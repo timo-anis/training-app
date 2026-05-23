@@ -379,6 +379,16 @@ input, select, textarea {
 .timer-hint{color:var(--muted);font-size:12px;text-align:center;margin-top:10px;}
 .add-card .section-title .meta,.add-card .help{display:none;}
 .btn.timer-live{border-color:rgba(242,201,76,.45);color:#f6de95;background:rgba(242,201,76,.10);}
+.workout-dominant-timer{position:fixed;inset:0;z-index:8500;display:none;align-items:center;justify-content:center;padding:18px;pointer-events:none;}
+.workout-dominant-timer.is-visible{display:flex;}
+.workout-dominant-timer__panel{width:min(520px,calc(100vw - 36px));border:1px solid rgba(242,201,76,.34);border-radius:26px;padding:24px 22px 26px;text-align:center;background:radial-gradient(circle at 50% 0%,rgba(242,201,76,.22),rgba(242,201,76,0) 42%),rgba(8,18,34,.88);box-shadow:0 28px 70px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(14px);}
+.workout-dominant-timer__label{margin-bottom:8px;color:#f7d979;font-size:12px;line-height:1;font-weight:900;letter-spacing:.12em;text-transform:uppercase;}
+.workout-dominant-timer__value{color:#fff8dc;font-size:clamp(76px,22vw,156px);line-height:.92;font-weight:900;letter-spacing:0;font-variant-numeric:tabular-nums;text-shadow:0 18px 44px rgba(0,0,0,.28);}
+.workout-dominant-timer__hint{margin-top:12px;color:#d9e7f6;font-size:13px;line-height:1.35;font-weight:700;}
+@media (max-width:640px){
+  .workout-dominant-timer{padding:14px;}
+  .workout-dominant-timer__panel{width:min(100%,430px);border-radius:22px;padding:20px 16px 22px;}
+}
 @media (max-width:640px) {
   .topbar{margin:-10px -10px 8px;padding:calc(max(8px, env(safe-area-inset-top))) 10px 8px;}
   .topbar-main{align-items:center;justify-content:center;}
@@ -6701,6 +6711,13 @@ textarea.exercise-name{
   </div>
 </div>
 <div class="quick-toast" id="quickToast">Saved</div>
+<div class="workout-dominant-timer" id="workoutDominantTimer" aria-hidden="true">
+  <div class="workout-dominant-timer__panel">
+    <div class="workout-dominant-timer__label">Rest timer</div>
+    <div class="workout-dominant-timer__value" id="workoutDominantTimerValue">00:00</div>
+    <div class="workout-dominant-timer__hint" id="workoutDominantTimerHint">Keep the next set in sight.</div>
+  </div>
+</div>
 <div class="timer-overlay" id="timerOverlay">
   <div class="timer-sheet">
     <div class="timer-head">
@@ -9652,6 +9669,7 @@ function renderExercises() {
   bindWorkoutProgressJumpButtons();
   bindWorkoutActionPanelButtons(getWorkoutGroups(getFilteredExercisesForCurrentDay()));
   bindEmptyStateAddWorkoutCta();
+  renderTimer();
 
   requestAnimationFrame(() => {
     restoreExerciseViewportContext();
@@ -10826,6 +10844,25 @@ function formatTimer(totalSeconds) {
   const secs = Math.floor(total % 60).toString().padStart(2, "0");
   return hours > 0 ? `${hours}.${mins}.${secs}` : `${mins}:${secs}`;
 }
+function getWorkoutTimerDisplayMode({ workoutMode, running, elapsedSeconds }) {
+  return workoutMode && (running || elapsedSeconds > 0) ? "dominant" : "compact";
+}
+function renderWorkoutDominantTimer({ elapsedSeconds, running, workoutMode }) {
+  const timer = document.getElementById("workoutDominantTimer");
+  const value = document.getElementById("workoutDominantTimerValue");
+  const hint = document.getElementById("workoutDominantTimerHint");
+  const mode = getWorkoutTimerDisplayMode({ workoutMode, running, elapsedSeconds });
+  if(timer) {
+    timer.classList.toggle("is-visible", mode === "dominant");
+    timer.setAttribute("aria-hidden", mode === "dominant" ? "false" : "true");
+  }
+  if(value) value.textContent = formatTimer(elapsedSeconds);
+  if(hint) {
+    hint.textContent = running
+      ? "Rest is running. Stay loose for the next set."
+      : "Timer paused. Controls stay available below.";
+  }
+}
 function renderTimer() {
   const display = document.getElementById("timerDisplay");
   const btn = document.getElementById("bottomTimerBtn");
@@ -10836,6 +10873,11 @@ function renderTimer() {
   const sheet = document.querySelector(".timer-sheet");
   const elapsedSeconds = Math.floor(getTimerElapsedMs() / 1000);
   const hasValue = elapsedSeconds > 0;
+  renderWorkoutDominantTimer({
+    elapsedSeconds,
+    running: timerState.running,
+    workoutMode: ui.workoutMode
+  });
   if(V2_TIMER_RUNTIME?.renderTimerView) {
     V2_TIMER_RUNTIME.renderTimerView({
       elapsedSeconds,
