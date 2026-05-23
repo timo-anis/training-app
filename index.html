@@ -381,13 +381,13 @@ input, select, textarea {
 .btn.timer-live{border-color:rgba(242,201,76,.45);color:#f6de95;background:rgba(242,201,76,.10);}
 .workout-dominant-timer{position:fixed;inset:0;z-index:8500;display:none;align-items:center;justify-content:center;padding:18px;pointer-events:none;}
 .workout-dominant-timer.is-visible{display:flex;}
-.workout-dominant-timer__panel{width:min(520px,calc(100vw - 36px));border:1px solid rgba(242,201,76,.34);border-radius:26px;padding:24px 22px 26px;text-align:center;background:radial-gradient(circle at 50% 0%,rgba(242,201,76,.22),rgba(242,201,76,0) 42%),rgba(8,18,34,.88);box-shadow:0 28px 70px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.08);backdrop-filter:blur(14px);}
-.workout-dominant-timer__label{margin-bottom:8px;color:#f7d979;font-size:12px;line-height:1;font-weight:900;letter-spacing:.12em;text-transform:uppercase;}
-.workout-dominant-timer__value{color:#fff8dc;font-size:clamp(76px,22vw,156px);line-height:.92;font-weight:900;letter-spacing:0;font-variant-numeric:tabular-nums;text-shadow:0 18px 44px rgba(0,0,0,.28);}
-.workout-dominant-timer__hint{margin-top:12px;color:#d9e7f6;font-size:13px;line-height:1.35;font-weight:700;}
+.workout-dominant-timer__panel{width:min(620px,calc(100vw - 28px));border:1px solid rgba(255,255,255,.10);border-radius:22px;padding:18px 16px 20px;text-align:center;background:rgba(8,18,34,.72);box-shadow:0 22px 54px rgba(0,0,0,.30);backdrop-filter:blur(10px);}
+.workout-dominant-timer__label{margin-bottom:6px;color:rgba(247,217,121,.70);font-size:10px;line-height:1;font-weight:800;letter-spacing:.14em;text-transform:uppercase;}
+.workout-dominant-timer__value{color:#fff9df;font-size:clamp(104px,30vw,220px);line-height:.84;font-weight:950;letter-spacing:0;font-variant-numeric:tabular-nums;text-shadow:0 10px 26px rgba(0,0,0,.24);}
+.workout-dominant-timer__hint{margin-top:8px;color:rgba(217,231,246,.66);font-size:11px;line-height:1.25;font-weight:600;}
 @media (max-width:640px){
   .workout-dominant-timer{padding:14px;}
-  .workout-dominant-timer__panel{width:min(100%,430px);border-radius:22px;padding:20px 16px 22px;}
+  .workout-dominant-timer__panel{width:100%;border-radius:20px;padding:16px 12px 18px;}
 }
 @media (max-width:640px) {
   .topbar{margin:-10px -10px 8px;padding:calc(max(8px, env(safe-area-inset-top))) 10px 8px;}
