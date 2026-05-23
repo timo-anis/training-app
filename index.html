@@ -8009,6 +8009,54 @@ function copyHistoryTo(week,day,exId,preview,mode) {
   if(preview.rest) state[`rest_w${week}_${day}_${exId}`] = preview.rest;
   if(preview.note) state[`note_w${week}_${day}_${exId}`] = preview.note;
 }
+function getPreviousWeekWorkout(week, day) {
+  const previousWeek = Number(week) - 1;
+  if(!Number.isFinite(previousWeek) || previousWeek < 1) return null;
+  const exercises = getExercisesForWeekDay(previousWeek, day);
+  return exercises.length ? { week: previousWeek, day, exercises } : null;
+}
+function cloneWorkoutValue(value) {
+  if(value === undefined || value === null) return value;
+  return JSON.parse(JSON.stringify(value));
+}
+function cloneSetForNewWorkout(rawSet) {
+  const src = normalizeSetObject(cloneWorkoutValue(rawSet));
+  return { kg: src.kg, reps: src.reps, done: "" };
+}
+function hasStoredWorkoutDataForDay(week, day) {
+  const metaPattern = new RegExp(`^(sc|note|interval|rest|exname|exlabel|exss|excode|hidden|blockdone)_w${week}_${day}_.+$`);
+  const setPattern = new RegExp(`^w${week}_${day}_.+_s\\d+$`);
+  return Object.keys(state).some(key => metaPattern.test(key) || setPattern.test(key));
+}
+function clearWorkoutDay(week, day) {
+  const metaPattern = new RegExp(`^(sc|note|interval|rest|exname|exlabel|exss|excode|hidden|blockdone)_w${week}_${day}_.+$`);
+  const setPattern = new RegExp(`^w${week}_${day}_.+_s\\d+$`);
+  Object.keys(state).forEach(key => {
+    if(metaPattern.test(key) || setPattern.test(key)) delete state[key];
+  });
+}
+function cloneWorkoutForNewWeek(workout, targetWeek, targetDay) {
+  if(!workout || !Array.isArray(workout.exercises) || !workout.exercises.length) return 0;
+  if(hasStoredWorkoutDataForDay(targetWeek, targetDay)) return 0;
+  clearWorkoutDay(targetWeek, targetDay);
+  const metaPrefixes = ["note", "interval", "rest", "exname", "exlabel", "exss", "excode", "hidden"];
+  workout.exercises.forEach(ex => {
+    const setCount = Math.max(1, Number(setCountOf(workout.week, workout.day, ex) || 1));
+    state[`sc_w${targetWeek}_${targetDay}_${ex}`] = setCount;
+    metaPrefixes.forEach(prefix => {
+      const sourceKey = `${prefix}_w${workout.week}_${workout.day}_${ex}`;
+      if(Object.prototype.hasOwnProperty.call(state, sourceKey)) {
+        state[`${prefix}_w${targetWeek}_${targetDay}_${ex}`] = cloneWorkoutValue(state[sourceKey]);
+      }
+    });
+    state[`blockdone_w${targetWeek}_${targetDay}_${ex}`] = "";
+    for(let i=0;i<setCount;i++) {
+      const sourceSetKey = `w${workout.week}_${workout.day}_${ex}_s${i}`;
+      state[`w${targetWeek}_${targetDay}_${ex}_s${i}`] = cloneSetForNewWorkout(state[sourceSetKey]);
+    }
+  });
+  return workout.exercises.length;
+}
 function addExercise(scope,displayName,historyMode) {
   const nice = normalizeExerciseDisplayName(displayName);
   const baseId = suggestedExerciseId(nice);
@@ -9163,6 +9211,18 @@ function bindEmptyStateAddWorkoutCta() {
       setTimeout(() => target.focus(), 250);
     }
   };
+  const copyPreviousWeekWorkoutBtn = document.getElementById("copyPreviousWeekWorkoutBtn");
+  if(copyPreviousWeekWorkoutBtn) copyPreviousWeekWorkoutBtn.onclick = () => {
+    const previousWorkout = getPreviousWeekWorkout(ui.week, ui.day);
+    if(!previousWorkout || hasStoredWorkoutDataForDay(ui.week, ui.day)) return;
+    commitStateUpdate(() => {
+      cloneWorkoutForNewWeek(previousWorkout, ui.week, ui.day);
+    }, {
+      renderMode: "exercises",
+      message: "Copied last week's workout locally on this device.",
+      toast: "Workout copied"
+    });
+  };
 }
 
 
@@ -9436,6 +9496,11 @@ function renderExercises() {
         hasWorkoutData: hasWorkoutData(state)
       })
     : !!(currentUser && !q && !hasWorkoutData(state));
+  const targetDayIsTrulyEmpty = !hasStoredWorkoutDataForDay(ui.week, ui.day);
+  const previousWeekWorkout = !q && targetDayIsTrulyEmpty ? getPreviousWeekWorkout(ui.week, ui.day) : null;
+  const copyPreviousWeekWorkoutMarkup = previousWeekWorkout
+    ? `<button class="btn primary empty-workout-cta" id="copyPreviousWeekWorkoutBtn" type="button">Copy last week's workout</button>`
+    : "";
   const firstWorkoutEmptyStateInput = V2_EMPTY_STATE?.buildFirstWorkoutEmptyStateInput
     ? V2_EMPTY_STATE.buildFirstWorkoutEmptyStateInput({
         title: "No workout yet",
@@ -9449,12 +9514,12 @@ function renderExercises() {
     ? V2_RENDER_PLAIN_EMPTY_STATE.buildPlainEmptyStateInput({
         title: q ? "No exercises in this day view" : "No workout yet",
         metaMarkup: q ? `<div class="meta">Search is active for ${DAY_LABEL[ui.day]}</div>` : `<div class="meta">${fmtFullDate(dayDate(ui.week,ui.day))}</div>`,
-        body: q ? "No exercises in this day match your current search. Clear search or open a result above." : `Add your first exercise below to create this workout day. Your calendar will build from your own training data.`
+        body: q ? "No exercises in this day match your current search. Clear search or open a result above." : `${previousWeekWorkout ? "Start from the same weekday last week, with all completed states cleared." : "Add your first exercise below to create this workout day. Your calendar will build from your own training data."}${copyPreviousWeekWorkoutMarkup}`
       })
     : buildPlainEmptyStateInputFallback({
         title: q ? "No exercises in this day view" : "No workout yet",
         metaMarkup: q ? `<div class="meta">Search is active for ${DAY_LABEL[ui.day]}</div>` : `<div class="meta">${fmtFullDate(dayDate(ui.week,ui.day))}</div>`,
-        body: q ? "No exercises in this day match your current search. Clear search or open a result above." : `Add your first exercise below to create this workout day. Your calendar will build from your own training data.`
+        body: q ? "No exercises in this day match your current search. Clear search or open a result above." : `${previousWeekWorkout ? "Start from the same weekday last week, with all completed states cleared." : "Add your first exercise below to create this workout day. Your calendar will build from your own training data."}${copyPreviousWeekWorkoutMarkup}`
       });
   const renderFirstWorkoutEmptyStateFallback = input => {
     const title = String(input?.title || "");
