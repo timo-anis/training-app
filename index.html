@@ -7658,7 +7658,11 @@ function commitStateUpdate(mutator, options={}) {
   normalizeUiState();
   localStorage.setItem(getStateStorageKey(currentUser), JSON.stringify(state));
   safeSetText("saveStatus", opts.message || "Saved locally on this device.");
-  scheduleCloudSave();
+  if (opts.immediate) {
+    saveCloudStateNow(); // Critical action — save to cloud immediately, no debounce
+  } else {
+    scheduleCloudSave();
+  }
   if (opts.toast) showToast(opts.toast);
   requestRender(renderMode);
   syncWorkoutWakeLockSoon();
@@ -9091,7 +9095,7 @@ function finishWorkoutNow(){
   commitStateUpdate(() => {
     markEntireWorkoutDone();
     ui.workoutMode = false;
-  }, { renderMode:"app", message:"Workout saved locally on this device." });
+  }, { renderMode:"app", message:"Workout saved locally on this device.", immediate: true });
   const btn = document.getElementById("workoutModeBtn");
   if(btn) btn.textContent = "WORKOUT MODE";
   openFinishSummary(stats);
@@ -10021,7 +10025,7 @@ function bindDeleteExerciseButtons() {
     if(!window.confirm("Delete this exercise?")) return;
     commitStateUpdate(() => {
       deleteExercise(ui.week, ui.day, ex);
-    }, { renderMode:"exercises", toast:"Exercise removed" });
+    }, { renderMode:"exercises", toast:"Exercise removed", immediate: true });
   });
 }
 
@@ -10695,6 +10699,8 @@ async function saveCloudStateNow() {
   } catch (error) {
     console.error(error);
     setSyncStatus("Cloud: save failed");
+    const reason = !navigator.onLine ? "Offline — data safe on device." : "Cloud sync failed — data safe on device.";
+    showToast(reason);
     return false;
   }
 }
@@ -10786,6 +10792,10 @@ async function initSupabaseApp() {
       setAuthMessage("Enter your email and password.", "error");
       return;
     }
+    if(!email.includes("@") || !email.includes(".")) {
+      setAuthMessage("Enter a valid email address.", "error");
+      return;
+    }
     setAuthMessage("Signing you in...");
     try {
       const result = await signInSupabase(email, password);
@@ -10803,6 +10813,10 @@ async function initSupabaseApp() {
     const password = document.getElementById("authPassword").value;
     if(!email || !password) {
       setAuthMessage("Enter your email and password.", "error");
+      return;
+    }
+    if(!email.includes("@") || !email.includes(".")) {
+      setAuthMessage("Enter a valid email address.", "error");
       return;
     }
     setAuthMessage("Creating your account...");
@@ -10876,6 +10890,7 @@ async function initSupabaseApp() {
   pinScopeResolved = true;
 
   if(currentUser) {
+    pruneOldLocalBackupKeys();
     applySignedInUiState(currentUser, { startBootstrap: true });
   } else {
     applySignedOutUiState({
@@ -10884,6 +10899,35 @@ async function initSupabaseApp() {
     });
   }
   refreshLockScreenForResolvedScope();
+}
+
+// Cleans up old migration backup keys from localStorage.
+// Keeps only the most recent backup per base key. Safe: never touches actual state keys.
+function pruneOldLocalBackupKeys() {
+  try {
+    const BACKUP_SUFFIX = "_backup_";
+    const backupKeys = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.includes(BACKUP_SUFFIX)) backupKeys.push(key);
+    }
+    // Group by base key (everything before _backup_)
+    const groups = {};
+    backupKeys.forEach(key => {
+      const idx = key.lastIndexOf(BACKUP_SUFFIX);
+      const base = key.slice(0, idx);
+      if (!groups[base]) groups[base] = [];
+      groups[base].push(key);
+    });
+    // For each base key, keep only the most recent backup, remove the rest
+    Object.values(groups).forEach(keys => {
+      if (keys.length <= 1) return;
+      keys.sort(); // timestamp suffix sorts chronologically
+      keys.slice(0, -1).forEach(old => {
+        try { localStorage.removeItem(old); } catch {}
+      });
+    });
+  } catch {}
 }
 
 
