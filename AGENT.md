@@ -243,3 +243,27 @@ Use Timo Training Agent v3 → fix mobile comma input in weight field
 ## Final Rule
 
 Never trade a working production-like state for a cleaner file unless the change is bounded, tested, reversible, and based on the latest confirmed working baseline.
+
+---
+
+## Claude Workflow (Cowork)
+
+This project is built using Claude via the Cowork desktop app.
+
+### How to work effectively
+
+- Use **Cowork** (not the web chat) — Claude has direct access to the repo folder and memory persists across sessions
+- **One conversation = one task** — keep each session focused on a single change or bug fix
+- If a conversation gets long or slow, **open a new Cowork session** in the same project — memory and repo access reload automatically
+- Claude edits `index.html` directly in the repo
+- Timo tests locally in the browser before committing
+- Timo runs `git commit` + `git push` — Claude does not push
+
+### Git workflow
+
+1. Claude makes the change and explains exactly what was modified and why
+2. Timo tests locally
+3. Timo commits: `git commit -m "description"`
+4. Timo pushes: `git push`
+
+Claude never commits or pushes. Claude never assumes the change is safe — Timo confirms after local testing.
