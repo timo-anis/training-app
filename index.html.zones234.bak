@@ -1973,20 +1973,21 @@ body{
 }
 
 /* =========================================
-   ZONE 2 — LAYOUT & SPACING SYSTEM
-   Consolidated from ITERATION 2, SAFE REFACTOR PACK 1
-   CSS only — no JS / data / auth / overlay changes
-   Scope: topbar, metrics, layout columns, card padding
+   ITERATION 2 AUTHORITATIVE LAYER
+   Scope: layout / spacing / visual rhythm
+   Protected zones intentionally excluded:
+   JS / HTML structure / auth / overlays / finish flow
 ========================================= */
 
 :root{
-  --space-section:20px;
-  --space-card:16px;
-  --space-card-compact:12px;
+  --iter2-space-page:20px;
+  --iter2-space-stack:18px;
+  --iter2-space-card:16px;
+  --iter2-space-card-tight:12px;
 }
 
 .topbar{
-  margin:-14px -14px var(--space-section);
+  margin:-14px -14px var(--iter2-space-page);
   padding:max(12px, env(safe-area-inset-top)) 14px 12px;
 }
 
@@ -1997,6 +1998,408 @@ body{
 .topbar-main{
   gap:10px;
   padding-bottom:18px;
+}
+
+.metrics{
+  gap:12px;
+  margin-bottom:var(--iter2-space-page);
+}
+
+.layout{
+  gap:var(--iter2-space-page);
+  margin-top:0;
+  align-items:start;
+}
+
+.left,
+.right{
+  gap:var(--iter2-space-stack);
+  align-content:start;
+  margin:0;
+}
+
+.card,
+.metric{
+  border-radius:20px;
+}
+
+.card{
+  padding:var(--iter2-space-card);
+}
+
+.metric{
+  padding:var(--iter2-space-card);
+}
+
+.section-title{
+  margin:0 0 var(--iter2-space-card-tight);
+  min-height:24px;
+}
+
+.days-card .section-title,
+.compact-search-card .section-title,
+.radar-card .section-title,
+.add-card .section-title,
+.calendar-collapsible .section-title{
+  margin-bottom:var(--iter2-space-card-tight);
+}
+
+.exercise-list,
+#searchResultsHost{
+  gap:var(--iter2-space-stack);
+}
+
+.finish-workout-row{
+  margin:18px 0 0;
+}
+
+.workout-progress-row{
+  margin-top:12px;
+}
+
+@media (max-width:980px){
+  :root{
+    --iter2-space-page:18px;
+    --iter2-space-stack:16px;
+    --iter2-space-card:15px;
+    --iter2-space-card-tight:11px;
+  }
+
+  .layout{
+    grid-template-columns:1fr;
+  }
+}
+
+@media (max-width:640px){
+  :root{
+    --iter2-space-page:16px;
+    --iter2-space-stack:14px;
+    --iter2-space-card:14px;
+    --iter2-space-card-tight:10px;
+  }
+
+  .app{
+    padding:10px 10px 20px;
+  }
+
+  .topbar{
+    margin:-10px -10px var(--iter2-space-page);
+    padding:calc(max(8px, env(safe-area-inset-top))) 10px 10px;
+  }
+
+  .topbar-inner{
+    gap:10px;
+  }
+
+  .topbar-main{
+    gap:8px;
+    padding-bottom:16px;
+  }
+
+  .metrics{
+    gap:10px;
+    margin-bottom:var(--iter2-space-page);
+  }
+
+  .layout,
+  .left,
+  .right,
+  .exercise-list,
+  #searchResultsHost{
+    gap:var(--iter2-space-stack);
+  }
+
+  .card,
+  .metric{
+    padding:var(--iter2-space-card);
+    border-radius:18px;
+  }
+
+  .section-title{
+    margin-bottom:var(--iter2-space-card-tight);
+  }
+}
+
+/* =========================================
+   ITERATION 3 AUTHORITATIVE LAYER
+   Scope: micro UX polish for workout interaction
+   CSS only — no DOM / JS / auth / overlay changes
+========================================= */
+
+.setrow{
+  min-height:74px;
+  padding:10px;
+  gap:10px;
+  border-radius:18px;
+  background:linear-gradient(180deg, rgba(20,38,67,.92), rgba(13,27,49,.96));
+  border:1px solid rgba(48,72,112,.88);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.setn{
+  background:linear-gradient(180deg, rgba(18,27,40,.96), rgba(14,21,33,.98));
+  border-color:rgba(58,78,111,.85);
+  color:#dbe6f4;
+  font-weight:800;
+}
+
+.setcol .k{
+  margin-bottom:6px;
+  color:#9eb1c8;
+}
+
+.setinput{
+  min-height:44px;
+  border-color:rgba(58,78,111,.88);
+  background:linear-gradient(180deg, rgba(13,22,34,.98), rgba(16,25,38,.98));
+  color:#f7f9fc;
+  font-weight:600;
+}
+
+.setinput::placeholder{
+  color:#7f95b1;
+}
+
+.donebtn{
+  width:44px;
+  height:44px;
+  border-radius:13px;
+  border-color:rgba(58,78,111,.88);
+  background:linear-gradient(180deg, rgba(17,27,41,.98), rgba(12,20,31,.98));
+  color:#9eb1c8;
+  font-weight:800;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.donebtn.on{
+  background:linear-gradient(180deg, rgba(57,181,106,.24), rgba(57,181,106,.12));
+  border-color:rgba(57,181,106,.58);
+  color:#d9ffe5;
+  box-shadow:0 10px 18px rgba(57,181,106,.12), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.exercise.active-workout{
+  border-color:rgba(242,201,76,.58);
+  box-shadow:0 0 0 1px rgba(242,201,76,.18) inset, 0 14px 28px rgba(0,0,0,.18);
+  background:linear-gradient(180deg, rgba(44,36,24,.78), rgba(20,27,39,.98));
+}
+
+.exercise.active-workout .exercise-name{
+  color:#fff3c9;
+}
+
+.exercise.superset{
+  border-left-width:5px;
+  border-left-color:rgba(242,201,76,.88);
+  background-image:linear-gradient(90deg, rgba(242,201,76,.06), rgba(242,201,76,0) 22%);
+}
+
+.codebox{
+  font-weight:800;
+  letter-spacing:-.01em;
+}
+
+.exercise-actions .btn,
+.workout-progress-pill,
+.finish-workout-btn,
+.finish-workout-inline-btn{
+  touch-action:manipulation;
+}
+
+.exercise-actions .btn{
+  min-height:40px;
+}
+
+.workout-progress-pill{
+  width:42px;
+  height:42px;
+}
+
+@media (max-width:640px){
+  .setrow{
+    min-height:70px;
+    padding:8px;
+    gap:7px;
+    border-radius:16px;
+  }
+
+  .setinput,
+  .donebtn,
+  .setn{
+    min-height:42px;
+    height:42px;
+  }
+
+  .donebtn{
+    width:42px;
+  }
+  .setdeletebtn{
+    width:42px;
+    height:42px;
+  }
+
+  .exercise.superset{
+    border-left-width:4px;
+  }
+
+  .exercise-actions .btn{
+    min-height:42px;
+  }
+}
+
+/* =========================================
+   ITERATION 3 HOTFIX
+   Restore dark input surfaces inside workout cards
+   without changing logic or structure
+========================================= */
+
+.exercise .codebox,
+.exercise .exercise-name,
+.exercise .field,
+.exercise .textarea,
+.exercise .select,
+.exercise .setinput{
+  -webkit-appearance:none;
+  appearance:none;
+  background:#101828 !important;
+  color:var(--text) !important;
+  border:1px solid var(--line) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03) !important;
+}
+
+.exercise .exercise-name{
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  color:var(--text) !important;
+}
+
+.exercise.active-workout .exercise-name{
+  color:#fff3c9 !important;
+}
+
+.exercise .codebox{
+  background:#221d17 !important;
+  border:1px solid #5e4e2c !important;
+  color:#e6cd9d !important;
+  text-align:center;
+}
+
+.exercise .textarea,
+.exercise .field,
+.exercise .select,
+.exercise .setinput{
+  border-radius:12px;
+}
+
+.exercise .setinput[data-role="volume"]{
+  background:#101828 !important;
+  color:#dbe6f4 !important;
+  opacity:1 !important;
+}
+
+.exercise .setinput::placeholder,
+.exercise .textarea::placeholder,
+.exercise .field::placeholder{
+  color:#7f95b1 !important;
+}
+
+/* =========================================
+   ITERATION 4 AUTHORITATIVE LAYER
+   Scope: bottom action area polish
+   CSS only
+========================================= */
+
+.finish-workout-btn,
+.finish-workout-inline-btn{
+  min-height:52px;
+  padding:0 22px;
+  font-weight:800;
+  letter-spacing:.02em;
+  border-radius:16px;
+  box-shadow:
+    0 12px 28px rgba(255,170,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.18);
+}
+
+.finish-workout-btn{
+  margin-top:14px;
+  margin-bottom:12px;
+}
+
+.exercise-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  justify-content:center;
+  margin-top:10px;
+}
+
+.exercise-actions .btn{
+  min-height:44px;
+  padding:0 16px;
+  border-radius:14px;
+  font-weight:600;
+}
+
+.exercise-actions .btn.primary{
+  box-shadow:
+    0 10px 22px rgba(242,201,76,.18),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+.workout-bottom-actions{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:10px;
+}
+
+@media (max-width:640px){
+
+  .finish-workout-btn{
+    width:100%;
+    max-width:320px;
+  }
+
+  .exercise-actions{
+    width:100%;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  .exercise-actions .btn{
+    flex:1 1 auto;
+    min-width:120px;
+  }
+}
+
+/* =========================================
+   SAFE REFACTOR PACK 1 — CANONICAL LAYER
+   Source of truth for safe zones:
+   - layout / spacing
+   - exercise / workout cards
+   - set rows / input surfaces
+   - bottom action area
+   Protected zones intentionally excluded:
+   - auth
+   - overlays
+   - boot / render flow
+   - sign out logic
+   - finish summary logic
+   CSS only
+========================================= */
+
+/* --- Layout / spacing --- */
+:root{
+  --space-section:20px;
+  --space-card:16px;
+  --space-card-compact:12px;
+}
+
+.topbar{
+  margin:-14px -14px var(--space-section);
+  padding:max(12px, env(safe-area-inset-top)) 14px 12px;
 }
 
 .metrics{
@@ -2037,69 +2440,7 @@ body{
   min-height:24px;
 }
 
-.days-card .section-title,
-.compact-search-card .section-title,
-.radar-card .section-title,
-.add-card .section-title,
-.calendar-collapsible .section-title{
-  margin-bottom:var(--space-card-compact);
-}
-
-@media (max-width:980px){
-  .layout{
-    grid-template-columns:1fr;
-    gap:18px;
-  }
-
-  .metrics{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-}
-
-@media (max-width:640px){
-  .metrics,
-  .layout,
-  .left,
-  .right,
-  .exercise-list,
-  #searchResultsHost{
-    gap:var(--space-section);
-  }
-
-  .card,
-  .metric{
-    padding:var(--space-card);
-    border-radius:18px;
-  }
-
-  .section-title{
-    margin-bottom:var(--space-card-compact);
-  }
-
-  .topbar{
-    margin:-10px -10px var(--space-section);
-    padding:calc(max(8px, env(safe-area-inset-top))) 10px 10px;
-  }
-
-  .topbar-inner{
-    gap:10px;
-  }
-
-  .topbar-main{
-    gap:8px;
-    padding-bottom:16px;
-  }
-}
-
-/* =========================================
-   ZONE 3 — EXERCISE CARDS, SET ROWS & INPUT STATES
-   Consolidated from ITERATION 3, ITERATION 3 HOTFIX,
-   SAFE REFACTOR PACK 1, Set Completion Clarity, Next-Step Guidance
-   CSS only — no JS / data / auth / overlay changes
-   Scope: exercise shell, setrow base + states, inputs, exercise-actions
-========================================= */
-
-/* --- Exercise card shell --- */
+/* --- Exercise / workout cards --- */
 .block-group{
   border-radius:22px;
   overflow:hidden;
@@ -2109,48 +2450,6 @@ body{
   border-left:5px solid rgba(242,201,76,.88);
   padding-left:10px;
   background-image:linear-gradient(90deg, rgba(242,201,76,.06), rgba(242,201,76,0) 22%);
-}
-
-.exercise.active-workout{
-  border:1px solid rgba(242,201,76,.58);
-  box-shadow:0 0 0 1px rgba(242,201,76,.18) inset, 0 14px 28px rgba(0,0,0,.18);
-  background:linear-gradient(180deg, rgba(44,36,24,.78), rgba(20,27,39,.98));
-}
-
-/* --- Exercise name & codebox --- */
-.exercise-name{
-  display:block;
-  width:100%;
-  min-width:0;
-  background:transparent;
-  border:none;
-  color:var(--text);
-  font-size:18px;
-  line-height:1.12;
-  font-weight:650;
-  letter-spacing:-.024em;
-  padding:0;
-  outline:none;
-  white-space:normal;
-  overflow:visible;
-  text-overflow:clip;
-}
-
-input.exercise-name{
-  min-height:44px;
-  height:44px;
-  padding:10px 12px;
-  font-size:16px;
-  line-height:1.2;
-  font-weight:750;
-}
-
-textarea.exercise-name{
-  min-height:52px;
-  height:auto;
-  resize:none;
-  overflow:hidden;
-  padding:0;
 }
 
 .codebox{
@@ -2168,56 +2467,64 @@ textarea.exercise-name{
   padding:0 8px;
 }
 
-/* --- Dark input surfaces inside exercise cards (ITER3-HOTFIX) --- */
-.exercise .codebox,
-.exercise .field,
-.exercise .textarea,
-.exercise .select,
-.exercise .setinput{
-  -webkit-appearance:none;
-  appearance:none;
-  background:#101828 !important;
-  color:var(--text) !important;
-  border:1px solid var(--line) !important;
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.03) !important;
+.exercise-name{
+  display:block;
+  width:100%;
+  min-width:0;
+  background:transparent;
+  border:none;
+  color:var(--text);
+  font-size:18px;
+  line-height:1.12;
+  font-weight:650;
+  letter-spacing:-.024em;
+  padding:0;
+  outline:none;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+input.exercise-name{
+  min-height:44px;
+  height:44px;
+  padding:10px 12px;
+  font-size:16px;
+  line-height:1.2;
+  font-weight:750;
+}
+textarea.exercise-name{
+  min-height:52px;
+  height:auto;
+  resize:none;
+  overflow:hidden;
+  padding:0;
 }
 
-.exercise .exercise-name{
-  background:transparent !important;
-  border:none !important;
-  box-shadow:none !important;
-  color:var(--text) !important;
+.exercise.active-workout{
+  border:1px solid rgba(242,201,76,.58);
+  box-shadow:0 0 0 1px rgba(242,201,76,.18) inset, 0 14px 28px rgba(0,0,0,.18);
+  background:linear-gradient(180deg, rgba(44,36,24,.78), rgba(20,27,39,.98));
 }
 
-.exercise.active-workout .exercise-name{
-  color:#fff3c9 !important;
-}
-
-.exercise .codebox{
-  background:#221d17 !important;
-  border:1px solid #5e4e2c !important;
-  color:#e6cd9d !important;
-}
-
-.exercise .textarea,
-.exercise .field,
-.exercise .select,
-.exercise .setinput{
+.workout-progress-pill{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  padding:0;
   border-radius:12px;
+  font-size:14px;
+  font-weight:800;
 }
 
-.exercise .setinput[data-role="volume"]{
-  color:#dbe6f4 !important;
-  opacity:1 !important;
+/* --- Set rows / inputs --- */
+.field-grid{
+  grid-template-columns:110px 1fr;
+  gap:12px;
+  align-items:start;
+  margin-top:12px;
 }
 
-.exercise .setinput::placeholder,
-.exercise .textarea::placeholder,
-.exercise .field::placeholder{
-  color:#7f95b1 !important;
-}
-
-/* --- Set row base --- */
 .setrow{
   display:grid;
   grid-template-columns:54px minmax(0,1fr) minmax(0,1fr) 94px 44px 44px;
@@ -2229,8 +2536,6 @@ textarea.exercise-name{
   background:linear-gradient(180deg, rgba(20,38,67,.92), rgba(13,27,49,.96));
   border:1px solid rgba(48,72,112,.88);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
-  position:relative;
-  transition:background-color .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .18s ease, transform .12s ease;
 }
 
 .setn{
@@ -2244,11 +2549,6 @@ textarea.exercise-name{
   font-weight:800;
 }
 
-.setcol .k{
-  margin-bottom:6px;
-  color:#9eb1c8;
-}
-
 .setinput{
   width:100%;
   min-height:44px;
@@ -2258,10 +2558,6 @@ textarea.exercise-name{
   background:linear-gradient(180deg, rgba(13,22,34,.98), rgba(16,25,38,.98));
   color:#f7f9fc;
   font-weight:600;
-}
-
-.setinput::placeholder{
-  color:#7f95b1;
 }
 
 .donebtn{
@@ -2275,175 +2571,85 @@ textarea.exercise-name{
   box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
 }
 
-.donebtn.on{
-  background:linear-gradient(180deg, rgba(57,181,106,.24), rgba(57,181,106,.12));
-  border-color:rgba(57,181,106,.58);
-  color:#d9ffe5;
-  box-shadow:0 10px 18px rgba(57,181,106,.12), inset 0 1px 0 rgba(255,255,255,.06);
-}
-
-/* --- Set row interaction states --- */
-.setrow:focus-within{
-  border-color:rgba(127,178,255,.58);
-  box-shadow:
-    0 0 0 1px rgba(127,178,255,.16) inset,
-    0 10px 24px rgba(0,0,0,.12);
-}
-
-.setrow.is-done,
-.setrow[data-done="1"]{
-  background:linear-gradient(180deg, rgba(23,55,41,.96), rgba(14,36,28,.98));
-  border-color:rgba(57,181,106,.42);
-  box-shadow:
-    0 10px 20px rgba(57,181,106,.08),
-    inset 0 1px 0 rgba(255,255,255,.03);
-}
-
-.setrow.is-done .setn,
-.setrow[data-done="1"] .setn{
-  background:linear-gradient(180deg, rgba(27,66,48,.98), rgba(19,46,34,.98));
-  border-color:rgba(57,181,106,.38);
-  color:#d9ffe5;
-}
-
-.setrow.is-done .setcol .k,
-.setrow[data-done="1"] .setcol .k{
-  color:#bfe8cf;
-}
-
-.setrow.is-done .setinput,
-.setrow[data-done="1"] .setinput{
-  border-color:rgba(57,181,106,.28);
-  background:linear-gradient(180deg, rgba(15,37,28,.98), rgba(14,31,24,.98));
-  color:#edf8f1;
-  opacity:.92;
-}
-
-.setrow.is-done .setinput[data-role="volume"],
-.setrow[data-done="1"] .setinput[data-role="volume"]{
-  color:#ffffff;
-  font-weight:700;
-}
-
-.setrow.is-done .donebtn,
-.setrow[data-done="1"] .donebtn{
-  background:linear-gradient(180deg, rgba(57,181,106,.28), rgba(57,181,106,.14));
-  border-color:rgba(57,181,106,.52);
-  color:#e5ffed;
-  box-shadow:
-    0 10px 20px rgba(57,181,106,.10),
-    inset 0 1px 0 rgba(255,255,255,.05);
-}
-
-.setrow.is-done::after,
-.setrow[data-done="1"]::after{
-  content:"Done";
-  position:absolute;
-  top:8px;
-  right:56px;
-  padding:4px 8px;
-  border-radius:999px;
-  font-size:10px;
-  line-height:1;
-  font-weight:800;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:#dbffe6;
-  background:rgba(57,181,106,.14);
-  border:1px solid rgba(57,181,106,.32);
-}
-
-.setrow.is-next{
-  border-color:rgba(242,201,76,.52);
-  background:linear-gradient(180deg, rgba(46,43,23,.94), rgba(18,29,46,.98));
-  box-shadow:
-    0 0 0 1px rgba(242,201,76,.14) inset,
-    0 14px 26px rgba(0,0,0,.12);
-}
-
-.setrow.is-next .setn{
-  border-color:rgba(242,201,76,.40);
-  color:#fff1bf;
-}
-
-.setrow.is-next::before{
-  content:"Next";
-  position:absolute;
-  top:8px;
-  left:8px;
-  padding:4px 8px;
-  border-radius:999px;
-  font-size:10px;
-  line-height:1;
-  font-weight:800;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:#fff1bf;
-  background:rgba(242,201,76,.12);
-  border:1px solid rgba(242,201,76,.28);
-}
-
-.setrow.input-row-active{
-  border-color:rgba(242,201,76,.44);
-  background:linear-gradient(180deg, rgba(37,40,23,.92), rgba(18,29,46,.98));
-  box-shadow:
-    0 0 0 1px rgba(242,201,76,.14) inset,
-    0 12px 24px rgba(0,0,0,.14);
-}
-
-.setrow.input-row-active .setn{
-  border-color:rgba(242,201,76,.36);
-  color:#fff1bf;
-}
-
-.setrow.is-done ~ .setrow:not(.is-next):not(.is-done){
-  opacity:.94;
-}
-
-.setrow.is-done .setinput{
-  opacity:.92;
-}
-
-.setrow:not(.is-done):not([data-done="1"]) .donebtn:hover{
-  border-color:rgba(242,201,76,.34);
-  color:#fff1bf;
-}
-
-/* --- Field grid --- */
-.field-grid{
-  grid-template-columns:110px 1fr;
-  gap:12px;
-  align-items:start;
-  margin-top:12px;
-}
-
-/* --- Exercise actions --- */
+/* --- Bottom action area --- */
 .exercise-actions{
   display:flex;
   gap:10px;
   flex-wrap:wrap;
   align-items:center;
   justify-content:center;
-  margin-top:12px;
+  margin-top:10px;
 }
 
 .exercise-actions .btn{
-  min-height:42px;
+  min-height:44px;
   padding:0 16px;
   border-radius:14px;
   font-weight:600;
   touch-action:manipulation;
 }
 
-.exercise-actions .btn.primary{
-  border-color:rgba(242,201,76,.28);
+.finish-workout-btn,
+.finish-workout-inline-btn{
+  min-height:52px;
+  padding:0 22px;
+  border-radius:16px;
+  font-weight:800;
+  letter-spacing:.02em;
   box-shadow:
-    0 10px 22px rgba(242,201,76,.18),
-    inset 0 1px 0 rgba(255,255,255,.12);
+    0 12px 28px rgba(255,170,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.18);
+  touch-action:manipulation;
 }
 
-/* --- Responsive --- */
+.finish-workout-btn{
+  min-width:min(100%,340px);
+  margin-top:14px;
+  margin-bottom:12px;
+}
+
+.workout-progress-pill{
+  touch-action:manipulation;
+}
+
+/* --- Responsive safe layer --- */
+@media (max-width:980px){
+  .layout{
+    grid-template-columns:1fr;
+    gap:18px;
+  }
+
+  .metrics{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
 @media (max-width:640px){
+
+  .topbar{
+    margin:-10px -10px var(--space-section);
+    padding:calc(max(8px, env(safe-area-inset-top))) 10px 10px;
+  }
+
+  .metrics,
+  .layout,
+  .left,
+  .right,
+  .exercise-list,
+  #searchResultsHost{
+    gap:var(--space-section);
+  }
+
+  .card,
+  .metric{
+    padding:var(--space-card);
+    border-radius:18px;
+  }
+
+  .exercise{
+    padding:14px 12px;
+  }
+
   .setrow{
     grid-template-columns:44px 1fr 1fr 70px 40px 40px;
     min-height:70px;
@@ -2452,39 +2658,9 @@ textarea.exercise-name{
     border-radius:16px;
   }
 
-  .setn,
-  .setinput,
-  .donebtn{
-    min-height:42px;
-    height:42px;
-  }
-
-  .donebtn{
-    width:42px;
-  }
-
-  .setdeletebtn{
-    width:42px;
-    height:42px;
-  }
-
-  .exercise.superset{
-    border-left-width:4px;
-  }
-
-  .setrow.is-done::after,
-  .setrow[data-done="1"]::after{
-    top:6px;
-    right:48px;
-    font-size:9px;
-    padding:4px 7px;
-  }
-
-  .setrow.is-next::before{
-    top:6px;
-    left:6px;
-    font-size:9px;
-    padding:4px 7px;
+  .exercise-actions{
+    width:100%;
+    justify-content:center;
   }
 
   .exercise-actions .btn{
@@ -2492,24 +2668,224 @@ textarea.exercise-name{
     min-width:120px;
     min-height:42px;
   }
+
 }
 
-/* =========================================
-   ZONE 4 — WORKOUT MODE, TIMER & ACTIVE STATES
-   Consolidated from SAFE REFACTOR PACK 1 (workout sections),
-   Workout Mode Action Hierarchy, Timer Behavior Refinement,
-   Last Time Block Upgrade, Add Card, Active Workout States
-   CSS only — no JS / data / auth / overlay changes
-   Scope: workout focus card, progress pills, timer overlay,
-          last-time compare, add card, active-workout exercise states
-========================================= */
+/* ===== Iteration 1 — Finish Summary Upgrade (SAFE) ===== */
 
-/* --- Workout mode shell --- */
+.finish-summary {
+  display: grid;
+  gap: 16px;
+  padding: 18px;
+  border-radius: 20px;
+  background: linear-gradient(180deg, rgba(20,27,39,.98), rgba(14,20,30,.98));
+  border: 1px solid rgba(242,201,76,.25);
+  box-shadow: 0 18px 40px rgba(0,0,0,.25);
+}
+
+.finish-title {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #f2c94c;
+  text-align: center;
+}
+
+.finish-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.finish-stat {
+  padding: 12px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(18,27,40,.96), rgba(14,21,33,.98));
+  border: 1px solid rgba(58,78,111,.6);
+  text-align: center;
+}
+
+.finish-stat .value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.finish-stat .label {
+  font-size: 11px;
+  color: #9eb1c8;
+  margin-top: 4px;
+}
+
+.finish-actions {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.finish-actions .btn {
+  min-height: 44px;
+  padding: 0 18px;
+  border-radius: 14px;
+  font-weight: 700;
+}
+
+/* ===== Iteration 2 — Finish Completion Feeling (SAFE) ===== */
+
+.finish-summary-overlay{
+  background:
+    radial-gradient(circle at 50% 22%, rgba(242,201,76,.10), rgba(242,201,76,0) 32%),
+    rgba(3,8,18,.72);
+  backdrop-filter: blur(10px);
+}
+
+.finish-summary-card{
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(242,201,76,.22);
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.34),
+    0 0 0 1px rgba(255,255,255,.02) inset;
+}
+
+.finish-summary-card::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:88px;
+  background: linear-gradient(180deg, rgba(242,201,76,.10), rgba(242,201,76,0));
+  pointer-events:none;
+}
+
+.finish-summary-kicker{
+  color: rgba(255,235,179,.72);
+  letter-spacing: .18em;
+  font-weight: 800;
+}
+
+.finish-summary-title{
+  color:#fff7de;
+  text-shadow: 0 8px 24px rgba(242,201,76,.08);
+}
+
+.finish-summary-subline{
+  color:#d9e4f1;
+  max-width: 300px;
+  margin-left:auto;
+  margin-right:auto;
+}
+
+.finish-summary-grid{
+  margin:20px 0 22px;
+  gap:12px;
+}
+
+.finish-summary-stat{
+  background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.04);
+}
+
+.finish-summary-stat .k{
+  color: rgba(255,255,255,.56);
+  letter-spacing:.12em;
+  font-weight:700;
+}
+
+.finish-summary-stat .v{
+  color:#fffaf0;
+  text-shadow: 0 4px 14px rgba(0,0,0,.16);
+}
+
+.finish-summary-done{
+  min-height:52px;
+  padding:0 22px;
+  border-radius:16px;
+  font-weight:900;
+  letter-spacing:.04em;
+  box-shadow:
+    0 14px 28px rgba(255,159,10,.24),
+    inset 0 1px 0 rgba(255,255,255,.24);
+}
+
+.finish-summary-done:hover{
+  transform: translateY(-1px);
+  box-shadow:
+    0 18px 34px rgba(255,159,10,.26),
+    inset 0 1px 0 rgba(255,255,255,.24);
+}
+
+.finish-summary-done:active{
+  transform: scale(.985);
+}
+
+@media (max-width:640px){
+  .finish-summary-card{
+    border-radius: 24px;
+  }
+
+  .finish-summary-subline{
+    max-width: 260px;
+  }
+
+  .finish-summary-done{
+    width:100%;
+    max-width:260px;
+  }
+}
+
+/* ===== Iteration 3 — Finish Copy & Hierarchy Polish (SAFE) ===== */
+
+.finish-title::after{
+  content: "Session complete";
+  display:block;
+  font-size:12px;
+  letter-spacing:.18em;
+  color:rgba(255,235,179,.7);
+  margin-top:6px;
+}
+
+.finish-stat .label{
+  text-transform:uppercase;
+  letter-spacing:.12em;
+  font-weight:700;
+}
+
+.finish-stat .value{
+  font-size:20px;
+}
+
+.finish-summary{
+  text-align:center;
+}
+
+.finish-actions .btn.primary{
+  font-size:15px;
+  letter-spacing:.04em;
+}
+
+.finish-actions::before{
+  content:"Nice work — keep building momentum.";
+  display:block;
+  width:100%;
+  font-size:13px;
+  color:#9eb1c8;
+  margin-bottom:6px;
+}
+
+/* ===== Iteration 1 — Workout Mode Action Hierarchy (SAFE) =====
+   Scope:
+   - workout mode only
+   - primary vs secondary action clarity
+   - visual hierarchy and spacing
+   CSS only
+=============================================================== */
+
 .workout-mode-shell{
   gap:16px;
 }
 
-/* --- Workout focus card --- */
 .workout-focus-card{
   position:relative;
   gap:14px;
@@ -2552,7 +2928,6 @@ textarea.exercise-name{
   line-height:1.45 !important;
 }
 
-/* --- Progress pills --- */
 .workout-progress-row{
   gap:12px;
   margin-top:14px;
@@ -2562,17 +2937,11 @@ textarea.exercise-name{
 .workout-progress-pill{
   width:44px;
   height:44px;
-  display:grid;
-  place-items:center;
-  padding:0;
   border-radius:14px;
-  font-size:14px;
-  font-weight:800;
   border:1px solid rgba(36,58,97,.95);
   background:linear-gradient(180deg,#132645,#0f213d);
   color:#b7c7db;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
-  touch-action:manipulation;
 }
 
 .workout-progress-pill.active{
@@ -2590,7 +2959,6 @@ textarea.exercise-name{
   background:linear-gradient(180deg, rgba(57,181,106,.22), rgba(57,181,106,.10));
 }
 
-/* --- Workout nav --- */
 .workout-nav-row{
   gap:10px;
   margin-top:6px;
@@ -2611,13 +2979,259 @@ textarea.exercise-name{
     inset 0 1px 0 rgba(255,255,255,.10);
 }
 
-/* --- Finish workout button (touch target — visual overridden by Zone 8) --- */
-.finish-workout-btn,
-.finish-workout-inline-btn{
-  touch-action:manipulation;
+.finish-workout-row{
+  margin:20px 0 8px;
 }
 
-/* --- Timer overlay & sheet --- */
+.finish-workout-btn{
+  min-height:54px;
+  min-width:min(100%,360px);
+  border-radius:18px;
+  font-size:16px;
+  font-weight:900;
+  letter-spacing:.05em;
+  box-shadow:
+    0 16px 34px rgba(255,159,10,.24),
+    inset 0 1px 0 rgba(255,255,255,.24);
+}
+
+.finish-workout-btn::before{
+  content:"✓";
+  display:inline-block;
+  margin-right:10px;
+  font-weight:900;
+}
+
+.exercise-actions{
+  gap:10px;
+  margin-top:12px;
+}
+
+.exercise-actions .btn{
+  min-height:42px;
+  border-radius:14px;
+}
+
+.exercise-actions .btn.primary{
+  border-color:rgba(242,201,76,.28);
+}
+
+@media (max-width:640px){
+  .workout-mode-shell{
+    gap:14px;
+  }
+
+  .workout-focus-card{
+    padding:16px 14px;
+    border-radius:20px;
+  }
+
+  .workout-focus-card .section-title h3{
+    font-size:20px !important;
+  }
+
+  .workout-date-big{
+    font-size:22px;
+  }
+
+  .workout-progress-row{
+    gap:10px;
+  }
+
+  .workout-progress-pill{
+    width:42px;
+    height:42px;
+  }
+
+  .workout-nav-row{
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+
+  .workout-nav-row .btn{
+    flex:1 1 140px;
+    min-width:0;
+  }
+
+  .finish-workout-btn{
+    width:100%;
+    max-width:340px;
+    min-height:52px;
+    font-size:15px;
+  }
+}
+
+/* ===== Iteration 2 — Set Completion Clarity (SAFE) =====
+   Scope:
+   - set rows only
+   - clearer done / active / pending state
+   CSS only
+======================================================== */
+
+.setrow{
+  position:relative;
+  transition:background-color .18s ease, border-color .18s ease, box-shadow .18s ease, opacity .18s ease, transform .12s ease;
+}
+
+.setrow:focus-within{
+  border-color:rgba(127,178,255,.58);
+  box-shadow:
+    0 0 0 1px rgba(127,178,255,.16) inset,
+    0 10px 24px rgba(0,0,0,.12);
+}
+
+.setrow.is-done,
+.setrow[data-done="1"]{
+  background:linear-gradient(180deg, rgba(23,55,41,.96), rgba(14,36,28,.98));
+  border-color:rgba(57,181,106,.42);
+  box-shadow:
+    0 10px 20px rgba(57,181,106,.08),
+    inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.setrow.is-done .setn,
+.setrow[data-done="1"] .setn{
+  background:linear-gradient(180deg, rgba(27,66,48,.98), rgba(19,46,34,.98));
+  border-color:rgba(57,181,106,.38);
+  color:#d9ffe5;
+}
+
+.setrow.is-done .setcol .k,
+.setrow[data-done="1"] .setcol .k{
+  color:#bfe8cf;
+}
+
+.setrow.is-done .setinput,
+.setrow[data-done="1"] .setinput{
+  border-color:rgba(57,181,106,.28);
+  background:linear-gradient(180deg, rgba(15,37,28,.98), rgba(14,31,24,.98));
+  color:#edf8f1;
+}
+
+.setrow.is-done .setinput[data-role="volume"],
+.setrow[data-done="1"] .setinput[data-role="volume"]{
+  color:#ffffff;
+  font-weight:700;
+}
+
+.setrow.is-done .donebtn,
+.setrow[data-done="1"] .donebtn{
+  background:linear-gradient(180deg, rgba(57,181,106,.28), rgba(57,181,106,.14));
+  border-color:rgba(57,181,106,.52);
+  color:#e5ffed;
+  box-shadow:
+    0 10px 20px rgba(57,181,106,.10),
+    inset 0 1px 0 rgba(255,255,255,.05);
+}
+
+.setrow.is-done::after,
+.setrow[data-done="1"]::after{
+  content:"Done";
+  position:absolute;
+  top:8px;
+  right:56px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:10px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#dbffe6;
+  background:rgba(57,181,106,.14);
+  border:1px solid rgba(57,181,106,.32);
+}
+
+.setrow.input-row-active{
+  border-color:rgba(242,201,76,.44);
+  background:linear-gradient(180deg, rgba(37,40,23,.92), rgba(18,29,46,.98));
+  box-shadow:
+    0 0 0 1px rgba(242,201,76,.14) inset,
+    0 12px 24px rgba(0,0,0,.14);
+}
+
+.setrow.input-row-active .setn{
+  border-color:rgba(242,201,76,.36);
+  color:#fff1bf;
+}
+
+.setrow:not(.is-done):not([data-done="1"]) .donebtn:hover{
+  border-color:rgba(242,201,76,.34);
+  color:#fff1bf;
+}
+
+@media (max-width:640px){
+  .setrow.is-done::after,
+  .setrow[data-done="1"]::after{
+    top:6px;
+    right:48px;
+    font-size:9px;
+    padding:4px 7px;
+  }
+}
+
+/* ===== Iteration 3 — Next-Step Guidance (SAFE) =====
+   Scope:
+   - set row guidance only
+   - highlight next logical row after completion
+   - minimal JS + CSS
+===================================================== */
+
+.setrow.is-next{
+  border-color:rgba(242,201,76,.52);
+  background:linear-gradient(180deg, rgba(46,43,23,.94), rgba(18,29,46,.98));
+  box-shadow:
+    0 0 0 1px rgba(242,201,76,.14) inset,
+    0 14px 26px rgba(0,0,0,.12);
+}
+
+.setrow.is-next .setn{
+  border-color:rgba(242,201,76,.40);
+  color:#fff1bf;
+}
+
+.setrow.is-next::before{
+  content:"Next";
+  position:absolute;
+  top:8px;
+  left:8px;
+  padding:4px 8px;
+  border-radius:999px;
+  font-size:10px;
+  line-height:1;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:#fff1bf;
+  background:rgba(242,201,76,.12);
+  border:1px solid rgba(242,201,76,.28);
+}
+
+.setrow.is-done ~ .setrow:not(.is-next):not(.is-done){
+  opacity:.94;
+}
+
+.setrow.is-done .setinput{
+  opacity:.92;
+}
+
+@media (max-width:640px){
+  .setrow.is-next::before{
+    top:6px;
+    left:6px;
+    font-size:9px;
+    padding:4px 7px;
+  }
+}
+
+/* ===== Iteration 4 — Timer Behavior Refinement (SAFE) =====
+   Scope:
+   - timer overlay only
+   - clearer running / paused / idle states
+   - stronger action hierarchy
+   CSS + very small JS
+============================================================ */
+
 .timer-overlay{
   background:
     radial-gradient(circle at 50% 18%, rgba(127,178,255,.10), rgba(127,178,255,0) 32%),
@@ -2711,7 +3325,32 @@ textarea.exercise-name{
   line-height:1.45;
 }
 
-/* --- Last time compare card --- */
+.timer-sheet.is-live::after{
+  content:none;
+}
+
+@media (max-width:640px){
+  .timer-sheet{
+    border-radius:24px;
+    padding:16px;
+  }
+
+  .timer-display{
+    font-size:52px;
+  }
+
+  .timer-actions{
+    grid-template-columns:1fr;
+  }
+}
+
+/* ===== Iteration 5 — Last Time Block Upgrade (SAFE) =====
+   Scope:
+   - last time compare block only
+   - clearer hierarchy and faster readability
+   CSS + tiny render markup update
+========================================================== */
+
 .compare.compact-last{
   margin-top:12px;
 }
@@ -2790,229 +3429,9 @@ textarea.exercise-name{
   line-height:1.4;
 }
 
-/* --- Add card --- */
-.add-card .section-title{
-  justify-content:flex-start;
-  text-align:left;
-  margin-bottom:14px !important;
-}
-
-.add-card .section-title h2{
-  width:100%;
-}
-
-.add-card .add-scope-row{
-  display:flex;
-  align-items:center;
-  justify-content:flex-start;
-  width:100%;
-  margin:4px 0 14px !important;
-}
-
-.add-card .add-scope-row .select{
-  width:100%;
-  min-width:0;
-  max-width:none;
-  flex:1 1 auto;
-}
-
-.add-card .add-grid{
-  margin-top:0 !important;
-  gap:12px !important;
-  align-items:stretch !important;
-}
-
-.add-card .add-grid > .field,
-.add-card .add-grid > .select,
-.add-card .add-grid > .btn{
-  min-height:50px !important;
-  height:50px !important;
-  border-radius:15px !important;
-}
-
-.add-card .add-grid > .field,
-.add-card .add-grid > .select{
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
-}
-
-.add-card #addExerciseBtn{
-  font-weight:850 !important;
-  letter-spacing:.02em;
-  box-shadow:0 10px 22px rgba(242,201,76,.16), inset 0 1px 0 rgba(255,255,255,.12);
-}
-
-.add-card #addExerciseBtn:hover{
-  transform:translateY(-1px);
-  box-shadow:0 14px 28px rgba(242,201,76,.18), inset 0 1px 0 rgba(255,255,255,.14);
-}
-
-.add-card #addExerciseBtn:active{
-  transform:scale(.985);
-}
-
-/* --- Active workout — exercise states --- */
-.exercise[data-anchor-match="1"]{
-  box-shadow:0 0 0 1px rgba(127,178,255,.22) inset;
-}
-
-.exercise.active-workout .exercise-meta{
-  color:rgba(255,255,255,.54) !important;
-}
-
-.exercise.active-workout .sets{
-  gap:12px;
-  margin-top:4px;
-}
-
-.exercise.active-workout .setrow{
-  border-color:rgba(255,255,255,.12);
-  box-shadow:
-    0 12px 26px rgba(0,0,0,.14),
-    inset 0 1px 0 rgba(255,255,255,.03);
-}
-
-.exercise.active-workout .setcol .k{
-  color:rgba(255,255,255,.62) !important;
-  letter-spacing:.08em;
-}
-
-.exercise.active-workout .setinput{
-  font-size:17px;
-  font-weight:680;
-}
-
-.exercise.active-workout .donebtn{
-  border-color:rgba(255,255,255,.16);
-  color:#f2f6fb;
-  box-shadow:0 8px 18px rgba(0,0,0,.10);
-}
-
-.exercise.active-workout .compare.compact-last,
-.exercise.active-workout .field-grid,
-.exercise.active-workout .info-box{
-  box-shadow:none !important;
-}
-
-.exercise.active-workout .compare.compact-last{
-  opacity:.72;
-}
-
-.exercise.active-workout .last-time-summary{
-  color:rgba(255,255,255,.74) !important;
-}
-
-.exercise.active-workout .last-time-meta,
-.exercise.active-workout .field-grid .label,
-.exercise.active-workout .info-box .k{
-  color:rgba(255,255,255,.46) !important;
-}
-
-.exercise.active-workout .field-grid .field,
-.exercise.active-workout .field-grid .textarea,
-.exercise.active-workout .info-box{
-  background:rgba(10,20,34,.52) !important;
-  border-color:rgba(255,255,255,.08) !important;
-}
-
-/* --- Active workout — action hierarchy --- */
-.exercise.active-workout .exercise-actions .workout-inline-addset{
-  background:linear-gradient(180deg, rgba(19,35,60,.96), rgba(12,25,44,.98)) !important;
-  border-color:rgba(127,178,255,.26) !important;
-  color:#d7e6ff !important;
-  font-weight:760 !important;
-  box-shadow:none !important;
-}
-
-.exercise.active-workout .exercise-actions .workout-delete-btn{
-  background:transparent !important;
-  border-color:rgba(255,255,255,.10) !important;
-  border-style:dashed !important;
-  color:rgba(255,255,255,.58) !important;
-  box-shadow:none !important;
-}
-
-.exercise.active-workout .exercise-actions .workout-delete-btn:hover,
-.exercise.active-workout .exercise-actions .workout-delete-btn:focus-visible{
-  border-color:rgba(235,87,87,.24) !important;
-  color:#efc8cf !important;
-}
-
-.workout-end-actions .workout-footer-secondary{
-  background:linear-gradient(180deg, rgba(14,28,48,.96), rgba(10,22,39,.98)) !important;
-  border-color:rgba(255,255,255,.10) !important;
-  color:rgba(255,255,255,.78) !important;
-  box-shadow:none !important;
-}
-
-.workout-end-actions .workout-footer-primary{
-  border-color:rgba(242,201,76,.30) !important;
-}
-
-/* --- Responsive --- */
-@media (max-width:980px){
-  .add-card .section-title{
-    justify-content:center;
-    text-align:center;
-  }
-
-  .add-card .add-scope-row{
-    justify-content:center;
-    margin:4px 0 12px !important;
-  }
-}
-
 @media (max-width:640px){
-  .workout-mode-shell{
-    gap:14px;
-  }
-
-  .workout-focus-card{
-    padding:16px 14px;
-    border-radius:20px;
-  }
-
-  .workout-focus-card .section-title h3{
-    font-size:20px !important;
-  }
-
-  .workout-date-big{
-    font-size:22px;
-  }
-
-  .workout-progress-row{
-    gap:10px;
-  }
-
-  .workout-progress-pill{
-    width:42px;
-    height:42px;
-  }
-
-  .workout-nav-row{
-    flex-wrap:wrap;
-    justify-content:center;
-  }
-
-  .workout-nav-row .btn{
-    flex:1 1 140px;
-    min-width:0;
-  }
-
-  .timer-sheet{
-    border-radius:24px;
-    padding:16px;
-  }
-
-  .timer-display{
-    font-size:52px;
-  }
-
-  .timer-actions{
-    grid-template-columns:1fr;
-  }
-
   .last-time-card{
-    padding:11px;
+    padding:11px 11px;
     gap:9px;
   }
 
@@ -3027,15 +3446,75 @@ textarea.exercise-name{
   .last-time-date{
     font-size:10px;
   }
+}
 
+/* --- Add card --- */
+.add-card .section-title{
+  justify-content:flex-start;
+  text-align:left;
+  margin-bottom:14px !important;
+}
+.add-card .section-title h2{
+  width:100%;
+}
+.add-card .add-scope-row{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  width:100%;
+  margin:4px 0 14px !important;
+}
+.add-card .add-scope-row .select{
+  width:100%;
+  min-width:0;
+  max-width:none;
+  flex:1 1 auto;
+}
+.add-card .add-grid{
+  margin-top:0 !important;
+  gap:12px !important;
+  align-items:stretch !important;
+}
+.add-card .add-grid > .field,
+.add-card .add-grid > .select,
+.add-card .add-grid > .btn{
+  min-height:50px !important;
+  height:50px !important;
+  border-radius:15px !important;
+}
+.add-card .add-grid > .field,
+.add-card .add-grid > .select{
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+.add-card #addExerciseBtn{
+  font-weight:850 !important;
+  letter-spacing:.02em;
+  box-shadow:0 10px 22px rgba(242,201,76,.16), inset 0 1px 0 rgba(255,255,255,.12);
+}
+.add-card #addExerciseBtn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 14px 28px rgba(242,201,76,.18), inset 0 1px 0 rgba(255,255,255,.14);
+}
+.add-card #addExerciseBtn:active{
+  transform:scale(.985);
+}
+@media (max-width:980px){
+  .add-card .section-title{
+    justify-content:center;
+    text-align:center;
+  }
+  .add-card .add-scope-row{
+    justify-content:center;
+    margin:4px 0 12px !important;
+  }
+}
+@media (max-width:640px){
   .add-card .section-title{
     margin-bottom:12px !important;
   }
-
   .add-card .add-grid{
     gap:12px !important;
   }
-
   .add-card .add-grid > .field,
   .add-card .add-grid > .select,
   .add-card .add-grid > .btn{
@@ -3043,6 +3522,88 @@ textarea.exercise-name{
     height:48px !important;
     border-radius:14px !important;
   }
+}
+
+/* --- Active workout — exercise state --- */
+.exercise[data-anchor-match="1"]{
+  box-shadow:0 0 0 1px rgba(127,178,255,.22) inset;
+}
+.exercise.active-workout .exercise-meta{
+  color:rgba(255,255,255,.54) !important;
+}
+.exercise.active-workout .sets{
+  gap:12px;
+  margin-top:4px;
+}
+.exercise.active-workout .setrow{
+  border-color:rgba(255,255,255,.12);
+  box-shadow:
+    0 12px 26px rgba(0,0,0,.14),
+    inset 0 1px 0 rgba(255,255,255,.03);
+}
+.exercise.active-workout .setcol .k{
+  color:rgba(255,255,255,.62) !important;
+  letter-spacing:.08em;
+}
+.exercise.active-workout .setinput{
+  font-size:17px;
+  font-weight:680;
+}
+.exercise.active-workout .donebtn{
+  border-color:rgba(255,255,255,.16);
+  color:#f2f6fb;
+  box-shadow:0 8px 18px rgba(0,0,0,.10);
+}
+.exercise.active-workout .compare.compact-last,
+.exercise.active-workout .field-grid,
+.exercise.active-workout .info-box{
+  box-shadow:none !important;
+}
+.exercise.active-workout .compare.compact-last{
+  opacity:.72;
+}
+.exercise.active-workout .last-time-summary{
+  color:rgba(255,255,255,.74) !important;
+}
+.exercise.active-workout .last-time-meta,
+.exercise.active-workout .field-grid .label,
+.exercise.active-workout .info-box .k{
+  color:rgba(255,255,255,.46) !important;
+}
+.exercise.active-workout .field-grid .field,
+.exercise.active-workout .field-grid .textarea,
+.exercise.active-workout .info-box{
+  background:rgba(10,20,34,.52) !important;
+  border-color:rgba(255,255,255,.08) !important;
+}
+/* --- Active workout — action hierarchy --- */
+.exercise.active-workout .exercise-actions .workout-inline-addset{
+  background:linear-gradient(180deg, rgba(19,35,60,.96), rgba(12,25,44,.98)) !important;
+  border-color:rgba(127,178,255,.26) !important;
+  color:#d7e6ff !important;
+  font-weight:760 !important;
+  box-shadow:none !important;
+}
+.exercise.active-workout .exercise-actions .workout-delete-btn{
+  background:transparent !important;
+  border-color:rgba(255,255,255,.10) !important;
+  border-style:dashed !important;
+  color:rgba(255,255,255,.58) !important;
+  box-shadow:none !important;
+}
+.exercise.active-workout .exercise-actions .workout-delete-btn:hover,
+.exercise.active-workout .exercise-actions .workout-delete-btn:focus-visible{
+  border-color:rgba(235,87,87,.24) !important;
+  color:#efc8cf !important;
+}
+.workout-end-actions .workout-footer-secondary{
+  background:linear-gradient(180deg, rgba(14,28,48,.96), rgba(10,22,39,.98)) !important;
+  border-color:rgba(255,255,255,.10) !important;
+  color:rgba(255,255,255,.78) !important;
+  box-shadow:none !important;
+}
+.workout-end-actions .workout-footer-primary{
+  border-color:rgba(242,201,76,.30) !important;
 }
 
 /* =========================================
