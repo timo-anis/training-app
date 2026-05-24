@@ -2468,7 +2468,9 @@ body{
 }
 
 .exercise-name{
+  display:block;
   width:100%;
+  min-width:0;
   background:transparent;
   border:none;
   color:var(--text);
@@ -2478,6 +2480,24 @@ body{
   letter-spacing:-.024em;
   padding:0;
   outline:none;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+}
+input.exercise-name{
+  min-height:44px;
+  height:44px;
+  padding:10px 12px;
+  font-size:16px;
+  line-height:1.2;
+  font-weight:750;
+}
+textarea.exercise-name{
+  min-height:52px;
+  height:auto;
+  resize:none;
+  overflow:hidden;
+  padding:0;
 }
 
 .exercise.active-workout{
@@ -4561,39 +4581,6 @@ body{
 }
 
 /* =========================================
-   ITER38 — MOBILE INPUT AUTO-ZOOM HARD FIX
-   Scope locked to input font sizing only
-   CSS only — no JS / layout / flow changes
-========================================= */
-@media (max-width: 980px) {
-  input[type="text"],
-  input[type="number"],
-  input[type="email"],
-  input[type="password"],
-  input[type="search"],
-  input:not([type]),
-  select,
-  textarea,
-  .field,
-  .select,
-  .textarea,
-  .setinput,
-  .exercise .field,
-  .exercise .textarea,
-  .exercise .setinput,
-  .add-grid > .field,
-  .add-grid > .select,
-  .search-row .field,
-  .compact-search-card .field,
-  #searchInput,
-  #addExerciseName,
-  #authEmail,
-  #authPassword {
-    font-size: 16px !important;
-  }
-}
-
-/* =========================================
    ITER40 — RADAR VISUAL POLISH ONLY
    Base: iter39 confirmed working baseline
    Scope locked to radar-card zone only
@@ -4795,6 +4782,33 @@ body{
    Protected: auto-zoom fix, auth, overlays, render flow
 ========================================= */
 @media (max-width: 980px) {
+  /* Mobile input auto-zoom fix — prevent iOS Safari zoom on focus */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input:not([type]),
+  select,
+  textarea,
+  .field,
+  .select,
+  .textarea,
+  .setinput,
+  .exercise .field,
+  .exercise .textarea,
+  .exercise .setinput,
+  .add-grid > .field,
+  .add-grid > .select,
+  .search-row .field,
+  .compact-search-card .field,
+  #searchInput,
+  #addExerciseName,
+  #authEmail,
+  #authPassword {
+    font-size: 16px !important;
+  }
+
   .app {
     padding-bottom: 28px !important;
   }
@@ -6324,40 +6338,6 @@ body{
 
 
 
-/* =========================================
-   ITER76C — targeted fix pack
-   Scope locked to:
-   - timer dismiss on done
-   - rest field arrow logic
-   - long exercise name visibility
-========================================= */
-.exercise-name{
-  display:block !important;
-  width:100% !important;
-  min-width:0;
-  white-space:normal !important;
-  overflow:visible !important;
-  text-overflow:clip !important;
-}
-input.exercise-name{
-  min-height:44px;
-  height:44px;
-  padding:10px 12px !important;
-  font-size:16px !important;
-  line-height:1.2;
-  font-weight:750;
-}
-textarea.exercise-name{
-  min-height:52px;
-  height:auto;
-  resize:none;
-  overflow:hidden;
-  padding:0;
-}
-.left-main > div[style*="min-width:0"]{
-  min-width:0 !important;
-  width:100% !important;
-}
 
 </style>
 
