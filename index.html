@@ -105,7 +105,35 @@ input, select, textarea {
 .weekdays,.calendar-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:8px; }
 .weekdays div { text-align:center; color:var(--muted); font-size:11px; }
 .calendar-collapsible.is-collapsed .calendar-body{display:none;}
-.calendar-toggle{min-width:72px;text-align:center;}
+.calendar-toggle{
+  min-width:44px;
+  width:44px;
+  height:44px;
+  min-height:44px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  font-size:18px;
+  font-weight:900;
+  line-height:1;
+}
+.calendar-year-nav{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  width:100%;
+}
+.calendar-year-btn{
+  width:44px;
+  height:44px;
+  min-height:44px;
+  padding:0;
+  display:grid;
+  place-items:center;
+  border-radius:14px;
+  flex:0 0 44px;
+}
 .daycell {
   min-height:66px; border:1px solid var(--line); background:var(--panel2); border-radius:14px;
   padding:8px; position:relative; cursor:pointer;
@@ -420,7 +448,7 @@ input, select, textarea {
 .days-card .pills{justify-content:center;}
 .pill{text-align:center;min-width:86px;justify-content:center;}
 #monthTitle{font-size:24px;font-weight:900;letter-spacing:-.02em;color:#f4d98c;text-align:center;min-width:0;flex:1;display:flex;justify-content:center;}
-#monthTitle .month-pill{min-width:220px;}
+#monthTitle .month-pill{min-width:140px;display:inline-flex;align-items:center;justify-content:center;}
 .calendar-collapsible .section-title{align-items:center;}
 .calendar-collapsible .section-title > .row{width:100%;justify-content:center;}
 .calendar-collapsible .section-title h2{display:none;}
@@ -464,10 +492,11 @@ input, select, textarea {
   min-width:160px;
 }
 #monthSubtitle{
-  color:rgba(255,255,255,.44);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
+  color:rgba(255,255,255,.62);
+  font-size:18px;
+  text-transform:none;
+  letter-spacing:-.01em;
+  font-weight:650;
   text-align:center;
   margin-top:4px;
 }
@@ -543,6 +572,13 @@ input, select, textarea {
   #monthTitle{
     font-size:20px;
     min-width:0;
+  }
+  .calendar-year-nav{gap:8px;}
+  .calendar-year-btn,.calendar-toggle{
+    width:42px;
+    height:42px;
+    min-height:42px;
+    flex-basis:42px;
   }
 }
 
@@ -718,8 +754,19 @@ input, select, textarea {
 .backup-tools-card .status-note{margin-top:8px;text-align:center;}
 .backup-tools-card .account-actions{display:none;grid-template-columns:1fr;gap:10px;margin-top:10px;justify-items:center;}
 .backup-tools-card .account-actions .btn{width:min(100%,340px);}
-.backup-tools-card .account-actions .signout-btn{background:linear-gradient(180deg,#ffc247 0%,#ff9f0a 100%);border:1px solid rgba(255,194,71,.38);color:#1a1204;font-weight:900;letter-spacing:.04em;box-shadow:0 10px 24px rgba(255,159,10,.22), inset 0 1px 0 rgba(255,255,255,.22);justify-content:center;text-align:center;}
-.backup-tools-card .account-actions .signout-btn:active{transform:scale(.985);box-shadow:0 6px 14px rgba(255,159,10,.18), inset 0 1px 0 rgba(255,255,255,.18);}
+.backup-tools-card .account-actions .signout-btn {
+  background: linear-gradient(180deg, #ffc247 0%, #ff9f0a 100%);
+  border: 1px solid rgba(255,194,71,.42);
+  color: #1a1204;
+  font-weight: 900;
+  letter-spacing: .04em;
+  box-shadow: 0 10px 24px rgba(255,159,10,.22), inset 0 1px 0 rgba(255,255,255,.22);
+  justify-content: center;
+  text-align: center;
+}
+.backup-tools-card .account-actions .signout-btn:hover { filter: brightness(1.02); }
+.backup-tools-card .account-actions .signout-btn:active { transform: scale(.985); box-shadow: 0 6px 14px rgba(255,159,10,.18), inset 0 1px 0 rgba(255,255,255,.18); }
+.backup-tools-card .account-actions .signout-btn:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(255,194,71,.18), 0 10px 24px rgba(255,159,10,.22), inset 0 1px 0 rgba(255,255,255,.22); }
 @media (max-width:640px){
   .backup-tools-card .backup-actions{grid-template-columns:1fr;}
 }
@@ -1548,15 +1595,6 @@ body{
   color:#f4d98c;
   text-align:center;
   min-width:160px;
-}
-
-#monthSubtitle{
-  color:rgba(255,255,255,.44);
-  font-size:11px;
-  text-transform:uppercase;
-  letter-spacing:.08em;
-  text-align:center;
-  margin-top:4px;
 }
 
 .compact-search-card{
@@ -6117,25 +6155,6 @@ body{
 
 
 /* =========================================
-   ITER60b HOTFIX
-   Scope: backup card sign out contrast only
-   Restore strong gold primary appearance
-========================================= */
-.backup-tools-card .account-actions .signout-btn{
-  background:linear-gradient(180deg,#ffc247 0%,#ff9f0a 100%) !important;
-  border:1px solid rgba(255,194,71,.42) !important;
-  color:#1a1204 !important;
-  box-shadow:0 10px 24px rgba(255,159,10,.22), inset 0 1px 0 rgba(255,255,255,.22) !important;
-}
-.backup-tools-card .account-actions .signout-btn:hover{
-  filter:brightness(1.02);
-}
-.backup-tools-card .account-actions .signout-btn:focus-visible{
-  outline:none;
-  box-shadow:0 0 0 3px rgba(255,194,71,.18), 0 10px 24px rgba(255,159,10,.22), inset 0 1px 0 rgba(255,255,255,.22) !important;
-}
-
-/* =========================================
    ITER67 — WORKOUT ACTION HIERARCHY CLEANUP
    Scope: workout-mode button emphasis only
    - finish stays primary
@@ -6229,74 +6248,6 @@ body{
 
 
 
-/* =========================================
-   ITER66 — CALENDAR HIERARCHY + SOFTER COLOR PASS
-   Scope: calendar visual layer only
-   - remove week number from day cells
-   - year in top pill
-   - month name in navigation subtitle
-   - soften day-type colors
-   - subtle green today state
-========================================= */
-#monthSubtitle{
-  color:rgba(255,255,255,.62) !important;
-  font-size:18px !important;
-  text-transform:none !important;
-  letter-spacing:-.01em !important;
-  font-weight:650 !important;
-}
-#monthTitle .month-pill{
-  min-width:140px;
-}
-
-/* =========================================
-   ITER67b — calendar visual correction
-   Scope: year nav alignment + Wednesday dot cleanup + compact collapse button
-========================================= */
-.calendar-year-nav{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  width:100%;
-}
-.calendar-year-btn{
-  width:44px;
-  height:44px;
-  min-height:44px;
-  padding:0;
-  display:grid;
-  place-items:center;
-  border-radius:14px;
-  flex:0 0 44px;
-}
-#monthTitle .month-pill{
-  min-width:140px;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-}
-.calendar-toggle{
-  min-width:44px !important;
-  width:44px;
-  height:44px;
-  min-height:44px !important;
-  padding:0 !important;
-  display:grid;
-  place-items:center;
-  font-size:18px;
-  font-weight:900;
-  line-height:1;
-}
-@media (max-width:640px){
-  .calendar-year-nav{gap:8px;}
-  .calendar-year-btn,.calendar-toggle{
-    width:42px;
-    height:42px;
-    min-height:42px !important;
-    flex-basis:42px;
-  }
-}
 
 
 
