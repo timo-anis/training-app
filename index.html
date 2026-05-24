@@ -7177,8 +7177,6 @@ function verifyMigrationIntegrity(original, migrated) {
   // Log warnings
   if (warnings.length > 0) {
     console.warn("[Migration Verification] Potential data changes detected:", warnings);
-  } else {
-    console.log("[Migration Verification] State integrity verified — no unexpected changes.");
   }
   return warnings;
 }
