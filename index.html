@@ -3953,10 +3953,411 @@ textarea.exercise-name{
 }
 
 /* =========================================
-   ITER58 — workout card readability polish
-   Scope: exercise + set rows only
-   CSS only — no logic / structure changes
+   ZONE 6 — MOBILE SPACING NORMALIZATION
+   Restored from ITER41 (accidentally removed in Zone 7 consolidation)
+   Scope: global mobile/tablet spacing rhythm
+   CSS only — no JS / DOM / auth / overlay changes
+   Protected: auto-zoom fix, auth, overlays, render flow
 ========================================= */
+@media (max-width:980px){
+  /* iOS Safari auto-zoom fix — inputs must be 16px to prevent zoom */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input:not([type]),
+  select,
+  textarea,
+  .field,
+  .select,
+  .textarea,
+  .setinput,
+  .exercise .field,
+  .exercise .textarea,
+  .exercise .setinput,
+  .add-grid > .field,
+  .add-grid > .select,
+  .search-row .field,
+  .compact-search-card .field,
+  #searchInput,
+  #addExerciseName,
+  #authEmail,
+  #authPassword{
+    font-size:16px !important;
+  }
+
+  .app{
+    padding-bottom:28px !important;
+  }
+
+  .left,
+  .right,
+  .exercise-list,
+  #searchResultsHost{
+    gap:18px !important;
+  }
+
+  .card,
+  .metric,
+  .block-group{
+    border-radius:20px !important;
+  }
+
+  .card,
+  .metric{
+    padding:15px 14px !important;
+  }
+
+  .section-title{
+    margin-bottom:12px !important;
+  }
+
+  .exercise{
+    padding:15px 13px !important;
+  }
+
+  .exercise-main,
+  .left-main{
+    gap:12px !important;
+  }
+
+  .compare.compact-last,
+  .field-grid,
+  .sets,
+  .exercise-actions,
+  .finish-workout-row{
+    margin-top:14px !important;
+  }
+
+  .setrow{
+    margin:0 !important;
+    padding:9px !important;
+    gap:8px !important;
+  }
+
+  .setcol .k{
+    margin-bottom:6px !important;
+  }
+
+  .setinput,
+  .field,
+  .select,
+  .textarea,
+  .donebtn,
+  .setdeletebtn,
+  .setn,
+  .exercise-actions .btn,
+  .finish-workout-btn,
+  .finish-workout-inline-btn,
+  .workout-nav-row .btn,
+  .workout-progress-pill,
+  .add-grid > .btn,
+  .add-grid > .field,
+  .add-grid > .select{
+    min-height:44px !important;
+  }
+
+  .exercise-actions{
+    gap:10px !important;
+  }
+
+  .exercise-actions .btn{
+    padding-left:14px !important;
+    padding-right:14px !important;
+  }
+}
+
+@media (max-width:640px){
+  .app{
+    padding:10px 10px 22px !important;
+  }
+
+  .topbar{
+    margin:-10px -10px 16px !important;
+    padding-left:10px !important;
+    padding-right:10px !important;
+  }
+
+  .topbar-inner,
+  .topbar-main{
+    gap:10px !important;
+  }
+
+  .metrics{
+    gap:10px !important;
+    margin-bottom:16px !important;
+  }
+
+  .layout,
+  .left,
+  .right,
+  .exercise-list,
+  #searchResultsHost{
+    gap:16px !important;
+  }
+
+  .card,
+  .metric{
+    padding:14px 12px !important;
+    border-radius:18px !important;
+  }
+
+  .days-card,
+  .compact-search-card,
+  .radar-card,
+  .add-card,
+  .backup-tools-card,
+  .block-group,
+  .workout-focus-card,
+  .search-results-card{
+    margin:0 !important;
+  }
+
+  .section-title{
+    margin-bottom:10px !important;
+  }
+
+  .calendar-head,
+  .legend,
+  .add-grid,
+  .backup-tools-card .backup-actions,
+  .backup-tools-card .account-actions,
+  .workout-progress-row,
+  .workout-nav-row{
+    gap:8px !important;
+  }
+
+  .add-grid{
+    margin-top:8px !important;
+  }
+
+  .exercise{
+    padding:14px 12px !important;
+  }
+
+  .exercise-main,
+  .left-main{
+    gap:10px !important;
+  }
+
+  .compare.compact-last{
+    margin-top:12px !important;
+  }
+
+  .field-grid{
+    gap:8px !important;
+    margin-top:12px !important;
+  }
+
+  .exercise .field,
+  .exercise .textarea,
+  .field-grid .field,
+  .field-grid .textarea,
+  .add-grid > .field,
+  .add-grid > .select,
+  .add-grid > .btn,
+  .compact-search-card .field,
+  .search-row .field{
+    min-height:46px !important;
+  }
+
+  .sets{
+    gap:8px !important;
+    margin-top:12px !important;
+  }
+
+  .setrow{
+    grid-template-columns:44px 1fr 1fr 72px 42px 42px !important;
+    gap:7px !important;
+    padding:8px !important;
+    border-radius:16px !important;
+    min-height:72px !important;
+  }
+
+  .setn,
+  .setinput,
+  .donebtn,
+  .setdeletebtn{
+    height:42px !important;
+    min-height:42px !important;
+  }
+
+  .setinput{
+    padding:9px 9px !important;
+  }
+
+  .setcol .k{
+    margin-bottom:5px !important;
+  }
+
+  .exercise-actions{
+    gap:8px !important;
+    margin-top:12px !important;
+  }
+
+  .exercise-actions .btn{
+    min-height:42px !important;
+    border-radius:13px !important;
+  }
+
+  .finish-workout-row{
+    margin:16px 0 0 !important;
+  }
+
+  .finish-workout-btn{
+    min-height:50px !important;
+    max-width:340px !important;
+  }
+
+  .workout-focus-card{
+    padding:16px 14px !important;
+  }
+}
+
+/* =========================================
+   ZONE 8 — WORKOUT + FINISH FLOW
+   Consolidated from ITER58, 59, 60, 74
+   CSS only — no JS / data / render / auth / overlay changes
+========================================= */
+
+/* --- Global UI tokens (ITER60, inlined) --- */
+.card,
+.metric,
+.block-group,
+.search-item,
+.finish-summary-card,
+.workout-focus-card,
+.empty-state,
+.info-box{
+  border-radius:20px;
+}
+
+.btn,
+.field,
+.select,
+.textarea,
+.setinput,
+.codebox,
+.donebtn,
+.setdeletebtn,
+.calendar-title-nav,
+.calendar-hide-btn,
+.search-open,
+.workout-progress-pill,
+.finish-summary-done,
+.finish-workout-btn,
+.finish-workout-inline-btn{
+  border-radius:14px;
+}
+
+.pill,
+.badge,
+.sync-pill,
+.month-pill,
+.segmented,
+.segmented button{
+  border-radius:999px;
+}
+
+.card,
+.metric,
+.block-group,
+.search-item,
+.workout-focus-card,
+.finish-summary-card{
+  box-shadow:0 16px 36px rgba(0,0,0,.24);
+}
+
+.section-title{
+  margin:0 0 12px !important;
+  align-items:center;
+}
+
+.section-title h2,
+.section-title h3{
+  line-height:1.16 !important;
+}
+
+.section-title .meta,
+.help,
+.legend-item,
+.search-item .meta,
+.daycell .w,
+.sync-pill,
+#syncStatus,
+.workout-focus-note,
+.timer-hint,
+.empty-state{
+  color:#9db0c8 !important;
+}
+
+.info-box .v,
+.metric .s,
+.finish-summary-subline{
+  color:#c9d5e4;
+}
+
+.metric .k,
+.info-box .k,
+.setcol .k,
+.label,
+.finish-summary-stat .k{
+  letter-spacing:.08em !important;
+}
+
+.btn{
+  font-weight:700 !important;
+}
+
+.btn:not(.primary):not(.gold):not(#workoutModeBtn):not(.finish-workout-btn):not(.finish-workout-inline-btn):not(.finish-summary-done){
+  background:linear-gradient(180deg, rgba(19,35,60,.96), rgba(12,25,44,.98));
+}
+
+.field,
+.select,
+.textarea,
+.setinput{
+  border-color:rgba(58,78,111,.82);
+}
+
+.field::placeholder,
+.textarea::placeholder,
+.setinput::placeholder{
+  color:#8297b2;
+}
+
+.metric,
+.info-box,
+.finish-summary-stat,
+.search-item,
+.empty-state{
+  border-color:rgba(255,255,255,.08);
+}
+
+.search-item .name,
+.exercise-name,
+.finish-summary-title,
+.workout-date-big{
+  letter-spacing:-.02em;
+}
+
+.finish-summary-grid,
+.radar-legend,
+.metrics,
+.add-grid{
+  gap:12px;
+}
+
+.exercise-actions,
+.workout-nav-row,
+.workout-progress-row,
+.legend,
+.pills{
+  gap:10px;
+}
+
+/* --- Exercise + set cards (ITER58) --- */
 .exercise{
   background:linear-gradient(180deg, rgba(16,27,43,.98), rgba(12,22,37,.98));
 }
@@ -4061,7 +4462,7 @@ textarea.exercise-name{
 
 .exercise-meta{
   margin-top:6px;
-  color:#9ab0ca !important;
+  color:#9db0c8 !important;
 }
 
 .compare .info-box{
@@ -4069,81 +4470,64 @@ textarea.exercise-name{
   border-color:rgba(255,255,255,.06);
 }
 
-@media (max-width:640px){
-  .sets{
-    gap:8px;
-  }
-
-  .setrow{
-    grid-template-columns:44px 1fr 1fr 70px 40px 40px;
-    min-height:70px;
-    gap:7px;
-    padding:8px;
-    border-radius:16px;
-  }
-
-  .setn,
-  .donebtn{
-    height:42px;
-  }
-
-  .donebtn{
-    width:42px;
-  }
-
-  .setdeletebtn{
-    width:42px;
-    height:42px;
-  }
-
-  .exercise-name{
-    font-size:18px !important;
-  }
+/* --- Finish workout CTA + summary (ITER59 + ITER74 merged) --- */
+.finish-workout-row{
+  position:relative;
+  justify-content:center;
+  margin:22px 0 10px !important;
 }
 
-
-
-/* =========================================
-   ITER59 — FINISH WORKOUT EXPERIENCE POLISH
-   Scope: finish CTA + summary visual confidence
-   CSS only — no logic / render / overlay wiring changes
-========================================= */
 @media (min-width:981px){
   .finish-workout-row{
     margin:24px 0 6px !important;
   }
 }
 
-.finish-workout-row{
-  position:relative;
-  justify-content:center;
-}
-
 .finish-workout-btn{
   position:relative;
-  min-height:56px !important;
-  min-width:min(100%, 380px) !important;
-  padding:0 24px !important;
-  border-radius:18px !important;
+  min-height:60px !important;
+  min-width:min(100%, 390px) !important;
+  padding:0 26px !important;
+  border-radius:20px !important;
   font-size:16px !important;
   font-weight:900 !important;
   letter-spacing:.05em !important;
+  text-transform:uppercase;
+  background:linear-gradient(180deg, #ffcb57 0%, #ffab1f 100%) !important;
+  border:1px solid rgba(255,194,71,.44) !important;
+  color:#1a1204 !important;
   box-shadow:
-    0 18px 36px rgba(255,159,10,.22),
-    0 8px 18px rgba(0,0,0,.16),
-    inset 0 1px 0 rgba(255,255,255,.26) !important;
+    0 20px 38px rgba(255,159,10,.28),
+    0 10px 20px rgba(0,0,0,.16),
+    inset 0 1px 0 rgba(255,255,255,.28) !important;
 }
 
 .finish-workout-btn:hover{
   transform:translateY(-1px);
   box-shadow:
-    0 22px 40px rgba(255,159,10,.24),
-    0 10px 20px rgba(0,0,0,.18),
+    0 24px 42px rgba(255,159,10,.30),
+    0 12px 22px rgba(0,0,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.30) !important;
+}
+
+.finish-workout-btn:active{
+  transform:scale(.985);
+}
+
+.finish-workout-btn:focus-visible{
+  outline:none;
+  box-shadow:
+    0 0 0 3px rgba(255,194,71,.18),
+    0 20px 38px rgba(255,159,10,.28),
+    0 10px 20px rgba(0,0,0,.16),
     inset 0 1px 0 rgba(255,255,255,.28) !important;
 }
 
 .finish-workout-btn::before{
+  content:"✓";
+  display:inline-block;
   margin-right:12px !important;
+  font-weight:900;
 }
 
 .finish-summary-overlay{
@@ -4230,183 +4614,12 @@ textarea.exercise-name{
     inset 0 1px 0 rgba(255,255,255,.24) !important;
 }
 
-@media (max-width:640px){
-  .finish-workout-row{
-    margin:18px 0 6px !important;
-  }
-  .finish-workout-btn{
-    width:100%;
-    max-width:340px;
-    min-height:54px !important;
-    font-size:15px !important;
-  }
-  .finish-summary-card{
-    padding:24px 18px 20px !important;
-    border-radius:24px !important;
-  }
-  .finish-summary-title{
-    font-size:32px !important;
-  }
-  .finish-summary-grid{
-    gap:9px !important;
-  }
-  .finish-summary-stat{
-    padding:13px 8px !important;
-    border-radius:18px !important;
-  }
-  .finish-summary-stat .v{
-    font-size:21px !important;
-  }
-}
-
-
-
-/* =========================================
-   ITER60 — FINAL UI CONSISTENCY PASS
-   Scope: CSS only
-   Purpose: unify rhythm, hierarchy, and control feel
-   No DOM / JS / render / auth / overlay logic changes
-========================================= */
-:root{
-  --iter60-radius-card:20px;
-  --iter60-radius-control:14px;
-  --iter60-radius-pill:999px;
-  --iter60-shadow-card:0 16px 36px rgba(0,0,0,.24);
-  --iter60-text-soft:#c9d5e4;
-  --iter60-text-meta:#9db0c8;
-}
-
-.card,
-.metric,
-.block-group,
-.search-item,
-.finish-summary-card,
-.workout-focus-card,
-.empty-state,
-.info-box{
-  border-radius:var(--iter60-radius-card);
-}
-
-.btn,
-.field,
-.select,
-.textarea,
-.setinput,
-.codebox,
-.donebtn,
-.setdeletebtn,
-.calendar-title-nav,
-.calendar-hide-btn,
-.search-open,
-.workout-progress-pill,
-.finish-summary-done,
-.finish-workout-btn,
-.finish-workout-inline-btn{
-  border-radius:var(--iter60-radius-control);
-}
-
-.pill,
-.badge,
-.sync-pill,
-.month-pill,
-.segmented,
-.segmented button{
-  border-radius:var(--iter60-radius-pill);
-}
-
-.card,
-.metric,
-.block-group,
-.search-item,
-.workout-focus-card,
-.finish-summary-card{
-  box-shadow:var(--iter60-shadow-card);
-}
-
-.section-title{
-  margin:0 0 12px !important;
-  align-items:center;
-}
-.section-title h2,
-.section-title h3{
-  line-height:1.16 !important;
-}
-.section-title .meta,
-.help,
-.legend-item,
-.exercise-meta,
-.search-item .meta,
-.daycell .w,
-.sync-pill,
-#syncStatus,
-.workout-focus-note,
-.timer-hint,
-.empty-state{
-  color:var(--iter60-text-meta) !important;
-}
-.info-box .v,
-.metric .s,
-.finish-summary-subline{
-  color:var(--iter60-text-soft);
-}
-
-.metric .k,
-.info-box .k,
-.setcol .k,
-.label,
-.finish-summary-stat .k{
-  letter-spacing:.08em !important;
-}
-
-.btn{
-  font-weight:700 !important;
-}
-.btn:not(.primary):not(.gold):not(#workoutModeBtn):not(.finish-workout-btn):not(.finish-workout-inline-btn):not(.finish-summary-done){
-  background:linear-gradient(180deg, rgba(19,35,60,.96), rgba(12,25,44,.98));
-}
-
-.field,
-.select,
-.textarea,
-.setinput{
-  border-color:rgba(58,78,111,.82);
-}
-.field::placeholder,
-.textarea::placeholder,
-.setinput::placeholder{
-  color:#8297b2;
-}
-
-.metric,
-.info-box,
-.finish-summary-stat,
-.search-item,
-.empty-state{
-  border-color:rgba(255,255,255,.08);
-}
-
-.search-item .name,
-.exercise-name,
-.finish-summary-title,
-.workout-date-big{
-  letter-spacing:-.02em;
-}
-
-.finish-summary-grid,
-.radar-legend,
-.metrics,
-.add-grid{
-  gap:12px;
-}
-.exercise-actions,
-.workout-nav-row,
-.workout-progress-row,
-.legend,
-.pills{
-  gap:10px;
-}
+/* =====================
+   RESPONSIVE
+   ===================== */
 
 @media (max-width:640px){
+  /* global tokens */
   .card,
   .metric,
   .block-group,
@@ -4417,6 +4630,7 @@ textarea.exercise-name{
   .info-box{
     border-radius:18px;
   }
+
   .btn,
   .field,
   .select,
@@ -4433,73 +4647,43 @@ textarea.exercise-name{
   .finish-workout-inline-btn{
     border-radius:12px;
   }
+
   .section-title{
     margin-bottom:10px !important;
   }
-}
 
+  /* exercise + set cards */
+  .sets{
+    gap:8px;
+  }
 
+  .setrow{
+    grid-template-columns:44px 1fr 1fr 70px 40px 40px;
+    min-height:70px;
+    gap:7px;
+    padding:8px;
+    border-radius:16px;
+  }
 
+  .setn,
+  .donebtn{
+    height:42px;
+  }
 
+  .donebtn{
+    width:42px;
+  }
 
+  .setdeletebtn{
+    width:42px;
+    height:42px;
+  }
 
-/* =========================================
-   ITER74 — WORKOUT DONE BUTTON VISUAL ONLY
-   Base: iter73d confirmed working
-   Scope locked strictly to Workout Done button only
-   CSS only — no bottom action row / overlay / logic changes
-========================================= */
-.finish-workout-row{
-  margin:22px 0 10px !important;
-}
+  .exercise-name{
+    font-size:18px !important;
+  }
 
-.finish-workout-btn{
-  min-height:60px !important;
-  min-width:min(100%, 390px) !important;
-  padding:0 26px !important;
-  border-radius:20px !important;
-  font-size:16px !important;
-  font-weight:900 !important;
-  letter-spacing:.05em !important;
-  background:linear-gradient(180deg,#ffcb57 0%, #ffab1f 100%) !important;
-  border:1px solid rgba(255,194,71,.44) !important;
-  color:#1a1204 !important;
-  box-shadow:
-    0 20px 38px rgba(255,159,10,.28),
-    0 10px 20px rgba(0,0,0,.16),
-    inset 0 1px 0 rgba(255,255,255,.28) !important;
-  text-transform:uppercase;
-}
-
-.finish-workout-btn:hover{
-  transform:translateY(-1px);
-  box-shadow:
-    0 24px 42px rgba(255,159,10,.30),
-    0 12px 22px rgba(0,0,0,.18),
-    inset 0 1px 0 rgba(255,255,255,.30) !important;
-}
-
-.finish-workout-btn:active{
-  transform:scale(.985);
-}
-
-.finish-workout-btn:focus-visible{
-  outline:none;
-  box-shadow:
-    0 0 0 3px rgba(255,194,71,.18),
-    0 20px 38px rgba(255,159,10,.28),
-    0 10px 20px rgba(0,0,0,.16),
-    inset 0 1px 0 rgba(255,255,255,.28) !important;
-}
-
-.finish-workout-btn::before{
-  content:"✓";
-  display:inline-block;
-  margin-right:12px;
-  font-weight:900;
-}
-
-@media (max-width:640px){
+  /* finish workout */
   .finish-workout-row{
     margin:18px 0 8px !important;
   }
@@ -4512,10 +4696,29 @@ textarea.exercise-name{
     border-radius:18px !important;
     font-size:15px !important;
   }
+
+  .finish-summary-card{
+    padding:24px 18px 20px !important;
+    border-radius:24px !important;
+  }
+
+  .finish-summary-title{
+    font-size:32px !important;
+  }
+
+  .finish-summary-grid{
+    gap:9px !important;
+  }
+
+  .finish-summary-stat{
+    padding:13px 8px !important;
+    border-radius:18px !important;
+  }
+
+  .finish-summary-stat .v{
+    font-size:21px !important;
+  }
 }
-
-
-
 
 </style>
 
