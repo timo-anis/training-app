@@ -7003,12 +7003,7 @@ const MUSCLE_HINTS = {
 // ===== UTILITIES =====
 function structured(x) { return JSON.parse(JSON.stringify(x)); }
 function num(val) {
-  if(V2_INPUT?.num) return V2_INPUT.num(val);
-  if (val === null || val === undefined || val === "") return null;
-  const normalized = String(val).replace(",", ".").trim();
-  if (!normalized) return null;
-  const parsed = parseFloat(normalized);
-  return Number.isNaN(parsed) ? null : parsed;
+  return V2_INPUT.num(val);
 }
 function esc(v) { return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;"); }
 function fmtShortDate(d) { return d.toLocaleDateString("en-GB", {day:"2-digit",month:"short"}); }
@@ -7800,11 +7795,7 @@ function getSet(week,day,ex,i) {
   return state[key];
 }
 function setVolume(s) {
-  if(V2_INPUT?.setVolume) return V2_INPUT.setVolume(s);
-  const kg=num(s.kg), reps=num(s.reps);
-  if(!Number.isNaN(kg)&&!Number.isNaN(reps)) return Math.round(kg*reps);
-  if(!Number.isNaN(reps)) return Math.round(reps);
-  return "";
+  return V2_INPUT.setVolume(s);
 }
 function isRecoveryLike(week,day,ex) {
   const cfg = getExerciseConfig(exerciseName(week,day,ex));
@@ -7875,37 +7866,22 @@ function dateToProgramDay(date) {
   return { ...slot, status: dayStatus(slot.week, slot.day) };
 }
 function formatSetSummaryLine(set) {
-  if(V2_SUMMARY?.formatSetSummaryLine) return V2_SUMMARY.formatSetSummaryLine(set);
-  return `${set?.kg || "—"} × ${set?.reps || "—"}`;
+  return V2_SUMMARY.formatSetSummaryLine(set);
 }
 function buildSetSummary(sets) {
-  if(V2_SUMMARY?.buildSetSummary) return V2_SUMMARY.buildSetSummary(sets);
-  return (Array.isArray(sets) ? sets : []).map(formatSetSummaryLine).join(" • ");
+  return V2_SUMMARY.buildSetSummary(sets);
 }
 function countTotalSets(sets) {
-  if(V2_SUMMARY?.countTotalSets) return V2_SUMMARY.countTotalSets(sets);
-  return Array.isArray(sets) ? sets.length : 0;
+  return V2_SUMMARY.countTotalSets(sets);
 }
 function countCompletedSets(sets) {
-  if(V2_SUMMARY?.countCompletedSets) return V2_SUMMARY.countCompletedSets(sets);
-  return (Array.isArray(sets) ? sets : []).reduce((sum, set) => {
-    return sum + (String(set?.done || "") === "1" ? 1 : 0);
-  }, 0);
+  return V2_SUMMARY.countCompletedSets(sets);
 }
 function sumExerciseVolume(sets) {
-  if(V2_SUMMARY?.sumExerciseVolume) return V2_SUMMARY.sumExerciseVolume(sets);
-  return (Array.isArray(sets) ? sets : []).reduce((sum, set) => {
-    const volume = setVolume(set);
-    if(!volume) return sum;
-    return sum + (Number(volume) || 0);
-  }, 0);
+  return V2_SUMMARY.sumExerciseVolume(sets);
 }
 function formatSetRowDisplay(set, index) {
-  if(V2_SUMMARY?.formatSetRowDisplay) return V2_SUMMARY.formatSetRowDisplay(set, index);
-  return {
-    setNumber: String(Number(index) + 1),
-    volume: String(setVolume(set) || "")
-  };
+  return V2_SUMMARY.formatSetRowDisplay(set, index);
 }
 function exerciseSetsSummary(week,day,ex) {
   const sets=[], c=setCountOf(week,day,ex);
@@ -7960,24 +7936,13 @@ function historyPreview(displayName) {
   };
 }
 function normalizeQuery(query) {
-  if(V2_SEARCH?.normalizeQuery) return V2_SEARCH.normalizeQuery(query);
-  return String(query || "").trim().toLowerCase();
+  return V2_SEARCH.normalizeQuery(query);
 }
 function matchExerciseName(name, query) {
-  if(V2_SEARCH?.matchExerciseName) return V2_SEARCH.matchExerciseName(name, query);
-  const q = normalizeQuery(query);
-  if(!q) return true;
-  const nameLower = String(name || "").trim().toLowerCase();
-  return nameLower.startsWith(q);
+  return V2_SEARCH.matchExerciseName(name, query);
 }
 function filterExercises(list, query) {
-  if(V2_SEARCH?.filterExercises) return V2_SEARCH.filterExercises(list, query);
-  const q = normalizeQuery(query);
-  if(!q) return Array.isArray(list) ? list.slice() : [];
-  return (Array.isArray(list) ? list : []).filter(item => {
-    const name = typeof item === "string" ? item : item?.name;
-    return matchExerciseName(name, q);
-  });
+  return V2_SEARCH.filterExercises(list, query);
 }
 function matchesExerciseSearchQuery(name, exId, code, query) {
   return matchExerciseName(name, query);
@@ -8141,37 +8106,16 @@ function computeRadarLifetime() {
 // ===== UI STATE =====
 const UI_SELECTION_KEY = "timo_training_ui_selection_v1";
 function normalizePersistedUiSelectionValue(selection) {
-  if(V2_CALENDAR?.normalizePersistedUiSelection) {
-    return V2_CALENDAR.normalizePersistedUiSelection(selection, DAY_ORDER);
-  }
-  if(!selection || typeof selection !== "object") return null;
-  const week = Number(selection.week);
-  const day = String(selection.day || "");
-  if(!Number.isFinite(week) || week < 1) return null;
-  if(!DAY_ORDER.includes(day)) return null;
-  return { week: Math.floor(week), day };
+  return V2_CALENDAR.normalizePersistedUiSelection(selection, DAY_ORDER);
 }
 function getInitialUiSelectionState(persistedSelection) {
-  if(V2_CALENDAR?.buildInitialUiSelection) {
-    return V2_CALENDAR.buildInitialUiSelection({
-      persistedSelection,
-      dayOrder: DAY_ORDER,
-      initialWeek: getInitialWeek(),
-      getFirstDay,
-      dayDate
-    });
-  }
-  const normalized = normalizePersistedUiSelectionValue(persistedSelection);
-  const initialWeek = normalized?.week ?? getInitialWeek();
-  const initialDay = normalized?.day ?? getFirstDay(initialWeek);
-  const initialDate = dayDate(initialWeek, initialDay);
-  return {
-    persistedSelection: normalized,
-    initialWeek,
-    initialDay,
-    initialDate,
-    month: new Date(initialDate.getFullYear(), initialDate.getMonth(), 1)
-  };
+  return V2_CALENDAR.buildInitialUiSelection({
+    persistedSelection,
+    dayOrder: DAY_ORDER,
+    initialWeek: getInitialWeek(),
+    getFirstDay,
+    dayDate
+  });
 }
 function loadPersistedUiSelection(user) {
   try {
@@ -8224,15 +8168,10 @@ function getFilteredWorkoutGroupCount() {
   return getWorkoutGroups(getFilteredExercisesForCurrentDay()).length;
 }
 function clampActiveExerciseIndex() {
-  ui.activeExerciseIndex = V2_WORKOUT_RUNTIME?.clampActiveWorkoutIndex
-    ? V2_WORKOUT_RUNTIME.clampActiveWorkoutIndex({
-        activeIndex: ui.activeExerciseIndex,
-        groupCount: getFilteredWorkoutGroupCount()
-      })
-    : Math.min(
-        Math.max(0, getFilteredWorkoutGroupCount() - 1),
-        Math.max(0, Number(ui.activeExerciseIndex) || 0)
-      );
+  ui.activeExerciseIndex = V2_WORKOUT_RUNTIME.clampActiveWorkoutIndex({
+    activeIndex: ui.activeExerciseIndex,
+    groupCount: getFilteredWorkoutGroupCount()
+  });
 }
 
 function buildFocusRestoreSelector(el) {
@@ -8403,129 +8342,43 @@ function getWorkoutStatsSafe() {
   return { exs, totalSets, doneSets, totalVol };
 }
 function buildMetricsMarkup(input) {
-  if(V2_RENDER_METRICS?.buildMetricsMarkup) return V2_RENDER_METRICS.buildMetricsMarkup(input);
-  const week = Number(input?.week) || 0;
-  const weekRange = String(input?.weekRange || "");
-  const dayLabel = String(input?.dayLabel || "");
-  const fullDate = String(input?.fullDate || "");
-  const groups = Number(input?.groups) || 0;
-  const exerciseCount = Number(input?.exerciseCount) || 0;
-  const totalVolume = Number(input?.totalVolume) || 0;
-  const doneSets = Number(input?.doneSets) || 0;
-  const totalSets = Number(input?.totalSets) || 0;
-  const volumeText = totalVolume ? `${totalVolume.toLocaleString("en-GB")} kg` : "0 kg";
-  return `
-    <div class="metric"><div class="k">Week</div><div class="v">W${week}</div><div class="s">${weekRange}</div></div>
-    <div class="metric"><div class="k">Day</div><div class="v">${dayLabel}</div><div class="s">${fullDate}</div></div>
-    <div class="metric"><div class="k">Blocks</div><div class="v">${groups || 0}</div><div class="s">${exerciseCount} exercises</div></div>
-    <div class="metric"><div class="k">Volume</div><div class="v">${volumeText}</div><div class="s">${doneSets} / ${totalSets} sets done</div></div>
-  `;
+  return V2_RENDER_METRICS.buildMetricsMarkup(input);
 }
 function buildWorkoutHeaderMarkup(input) {
-  if(V2_RENDER_WORKOUT_HEADER?.buildWorkoutHeaderMarkup) return V2_RENDER_WORKOUT_HEADER.buildWorkoutHeaderMarkup(input);
-  const dateDisplay = String(input?.dateDisplay || "");
-  const title = String(input?.title || "");
-  const summaryMarkup = String(input?.summaryMarkup || "");
-  const progressMarkup = String(input?.progressMarkup || "");
-  const navMarkup = String(input?.navMarkup || "");
-  return `<div class="card workout-focus-card"><div class="workout-date-big">${dateDisplay}</div><div class="section-title"><h3>${title}</h3></div>${summaryMarkup}${progressMarkup}${navMarkup}</div>`;
+  return V2_RENDER_WORKOUT_HEADER.buildWorkoutHeaderMarkup(input);
 }
 function buildWorkoutContainerMarkup(input) {
-  if(V2_RENDER_WORKOUT_CONTAINER?.buildWorkoutContainerMarkup) return V2_RENDER_WORKOUT_CONTAINER.buildWorkoutContainerMarkup(input);
-  const headerMarkup = String(input?.headerMarkup || "");
-  const contentMarkup = String(input?.contentMarkup || "");
-  const emptyMarkup = String(input?.emptyMarkup || "");
-  const hasContent = !!input?.hasContent;
-  return `${headerMarkup}${hasContent ? contentMarkup : emptyMarkup}`;
+  return V2_RENDER_WORKOUT_CONTAINER.buildWorkoutContainerMarkup(input);
 }
 function buildExerciseShellMarkup(input) {
-  if(V2_RENDER_EXERCISE?.buildExerciseShellMarkup) return V2_RENDER_EXERCISE.buildExerciseShellMarkup(input);
-  const exerciseClass = String(input?.exerciseClass || "");
-  const exerciseId = String(input?.exerciseId || "");
-  const mainMarkup = String(input?.mainMarkup || "");
-  const compareMarkup = String(input?.compareMarkup || "");
-  const detailsMarkup = String(input?.detailsMarkup || "");
-  const actionsMarkup = String(input?.actionsMarkup || "");
-  return `<div class="exercise ${exerciseClass}" data-exercise-card="${exerciseId}">${mainMarkup}${compareMarkup}${detailsMarkup}${actionsMarkup}</div>`;
+  return V2_RENDER_EXERCISE.buildExerciseShellMarkup(input);
 }
 function buildExerciseDetailsMarkup(input) {
-  if(V2_RENDER_EXERCISE_DETAILS?.buildExerciseDetailsMarkup) return V2_RENDER_EXERCISE_DETAILS.buildExerciseDetailsMarkup(input);
-  const prioritizeSets = !!input?.prioritizeSets;
-  const exerciseId = String(input?.exerciseId || "");
-  const restValue = String(input?.restValue || "");
-  const noteValue = String(input?.noteValue || "");
-  const recoveryMarkup = String(input?.recoveryMarkup || "");
-  const setsMarkup = String(input?.setsMarkup || "");
-  const secondaryMarkup = `<div class="field-grid field-grid-rest">
-            <div class="label">Rest</div>
-            <input class="field" data-role="rest" data-ex="${exerciseId}" value="${restValue}" placeholder="2:00" />
-          </div>
-          <div class="field-grid">
-            <div class="label">Notes</div>
-            <textarea class="textarea" rows="1" data-role="note" data-ex="${exerciseId}">${noteValue}</textarea>
-          </div>
-
-          ${recoveryMarkup}`;
-  return prioritizeSets ? `${setsMarkup}${secondaryMarkup}` : `${secondaryMarkup}${setsMarkup}`;
+  return V2_RENDER_EXERCISE_DETAILS.buildExerciseDetailsMarkup(input);
 }
 function buildExerciseCompareMarkup(input) {
-  if(V2_RENDER_EXERCISE_COMPARE?.buildExerciseCompareMarkup) return V2_RENDER_EXERCISE_COMPARE.buildExerciseCompareMarkup(input);
-  const dateLabel = String(input?.dateLabel || "");
-  const summaryText = String(input?.summaryText || "");
-  const metaText = String(input?.metaText || "");
-  if(!dateLabel && !summaryText && !metaText) return "";
-  return `<div class="compare compact-last"><div class="last-time-card"><div class="last-time-head"><div class="last-time-title"><span class="dot"></span><span class="k">Last time</span></div><div class="last-time-date">${dateLabel}</div></div><div class="last-time-summary">${summaryText}</div><div class="last-time-meta">${metaText}</div></div></div>`;
+  return V2_RENDER_EXERCISE_COMPARE.buildExerciseCompareMarkup(input);
 }
 function buildExerciseActionsMarkup(input) {
-  if(V2_RENDER_EXERCISE_ACTIONS?.buildExerciseActionsMarkup) return V2_RENDER_EXERCISE_ACTIONS.buildExerciseActionsMarkup(input);
-  const exerciseId = String(input?.exerciseId || "");
-  const primaryButtonClass = String(input?.primaryButtonClass || "btn");
-  const primaryButtonRole = String(input?.primaryButtonRole || "");
-  const primaryButtonLabel = String(input?.primaryButtonLabel || "");
-  const deleteButtonClass = String(input?.deleteButtonClass || "btn");
-  return `<div class="exercise-actions">
-	            <button class="${primaryButtonClass}" data-role="${primaryButtonRole}" data-ex="${exerciseId}">${primaryButtonLabel}</button>
-	            <button class="${deleteButtonClass}" data-role="delete" data-ex="${exerciseId}">Delete exercise</button>
-	          </div>`;
+  return V2_RENDER_EXERCISE_ACTIONS.buildExerciseActionsMarkup(input);
 }
 function getSetDisplayIndex(set, index) {
-  if(V2_SET?.getSetDisplayIndex) return V2_SET.getSetDisplayIndex(set, index);
-  return String(Number(index) + 1);
+  return V2_SET.getSetDisplayIndex(set, index);
 }
 function getSetDoneState(set) {
-  if(V2_SET?.getSetDoneState) return V2_SET.getSetDoneState(set);
-  return String(set?.done || "");
+  return V2_SET.getSetDoneState(set);
 }
 function getSetRepsValue(set) {
-  if(V2_SET?.getSetRepsValue) return V2_SET.getSetRepsValue(set);
-  return set?.reps ?? "";
+  return V2_SET.getSetRepsValue(set);
 }
 function getSetWeightValue(set) {
-  if(V2_SET?.getSetWeightValue) return V2_SET.getSetWeightValue(set);
-  return set?.kg ?? "";
+  return V2_SET.getSetWeightValue(set);
 }
 function buildSetMarkup(input) {
-  if(V2_RENDER_SET?.buildSetMarkup) return V2_RENDER_SET.buildSetMarkup(input);
-  const exerciseId = String(input?.exerciseId || "");
-  const setIndex = Number(input?.setIndex) || 0;
-  const displayIndex = String(input?.displayIndex || "");
-  const weightValue = String(input?.weightValue || "");
-  const repsValue = String(input?.repsValue || "");
-  const volumeValue = String(input?.volumeValue || "");
-  const doneState = String(input?.doneState || "");
-  return `<div class="setrow" data-setrow="${exerciseId}_${setIndex}">
-            <div class="setn">${displayIndex}</div>
-            <div class="setcol"><div class="k">kg</div><input class="setinput" type="text" step="0.01" min="0" inputmode="decimal" data-role="kg" data-ex="${exerciseId}" data-idx="${setIndex}" value="${weightValue}" /></div>
-            <div class="setcol"><div class="k">reps</div><input class="setinput" type="text" step="1" min="0" inputmode="decimal" data-role="reps" data-ex="${exerciseId}" data-idx="${setIndex}" value="${repsValue}" /></div>
-            <div class="setcol"><div class="k">volume</div><input class="setinput" data-role="volume" value="${volumeValue}" disabled /></div>
-            <button class="setdeletebtn" type="button" data-role="delete-set" data-ex="${exerciseId}" data-idx="${setIndex}" aria-label="Delete set">✕</button>
-	            <button class="donebtn ${doneState==='1'?'on':''}" data-role="toggle-set" data-ex="${exerciseId}" data-idx="${setIndex}">${doneState==='1'?'✓':'·'}</button>
-	          </div>`;
+  return V2_RENDER_SET.buildSetMarkup(input);
 }
 function buildSetsContainerMarkup(input) {
-  if(V2_RENDER_SETS_CONTAINER?.buildSetsContainerMarkup) return V2_RENDER_SETS_CONTAINER.buildSetsContainerMarkup(input);
-  const setRowsMarkup = String(input?.setRowsMarkup || "");
-  return `<div class="sets">${setRowsMarkup}</div>`;
+  return V2_RENDER_SETS_CONTAINER.buildSetsContainerMarkup(input);
 }
 
 // ===== RENDER: METRICS =====
@@ -8619,37 +8472,14 @@ function getCalendarDefaultDayType(date) {
 }
 
 function formatCalendarDateKey(date) {
-  if(V2_CALENDAR?.formatLocalDateKey) return V2_CALENDAR.formatLocalDateKey(date);
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+  return V2_CALENDAR.formatLocalDateKey(date);
 }
 
 function parseCalendarDateKey(dateKey) {
-  if(V2_CALENDAR?.parseLocalDateKey) return V2_CALENDAR.parseLocalDateKey(dateKey);
-  const match = String(dateKey || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-  if(!match) return null;
-  const year = Number(match[1]);
-  const monthIndex = Number(match[2]) - 1;
-  const day = Number(match[3]);
-  return new Date(year, monthIndex, day);
+  return V2_CALENDAR.parseLocalDateKey(dateKey);
 }
 function buildDayCellMarkup(input) {
-  if(V2_RENDER_CALENDAR?.buildDayCellMarkup) return V2_RENDER_CALENDAR.buildDayCellMarkup(input);
-  if(input?.inactive) return `<div class="daycell inactive"></div>`;
-  const dayTypeClass = String(input?.dayTypeClass || "");
-  const activeClass = input?.active ? "active" : "";
-  const todayClass = input?.isToday ? "today" : "";
-  const dateKey = String(input?.dateKey || "");
-  const dayNumber = String(input?.dayNumber || "");
-  const weekdayLabel = String(input?.weekdayLabel || "");
-  const dot = String(input?.dot || "transparent");
-  return `<div class="daycell ${dayTypeClass} ${activeClass} ${todayClass}" data-date="${dateKey}">
-      <div class="d">${dayNumber}</div>
-      <div class="w">${weekdayLabel}</div>
-      <div class="daydot" style="background:${dot}"></div>
-    </div>`;
+  return V2_RENDER_CALENDAR.buildDayCellMarkup(input);
 }
 
 function buildCalendarCellHtml(date) {
@@ -8669,9 +8499,7 @@ function buildCalendarCellHtml(date) {
 }
 
 function selectCalendarDate(dateKey) {
-  const selection = V2_CALENDAR?.mapCalendarSelection
-    ? V2_CALENDAR.mapCalendarSelection(dateKey, dateToProgramDay)
-    : null;
+  const selection = V2_CALENDAR.mapCalendarSelection(dateKey, dateToProgramDay);
   const clickedDate = selection?.clickedDate ?? parseCalendarDateKey(dateKey);
   if(!clickedDate || Number.isNaN(clickedDate.getTime())) return;
   const info = selection?.info ?? dateToProgramDay(clickedDate);
@@ -8902,89 +8730,45 @@ function renderHistoryPreview() {
 }
 
 function isSuperset(ex) {
-  const code = codeOf(ui.week,ui.day,ex);
-  if(V2_SUPERSET?.isSuperset) return V2_SUPERSET.isSuperset(code);
-  return /\d$/.test(String(code || "").trim());
+  return V2_SUPERSET.isSuperset(codeOf(ui.week,ui.day,ex));
 }
 function getSupersetLabel(ex, index) {
-  const code = codeOf(ui.week,ui.day,ex);
-  if(V2_SUPERSET?.getSupersetLabel) return V2_SUPERSET.getSupersetLabel(code, index);
-  return isSuperset(ex) ? code : "";
+  return V2_SUPERSET.getSupersetLabel(codeOf(ui.week,ui.day,ex), index);
 }
 function getSupersetGroup(exercises, index) {
   const items = (Array.isArray(exercises) ? exercises : []).map(ex => ({
     ex,
     code: codeOf(ui.week,ui.day,ex)
   }));
-  if(V2_SUPERSET?.getSupersetGroup) {
-    const group = V2_SUPERSET.getSupersetGroup(items, index);
-    return {
-      block: group?.block ?? "•",
-      items: Array.isArray(group?.items) ? group.items.map(item => item.ex) : []
-    };
-  }
-  const start = items[index];
-  if(!start) return { block:"•", items:[] };
-  const block = (String(start.code || "").match(/^([A-Z])/) || [null,"•"])[1];
-  const out = [];
-  for(let i=index;i<items.length;i++) {
-    const item = items[i];
-    const itemBlock = (String(item.code || "").match(/^([A-Z])/) || [null,"•"])[1];
-    if(itemBlock !== block) break;
-    out.push(item.ex);
-  }
-  return { block, items: out };
+  const group = V2_SUPERSET.getSupersetGroup(items, index);
+  return {
+    block: group?.block ?? "•",
+    items: Array.isArray(group?.items) ? group.items.map(item => item.ex) : []
+  };
 }
 function formatExerciseHeaderDisplay(input) {
-  if(V2_RENDER?.formatExerciseHeaderDisplay) return V2_RENDER.formatExerciseHeaderDisplay(input);
-  const displayName = String(input?.name || "");
-  const metaText = [
-    input?.supersetLabel ? `Superset item ${input.supersetLabel}` : (input?.code ? `Block item ${input.code}` : ""),
-    input?.recovery ? "Recovery / conditioning" : "",
-    input?.weighted ? "Weighted" : ""
-  ].filter(Boolean).join(" • ");
-  return { displayName, metaText };
+  return V2_RENDER.formatExerciseHeaderDisplay(input);
 }
 function isSupersetStart(exercises, index) {
   const items = (Array.isArray(exercises) ? exercises : []).map(ex => ({
     ex,
     code: codeOf(ui.week,ui.day,ex)
   }));
-  if(V2_GROUP?.isSupersetStart) return V2_GROUP.isSupersetStart(items, index);
-  const current = items[index];
-  if(!current) return false;
-  if(!/\d$/.test(String(current.code || "").trim())) return false;
-  if(index <= 0) return true;
-  const prevBlock = (String(items[index - 1]?.code || "").match(/^([A-Z])/) || [null,"•"])[1];
-  const currentBlock = (String(current.code || "").match(/^([A-Z])/) || [null,"•"])[1];
-  return prevBlock !== currentBlock;
+  return V2_GROUP.isSupersetStart(items, index);
 }
 function getGroupIndices(exercises, index) {
   const items = (Array.isArray(exercises) ? exercises : []).map(ex => ({
     ex,
     code: codeOf(ui.week,ui.day,ex)
   }));
-  if(V2_GROUP?.getGroupIndices) return V2_GROUP.getGroupIndices(items, index);
-  const start = items[index];
-  if(!start) return [];
-  const block = (String(start.code || "").match(/^([A-Z])/) || [null,"•"])[1];
-  const out = [];
-  for(let i=index;i<items.length;i++) {
-    const itemBlock = (String(items[i]?.code || "").match(/^([A-Z])/) || [null,"•"])[1];
-    if(itemBlock !== block) break;
-    out.push(i);
-  }
-  return out;
+  return V2_GROUP.getGroupIndices(items, index);
 }
 function getGroupLength(exercises, index) {
-  if(V2_GROUP?.getGroupLength) {
-    const items = (Array.isArray(exercises) ? exercises : []).map(ex => ({
-      ex,
-      code: codeOf(ui.week,ui.day,ex)
-    }));
-    return V2_GROUP.getGroupLength(items, index);
-  }
-  return getGroupIndices(exercises, index).length;
+  const items = (Array.isArray(exercises) ? exercises : []).map(ex => ({
+    ex,
+    code: codeOf(ui.week,ui.day,ex)
+  }));
+  return V2_GROUP.getGroupLength(items, index);
 }
 
 
@@ -9102,18 +8886,11 @@ function finishWorkoutNow(){
 }
 
 function bindWorkoutProgressJumpButtons() {
-  if(V2_WORKOUT_RUNTIME?.bindWorkoutProgressJumpButtons) {
-    V2_WORKOUT_RUNTIME.bindWorkoutProgressJumpButtons({
-      onJump(nextIndex) {
-        ui.activeExerciseIndex = nextIndex;
-        requestRender("exercises");
-      }
-    });
-    return;
-  }
-  document.querySelectorAll("[data-workout-jump]").forEach(el => el.onclick = () => {
-    ui.activeExerciseIndex = Number(el.dataset.workoutJump);
-    requestRender("exercises");
+  V2_WORKOUT_RUNTIME.bindWorkoutProgressJumpButtons({
+    onJump(nextIndex) {
+      ui.activeExerciseIndex = nextIndex;
+      requestRender("exercises");
+    }
   });
 }
 
@@ -9124,91 +8901,34 @@ function bindWorkoutActionPanelButtons(groupsForDay) {
     finishWorkoutNow();
   };
 
-  if(V2_WORKOUT_RUNTIME?.bindWorkoutBottomActionButtons) {
-    V2_WORKOUT_RUNTIME.bindWorkoutBottomActionButtons({
-      onOpenTimer() {
-        openTimer();
-      },
-      onAddExercise() {
-        const target = document.getElementById("addExerciseName");
-        if(target) {
-          target.scrollIntoView({block:"center", behavior:"smooth"});
-          setTimeout(() => target.focus(), 250);
-        }
-      },
-      onAddSet() {
-        const exs = getExercisesForWeekDay(ui.week, ui.day);
-        const active = V2_WORKOUT_RUNTIME?.getWorkoutAddSetTarget
-          ? V2_WORKOUT_RUNTIME.getWorkoutAddSetTarget({
-              groupsForDay,
-              dayExercises: exs,
-              activeExerciseIndex: ui.activeExerciseIndex,
-              week: ui.week,
-              day: ui.day,
-              isRecoveryLike
-            })
-          : (() => {
-              let fallbackActive = null;
-              if(ui.workoutMode){
-                const activeGroupForDay = groupsForDay[ui.activeExerciseIndex] || null;
-                fallbackActive = activeGroupForDay?.items?.find(ex => !isRecoveryLike(ui.week, ui.day, ex)) || activeGroupForDay?.items?.[0] || null;
-              }
-              if(!fallbackActive || isRecoveryLike(ui.week, ui.day, fallbackActive)) {
-                fallbackActive = exs.find(ex => !isRecoveryLike(ui.week, ui.day, ex)) || null;
-              }
-              return fallbackActive;
-            })();
-        if(!active) {
-          showToast("No strength exercise selected");
-          return;
-        }
-        appendWorkoutSetWithFocus(active);
+  V2_WORKOUT_RUNTIME.bindWorkoutBottomActionButtons({
+    onOpenTimer() {
+      openTimer();
+    },
+    onAddExercise() {
+      const target = document.getElementById("addExerciseName");
+      if(target) {
+        target.scrollIntoView({block:"center", behavior:"smooth"});
+        setTimeout(() => target.focus(), 250);
       }
-    });
-    return;
-  }
-
-  const bottomTimerBtn = document.getElementById("bottomTimerBtn");
-  if(bottomTimerBtn) bottomTimerBtn.onclick = () => openTimer();
-
-  const bottomAddExerciseBtn = document.getElementById("bottomAddExerciseBtn");
-  if(bottomAddExerciseBtn) bottomAddExerciseBtn.onclick = () => {
-    const target = document.getElementById("addExerciseName");
-    if(target) {
-      target.scrollIntoView({block:"center", behavior:"smooth"});
-      setTimeout(() => target.focus(), 250);
+    },
+    onAddSet() {
+      const exs = getExercisesForWeekDay(ui.week, ui.day);
+      const active = V2_WORKOUT_RUNTIME.getWorkoutAddSetTarget({
+        groupsForDay,
+        dayExercises: exs,
+        activeExerciseIndex: ui.activeExerciseIndex,
+        week: ui.week,
+        day: ui.day,
+        isRecoveryLike
+      });
+      if(!active) {
+        showToast("No strength exercise selected");
+        return;
+      }
+      appendWorkoutSetWithFocus(active);
     }
-  };
-
-  const bottomAddSetBtn = document.getElementById("bottomAddSetBtn");
-  if(bottomAddSetBtn) bottomAddSetBtn.onclick = () => {
-    const exs = getExercisesForWeekDay(ui.week, ui.day);
-    const active = V2_WORKOUT_RUNTIME?.getWorkoutAddSetTarget
-      ? V2_WORKOUT_RUNTIME.getWorkoutAddSetTarget({
-          groupsForDay,
-          dayExercises: exs,
-          activeExerciseIndex: ui.activeExerciseIndex,
-          week: ui.week,
-          day: ui.day,
-          isRecoveryLike
-        })
-      : (() => {
-          let fallbackActive = null;
-          if(ui.workoutMode){
-            const activeGroupForDay = groupsForDay[ui.activeExerciseIndex] || null;
-            fallbackActive = activeGroupForDay?.items?.find(ex => !isRecoveryLike(ui.week, ui.day, ex)) || activeGroupForDay?.items?.[0] || null;
-          }
-          if(!fallbackActive || isRecoveryLike(ui.week, ui.day, fallbackActive)) {
-            fallbackActive = exs.find(ex => !isRecoveryLike(ui.week, ui.day, ex)) || null;
-          }
-          return fallbackActive;
-        })();
-    if(!active) {
-      showToast("No strength exercise selected");
-      return;
-    }
-    appendWorkoutSetWithFocus(active);
-  };
+  });
 }
 
 function bindEmptyStateAddWorkoutCta() {
@@ -9249,299 +8969,87 @@ function renderExercises() {
   const searchMatches = q ? searchExercisesGlobal(q) : [];
   const all = filteredDayExercises;
   const allGroups = getWorkoutGroups(all);
-  const nextActiveWorkoutIndex = V2_WORKOUT_RUNTIME?.clampActiveWorkoutIndex
-    ? V2_WORKOUT_RUNTIME.clampActiveWorkoutIndex({
-        activeIndex: ui.activeExerciseIndex,
-        groupCount: allGroups.length
-      })
-    : Math.min(Math.max(0, allGroups.length - 1), Math.max(0, Number(ui.activeExerciseIndex) || 0));
+  const nextActiveWorkoutIndex = V2_WORKOUT_RUNTIME.clampActiveWorkoutIndex({
+    activeIndex: ui.activeExerciseIndex,
+    groupCount: allGroups.length
+  });
   if(ui.activeExerciseIndex !== nextActiveWorkoutIndex) ui.activeExerciseIndex = nextActiveWorkoutIndex;
-  const activeGroup = V2_WORKOUT_RUNTIME?.getActiveWorkoutGroup
-    ? V2_WORKOUT_RUNTIME.getActiveWorkoutGroup({
-        groups: allGroups,
-        activeIndex: ui.activeExerciseIndex
-      })
-    : allGroups[ui.activeExerciseIndex] || null;
+  const activeGroup = V2_WORKOUT_RUNTIME.getActiveWorkoutGroup({
+    groups: allGroups,
+    activeIndex: ui.activeExerciseIndex
+  });
   const list = ui.workoutMode ? (activeGroup ? activeGroup.items : []) : all;
   const groups = ui.workoutMode ? (activeGroup ? [activeGroup] : []) : allGroups;
   const wrap = document.getElementById("exerciseList");
   const searchHost = document.getElementById("searchResultsHost");
   const focusMeta = ui.workoutMode
-    ? (V2_WORKOUT_RUNTIME?.buildWorkoutFocusMeta
-        ? V2_WORKOUT_RUNTIME.buildWorkoutFocusMeta({
-            activeIndex: ui.activeExerciseIndex,
-            groupCount: allGroups.length
-          })
-        : `Block ${Math.min(ui.activeExerciseIndex+1, Math.max(1,allGroups.length))} of ${Math.max(1,allGroups.length)}`)
+    ? V2_WORKOUT_RUNTIME.buildWorkoutFocusMeta({
+        activeIndex: ui.activeExerciseIndex,
+        groupCount: allGroups.length
+      })
     : "";
   const workoutProgressItems = ui.workoutMode
-    ? (V2_WORKOUT_RUNTIME?.buildWorkoutProgressItems
-        ? V2_WORKOUT_RUNTIME.buildWorkoutProgressItems({
-            groups: allGroups,
-            activeIndex: ui.activeExerciseIndex,
-            week: ui.week,
-            day: ui.day,
-            isExerciseDone: exerciseHasDone
-          })
-        : allGroups.map((group, idx) => {
-            const done = group.items.every(ex => exerciseHasDone(ui.week,ui.day,ex));
-            const cls = idx===ui.activeExerciseIndex ? "active" : (done ? "done" : "");
-            return {
-              index: idx,
-              label: String(idx + 1),
-              className: cls
-            };
-          }))
+    ? V2_WORKOUT_RUNTIME.buildWorkoutProgressItems({
+        groups: allGroups,
+        activeIndex: ui.activeExerciseIndex,
+        week: ui.week,
+        day: ui.day,
+        isExerciseDone: exerciseHasDone
+      })
     : [];
-  const renderWorkoutHeaderFallback = input => {
-    const dateDisplay = String(input?.dateDisplay || "");
-    const title = String(input?.title || "");
-    const progressItems = Array.isArray(input?.progressItems) ? input.progressItems : [];
-    const progressMarkup = V2_WORKOUT_MODE?.renderWorkoutProgressPills
-      ? V2_WORKOUT_MODE.renderWorkoutProgressPills({ items: progressItems })
-      : `<div class="workout-progress-row">${progressItems.map(item => `<button class="workout-progress-pill ${String(item?.className || "").trim()}" type="button" data-workout-jump="${Number(item?.index) || 0}">${String(item?.label || "")}</button>`).join("")}</div>`;
-    return `<div class="card workout-focus-card"><div class="workout-date-big">${dateDisplay}</div><div class="section-title"><h3>${title}</h3></div>${progressMarkup}<div class="workout-nav-row"><button class="btn" id="prevExerciseBtn">← Previous</button><button class="btn" id="nextExerciseBtn">Next →</button></div></div>`;
-  };
-  const buildWorkoutHeaderInputFallback = input => ({
-    dateDisplay: String(input?.dateDisplay || ""),
-    title: String(input?.title || ""),
-    progressItems: Array.isArray(input?.progressItems) ? input.progressItems : [],
-    prevLabel: String(input?.prevLabel || "← Previous"),
-    nextLabel: String(input?.nextLabel || "Next →")
-  });
-  const renderWorkoutActionPanelFallback = () => `<div class="end-panel-shell"><div class="workout-end-panel"><div class="finish-workout-inline-row"><button id="finishWorkoutBtnInline" class="finish-workout-inline-btn" type="button">Finish workout</button></div><div class="workout-end-actions" id="bottomBarInline"><button class="btn workout-footer-secondary" id="bottomTimerBtn">⏱ Timer</button><button class="btn workout-footer-secondary" id="bottomAddExerciseBtn">+ Exercise</button><button class="btn primary workout-footer-primary" id="bottomAddSetBtn">+ Set</button></div></div></div>`;
-  const renderWorkoutModeBodyFallback = input => {
-    const hasContent = !!input?.hasContent;
-    const contentMarkup = String(input?.contentMarkup || "");
-    const emptyMarkup = String(input?.emptyMarkup || "");
-    const actionPanelMarkup = String(input?.actionPanelMarkup || "");
-    return hasContent ? `${contentMarkup}${actionPanelMarkup}` : emptyMarkup;
-  };
-  const renderExerciseHeaderMetaFallback = input => {
-    const exerciseId = String(input?.exerciseId || "");
-    const codeValue = String(input?.codeValue || "");
-    const displayName = String(input?.displayName || "");
-    const metaText = String(input?.metaText || "");
-    return `<div class="exercise-main">
-            <div class="left-main">
-              <input class="codebox" data-role="code" data-ex="${exerciseId}" value="${codeValue}" />
-              <div style="min-width:0;width:100%">
-                <input class="exercise-name field" type="text" data-role="name" data-ex="${exerciseId}" value="${displayName}" />
-                <div class="exercise-meta">${metaText}</div>
-              </div>
-            </div>
-          </div>`;
-  };
   const workoutHeaderInput = ui.workoutMode
-    ? (V2_WORKOUT_MODE?.buildWorkoutHeaderInput
-        ? V2_WORKOUT_MODE.buildWorkoutHeaderInput({
-            dateDisplay: fmtFullDate(dayDate(ui.week,ui.day)),
-            title: focusMeta,
-            progressItems: workoutProgressItems,
-            prevLabel: "← Previous",
-            nextLabel: "Next →"
-          })
-        : buildWorkoutHeaderInputFallback({
-            dateDisplay: fmtFullDate(dayDate(ui.week,ui.day)),
-            title: focusMeta,
-            progressItems: workoutProgressItems,
-            prevLabel: "← Previous",
-            nextLabel: "Next →"
-          }))
-    : null;
-  const focus = ui.workoutMode ? (V2_WORKOUT_MODE?.renderWorkoutHeader
-    ? V2_WORKOUT_MODE.renderWorkoutHeader(workoutHeaderInput)
-    : renderWorkoutHeaderFallback(workoutHeaderInput || {
+    ? V2_WORKOUT_MODE.buildWorkoutHeaderInput({
         dateDisplay: fmtFullDate(dayDate(ui.week,ui.day)),
         title: focusMeta,
-        progressItems: workoutProgressItems
-      })) : "";
-  const workoutActionPanelMarkup = ui.workoutMode
-    ? (V2_WORKOUT_MODE?.renderWorkoutActionPanel
-        ? V2_WORKOUT_MODE.renderWorkoutActionPanel()
-        : renderWorkoutActionPanelFallback())
-    : "";
-  const renderSearchResultItemFallback = input => {
-    const week = Number(input?.week) || 0;
-    const day = String(input?.day || "");
-    const exerciseId = String(input?.exerciseId || "");
-    const name = String(input?.name || "");
-    const meta = String(input?.meta || "");
-    const ctaLabel = String(input?.ctaLabel || "Open");
-    return `<button class="search-item" type="button" data-jump-week="${week}" data-jump-day="${day}" data-jump-ex="${exerciseId}"><div><div class="name">${name}</div><div class="meta">${meta}</div></div><div class="search-open">${ctaLabel}</div></button>`;
-  };
-  const renderSearchResultsCardFallback = input => {
-    const heading = String(input?.heading || "Search results");
-    const count = Number(input?.count) || 0;
-    const emptyMessage = String(input?.emptyMessage || "");
-    const itemMarkup = String(input?.itemMarkup || "");
-    const countLabel = `${count} match${count === 1 ? "" : "es"}`;
-    return `<div class="card search-results-card"><div class="section-title"><h3>${heading}</h3><div class="meta">${countLabel}</div></div>${count ? `<div class="search-results">${itemMarkup}</div>` : `<div class="empty-state">${emptyMessage}</div>`}</div>`;
-  };
-  const buildSearchResultItemInputFallback = input => {
-    const week = Number(input?.week) || 0;
-    const day = String(input?.day || "");
-    const exerciseId = String(input?.exerciseId || "");
-    const name = String(input?.name || "");
-    const dateLabel = String(input?.dateLabel || "");
-    const dayLabel = String(input?.dayLabel || "");
-    const code = String(input?.code || "");
-    const ctaLabel = String(input?.ctaLabel || "Open");
-    return {
-      week,
-      day,
-      exerciseId,
-      name,
-      meta: `${dateLabel} · ${dayLabel} · ${code || "No code"}`,
-      ctaLabel
-    };
-  };
-  const renderGroupHeaderFallback = input => {
-    const blockLabel = String(input?.blockLabel || "");
-    const blockMeta = String(input?.blockMeta || "");
-    return `<div class="block-header"><div class="block-title"><div class="block-chip">${blockLabel}</div><div>${blockMeta}</div></div></div>`;
-  };
-  const renderExerciseGroupFallback = input => {
-    const groupHeaderMarkup = String(input?.groupHeaderMarkup || "");
-    const groupInnerMarkup = String(input?.groupInnerMarkup || "");
-    return `<div class="block-group">${groupHeaderMarkup}<div class="workout-group-stack">${groupInnerMarkup}</div></div>`;
-  };
-  const buildExerciseShellInputFallback = input => ({
-    exerciseClass: String(input?.exerciseClass || ""),
-    exerciseId: String(input?.exerciseId || "")
-  });
-  const buildExerciseDetailsInputFallback = input => ({
-    exerciseId: String(input?.exerciseId || ""),
-    prioritizeSets: !!input?.prioritizeSets,
-    restValue: String(input?.restValue || ""),
-    noteValue: String(input?.noteValue || ""),
-    recoveryMarkup: String(input?.recoveryMarkup || ""),
-    setsMarkup: String(input?.setsMarkup || "")
-  });
-  const buildExerciseActionsInputFallback = input => ({
-    exerciseId: String(input?.exerciseId || ""),
-    primaryButtonClass: String(input?.primaryButtonClass || "btn"),
-    primaryButtonRole: String(input?.primaryButtonRole || ""),
-    primaryButtonLabel: String(input?.primaryButtonLabel || ""),
-    deleteButtonClass: String(input?.deleteButtonClass || "btn")
-  });
-  const buildExerciseCompareInputFallback = input => {
-    const dateLabel = String(input?.dateLabel || "");
-    const summaryText = String(input?.summaryText || "");
-    const metaText = String(input?.metaText || "");
-    return { dateLabel, summaryText, metaText };
-  };
-  const renderNormalExerciseCardFallback = input => {
-    const exerciseShellInput = input?.exerciseShellInput && typeof input.exerciseShellInput === "object"
-      ? input.exerciseShellInput
-      : {};
-    return buildExerciseShellMarkup({
-      ...exerciseShellInput,
-      mainMarkup: String(input?.mainMarkup || ""),
-      compareMarkup: String(input?.compareMarkup || ""),
-      detailsMarkup: String(input?.detailsMarkup || ""),
-      actionsMarkup: String(input?.actionsMarkup || "")
-    });
-  };
-  const buildFirstWorkoutEmptyStateInputFallback = input => ({
-    title: String(input?.title || ""),
-    metaMarkup: String(input?.metaMarkup || "")
-  });
-  const renderPlainEmptyStateFallback = input => {
-    const title = String(input?.title || "");
-    const metaMarkup = String(input?.metaMarkup || "");
-    const body = String(input?.body || "");
-    return `<div class="card empty-workout-card"><div class="section-title"><h3>${title}</h3>${metaMarkup}</div><div class="empty-state">${body}</div></div>`;
-  };
-  const buildPlainEmptyStateInputFallback = input => ({
-    title: String(input?.title || ""),
-    metaMarkup: String(input?.metaMarkup || ""),
-    body: String(input?.body || "")
-  });
+        progressItems: workoutProgressItems,
+        prevLabel: "← Previous",
+        nextLabel: "Next →"
+      })
+    : null;
+  const focus = ui.workoutMode ? V2_WORKOUT_MODE.renderWorkoutHeader(workoutHeaderInput) : "";
+  const workoutActionPanelMarkup = ui.workoutMode ? V2_WORKOUT_MODE.renderWorkoutActionPanel() : "";
   const searchResultsItemMarkup = searchMatches.map(m => {
-    const input = V2_RENDER_SEARCH_RESULTS?.buildSearchResultItemInput
-      ? V2_RENDER_SEARCH_RESULTS.buildSearchResultItemInput({
-          week: m.week,
-          day: m.day,
-          exerciseId: m.ex,
-          name: esc(m.name),
-          dateLabel: esc(m.dateLabel),
-          dayLabel: DAY_LABEL[m.day],
-          code: esc(m.code || "No code"),
-          ctaLabel: "Open"
-        })
-      : buildSearchResultItemInputFallback({
-          week: m.week,
-          day: m.day,
-          exerciseId: m.ex,
-          name: esc(m.name),
-          dateLabel: esc(m.dateLabel),
-          dayLabel: DAY_LABEL[m.day],
-          code: esc(m.code || "No code"),
-          ctaLabel: "Open"
-        });
-    return V2_RENDER_SEARCH_RESULTS?.renderSearchResultItem
-      ? V2_RENDER_SEARCH_RESULTS.renderSearchResultItem(input)
-      : renderSearchResultItemFallback(input);
+    const input = V2_RENDER_SEARCH_RESULTS.buildSearchResultItemInput({
+        week: m.week,
+        day: m.day,
+        exerciseId: m.ex,
+        name: esc(m.name),
+        dateLabel: esc(m.dateLabel),
+        dayLabel: DAY_LABEL[m.day],
+        code: esc(m.code || "No code"),
+        ctaLabel: "Open"
+      });
+    return V2_RENDER_SEARCH_RESULTS.renderSearchResultItem(input);
   }).join("");
-  const searchBox = q ? (V2_RENDER_SEARCH_RESULTS?.renderSearchResultsCard
-    ? V2_RENDER_SEARCH_RESULTS.renderSearchResultsCard({
-        heading: "Search results",
-        count: searchMatches.length,
-        emptyMessage: "No matching exercises found yet.",
-        itemMarkup: searchResultsItemMarkup
-      })
-    : renderSearchResultsCardFallback({
-        heading: "Search results",
-        count: searchMatches.length,
-        emptyMessage: "No matching exercises found yet.",
-        itemMarkup: searchResultsItemMarkup
-      })) : "";
+  const searchBox = q ? V2_RENDER_SEARCH_RESULTS.renderSearchResultsCard({
+      heading: "Search results",
+      count: searchMatches.length,
+      emptyMessage: "No matching exercises found yet.",
+      itemMarkup: searchResultsItemMarkup
+    }) : "";
   if(searchHost) searchHost.innerHTML = searchBox;
-  const showFirstWorkoutCta = V2_ONBOARDING?.shouldShowFirstWorkoutCta
-    ? V2_ONBOARDING.shouldShowFirstWorkoutCta({
-        currentUser,
-        hasSearchQuery: !!q,
-        hasWorkoutData: hasWorkoutData(state)
-      })
-    : !!(currentUser && !q && !hasWorkoutData(state));
+  const showFirstWorkoutCta = V2_ONBOARDING.shouldShowFirstWorkoutCta({
+      currentUser,
+      hasSearchQuery: !!q,
+      hasWorkoutData: hasWorkoutData(state)
+    });
   const targetDayIsTrulyEmpty = !hasStoredWorkoutDataForDay(ui.week, ui.day);
   const previousWeekWorkout = !q && targetDayIsTrulyEmpty ? getPreviousWeekWorkout(ui.week, ui.day) : null;
   const copyPreviousWeekWorkoutMarkup = previousWeekWorkout
     ? `<button class="btn primary empty-workout-cta" id="copyPreviousWeekWorkoutBtn" type="button">Copy last week's workout</button>`
     : "";
-  const firstWorkoutEmptyStateInput = V2_EMPTY_STATE?.buildFirstWorkoutEmptyStateInput
-    ? V2_EMPTY_STATE.buildFirstWorkoutEmptyStateInput({
-        title: "No workout yet",
-        metaMarkup: `<div class="meta">${fmtFullDate(dayDate(ui.week,ui.day))}</div>`
-      })
-    : buildFirstWorkoutEmptyStateInputFallback({
-        title: "No workout yet",
-        metaMarkup: `<div class="meta">${fmtFullDate(dayDate(ui.week,ui.day))}</div>`
-      });
-  const plainEmptyStateInput = V2_RENDER_PLAIN_EMPTY_STATE?.buildPlainEmptyStateInput
-    ? V2_RENDER_PLAIN_EMPTY_STATE.buildPlainEmptyStateInput({
-        title: q ? "No exercises in this day view" : "No workout yet",
-        metaMarkup: q ? `<div class="meta">Search is active for ${DAY_LABEL[ui.day]}</div>` : `<div class="meta">${fmtFullDate(dayDate(ui.week,ui.day))}</div>`,
-        body: q ? "No exercises in this day match your current search. Clear search or open a result above." : `${previousWeekWorkout ? "Start from the same weekday last week, with all completed states cleared." : "Add your first exercise below to create this workout day. Your calendar will build from your own training data."}${copyPreviousWeekWorkoutMarkup}`
-      })
-    : buildPlainEmptyStateInputFallback({
-        title: q ? "No exercises in this day view" : "No workout yet",
-        metaMarkup: q ? `<div class="meta">Search is active for ${DAY_LABEL[ui.day]}</div>` : `<div class="meta">${fmtFullDate(dayDate(ui.week,ui.day))}</div>`,
-        body: q ? "No exercises in this day match your current search. Clear search or open a result above." : `${previousWeekWorkout ? "Start from the same weekday last week, with all completed states cleared." : "Add your first exercise below to create this workout day. Your calendar will build from your own training data."}${copyPreviousWeekWorkoutMarkup}`
-      });
-  const renderFirstWorkoutEmptyStateFallback = input => {
-    const title = String(input?.title || "");
-    const metaMarkup = String(input?.metaMarkup || "");
-    return `<div class="card empty-workout-card"><div class="section-title"><h3>${title}</h3>${metaMarkup}</div><div class="empty-state"><div class="empty-workout-hero"><div class="empty-workout-eyebrow">Start here</div><div class="empty-workout-body">Create your first workout day with one exercise, then build from your own training rhythm.</div><div class="empty-workout-support">Nothing is prefilled. Your calendar will take shape from the workouts you actually log.</div></div><button class="btn primary empty-workout-cta" id="emptyStateAddWorkoutBtn" type="button">Add first workout</button></div></div>`;
-  };
+  const firstWorkoutEmptyStateInput = V2_EMPTY_STATE.buildFirstWorkoutEmptyStateInput({
+      title: "No workout yet",
+      metaMarkup: `<div class="meta">${fmtFullDate(dayDate(ui.week,ui.day))}</div>`
+    });
+  const plainEmptyStateInput = V2_RENDER_PLAIN_EMPTY_STATE.buildPlainEmptyStateInput({
+      title: q ? "No exercises in this day view" : "No workout yet",
+      metaMarkup: q ? `<div class="meta">Search is active for ${DAY_LABEL[ui.day]}</div>` : `<div class="meta">${fmtFullDate(dayDate(ui.week,ui.day))}</div>`,
+      body: q ? "No exercises in this day match your current search. Clear search or open a result above." : `${previousWeekWorkout ? "Start from the same weekday last week, with all completed states cleared." : "Add your first exercise below to create this workout day. Your calendar will build from your own training data."}${copyPreviousWeekWorkoutMarkup}`
+    });
   const emptyMessage = !groups.length ? showFirstWorkoutCta
-    ? (V2_EMPTY_STATE?.renderFirstWorkoutEmptyState
-        ? V2_EMPTY_STATE.renderFirstWorkoutEmptyState(firstWorkoutEmptyStateInput)
-        : renderFirstWorkoutEmptyStateFallback(firstWorkoutEmptyStateInput))
-    : (V2_RENDER_PLAIN_EMPTY_STATE?.renderPlainEmptyStateCard
-        ? V2_RENDER_PLAIN_EMPTY_STATE.renderPlainEmptyStateCard(plainEmptyStateInput)
-        : renderPlainEmptyStateFallback(plainEmptyStateInput)) : "";
+    ? V2_EMPTY_STATE.renderFirstWorkoutEmptyState(firstWorkoutEmptyStateInput)
+    : V2_RENDER_PLAIN_EMPTY_STATE.renderPlainEmptyStateCard(plainEmptyStateInput) : "";
   wrap.className = ui.workoutMode ? "exercise-list workout-mode-shell" : "exercise-list";
   const contentMarkup = groups.length ? groups.map(group => {
     const blockKinds = group.items.map(ex => codeOf(ui.week,ui.day,ex)).filter(Boolean);
@@ -9570,21 +9078,13 @@ function renderExercises() {
           displayName: esc(headerDisplay.displayName),
           metaText: headerDisplay.metaText
         };
-        const mainMarkup = !ui.workoutMode && V2_RENDER?.renderExerciseHeaderMetaMarkup
-          ? V2_RENDER.renderExerciseHeaderMetaMarkup(exerciseHeaderMetaInput)
-          : renderExerciseHeaderMetaFallback(exerciseHeaderMetaInput);
+        const mainMarkup = V2_RENDER.renderExerciseHeaderMetaMarkup(exerciseHeaderMetaInput);
         const compareInput = last
-          ? (V2_RENDER_EXERCISE_COMPARE?.buildExerciseCompareInput
-              ? V2_RENDER_EXERCISE_COMPARE.buildExerciseCompareInput({
-                  dateLabel: fmtShortDate(last.date),
-                  summaryText: esc(exerciseSetsSummary(last.week,last.day,last.ex)),
-                  metaText: "Use this as your quick reference before the next set."
-                })
-              : buildExerciseCompareInputFallback({
-                  dateLabel: fmtShortDate(last.date),
-                  summaryText: esc(exerciseSetsSummary(last.week,last.day,last.ex)),
-                  metaText: "Use this as your quick reference before the next set."
-                }))
+          ? V2_RENDER_EXERCISE_COMPARE.buildExerciseCompareInput({
+              dateLabel: fmtShortDate(last.date),
+              summaryText: esc(exerciseSetsSummary(last.week,last.day,last.ex)),
+              metaText: "Use this as your quick reference before the next set."
+            })
           : null;
         const compareMarkup = compareInput ? buildExerciseCompareMarkup(compareInput) : "";
  	        const setsHtml = recovery ? "" : Array.from({length:c}, (_,i) => {
@@ -9602,23 +9102,14 @@ function renderExercises() {
           });
 	        }).join("");
         const detailsInput = !ui.workoutMode
-          ? (V2_RENDER_EXERCISE_DETAILS?.buildExerciseDetailsInput
-              ? V2_RENDER_EXERCISE_DETAILS.buildExerciseDetailsInput({
-                  exerciseId: ex,
-                  prioritizeSets: ui.workoutMode,
-                  restValue: esc(normalizeRestValue(rest)),
-                  noteValue: esc(note),
-                  recoveryMarkup: recovery ? `<div class="info-box" style="margin-top:12px"><div class="k">Completion</div><div class="v">${done ? "Done" : "Not done yet"}</div></div>` : "",
-                  setsMarkup: setsHtml ? buildSetsContainerMarkup({ setRowsMarkup: setsHtml }) : ""
-                })
-              : buildExerciseDetailsInputFallback({
-                  exerciseId: ex,
-                  prioritizeSets: ui.workoutMode,
-                  restValue: esc(normalizeRestValue(rest)),
-                  noteValue: esc(note),
-                  recoveryMarkup: recovery ? `<div class="info-box" style="margin-top:12px"><div class="k">Completion</div><div class="v">${done ? "Done" : "Not done yet"}</div></div>` : "",
-                  setsMarkup: setsHtml ? buildSetsContainerMarkup({ setRowsMarkup: setsHtml }) : ""
-                }))
+          ? V2_RENDER_EXERCISE_DETAILS.buildExerciseDetailsInput({
+              exerciseId: ex,
+              prioritizeSets: ui.workoutMode,
+              restValue: esc(normalizeRestValue(rest)),
+              noteValue: esc(note),
+              recoveryMarkup: recovery ? `<div class="info-box" style="margin-top:12px"><div class="k">Completion</div><div class="v">${done ? "Done" : "Not done yet"}</div></div>` : "",
+              setsMarkup: setsHtml ? buildSetsContainerMarkup({ setRowsMarkup: setsHtml }) : ""
+            })
           : null;
         const detailsMarkup = buildExerciseDetailsMarkup(detailsInput || {
           exerciseId: ex,
@@ -9629,21 +9120,13 @@ function renderExercises() {
           setsMarkup: setsHtml ? buildSetsContainerMarkup({ setRowsMarkup: setsHtml }) : ""
         });
         const actionsInput = !ui.workoutMode
-          ? (V2_RENDER_EXERCISE_ACTIONS?.buildExerciseActionsInput
-              ? V2_RENDER_EXERCISE_ACTIONS.buildExerciseActionsInput({
-                  exerciseId: ex,
-                  primaryButtonClass: recovery ? "btn gold" : (ui.workoutMode ? "btn workout-inline-addset" : "btn"),
-                  primaryButtonRole: recovery ? "toggle-block" : "add-set",
-                  primaryButtonLabel: recovery ? (done ? "Set as not done" : "Set as done") : "+ Set",
-                  deleteButtonClass: ui.workoutMode ? "btn workout-delete-btn" : "btn"
-                })
-              : buildExerciseActionsInputFallback({
-                  exerciseId: ex,
-                  primaryButtonClass: recovery ? "btn gold" : (ui.workoutMode ? "btn workout-inline-addset" : "btn"),
-                  primaryButtonRole: recovery ? "toggle-block" : "add-set",
-                  primaryButtonLabel: recovery ? (done ? "Set as not done" : "Set as done") : "+ Set",
-                  deleteButtonClass: ui.workoutMode ? "btn workout-delete-btn" : "btn"
-                }))
+          ? V2_RENDER_EXERCISE_ACTIONS.buildExerciseActionsInput({
+              exerciseId: ex,
+              primaryButtonClass: recovery ? "btn gold" : (ui.workoutMode ? "btn workout-inline-addset" : "btn"),
+              primaryButtonRole: recovery ? "toggle-block" : "add-set",
+              primaryButtonLabel: recovery ? (done ? "Set as not done" : "Set as done") : "+ Set",
+              deleteButtonClass: ui.workoutMode ? "btn workout-delete-btn" : "btn"
+            })
           : null;
         const actionsMarkup = buildExerciseActionsMarkup(actionsInput || {
           exerciseId: ex,
@@ -9653,36 +9136,22 @@ function renderExercises() {
           deleteButtonClass: ui.workoutMode ? "btn workout-delete-btn" : "btn"
         });
         const exerciseShellInputBase = !ui.workoutMode
-          ? (V2_RENDER_EXERCISE?.buildExerciseShellInput
-              ? V2_RENDER_EXERCISE.buildExerciseShellInput({
-                  exerciseClass: `${isSuperset(ex)?'superset':''} ${ui.workoutMode ? 'active-workout' : ''}`,
-                  exerciseId: ex
-                })
-              : buildExerciseShellInputFallback({
-                  exerciseClass: `${isSuperset(ex)?'superset':''} ${ui.workoutMode ? 'active-workout' : ''}`,
-                  exerciseId: ex
-                }))
+          ? V2_RENDER_EXERCISE.buildExerciseShellInput({
+              exerciseClass: `${isSuperset(ex)?'superset':''} ${ui.workoutMode ? 'active-workout' : ''}`,
+              exerciseId: ex
+            })
           : {
               exerciseClass: `${isSuperset(ex)?'superset':''} ${ui.workoutMode ? 'active-workout' : ''}`,
               exerciseId: ex,
             };
-        const normalExerciseCardMarkup = V2_RENDER_EXERCISE?.renderNormalExerciseCard
-          ? V2_RENDER_EXERCISE.renderNormalExerciseCard({
-              exerciseShellInput: exerciseShellInputBase,
-              mainMarkup,
-              compareMarkup,
-              detailsMarkup,
-              actionsMarkup,
-              setsMarkup: setsHtml
-            })
-          : renderNormalExerciseCardFallback({
-              exerciseShellInput: exerciseShellInputBase,
-              mainMarkup,
-              compareMarkup,
-              detailsMarkup,
-              actionsMarkup,
-              setsMarkup: setsHtml
-            });
+        const normalExerciseCardMarkup = V2_RENDER_EXERCISE.renderNormalExerciseCard({
+            exerciseShellInput: exerciseShellInputBase,
+            mainMarkup,
+            compareMarkup,
+            detailsMarkup,
+            actionsMarkup,
+            setsMarkup: setsHtml
+          });
         const workoutExerciseShellInput = {
           ...exerciseShellInputBase,
           mainMarkup,
@@ -9697,41 +9166,24 @@ function renderExercises() {
 	      }).join("");
     const blockLabel = group.block && group.block !== "•" ? group.block : "Single";
         const blockMeta = isSupersetBlock ? `Superset • ${group.items.length} exercises` : (group.items.length > 1 ? `${group.items.length} exercises` : `1 exercise`);
-        const groupHeaderMarkup = ui.workoutMode ? `` : (V2_RENDER_GROUP_HEADER?.renderExerciseGroupHeader
-          ? V2_RENDER_GROUP_HEADER.renderExerciseGroupHeader({
-              blockLabel: esc(blockLabel),
-              blockMeta
-            })
-          : renderGroupHeaderFallback({
-              blockLabel: esc(blockLabel),
-              blockMeta
-            }));
+        const groupHeaderMarkup = ui.workoutMode ? `` : V2_RENDER_GROUP_HEADER.renderExerciseGroupHeader({
+            blockLabel: esc(blockLabel),
+            blockMeta
+          });
         return ui.workoutMode
           ? `<div class="block-group">${groupHeaderMarkup}<div class="workout-group-stack">${groupInner}</div></div>`
-          : (V2_RENDER_GROUP_COMPOSER?.renderExerciseGroup
-              ? V2_RENDER_GROUP_COMPOSER.renderExerciseGroup({
-                  groupHeaderMarkup,
-                  groupInnerMarkup: groupInner
-                })
-              : renderExerciseGroupFallback({
-                  groupHeaderMarkup,
-                  groupInnerMarkup: groupInner
-                }));
+          : V2_RENDER_GROUP_COMPOSER.renderExerciseGroup({
+              groupHeaderMarkup,
+              groupInnerMarkup: groupInner
+            });
       }).join("") : ``;
   const workoutModeBodyMarkup = ui.workoutMode
-    ? (V2_WORKOUT_MODE?.renderWorkoutModeBody
-        ? V2_WORKOUT_MODE.renderWorkoutModeBody({
-            hasContent: groups.length > 0,
-            contentMarkup,
-            emptyMarkup: emptyMessage,
-            actionPanelMarkup: workoutActionPanelMarkup
-          })
-        : renderWorkoutModeBodyFallback({
-            hasContent: groups.length > 0,
-            contentMarkup,
-            emptyMarkup: emptyMessage,
-            actionPanelMarkup: workoutActionPanelMarkup
-          }))
+    ? V2_WORKOUT_MODE.renderWorkoutModeBody({
+        hasContent: groups.length > 0,
+        contentMarkup,
+        emptyMarkup: emptyMessage,
+        actionPanelMarkup: workoutActionPanelMarkup
+      })
     : "";
   wrap.innerHTML = buildWorkoutContainerMarkup({
     headerMarkup: focus,
@@ -9828,18 +9280,7 @@ function toggleWorkoutSetDoneState(ex, idx) {
   return s;
 }
 function sanitizeSetInputValue(role, value) {
-  if(V2_INPUT?.sanitizeSetInputValue) return V2_INPUT.sanitizeSetInputValue(role, value);
-  const raw = String(value ?? "");
-  if(role === "kg") {
-    const normalized = raw.replace(/,/g, ".").replace(/[^0-9.]/g, "");
-    const parts = normalized.split(".");
-    if(parts.length <= 1) return normalized;
-    return `${parts.shift()}.${parts.join("")}`;
-  }
-  if(role === "reps") {
-    return raw.replace(/[^0-9]/g, "");
-  }
-  return raw;
+  return V2_INPUT.sanitizeSetInputValue(role, value);
 }
 function updateWorkoutExerciseField(ex, field, value) {
   const key = `${field}_w${ui.week}_${ui.day}_${ex}`;
@@ -9848,39 +9289,13 @@ function updateWorkoutExerciseField(ex, field, value) {
 }
 
 function parseRestSeconds(value) {
-  if(V2_FORMAT?.parseRestSeconds) return V2_FORMAT.parseRestSeconds(value);
-  const raw = String(value ?? "").trim();
-  if(!raw) return 0;
-  if(/^\d+$/.test(raw)) {
-    const total = Math.max(0, Number(raw) || 0);
-    return raw.length <= 2 && total <= 10 ? total * 60 : total;
-  }
-  const parts = raw.split(':').map(part => part.trim()).filter(Boolean);
-  if(parts.some(part => !/^\d+$/.test(part))) return 0;
-  if(parts.length === 2) {
-    const [m, s] = parts.map(Number);
-    return Math.max(0, m * 60 + s);
-  }
-  if(parts.length === 3) {
-    const [h, m, s] = parts.map(Number);
-    return Math.max(0, h * 3600 + m * 60 + s);
-  }
-  return 0;
+  return V2_FORMAT.parseRestSeconds(value);
 }
 function formatRestSeconds(totalSeconds) {
-  if(V2_FORMAT?.formatRestSeconds) return V2_FORMAT.formatRestSeconds(totalSeconds);
-  const total = Math.max(0, Math.floor(Number(totalSeconds) || 0));
-  const hours = Math.floor(total / 3600);
-  const minutes = Math.floor((total % 3600) / 60);
-  const seconds = total % 60;
-  if(hours > 0) return `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
-  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+  return V2_FORMAT.formatRestSeconds(totalSeconds);
 }
 function normalizeRestValue(value) {
-  if(V2_FORMAT?.normalizeRestValue) return V2_FORMAT.normalizeRestValue(value);
-  const raw = String(value ?? "").trim();
-  if(!raw) return "";
-  return formatRestSeconds(parseRestSeconds(raw));
+  return V2_FORMAT.normalizeRestValue(value);
 }
 const WORKOUT_MOBILE_ADVANCE_BLUR_DELAY_MS = 40;
 const WORKOUT_MOBILE_ADVANCE_POINTER_GUARD_MS = 180;
@@ -9986,20 +9401,14 @@ function bindSearchJumpEvents() {
 }
 
 function bindWorkoutPrevNextButtons() {
-  if(V2_WORKOUT_RUNTIME?.bindWorkoutPrevNextButtons) {
-    V2_WORKOUT_RUNTIME.bindWorkoutPrevNextButtons({
-      onPrev() {
-        commitUiUpdate(() => { ui.activeExerciseIndex=Math.max(0,ui.activeExerciseIndex-1); }, "exercises");
-      },
-      onNext() {
-        commitUiUpdate(() => { const count=getFilteredWorkoutGroupCount(); ui.activeExerciseIndex=Math.min(Math.max(0,count-1),ui.activeExerciseIndex+1); }, "exercises");
-      }
-    });
-    return;
-  }
-  const prev=document.getElementById("prevExerciseBtn"), next=document.getElementById("nextExerciseBtn");
-  if(prev) prev.onclick=()=> commitUiUpdate(() => { ui.activeExerciseIndex=Math.max(0,ui.activeExerciseIndex-1); }, "exercises");
-  if(next) next.onclick=()=> commitUiUpdate(() => { const count=getFilteredWorkoutGroupCount(); ui.activeExerciseIndex=Math.min(Math.max(0,count-1),ui.activeExerciseIndex+1); }, "exercises");
+  V2_WORKOUT_RUNTIME.bindWorkoutPrevNextButtons({
+    onPrev() {
+      commitUiUpdate(() => { ui.activeExerciseIndex=Math.max(0,ui.activeExerciseIndex-1); }, "exercises");
+    },
+    onNext() {
+      commitUiUpdate(() => { const count=getFilteredWorkoutGroupCount(); ui.activeExerciseIndex=Math.min(Math.max(0,count-1),ui.activeExerciseIndex+1); }, "exercises");
+    }
+  });
 }
 
 function bindAddSetButtons() {
@@ -10337,9 +9746,7 @@ function handleAddExerciseClick() {
       if(payload.historyModeInput) payload.historyModeInput.value = "empty";
     }, { renderMode:"app", message:"Exercise saved locally on this device." });
     if(startingFirstWorkout) {
-      const firstWorkoutMessage = V2_FEEDBACK?.getFirstWorkoutCreatedMessage
-        ? V2_FEEDBACK.getFirstWorkoutCreatedMessage({ isFirstWorkout: true })
-        : "Workout started";
+      const firstWorkoutMessage = V2_FEEDBACK.getFirstWorkoutCreatedMessage({ isFirstWorkout: true });
       if(firstWorkoutMessage) showToast(firstWorkoutMessage);
       requestAnimationFrame(() => {
         const targetCard = document.querySelector("[data-exercise-card]");
@@ -10436,51 +9843,8 @@ function setSyncStatus(text) {
   const el = ensureElement("syncStatus");
   if(!el) return;
   const value = String(text || "");
-  const getFallbackLabel = statusValue => {
-    if(/Cloud: loaded/i.test(statusValue)) return "Cloud loaded";
-    if(/Cloud: synced/i.test(statusValue)) return "Cloud synced";
-    if(/Cloud: syncing/i.test(statusValue)) return "Saving to cloud";
-    if(/Cloud: loading/i.test(statusValue)) return "Preparing your training";
-    if(/Cloud: connecting/i.test(statusValue)) return "Connecting your cloud";
-    if(/Cloud: empty/i.test(statusValue)) return "No cloud training yet";
-    if(/Cloud: local scoped/i.test(statusValue)) return "Using local training";
-    if(/Cloud: local imported/i.test(statusValue)) return "Using imported training";
-    if(/Cloud: save blocked/i.test(statusValue)) return "Saved locally only";
-    if(/Cloud: unavailable/i.test(statusValue)) return "Cloud unavailable";
-    if(/Cloud: save failed/i.test(statusValue)) return "Saved locally only";
-    if(/Cloud: offline/i.test(statusValue)) return "Offline";
-    if(/local restore/i.test(statusValue)) return "Restored locally";
-    if(/local only/i.test(statusValue)) return "Using local mode";
-    if(/signing out/i.test(statusValue)) return "Signing out";
-    if(/sign out failed/i.test(statusValue)) return "Sign out failed";
-    if(/sign in/i.test(statusValue)) return "Sign in";
-    return statusValue;
-  };
-  const getFallbackTone = statusValue => {
-    if(/Cloud: loaded/i.test(statusValue)) return "ok";
-    if(/Cloud: synced/i.test(statusValue)) return "ok";
-    if(/Cloud: syncing/i.test(statusValue)) return "info";
-    if(/Cloud: loading/i.test(statusValue)) return "info";
-    if(/Cloud: connecting/i.test(statusValue)) return "info";
-    if(/Cloud: empty/i.test(statusValue)) return "info";
-    if(/Cloud: local scoped/i.test(statusValue)) return "info";
-    if(/Cloud: local imported/i.test(statusValue)) return "info";
-    if(/Cloud: save blocked/i.test(statusValue)) return "warn";
-    if(/Cloud: unavailable/i.test(statusValue)) return "warn";
-    if(/Cloud: save failed/i.test(statusValue)) return "warn";
-    if(/Cloud: offline/i.test(statusValue)) return "warn";
-    if(/local restore/i.test(statusValue)) return "info";
-    if(/local only/i.test(statusValue)) return "info";
-    if(/signing out/i.test(statusValue)) return "info";
-    if(/sign out failed/i.test(statusValue)) return "warn";
-    return "";
-  };
-  const label = V2_SYNC_STATUS?.getSyncStatusLabel
-    ? V2_SYNC_STATUS.getSyncStatusLabel(value)
-    : getFallbackLabel(value);
-  const tone = V2_SYNC_STATUS?.getSyncStatusTone
-    ? V2_SYNC_STATUS.getSyncStatusTone(value)
-    : getFallbackTone(value);
+  const label = V2_SYNC_STATUS.getSyncStatusLabel(value);
+  const tone = V2_SYNC_STATUS.getSyncStatusTone(value);
   let cls = "sync-pill";
   if(tone) cls += ` ${tone}`;
   el.className = cls;
@@ -10938,26 +10302,13 @@ const timerState = { elapsedMs: 0, startedAt: null, interval: null, running: fal
 // TIMER ZONE
 // ============================================================
 function getTimerElapsedMs() {
-  if(V2_TIMER_RUNTIME?.getTimerElapsedMs) {
-    return V2_TIMER_RUNTIME.getTimerElapsedMs({
-      timerState,
-      now: () => Date.now()
-    });
-  }
-  if(timerState.running && timerState.startedAt) {
-    return Math.max(0, timerState.elapsedMs + (Date.now() - timerState.startedAt));
-  }
-  return Math.max(0, timerState.elapsedMs || 0);
+  return V2_TIMER_RUNTIME.getTimerElapsedMs({
+    timerState,
+    now: () => Date.now()
+  });
 }
 function formatTimer(totalSeconds) {
-  if(V2_TIMER_RUNTIME?.formatTimer) {
-    return V2_TIMER_RUNTIME.formatTimer({ totalSeconds });
-  }
-  const total = Math.max(0, Math.floor(Number(totalSeconds) || 0));
-  const hours = Math.floor(total / 3600);
-  const mins = Math.floor((total % 3600) / 60).toString().padStart(2, "0");
-  const secs = Math.floor(total % 60).toString().padStart(2, "0");
-  return hours > 0 ? `${hours}.${mins}.${secs}` : `${mins}:${secs}`;
+  return V2_TIMER_RUNTIME.formatTimer({ totalSeconds });
 }
 function getWorkoutTimerDisplayMode({ workoutMode, running, elapsedSeconds }) {
   return workoutMode && (running || elapsedSeconds > 0) ? "dominant" : "compact";
@@ -10993,51 +10344,21 @@ function renderTimer() {
     running: timerState.running,
     workoutMode: ui.workoutMode
   });
-  if(V2_TIMER_RUNTIME?.renderTimerView) {
-    V2_TIMER_RUNTIME.renderTimerView({
-      elapsedSeconds,
-      running: timerState.running,
-      hasValue,
-      refs: {
-        display,
-        bottomTimerBtn: btn,
-        startBtn,
-        pauseBtn,
-        resetBtn,
-        hint,
-        sheet
-      },
-      formatTimer
-    });
-    return;
-  }
-
-  if(display) {
-    display.textContent = formatTimer(elapsedSeconds);
-    display.classList.toggle("is-live", timerState.running);
-    display.classList.toggle("is-paused", !timerState.running && hasValue);
-  }
-
-  if(sheet) sheet.classList.toggle("is-live", timerState.running);
-
-  if(btn) {
-    btn.classList.toggle("timer-live", timerState.running || hasValue);
-    btn.textContent = timerState.running
-      ? `⏱ ${formatTimer(elapsedSeconds)}`
-      : (hasValue ? `⏱ ${formatTimer(elapsedSeconds)}` : "⏱ Timer");
-  }
-
-  if(startBtn) startBtn.textContent = hasValue ? "Resume" : "Start";
-  if(startBtn) startBtn.disabled = !!timerState.running;
-
-  if(pauseBtn) pauseBtn.disabled = !timerState.running;
-  if(resetBtn) resetBtn.disabled = !hasValue && !timerState.running;
-
-  if(hint) {
-    hint.textContent = timerState.running
-      ? "Timer is running while you keep moving."
-      : (hasValue ? "Timer is paused. Resume or reset when you are ready." : "Starts from 00:00 and runs until you stop it.");
-  }
+  V2_TIMER_RUNTIME.renderTimerView({
+    elapsedSeconds,
+    running: timerState.running,
+    hasValue,
+    refs: {
+      display,
+      bottomTimerBtn: btn,
+      startBtn,
+      pauseBtn,
+      resetBtn,
+      hint,
+      sheet
+    },
+    formatTimer
+  });
 }
 function stopTimerInterval() {
   if(timerState.interval) clearInterval(timerState.interval);
@@ -11119,13 +10440,10 @@ async function releaseWorkoutWakeLock() {
   workoutWakeLock = null;
 }
 function shouldHoldWorkoutWakeLock() {
-  if(V2_TIMER_RUNTIME?.shouldHoldWorkoutWakeLock) {
-    return V2_TIMER_RUNTIME.shouldHoldWorkoutWakeLock({
-      workoutMode: ui.workoutMode,
-      timerRunning: timerState.running
-    });
-  }
-  return !!(ui.workoutMode || timerState.running);
+  return V2_TIMER_RUNTIME.shouldHoldWorkoutWakeLock({
+    workoutMode: ui.workoutMode,
+    timerRunning: timerState.running
+  });
 }
 function syncWorkoutWakeLock() {
   if(document.visibilityState === "hidden") return;
@@ -11365,32 +10683,12 @@ function setupLockScreen() {
     document.addEventListener(evt, () => { if(appUnlocked) markSessionActive(); }, {passive:true});
   });
 }
-if(V2_TIMER_RUNTIME?.bindTimerOverlayControls) {
-  V2_TIMER_RUNTIME.bindTimerOverlayControls({
-    onClose() {
-      closeTimer();
-    },
-    onStart() {
-      startTimer();
-    },
-    onPause() {
-      pauseTimer();
-    },
-    onReset() {
-      resetTimer();
-    }
-  });
-} else {
-  const timerCloseBtn = document.getElementById("timerCloseBtn");
-  if(timerCloseBtn) timerCloseBtn.onclick = () => closeTimer();
-  const timerStartBtn = document.getElementById("timerStartBtn");
-  if(timerStartBtn) timerStartBtn.onclick = () => startTimer();
-  const timerPauseBtn = document.getElementById("timerPauseBtn");
-  if(timerPauseBtn) timerPauseBtn.onclick = () => pauseTimer();
-  const timerResetBtn = document.getElementById("timerResetBtn");
-  if(timerResetBtn) timerResetBtn.onclick = () => resetTimer();
-  document.getElementById("timerOverlay")?.addEventListener("click", e => { if(e.target.id === "timerOverlay") closeTimer(); });
-}
+V2_TIMER_RUNTIME.bindTimerOverlayControls({
+  onClose() { closeTimer(); },
+  onStart() { startTimer(); },
+  onPause() { pauseTimer(); },
+  onReset() { resetTimer(); }
+});
 document.addEventListener("keydown", e => {
   if(e.key === "Escape" && document.getElementById("timerOverlay")?.style.display === "flex") closeTimer();
 });
