@@ -3607,16 +3607,1144 @@ textarea.exercise-name{
 }
 
 /* =========================================
-   ZONE 7 — RADAR / BODY CARD
-   Consolidated from ITER22, 23, 40, 42E, 48, 51, 52, 53, 54
-   CSS only — no JS / data / render / auth / overlay changes
-   Scope: .radar-card and all children
+   ITER22 — RADAR LOCAL POLISH ONLY
+   Scope locked to radar-card zone only
+   No header / layout / auth / overlay / render flow changes
 ========================================= */
-
-/* --- Card container --- */
 .radar-card{
   position:relative;
   overflow:hidden;
+}
+
+.radar-card .section-title{
+  display:grid !important;
+  justify-items:center !important;
+  gap:12px !important;
+  margin-bottom:14px !important;
+  text-align:center !important;
+}
+
+.radar-card #radarTitle{
+  width:100%;
+  margin:0;
+  color:#f6f8fb !important;
+  font-size:21px !important;
+  line-height:1.08 !important;
+  letter-spacing:-.03em !important;
+  font-weight:800 !important;
+  text-transform:none !important;
+}
+
+.radar-card .radar-header-actions{
+  width:100%;
+  display:flex !important;
+  justify-content:center !important;
+  align-items:center !important;
+  margin:0 !important;
+}
+
+.radar-card #radarToggle{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  padding:4px;
+  border:1px solid rgba(255,255,255,.08) !important;
+  border-radius:999px !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 24px rgba(0,0,0,.18) !important;
+}
+
+.radar-card #radarToggle button{
+  min-width:86px !important;
+  min-height:36px !important;
+  padding:8px 14px !important;
+  border-radius:999px !important;
+  color:rgba(232,239,247,.66);
+  font-size:12px !important;
+  font-weight:750 !important;
+  letter-spacing:.02em !important;
+  transition:background-color .18s ease,color .18s ease,box-shadow .18s ease,transform .12s ease;
+}
+
+.radar-card #radarToggle button.active{
+  color:#fff3cc !important;
+  background:linear-gradient(180deg, rgba(242,201,76,.24), rgba(242,201,76,.10)) !important;
+  box-shadow:0 8px 20px rgba(242,201,76,.12), inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+
+.radar-card .radar-shell{
+  display:grid;
+  gap:14px;
+  justify-items:center;
+}
+
+.radar-card .radar-wrap{
+  width:100%;
+  max-width:320px;
+  aspect-ratio:1 / 1;
+  margin:0 auto;
+  padding:10px !important;
+  border-radius:24px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.07) !important;
+  background:
+    radial-gradient(circle at 50% 30%, rgba(255,255,255,.07), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,0));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.03),
+    0 18px 36px rgba(0,0,0,.20);
+}
+
+.radar-card .radar-wrap::after{
+  content:"";
+  position:absolute;
+  inset:14px;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.03);
+  pointer-events:none;
+}
+
+.radar-card #radarSvg{
+  display:block;
+  width:100%;
+  height:100%;
+}
+
+.radar-card #radarSvg text{
+  display:none;
+}
+
+.radar-card .radar-legend{
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0,1fr));
+  gap:10px;
+  width:100%;
+  max-width:560px;
+  margin:0 auto;
+}
+
+.radar-card .radar-legend-item{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  min-height:38px;
+  padding:8px 10px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+  color:rgba(239,244,251,.9);
+  font-size:12px;
+  font-weight:650;
+  white-space:nowrap;
+}
+
+.radar-card .radar-legend-dot{
+  width:9px;
+  height:9px;
+  border-radius:999px;
+  flex:0 0 auto;
+  box-shadow:0 0 0 3px rgba(255,255,255,.03);
+}
+
+.radar-card .radar-footnote{
+  max-width:520px;
+  margin:0 auto;
+  text-align:center;
+  color:rgba(226,233,243,.74);
+  font-size:12px;
+  line-height:1.4;
+}
+
+@media (max-width:640px){
+  .radar-card .section-title{
+    gap:10px !important;
+    margin-bottom:12px !important;
+  }
+
+  .radar-card #radarTitle{
+    font-size:19px !important;
+  }
+
+  .radar-card #radarToggle button{
+    min-width:76px !important;
+    min-height:34px !important;
+    padding:7px 12px !important;
+    font-size:11px !important;
+  }
+
+  .radar-card .radar-wrap{
+    max-width:300px;
+    padding:8px !important;
+    border-radius:22px;
+  }
+
+  .radar-card .radar-legend{
+    grid-template-columns:repeat(2, minmax(0,1fr));
+    gap:8px;
+  }
+
+  .radar-card .radar-legend-item{
+    min-height:34px;
+    font-size:11px;
+  }
+
+  .radar-card .radar-footnote{
+    font-size:11px;
+  }
+}
+
+/* =========================================
+   ITER23 — RADAR STRONG POLISH PACK
+   Scope locked to radar-card zone only
+   CSS only, no render / flow / auth changes
+========================================= */
+.radar-card{
+  border:1px solid rgba(255,255,255,.06);
+  background:
+    radial-gradient(circle at 50% -8%, rgba(242,201,76,.06), rgba(242,201,76,0) 34%),
+    linear-gradient(180deg, rgba(19,31,52,.985), rgba(11,23,41,.985));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    0 18px 42px rgba(0,0,0,.24);
+}
+
+.radar-card .section-title{
+  gap:14px !important;
+  margin-bottom:16px !important;
+}
+
+.radar-card #radarTitle{
+  color:#fbfcfe !important;
+  font-size:23px !important;
+  line-height:1.04 !important;
+  letter-spacing:-.035em !important;
+  text-shadow:0 10px 28px rgba(0,0,0,.16);
+}
+
+.radar-card .radar-header-actions{
+  position:relative;
+}
+
+.radar-card #radarToggle{
+  gap:3px;
+  padding:5px;
+  border-color:rgba(255,255,255,.09) !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.018)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 12px 28px rgba(0,0,0,.20) !important;
+}
+
+.radar-card #radarToggle button{
+  min-width:92px !important;
+  min-height:37px !important;
+  padding:8px 15px !important;
+  color:rgba(226,234,244,.48);
+  font-weight:780 !important;
+  letter-spacing:.025em !important;
+}
+
+.radar-card #radarToggle button:not(.active){
+  background:transparent !important;
+  box-shadow:none !important;
+}
+
+.radar-card #radarToggle button.active{
+  color:#fff7dd !important;
+  background:linear-gradient(180deg, rgba(242,201,76,.28), rgba(242,201,76,.12)) !important;
+  box-shadow:
+    0 10px 22px rgba(242,201,76,.14),
+    inset 0 1px 0 rgba(255,255,255,.12) !important;
+}
+
+.radar-card .radar-shell{
+  gap:16px;
+  width:100%;
+}
+
+.radar-card .radar-wrap{
+  max-width:332px;
+  padding:12px !important;
+  border-radius:26px;
+  border-color:rgba(255,255,255,.08) !important;
+  background:
+    radial-gradient(circle at 50% 24%, rgba(255,255,255,.085), rgba(255,255,255,0) 56%),
+    linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.008));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    inset 0 -24px 40px rgba(6,12,22,.18),
+    0 22px 44px rgba(0,0,0,.22);
+}
+
+.radar-card .radar-wrap::after{
+  inset:12px;
+  border-radius:22px;
+  border-color:rgba(255,255,255,.04);
+}
+
+.radar-card #radarSvg{
+  filter:drop-shadow(0 10px 24px rgba(0,0,0,.12));
+}
+
+.radar-card #radarSvg rect:first-of-type{
+  fill:#0a1930;
+}
+
+.radar-card #radarSvg line{
+  stroke:rgba(255,255,255,.065) !important;
+}
+
+.radar-card #radarSvg polygon[fill="none"]{
+  stroke:rgba(255,255,255,.055) !important;
+}
+
+.radar-card #radarSvg polygon[fill="rgba(242,201,76,.10)"]{
+  fill:rgba(242,201,76,.15) !important;
+  stroke:rgba(255,225,138,.84) !important;
+  stroke-width:2.35 !important;
+}
+
+.radar-card #radarSvg polygon[fill="rgba(255,255,255,.04)"]{
+  fill:rgba(255,255,255,.03) !important;
+  stroke:rgba(255,255,255,.12) !important;
+}
+
+.radar-card #radarSvg circle{
+  r:5.2;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.14));
+}
+
+.radar-card .radar-legend{
+  max-width:584px;
+  gap:10px;
+  align-items:stretch;
+}
+
+.radar-card .radar-legend-item{
+  justify-content:flex-start;
+  gap:10px;
+  min-height:42px;
+  padding:10px 12px;
+  border-radius:15px;
+  border-color:rgba(255,255,255,.075);
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.022));
+  color:rgba(244,247,251,.94);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:-.01em;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    0 8px 18px rgba(0,0,0,.10);
+}
+
+.radar-card .radar-legend-item span:last-child{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.radar-card .radar-legend-dot{
+  width:10px;
+  height:10px;
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,.025),
+    0 4px 10px rgba(0,0,0,.10);
+}
+
+.radar-card .radar-footnote{
+  max-width:500px;
+  color:rgba(214,224,236,.66);
+  font-size:11px;
+  line-height:1.5;
+  letter-spacing:.005em;
+}
+
+@media (max-width:640px){
+  .radar-card .section-title{
+    gap:12px !important;
+    margin-bottom:14px !important;
+  }
+
+  .radar-card #radarTitle{
+    font-size:20px !important;
+  }
+
+  .radar-card #radarToggle{
+    width:100%;
+    justify-content:center;
+  }
+
+  .radar-card #radarToggle button{
+    min-width:0 !important;
+    flex:1 1 0;
+    padding:8px 10px !important;
+    font-size:11px !important;
+  }
+
+  .radar-card .radar-wrap{
+    max-width:304px;
+    padding:10px !important;
+    border-radius:24px;
+  }
+
+  .radar-card .radar-legend-item{
+    min-height:38px;
+    padding:9px 10px;
+    font-size:11px;
+  }
+
+  .radar-card .radar-footnote{
+    font-size:10.5px;
+    line-height:1.45;
+  }
+}
+
+/* =========================================
+   ITER24 — EXERCISE CARD STRONG POLISH
+   Scope locked to exercise / superset / set rows / local action area
+   CSS only — no HTML / JS / render flow changes
+========================================= */
+
+.block-group{
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.04);
+  background:linear-gradient(180deg, rgba(18,31,54,.58), rgba(11,22,39,.22));
+  box-shadow:0 18px 38px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.02);
+}
+
+.block-header{
+  padding:12px 14px;
+  background:linear-gradient(180deg, rgba(17,24,35,.98), rgba(14,20,30,.98));
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+
+.block-title{
+  align-items:center;
+  gap:10px;
+  color:#edf3fb;
+}
+
+.block-title > div:last-child{
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:-.01em;
+  color:#d6e0ee;
+}
+
+.block-chip{
+  min-width:46px;
+  height:34px;
+  border-radius:12px;
+  font-weight:800;
+  color:#fff0bf;
+  background:linear-gradient(180deg, rgba(242,201,76,.22), rgba(242,201,76,.09));
+  border:1px solid rgba(242,201,76,.26);
+  box-shadow:0 8px 18px rgba(242,201,76,.10), inset 0 1px 0 rgba(255,255,255,.08);
+}
+
+.workout-group-stack{
+  display:grid;
+  gap:0;
+}
+
+.exercise{
+  position:relative;
+  padding:16px 14px;
+  border-top:1px solid rgba(58,79,115,.46);
+  background:linear-gradient(180deg, rgba(18,30,52,.34), rgba(10,20,36,.12));
+  transition:background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .12s ease;
+}
+
+.exercise:hover{
+  border-top-color:rgba(88,114,156,.56);
+}
+
+.exercise::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.015), rgba(255,255,255,0) 34%);
+  opacity:.75;
+}
+
+.exercise-main,
+.compare,
+.field-grid,
+.sets,
+.exercise-actions{
+  position:relative;
+  z-index:1;
+}
+
+.left-main{
+  gap:12px;
+  align-items:flex-start;
+}
+
+.codebox{
+  width:60px;
+  min-width:60px;
+  height:44px;
+  border-radius:13px;
+  font-size:15px;
+  font-weight:800;
+  box-shadow:0 10px 20px rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.exercise-name{
+  font-size:20px !important;
+  line-height:1.08 !important;
+  font-weight:700 !important;
+  letter-spacing:-.028em !important;
+}
+
+.exercise-meta{
+  margin-top:6px;
+  font-size:12px !important;
+  line-height:1.45 !important;
+  color:#9eb3cd !important;
+}
+
+.exercise.superset{
+  border-left-width:5px;
+  border-left-color:rgba(242,201,76,.92);
+  padding-left:12px;
+  background:
+    linear-gradient(90deg, rgba(242,201,76,.12), rgba(242,201,76,0) 22%),
+    linear-gradient(180deg, rgba(33,30,17,.34), rgba(10,20,36,.14));
+  box-shadow:inset 1px 0 0 rgba(255,241,191,.12);
+}
+
+.exercise.superset + .exercise.superset{
+  border-top-color:rgba(242,201,76,.22);
+}
+
+.exercise:not(.superset) + .exercise.superset{
+  margin-top:8px;
+}
+
+.exercise.superset + .exercise:not(.superset){
+  margin-top:10px;
+}
+
+.exercise.active-workout{
+  border-color:rgba(242,201,76,.62);
+  background:
+    linear-gradient(180deg, rgba(55,45,23,.82), rgba(19,28,42,.98));
+  box-shadow:0 0 0 1px rgba(242,201,76,.18) inset, 0 18px 34px rgba(0,0,0,.22);
+}
+
+.exercise.active-workout .exercise-meta{
+  color:rgba(255,255,255,.54) !important;
+}
+
+.compare.compact-last{
+  margin-top:12px;
+}
+
+.last-time-card,
+.compare .info-box{
+  border-radius:16px;
+}
+
+.field-grid{
+  gap:12px;
+  margin-top:14px;
+  align-items:center;
+}
+
+.label{
+  display:flex;
+  align-items:center;
+  min-height:46px;
+  padding-top:0;
+  color:#a5b7ce;
+  font-weight:700;
+}
+
+.exercise .field,
+.exercise .textarea{
+  min-height:46px;
+  border-radius:14px;
+  border-color:rgba(62,84,121,.88) !important;
+  background:linear-gradient(180deg, rgba(12,20,32,.98), rgba(15,24,38,.98)) !important;
+}
+
+.exercise .textarea{
+  min-height:54px;
+  padding-top:12px;
+  padding-bottom:12px;
+}
+
+.sets{
+  gap:10px;
+  margin-top:14px;
+}
+
+.setrow{
+  position:relative;
+  align-items:end;
+  min-height:78px;
+  padding:10px;
+  gap:10px;
+  border-radius:18px;
+  border:1px solid rgba(55,79,118,.92);
+  background:linear-gradient(180deg, rgba(20,37,64,.96), rgba(13,26,46,.98));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03), 0 10px 22px rgba(0,0,0,.10);
+}
+
+.setn{
+  height:44px;
+  border-radius:13px;
+  background:linear-gradient(180deg, rgba(17,25,38,.98), rgba(14,20,31,.98));
+  border-color:rgba(66,88,123,.94);
+  color:#edf4fd;
+  font-size:14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.setcol{
+  min-width:0;
+}
+
+.setcol .k{
+  margin-bottom:7px;
+  color:#aac0db;
+  font-size:10px;
+  letter-spacing:.08em;
+}
+
+.setinput{
+  min-height:44px;
+  height:44px;
+  border-radius:13px;
+  padding:10px 11px;
+  border:1px solid rgba(65,89,127,.92);
+  background:linear-gradient(180deg, rgba(11,19,31,.98), rgba(15,24,38,.98));
+  color:#f7f9fc;
+  font-weight:700;
+  font-size:14px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.setinput[data-role="volume"]{
+  color:#dbe8f8 !important;
+  background:linear-gradient(180deg, rgba(17,29,45,.98), rgba(14,23,37,.98)) !important;
+}
+
+.donebtn{
+  width:46px;
+  height:44px;
+  border-radius:14px;
+  font-size:18px;
+  font-weight:900;
+  border:1px solid rgba(66,88,123,.92);
+  background:linear-gradient(180deg, rgba(17,27,41,.98), rgba(11,19,31,.98));
+  color:#a8bdd7;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+
+.donebtn.on{
+  background:linear-gradient(180deg, rgba(57,181,106,.30), rgba(57,181,106,.14));
+  border-color:rgba(57,181,106,.62);
+  color:#ebfff1;
+  box-shadow:0 10px 20px rgba(57,181,106,.12), inset 0 1px 0 rgba(255,255,255,.06);
+}
+
+.setrow.is-done,
+.setrow[data-done="1"]{
+  background:linear-gradient(180deg, rgba(22,56,41,.98), rgba(14,33,26,.99));
+  border-color:rgba(57,181,106,.44);
+}
+
+.setrow.is-next{
+  border-color:rgba(242,201,76,.58);
+  background:linear-gradient(180deg, rgba(47,44,23,.96), rgba(17,28,46,.99));
+  box-shadow:0 0 0 1px rgba(242,201,76,.14) inset, 0 14px 28px rgba(0,0,0,.12);
+}
+
+.setrow.input-row-active,
+.setrow:focus-within{
+  border-color:rgba(127,178,255,.62);
+  box-shadow:0 0 0 1px rgba(127,178,255,.18) inset, 0 14px 28px rgba(0,0,0,.14);
+}
+
+.exercise-actions{
+  gap:10px;
+  margin-top:14px;
+  justify-content:center;
+}
+
+.exercise-actions .btn{
+  min-height:44px;
+  padding:0 16px;
+  border-radius:14px;
+  font-weight:700;
+  letter-spacing:-.01em;
+}
+
+.exercise-actions .btn.primary,
+.exercise-actions .btn.gold{
+  box-shadow:0 10px 22px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.10);
+}
+
+@media (max-width:640px){
+  .block-header{
+    padding:11px 12px;
+  }
+
+  .block-title > div:last-child{
+    font-size:12px;
+  }
+
+  .block-chip{
+    min-width:42px;
+    height:32px;
+    border-radius:11px;
+    font-size:12px;
+  }
+
+  .exercise-name{
+    font-size:18px !important;
+  }
+
+  .exercise-meta{
+    font-size:11px !important;
+  }
+
+  .codebox{
+    width:54px;
+    min-width:54px;
+    height:42px;
+    font-size:14px;
+  }
+
+  .exercise.superset{
+    border-left-width:4px;
+    padding-left:10px;
+  }
+
+  .exercise:not(.superset) + .exercise.superset{
+    margin-top:6px;
+  }
+
+  .exercise.superset + .exercise:not(.superset){
+    margin-top:8px;
+  }
+
+  .field-grid{
+    grid-template-columns:1fr;
+    gap:8px;
+    margin-top:12px;
+  }
+
+  .label{
+    min-height:0;
+    justify-content:center;
+    text-align:center;
+  }
+
+  .exercise .field,
+  .exercise .textarea{
+    min-height:48px;
+  }
+
+  .sets{
+    gap:8px;
+    margin-top:12px;
+  }
+
+  .setrow{
+    grid-template-columns:44px 1fr 1fr 72px 42px;
+    min-height:72px;
+    gap:7px;
+    padding:8px;
+    border-radius:16px;
+  }
+
+  .setn,
+  .setinput,
+  .donebtn{
+    min-height:42px;
+    height:42px;
+  }
+
+  .setinput{
+    padding:9px 9px;
+    font-size:13px;
+  }
+
+  .donebtn{
+    width:42px;
+    font-size:17px;
+  }
+
+  .exercise-actions{
+    width:100%;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .exercise-actions .btn{
+    flex:1 1 130px;
+    min-width:0;
+    min-height:42px;
+  }
+}
+
+/* =========================================
+   ITER25 — WORKOUT MODE + FINISH FLOW POLISH
+   Scope locked:
+   - workout mode card
+   - progress pills
+   - prev/next nav
+   - finish workout button area
+   - finish summary overlay/card
+   CSS only, no DOM / JS / flow changes
+========================================= */
+
+.workout-mode-shell{
+  gap:18px !important;
+}
+
+.workout-focus-card{
+  position:relative;
+  overflow:hidden;
+  gap:16px !important;
+  padding:20px 18px !important;
+  border-radius:24px !important;
+  border:1px solid rgba(242,201,76,.20) !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(242,201,76,.08), rgba(242,201,76,0) 34%),
+    linear-gradient(180deg, rgba(17,30,51,.985), rgba(10,22,40,.985)) !important;
+  box-shadow:
+    0 20px 44px rgba(0,0,0,.24),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.workout-focus-card::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:92px;
+  background:linear-gradient(180deg, rgba(242,201,76,.08), rgba(242,201,76,0));
+  pointer-events:none;
+}
+
+.workout-focus-card .section-title{
+  position:relative;
+  z-index:1;
+  gap:8px !important;
+  margin-bottom:0 !important;
+}
+
+.workout-focus-card .section-title h3{
+  font-size:24px !important;
+  line-height:1.06 !important;
+  letter-spacing:-.035em !important;
+  font-weight:800 !important;
+  color:#fff4cf !important;
+  text-wrap:balance;
+}
+
+.workout-date-big{
+  position:relative;
+  z-index:1;
+  margin-bottom:0 !important;
+  font-size:26px !important;
+  line-height:1.04 !important;
+  letter-spacing:-.03em !important;
+  color:#f4d98c !important;
+  text-shadow:0 10px 28px rgba(242,201,76,.10);
+}
+
+.workout-focus-note{
+  position:relative;
+  z-index:1;
+  max-width:480px;
+  margin:0 auto;
+  color:#bfd0e3 !important;
+  font-size:13px !important;
+  line-height:1.48 !important;
+}
+
+.workout-progress-row{
+  position:relative;
+  z-index:1;
+  gap:12px !important;
+  margin:2px 0 0 !important;
+}
+
+.workout-progress-pill{
+  width:46px !important;
+  height:46px !important;
+  border-radius:15px !important;
+  border:1px solid rgba(40,63,102,.95) !important;
+  background:linear-gradient(180deg, #132645, #0f213d) !important;
+  color:#bccce0 !important;
+  font-size:14px !important;
+  font-weight:800 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035) !important;
+}
+
+.workout-progress-pill:hover{
+  border-color:rgba(242,201,76,.30) !important;
+  color:#f3df9d !important;
+}
+
+.workout-progress-pill.active{
+  transform:translateY(-1px);
+  border-color:rgba(242,201,76,.62) !important;
+  color:#fff4cf !important;
+  background:linear-gradient(180deg, rgba(242,201,76,.24), rgba(242,201,76,.11)) !important;
+  box-shadow:
+    0 12px 24px rgba(242,201,76,.12),
+    inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+
+.workout-progress-pill.done{
+  border-color:rgba(57,181,106,.52) !important;
+  color:#dcffe8 !important;
+  background:linear-gradient(180deg, rgba(57,181,106,.24), rgba(57,181,106,.10)) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05) !important;
+}
+
+.workout-nav-row{
+  position:relative;
+  z-index:1;
+  gap:10px !important;
+  margin-top:2px !important;
+}
+
+.workout-nav-row .btn{
+  min-width:136px !important;
+  min-height:44px !important;
+  padding:0 18px !important;
+  border-radius:15px !important;
+  font-size:14px !important;
+  font-weight:750 !important;
+  background:linear-gradient(180deg, rgba(17,31,51,.96), rgba(12,23,40,.98)) !important;
+  border:1px solid rgba(45,67,103,.9) !important;
+  color:#e4edf7 !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.workout-nav-row .btn:hover{
+  border-color:rgba(242,201,76,.26) !important;
+  color:#fff2c7 !important;
+}
+
+.finish-workout-row{
+  margin:22px 0 10px !important;
+}
+
+.finish-workout-btn{
+  min-width:min(100%, 380px) !important;
+  min-height:58px !important;
+  padding:0 24px !important;
+  border-radius:18px !important;
+  font-size:16px !important;
+  font-weight:900 !important;
+  letter-spacing:.05em !important;
+  box-shadow:
+    0 18px 36px rgba(255,159,10,.26),
+    inset 0 1px 0 rgba(255,255,255,.26) !important;
+}
+
+.finish-workout-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:
+    0 22px 40px rgba(255,159,10,.28),
+    inset 0 1px 0 rgba(255,255,255,.26) !important;
+}
+
+.finish-workout-btn::before{
+  margin-right:12px !important;
+}
+
+.finish-summary-overlay{
+  background:
+    radial-gradient(circle at 50% 18%, rgba(242,201,76,.10), rgba(242,201,76,0) 34%),
+    rgba(3,8,18,.74) !important;
+  backdrop-filter:blur(10px) !important;
+}
+
+.finish-summary-card{
+  position:relative;
+  overflow:hidden;
+  width:min(440px, 100%) !important;
+  padding:26px 22px !important;
+  border-radius:28px !important;
+  border:1px solid rgba(242,201,76,.22) !important;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(242,201,76,.08), rgba(242,201,76,0) 34%),
+    linear-gradient(180deg, #132A4A, #0F243F) !important;
+  box-shadow:
+    0 28px 60px rgba(0,0,0,.36),
+    inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.finish-summary-card::before{
+  content:"";
+  position:absolute;
+  inset:0 0 auto 0;
+  height:94px;
+  background:linear-gradient(180deg, rgba(242,201,76,.10), rgba(242,201,76,0));
+  pointer-events:none;
+}
+
+.finish-summary-kicker{
+  position:relative;
+  z-index:1;
+  color:rgba(255,235,179,.78) !important;
+  letter-spacing:.18em !important;
+  font-weight:800 !important;
+}
+
+.finish-summary-title{
+  position:relative;
+  z-index:1;
+  color:#fff7de !important;
+  text-shadow:0 10px 26px rgba(242,201,76,.08);
+}
+
+.finish-summary-subline{
+  position:relative;
+  z-index:1;
+  max-width:300px;
+  margin:10px auto 0 !important;
+  color:#d9e4f1 !important;
+  font-size:14px !important;
+  line-height:1.44 !important;
+}
+
+.finish-summary-grid{
+  position:relative;
+  z-index:1;
+  gap:12px !important;
+  margin:22px 0 22px !important;
+}
+
+.finish-summary-stat{
+  border-radius:18px !important;
+  padding:14px 10px !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03)) !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04) !important;
+}
+
+.finish-summary-stat .k{
+  color:rgba(255,255,255,.58) !important;
+  letter-spacing:.12em !important;
+  font-weight:700 !important;
+}
+
+.finish-summary-stat .v{
+  color:#fffaf0 !important;
+  text-shadow:0 4px 14px rgba(0,0,0,.16);
+}
+
+.finish-summary-done{
+  position:relative;
+  z-index:1;
+  min-height:54px !important;
+  padding:0 24px !important;
+  border-radius:17px !important;
+  font-size:15px !important;
+  font-weight:900 !important;
+  letter-spacing:.04em !important;
+  box-shadow:
+    0 16px 32px rgba(255,159,10,.24),
+    inset 0 1px 0 rgba(255,255,255,.24) !important;
+}
+
+.finish-summary-done:hover{
+  transform:translateY(-1px);
+  box-shadow:
+    0 18px 34px rgba(255,159,10,.26),
+    inset 0 1px 0 rgba(255,255,255,.24) !important;
+}
+
+@media (max-width:640px){
+  .workout-mode-shell{
+    gap:16px !important;
+  }
+
+  .workout-focus-card{
+    gap:14px !important;
+    padding:17px 14px !important;
+    border-radius:21px !important;
+  }
+
+  .workout-focus-card .section-title h3{
+    font-size:21px !important;
+  }
+
+  .workout-date-big{
+    font-size:23px !important;
+  }
+
+  .workout-progress-row{
+    gap:10px !important;
+  }
+
+  .workout-progress-pill{
+    width:42px !important;
+    height:42px !important;
+    border-radius:13px !important;
+  }
+
+  .workout-nav-row .btn{
+    flex:1 1 140px;
+    min-width:0 !important;
+    min-height:42px !important;
+  }
+
+  .finish-workout-row{
+    margin:18px 0 6px !important;
+  }
+
+  .finish-workout-btn{
+    width:100% !important;
+    max-width:340px !important;
+    min-height:54px !important;
+    font-size:15px !important;
+  }
+
+  .finish-summary-card{
+    padding:22px 18px !important;
+    border-radius:24px !important;
+  }
+
+  .finish-summary-title{
+    font-size:30px !important;
+  }
+
+  .finish-summary-grid{
+    gap:8px !important;
+  }
+
+  .finish-summary-stat{
+    padding:12px 8px !important;
+    border-radius:16px !important;
+  }
+
+  .finish-summary-stat .v{
+    font-size:20px !important;
+  }
+
+}
+
+/* =========================================
+   ITER40 — RADAR VISUAL POLISH ONLY
+   Base: iter39 confirmed working baseline
+   Scope locked to radar-card zone only
+   CSS only — no JS / data / render changes
+========================================= */
+.radar-card{
   border:1px solid rgba(255,255,255,.07) !important;
   background:
     radial-gradient(circle at 50% -10%, rgba(242,201,76,.07), rgba(242,201,76,0) 36%),
@@ -3626,20 +4754,819 @@ textarea.exercise-name{
     0 20px 42px rgba(0,0,0,.24) !important;
 }
 
-/* --- Section title --- */
 .radar-card .section-title{
-  display:grid !important;
-  justify-items:center !important;
-  gap:14px !important;
-  margin-bottom:18px !important;
-  text-align:center !important;
+  gap:12px !important;
+  margin-bottom:16px !important;
 }
 
-/* --- Title (hidden; label injected via ::after) --- */
 .radar-card #radarTitle{
+  font-size:22px !important;
+  line-height:1.06 !important;
+  letter-spacing:-.03em !important;
+  font-weight:800 !important;
+  color:#fbfcfe !important;
+  text-shadow:0 8px 24px rgba(0,0,0,.14);
+}
+
+.radar-card .radar-header-actions{
+  margin-top:0 !important;
+}
+
+.radar-card #radarToggle{
+  padding:5px !important;
+  gap:4px !important;
+  border:1px solid rgba(255,255,255,.09) !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 10px 24px rgba(0,0,0,.18) !important;
+}
+
+.radar-card #radarToggle button{
+  min-width:90px !important;
+  min-height:38px !important;
+  padding:8px 15px !important;
+  border-radius:999px !important;
+  font-size:12px !important;
+  font-weight:750 !important;
+  color:rgba(232,239,247,.62) !important;
+}
+
+.radar-card #radarToggle button.active{
+  color:#fff4cf !important;
+  background:linear-gradient(180deg, rgba(242,201,76,.26), rgba(242,201,76,.11)) !important;
+  box-shadow:
+    0 8px 20px rgba(242,201,76,.12),
+    inset 0 1px 0 rgba(255,255,255,.10) !important;
+}
+
+.radar-card .radar-shell{
+  gap:16px !important;
+}
+
+.radar-card .radar-wrap{
+  max-width:336px !important;
+  padding:12px !important;
+  border-radius:26px !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  background:
+    radial-gradient(circle at 50% 28%, rgba(255,255,255,.08), rgba(255,255,255,0) 58%),
+    linear-gradient(180deg, rgba(255,255,255,.028), rgba(255,255,255,.008)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    inset 0 -24px 40px rgba(6,12,22,.16),
+    0 22px 44px rgba(0,0,0,.20) !important;
+}
+
+.radar-card .radar-wrap::after{
+  inset:12px !important;
+  border-radius:22px !important;
+  border-color:rgba(255,255,255,.04) !important;
+}
+
+.radar-card #radarSvg{
+  filter:drop-shadow(0 10px 22px rgba(0,0,0,.12));
+}
+
+.radar-card #radarSvg line{
+  stroke:rgba(255,255,255,.075) !important;
+}
+
+.radar-card #radarSvg polygon[fill="none"]{
+  stroke:rgba(255,255,255,.065) !important;
+}
+
+.radar-card #radarSvg polygon[fill="rgba(242,201,76,.10)"]{
+  fill:rgba(242,201,76,.16) !important;
+  stroke:rgba(255,228,143,.86) !important;
+  stroke-width:2.3 !important;
+}
+
+.radar-card #radarSvg polygon[fill="rgba(255,255,255,.04)"]{
+  fill:rgba(255,255,255,.03) !important;
+  stroke:rgba(255,255,255,.13) !important;
+}
+
+.radar-card #radarSvg circle{
+  r:5.1;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,.14));
+}
+
+.radar-card .radar-legend{
+  max-width:600px !important;
+  gap:10px !important;
+}
+
+.radar-card .radar-legend-item{
+  min-height:42px !important;
+  padding:10px 12px !important;
+  border-radius:15px !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.022)) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.035),
+    0 8px 18px rgba(0,0,0,.10) !important;
+  color:rgba(244,247,251,.94) !important;
+  font-size:12px !important;
+  font-weight:700 !important;
+  letter-spacing:-.01em !important;
+}
+
+.radar-card .radar-legend-dot{
+  width:10px !important;
+  height:10px !important;
+  box-shadow:
+    0 0 0 4px rgba(255,255,255,.025),
+    0 4px 10px rgba(0,0,0,.10) !important;
+}
+
+.radar-card .radar-footnote{
+  max-width:500px !important;
+  color:rgba(218,227,238,.70) !important;
+  font-size:11px !important;
+  line-height:1.5 !important;
+}
+
+@media (max-width:640px){
+  .radar-card .section-title{
+    gap:10px !important;
+    margin-bottom:14px !important;
+  }
+
+  .radar-card #radarTitle{
+    font-size:20px !important;
+  }
+
+  .radar-card #radarToggle{
+    width:100% !important;
+    justify-content:center !important;
+  }
+
+  .radar-card #radarToggle button{
+    min-width:0 !important;
+    flex:1 1 0 !important;
+    min-height:36px !important;
+    padding:8px 10px !important;
+    font-size:11px !important;
+  }
+
+  .radar-card .radar-wrap{
+    max-width:304px !important;
+    padding:10px !important;
+    border-radius:24px !important;
+  }
+
+  .radar-card .radar-legend{
+    grid-template-columns:repeat(2, minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+
+  .radar-card .radar-legend-item{
+    min-height:38px !important;
+    padding:9px 10px !important;
+    font-size:11px !important;
+  }
+
+  .radar-card .radar-footnote{
+    font-size:10.5px !important;
+    line-height:1.45 !important;
+  }
+}
+
+/* =========================================
+   ITER41 — MOBILE SPACING NORMALIZATION ONLY
+   Scope locked to mobile/tablet spacing rhythm
+   CSS only — no JS / DOM / font-size changes
+   Protected: auto-zoom fix, auth, overlays, render flow
+========================================= */
+@media (max-width: 980px) {
+  /* Mobile input auto-zoom fix — prevent iOS Safari zoom on focus */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input:not([type]),
+  select,
+  textarea,
+  .field,
+  .select,
+  .textarea,
+  .setinput,
+  .exercise .field,
+  .exercise .textarea,
+  .exercise .setinput,
+  .add-grid > .field,
+  .add-grid > .select,
+  .search-row .field,
+  .compact-search-card .field,
+  #searchInput,
+  #addExerciseName,
+  #authEmail,
+  #authPassword {
+    font-size: 16px !important;
+  }
+
+  .app {
+    padding-bottom: 28px !important;
+  }
+
+  .left,
+  .right,
+  .exercise-list,
+  #searchResultsHost {
+    gap: 18px !important;
+  }
+
+  .card,
+  .metric,
+  .block-group {
+    border-radius: 20px !important;
+  }
+
+  .card,
+  .metric {
+    padding: 15px 14px !important;
+  }
+
+  .section-title {
+    margin-bottom: 12px !important;
+  }
+
+  .exercise {
+    padding: 15px 13px !important;
+  }
+
+  .exercise-main,
+  .left-main {
+    gap: 12px !important;
+  }
+
+  .compare.compact-last,
+  .field-grid,
+  .sets,
+  .exercise-actions,
+  .finish-workout-row {
+    margin-top: 14px !important;
+  }
+
+  .setrow {
+    margin: 0 !important;
+    padding: 9px !important;
+    gap: 8px !important;
+  }
+
+  .setcol .k {
+    margin-bottom: 6px !important;
+  }
+
+  .setinput,
+  .field,
+  .select,
+  .textarea,
+  .donebtn,
+  .setdeletebtn,
+  .setn,
+  .exercise-actions .btn,
+  .finish-workout-btn,
+  .finish-workout-inline-btn,
+  .workout-nav-row .btn,
+  .workout-progress-pill,
+  .add-grid > .btn,
+  .add-grid > .field,
+  .add-grid > .select {
+    min-height: 44px !important;
+  }
+
+  .exercise-actions {
+    gap: 10px !important;
+  }
+
+  .exercise-actions .btn {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding: 10px 10px 22px !important;
+  }
+
+  .topbar {
+    margin: -10px -10px 16px !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .topbar-inner,
+  .topbar-main {
+    gap: 10px !important;
+  }
+
+  .metrics {
+    gap: 10px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .layout,
+  .left,
+  .right,
+  .exercise-list,
+  #searchResultsHost {
+    gap: 16px !important;
+  }
+
+  .card,
+  .metric {
+    padding: 14px 12px !important;
+    border-radius: 18px !important;
+  }
+
+  .days-card,
+  .compact-search-card,
+  .radar-card,
+  .add-card,
+  .backup-tools-card,
+  .block-group,
+  .workout-focus-card,
+  .search-results-card {
+    margin: 0 !important;
+  }
+
+  .section-title {
+    margin-bottom: 10px !important;
+  }
+
+  .calendar-head,
+  .legend,
+  .add-grid,
+  .backup-tools-card .backup-actions,
+  .backup-tools-card .account-actions,
+  .workout-progress-row,
+  .workout-nav-row {
+    gap: 8px !important;
+  }
+
+  .add-grid {
+    margin-top: 8px !important;
+  }
+
+  .exercise {
+    padding: 14px 12px !important;
+  }
+
+  .exercise-main,
+  .left-main {
+    gap: 10px !important;
+  }
+
+  .compare.compact-last {
+    margin-top: 12px !important;
+  }
+
+  .field-grid {
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+
+  .exercise .field,
+  .exercise .textarea,
+  .field-grid .field,
+  .field-grid .textarea,
+  .add-grid > .field,
+  .add-grid > .select,
+  .add-grid > .btn,
+  .compact-search-card .field,
+  .search-row .field {
+    min-height: 46px !important;
+  }
+
+  .sets {
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+
+  .setrow {
+    grid-template-columns: 44px 1fr 1fr 72px 42px 42px !important;
+    gap: 7px !important;
+    padding: 8px !important;
+    border-radius: 16px !important;
+    min-height: 72px !important;
+  }
+
+  .setn,
+  .setinput,
+  .donebtn,
+  .setdeletebtn {
+    height: 42px !important;
+    min-height: 42px !important;
+  }
+
+  .setinput {
+    padding: 9px 9px !important;
+  }
+
+  .setcol .k {
+    margin-bottom: 5px !important;
+  }
+
+  .exercise-actions {
+    gap: 8px !important;
+    margin-top: 12px !important;
+  }
+
+  .exercise-actions .btn {
+    min-height: 42px !important;
+    border-radius: 13px !important;
+  }
+
+  .finish-workout-row {
+    margin: 16px 0 0 !important;
+  }
+
+  .finish-workout-btn {
+    min-height: 50px !important;
+    max-width: 340px !important;
+  }
+
+  .workout-focus-card {
+    padding: 16px 14px !important;
+  }
+}
+
+/* =========================================
+   ITER42E — RADAR TOGGLE MOBILE FORCE FIT
+   Base: iter41 uploaded baseline
+   Scope locked to radar toggle mobile only
+   CSS only
+========================================= */
+@media (max-width:640px){
+  .radar-card .radar-header-actions{
+    width:100% !important;
+    display:flex !important;
+    justify-content:center !important;
+    padding:0 10px !important;
+    box-sizing:border-box !important;
+  }
+
+  .radar-card #radarToggle{
+    width:100% !important;
+    max-width:320px !important;
+    display:grid !important;
+    grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+    gap:3px !important;
+    padding:4px !important;
+    margin:0 auto !important;
+    box-sizing:border-box !important;
+  }
+
+  .radar-card #radarToggle button{
+    min-width:0 !important;
+    width:100% !important;
+    padding:8px 2px !important;
+    font-size:10px !important;
+    line-height:1.1 !important;
+    letter-spacing:0 !important;
+    white-space:nowrap !important;
+    text-align:center !important;
+  }
+}
+
+/* =========================================
+   ITER48 — RADAR FINAL POLISH
+   Base: iter45 confirmed working
+   Scope locked to radar-card zone only
+   CSS only — no JS / data / toggle logic changes
+========================================= */
+.radar-card .section-title{
+  margin-bottom:14px !important;
+}
+
+.radar-card #radarTitle{
+  font-size:21px !important;
+  line-height:1.08 !important;
+  letter-spacing:-.028em !important;
+}
+
+.radar-card .radar-shell{
+  gap:14px !important;
+}
+
+.radar-card .radar-wrap{
+  max-width:328px !important;
+  padding:11px !important;
+}
+
+.radar-card .radar-legend{
+  max-width:580px !important;
+  gap:9px !important;
+  margin-top:2px !important;
+}
+
+.radar-card .radar-legend-item{
+  min-height:40px !important;
+  padding:9px 11px !important;
+  font-size:11.5px !important;
+  line-height:1.2 !important;
+}
+
+.radar-card .radar-footnote{
+  max-width:480px !important;
+  margin-top:2px !important;
+  color:rgba(220,228,239,.74) !important;
+  font-size:11px !important;
+  line-height:1.42 !important;
+}
+
+@media (max-width:640px){
+  .radar-card .section-title{
+    margin-bottom:12px !important;
+  }
+
+  .radar-card #radarTitle{
+    font-size:19px !important;
+  }
+
+  .radar-card .radar-wrap{
+    max-width:300px !important;
+    padding:9px !important;
+  }
+
+  .radar-card .radar-legend{
+    grid-template-columns:repeat(2, minmax(0,1fr)) !important;
+    gap:8px !important;
+  }
+
+  .radar-card .radar-legend-item{
+    min-height:34px !important;
+    padding:8px 9px !important;
+    font-size:10.5px !important;
+  }
+
+  .radar-card .radar-footnote{
+    max-width:300px !important;
+    font-size:10px !important;
+    line-height:1.38 !important;
+  }
+}
+
+/* =========================================
+   ITER51 — RADAR BODY + INSIGHT LAYER
+   Base: iter50 confirmed working baseline
+   Scope locked to radar-card zone only
+   Adds body visualization + strongest/weakest/balance insight
+   No auth / overlay / calendar / workout flow changes
+========================================= */
+.radar-card .radar-balance-top{
   width:100%;
-  margin:0;
-  text-transform:none !important;
+  display:grid;
+  grid-template-columns:minmax(148px,176px) minmax(0,328px);
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+}
+.radar-card .radar-body-card{
+  width:100%;
+  display:flex;
+  justify-content:center;
+}
+.radar-card .radar-body-figure{
+  position:relative;
+  width:148px;
+  height:232px;
+  border-radius:28px;
+  background:
+    radial-gradient(circle at 50% 22%, rgba(255,255,255,.08), rgba(255,255,255,0) 40%),
+    linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.015));
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 18px 34px rgba(0,0,0,.14);
+}
+.radar-card .radar-body-head,
+.radar-card .radar-body-outline,
+.radar-card .radar-zone{position:absolute;left:50%;transform:translateX(-50%);}
+.radar-card .radar-body-head{
+  top:14px;
+  width:34px;
+  height:34px;
+  border-radius:999px;
+  background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.05));
+  border:1px solid rgba(255,255,255,.08);
+}
+.radar-card .radar-body-outline{
+  top:50px;
+  width:86px;
+  height:162px;
+  border-radius:42px 42px 32px 32px;
+  border:1px solid rgba(255,255,255,.08);
+  background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+}
+.radar-card .radar-zone{
+  border-radius:18px;
+  background:rgba(111,139,176,.12);
+  border:1px solid rgba(255,255,255,.04);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+  transition:background-color .18s ease, box-shadow .18s ease, border-color .18s ease, opacity .18s ease;
+}
+.radar-card .radar-zone::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  background:linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,0));
+  opacity:.28;
+}
+.radar-card .zone-shoulders{top:54px;width:92px;height:24px;border-radius:18px;}
+.radar-card .zone-back{top:76px;width:54px;height:32px;border-radius:18px;opacity:.9;}
+.radar-card .zone-chest{top:82px;width:62px;height:30px;border-radius:18px;}
+.radar-card .zone-arms.left{top:82px;left:28px;transform:none;width:18px;height:66px;border-radius:16px;}
+.radar-card .zone-arms.right{top:82px;left:auto;right:28px;transform:none;width:18px;height:66px;border-radius:16px;}
+.radar-card .zone-core{top:116px;width:46px;height:38px;border-radius:16px;}
+.radar-card .zone-posterior{top:158px;width:54px;height:28px;border-radius:18px;opacity:.92;}
+.radar-card .zone-quads.left{top:182px;left:48px;transform:none;width:24px;height:40px;border-radius:16px;}
+.radar-card .zone-quads.right{top:182px;left:auto;right:48px;transform:none;width:24px;height:40px;border-radius:16px;}
+.radar-card .radar-zone.is-low{
+  background:rgba(111,139,176,.12);
+  border-color:rgba(255,255,255,.04);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.radar-card .radar-zone.is-mid{
+  background:rgba(127,178,255,.20);
+  border-color:rgba(127,178,255,.22);
+  box-shadow:0 0 0 1px rgba(127,178,255,.08) inset, 0 10px 18px rgba(62,108,180,.10);
+}
+.radar-card .radar-zone.is-high{
+  background:linear-gradient(180deg, rgba(242,201,76,.42), rgba(242,201,76,.18));
+  border-color:rgba(242,201,76,.36);
+  box-shadow:0 0 0 1px rgba(242,201,76,.14) inset, 0 12px 22px rgba(242,201,76,.12);
+}
+.radar-card .radar-insights{
+  width:100%;
+  max-width:560px;
+  display:grid;
+  gap:9px;
+  margin:2px auto 0;
+}
+.radar-card .radar-insight-row{
+  display:grid;
+  grid-template-columns:auto 1fr;
+  align-items:center;
+  gap:10px;
+  padding:0;
+}
+.radar-card .radar-insight-label{
+  color:rgba(168,186,208,.88);
+  font-size:12px;
+  font-weight:700;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.radar-card .radar-insight-value{
+  color:#f3f6fb;
+  font-size:14px;
+  font-weight:650;
+  line-height:1.35;
+}
+.radar-card .radar-insight-balance .radar-insight-value{color:#d8e4f4;}
+.radar-card .radar-focus-pill{
+  margin-top:3px;
+  padding:12px 14px;
+  border-radius:16px;
+  border:1px solid rgba(242,201,76,.16);
+  background:linear-gradient(180deg, rgba(242,201,76,.10), rgba(242,201,76,.04));
+  color:#f4deb0;
+  font-size:13px;
+  line-height:1.42;
+  font-weight:650;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+.radar-card .radar-footnote{
+  max-width:560px !important;
+}
+@media (max-width:840px){
+  .radar-card .radar-balance-top{
+    grid-template-columns:1fr;
+    gap:14px;
+  }
+  .radar-card .radar-body-card{
+    order:1;
+  }
+  .radar-card .radar-wrap{
+    order:2;
+  }
+}
+@media (max-width:640px){
+  .radar-card .radar-body-figure{
+    width:136px;
+    height:218px;
+  }
+  .radar-card .radar-insights{
+    gap:8px;
+  }
+  .radar-card .radar-insight-label{
+    font-size:11px;
+  }
+  .radar-card .radar-insight-value{
+    font-size:13px;
+  }
+  .radar-card .radar-focus-pill{
+    padding:11px 12px;
+    font-size:12px;
+  }
+}
+
+/* =========================================
+   ITER52 — BODY VISUAL UPGRADE ONLY
+   Base: iter51 confirmed working baseline
+   Scope locked to radar body visual only
+   HTML + CSS only, existing radar logic preserved
+========================================= */
+.radar-card .radar-body-card{
+  align-self:stretch;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+.radar-card .radar-body-figure-svg{
+  width:100%;
+  max-width:220px;
+  height:auto;
+  border-radius:30px;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(255,255,255,.07), rgba(255,255,255,0) 42%),
+    linear-gradient(180deg, rgba(255,255,255,.025), rgba(255,255,255,.01));
+  border:1px solid rgba(255,255,255,.06);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 20px 38px rgba(0,0,0,.16);
+  padding:8px;
+}
+.radar-card .radar-body-svg{
+  display:block;
+  width:100%;
+  height:auto;
+}
+.radar-card .radar-body-svg .body-shell{
+  fill:url(#iter52BodyShell);
+  stroke:rgba(255,255,255,.08);
+  stroke-width:1;
+}
+.radar-card .radar-body-svg .body-core-shell{
+  fill:url(#iter52BodyInner);
+  stroke:rgba(255,255,255,.05);
+  stroke-width:1;
+}
+.radar-card .radar-body-svg .body-zone{
+  fill:rgba(111,139,176,.14);
+  stroke:rgba(255,255,255,.04);
+  stroke-width:1;
+  filter:drop-shadow(0 8px 14px rgba(0,0,0,.12));
+  transition:fill .18s ease, stroke .18s ease, opacity .18s ease, filter .18s ease;
+}
+.radar-card .radar-body-svg .body-zone.zone-back-svg{
+  opacity:.92;
+}
+.radar-card .radar-body-svg [data-zone].is-low{
+  fill:rgba(111,139,176,.14);
+  stroke:rgba(255,255,255,.04);
+  filter:drop-shadow(0 8px 14px rgba(0,0,0,.10));
+}
+.radar-card .radar-body-svg [data-zone].is-mid{
+  fill:rgba(127,178,255,.28);
+  stroke:rgba(127,178,255,.26);
+  filter:drop-shadow(0 10px 16px rgba(63,108,180,.16));
+}
+.radar-card .radar-body-svg [data-zone].is-high{
+  fill:rgba(242,201,76,.48);
+  stroke:rgba(242,201,76,.34);
+  filter:url(#iter52SoftGlow);
+}
+@media (max-width:840px){
+  .radar-card .radar-body-figure-svg{
+    max-width:208px;
+  }
+}
+@media (max-width:640px){
+  .radar-card .radar-body-figure-svg{
+    max-width:188px;
+    padding:6px;
+    border-radius:26px;
+  }
+}
+
+
+
+/* =========================================
+   ITER53 — REMOVE RADAR, KEEP BODY INSIGHTS
+   Base: iter52 confirmed working baseline
+   Scope locked to radar-card only
+   HTML + CSS only — render logic untouched
+========================================= */
+.radar-card .section-title{
+  gap:14px !important;
+  margin-bottom:18px !important;
+}
+.radar-card #radarTitle{
   font-size:0 !important;
   line-height:0 !important;
   color:transparent !important;
@@ -3654,97 +5581,27 @@ textarea.exercise-name{
   font-weight:800;
   color:#fbfcfe;
 }
-
-/* --- Header actions + toggle --- */
-.radar-card .radar-header-actions{
-  position:relative;
-  width:100%;
-  display:flex !important;
-  justify-content:center !important;
-  align-items:center !important;
-  margin:0 !important;
-}
-
-.radar-card #radarToggle{
-  display:inline-flex;
-  align-items:center;
-  gap:4px !important;
-  padding:5px !important;
-  border:1px solid rgba(255,255,255,.09) !important;
-  border-radius:999px !important;
-  background:linear-gradient(180deg, rgba(255,255,255,.055), rgba(255,255,255,.02)) !important;
-  box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.04),
-    0 10px 24px rgba(0,0,0,.18) !important;
-}
-
-.radar-card #radarToggle button{
-  min-width:90px !important;
-  min-height:38px !important;
-  padding:8px 15px !important;
-  border-radius:999px !important;
-  color:rgba(232,239,247,.62) !important;
-  font-size:12px !important;
-  font-weight:750 !important;
-  letter-spacing:.025em !important;
-  transition:background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .12s ease;
-}
-
-.radar-card #radarToggle button:not(.active){
-  background:transparent !important;
-  box-shadow:none !important;
-}
-
-.radar-card #radarToggle button.active{
-  color:#fff4cf !important;
-  background:linear-gradient(180deg, rgba(242,201,76,.26), rgba(242,201,76,.11)) !important;
-  box-shadow:
-    0 8px 20px rgba(242,201,76,.12),
-    inset 0 1px 0 rgba(255,255,255,.10) !important;
-}
-
-/* --- Shell layout --- */
 .radar-card .radar-shell{
-  display:grid;
   gap:16px !important;
-  justify-items:center;
 }
-
-/* --- Balance layout (body + hidden radar side-by-side originally) --- */
 .radar-card .radar-balance-top{
-  width:100%;
-  display:grid;
   grid-template-columns:1fr !important;
-  align-items:center;
-  justify-content:center;
   justify-items:center;
   gap:0;
   max-width:620px;
   margin:0 auto;
 }
-
-/* --- Hidden legacy radar elements --- */
 .radar-card .radar-wrap,
 .radar-card .radar-legend,
 .radar-card .radar-footnote{
   display:none !important;
 }
-
-/* --- Body card container --- */
 .radar-card .radar-body-card{
   width:100%;
-  display:flex;
-  align-self:stretch;
-  align-items:center;
   justify-content:center;
 }
-
-/* --- Body figure wrapper (div has both .radar-body-figure and .radar-body-figure-svg) --- */
 .radar-card .radar-body-figure-svg{
-  position:relative;
-  width:100%;
   max-width:244px;
-  height:auto;
   padding:10px;
   border-radius:32px;
   background:
@@ -3755,77 +5612,13 @@ textarea.exercise-name{
     inset 0 1px 0 rgba(255,255,255,.05),
     0 22px 42px rgba(0,0,0,.18);
 }
-
-/* --- Body SVG --- */
-.radar-card .radar-body-svg{
-  display:block;
-  width:100%;
-  height:auto;
-}
-
-.radar-card .radar-body-svg .body-shell{
-  fill:url(#iter52BodyShell);
-  stroke:rgba(255,255,255,.08);
-  stroke-width:1;
-}
-
-.radar-card .radar-body-svg .body-core-shell{
-  fill:url(#iter52BodyInner);
-  stroke:rgba(255,255,255,.05);
-  stroke-width:1;
-}
-
-.radar-card .radar-body-svg .body-zone{
-  fill:rgba(111,139,176,.14);
-  stroke:rgba(255,255,255,.04);
-  stroke-width:1;
-  filter:drop-shadow(0 8px 14px rgba(0,0,0,.12));
-  transition:fill .18s ease, stroke .18s ease, opacity .18s ease, filter .18s ease;
-}
-
-.radar-card .radar-body-svg .body-zone.zone-back-svg{
-  opacity:.92;
-}
-
-/* Prevent any stale position rules from leaking into SVG paths */
-.radar-card .radar-body-svg .radar-zone{
-  position:static !important;
-  left:auto !important;
-  right:auto !important;
-  top:auto !important;
-  transform:none !important;
-}
-
-/* Zone intensity states */
-.radar-card .radar-body-svg [data-zone].is-low{
-  fill:rgba(111,139,176,.14);
-  stroke:rgba(255,255,255,.04);
-  filter:drop-shadow(0 8px 14px rgba(0,0,0,.10));
-}
-
-.radar-card .radar-body-svg [data-zone].is-mid{
-  fill:rgba(127,178,255,.28);
-  stroke:rgba(127,178,255,.26);
-  filter:drop-shadow(0 10px 16px rgba(63,108,180,.16));
-}
-
-.radar-card .radar-body-svg [data-zone].is-high{
-  fill:rgba(242,201,76,.48);
-  stroke:rgba(242,201,76,.34);
-  filter:url(#iter52SoftGlow);
-}
-
-/* --- Insights section --- */
 .radar-card .radar-insights{
   width:100%;
   max-width:620px;
-  display:grid;
   gap:10px;
   margin:14px auto 0;
 }
-
 .radar-card .radar-insight-row{
-  display:grid;
   grid-template-columns:112px minmax(0,1fr);
   align-items:start;
   gap:12px;
@@ -3835,15 +5628,12 @@ textarea.exercise-name{
   background:linear-gradient(180deg, rgba(255,255,255,.045), rgba(255,255,255,.02));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
 }
-
 .radar-card .radar-insight-label{
   color:#9eb1c8;
   font-size:11px;
   font-weight:800;
   letter-spacing:.08em;
-  text-transform:uppercase;
 }
-
 .radar-card .radar-insight-value{
   min-width:0;
   color:#f3f6fb;
@@ -3851,11 +5641,6 @@ textarea.exercise-name{
   font-weight:650;
   line-height:1.4;
 }
-
-.radar-card .radar-insight-balance .radar-insight-value{
-  color:#d8e4f4;
-}
-
 .radar-card .radar-focus-pill{
   margin-top:4px;
   padding:14px 16px;
@@ -3868,89 +5653,53 @@ textarea.exercise-name{
   font-weight:650;
   box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
 }
-
-/* =====================
-   RESPONSIVE
-   ===================== */
-
-@media (max-width:840px){
-  .radar-card .radar-body-figure-svg{
-    max-width:208px;
-  }
-}
-
 @media (max-width:640px){
-  .radar-card .section-title{
-    gap:10px !important;
-    margin-bottom:12px !important;
-  }
-
   .radar-card #radarTitle::after{
     font-size:20px;
   }
-
   .radar-card .radar-header-actions{
     width:100% !important;
-    display:flex !important;
-    justify-content:center !important;
-    padding:0 10px !important;
-    box-sizing:border-box !important;
+    padding:0 4px;
   }
-
-  .radar-card #radarToggle{
-    width:100% !important;
-    max-width:320px !important;
-    display:grid !important;
-    grid-template-columns:repeat(3, minmax(0,1fr)) !important;
-    gap:3px !important;
-    padding:4px !important;
-    margin:0 auto !important;
-    box-sizing:border-box !important;
-  }
-
-  .radar-card #radarToggle button{
-    min-width:0 !important;
-    width:100% !important;
-    min-height:36px !important;
-    flex:1 1 0 !important;
-    padding:8px 2px !important;
-    font-size:10px !important;
-    line-height:1.1 !important;
-    letter-spacing:0 !important;
-    white-space:nowrap !important;
-    text-align:center !important;
-  }
-
   .radar-card .radar-body-figure-svg{
     max-width:208px;
     padding:8px;
     border-radius:28px;
   }
-
   .radar-card .radar-insights{
     gap:8px;
     margin-top:12px;
   }
-
   .radar-card .radar-insight-row{
     grid-template-columns:1fr;
     gap:6px;
     padding:11px 12px;
   }
-
-  .radar-card .radar-insight-label{
-    font-size:11px;
-  }
-
   .radar-card .radar-insight-value{
     font-size:13px;
   }
-
   .radar-card .radar-focus-pill{
     padding:12px 13px;
     font-size:12px;
   }
 }
+
+
+/* =========================================
+   ITER54 — BODY SVG ALIGNMENT FIX ONLY
+   Base: iter53 confirmed working baseline
+   Scope locked to radar-card body visual only
+   CSS only — no render / data / layout changes
+========================================= */
+.radar-card .radar-body-svg .radar-zone{
+  position:static !important;
+  left:auto !important;
+  right:auto !important;
+  top:auto !important;
+  transform:none !important;
+}
+
+
 
 /* =========================================
    ITER58 — workout card readability polish
