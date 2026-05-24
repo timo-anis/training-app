@@ -5552,33 +5552,6 @@ textarea.exercise-name{
 
 
 
-/* ITER55d — desktop-only add-card scope alignment fix
-   Scope: add-card only
-   Keeps mobile untouched
-   Fixes scope select row leaking centered row behavior on desktop */
-@media (min-width:981px){
-  .add-card .add-scope-row{
-    display:flex;
-    justify-content:flex-start;
-    align-items:center;
-    width:100%;
-    margin:4px 0 12px !important;
-  }
-  .add-card .add-scope-row .select{
-    width:100%;
-    min-width:0;
-    max-width:none;
-    flex:1 1 auto;
-    margin:0;
-  }
-  .add-card .add-grid{
-    margin-top:0;
-    align-items:stretch;
-  }
-}
-
-
-
 /* =========================================
    ITER56 — ADD CARD POLISH
    Scope: add-card only
