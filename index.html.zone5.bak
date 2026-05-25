@@ -1551,15 +1551,35 @@ body{
 }
 
 /* =========================================
-   ZONE 5 — CALENDAR, SEARCH & EXERCISE SHELL
-   Consolidated from PHASE 1 (calendar + add/search),
-   PHASE 2 (exercise / block / set structural base)
-   CSS only — no JS / data / auth / overlay changes
-   Scope: calendar nav, search card, add-grid, block-group shell,
-          exercise structure, sets, finish-summary overlay base
+   PHASE 1 AUTHORITATIVE LAYER
+   Scope: calendar + add/search + layout
+   Protected zones intentionally excluded:
+   header / auth / overlays / sign out / workout
 ========================================= */
 
-/* --- Calendar nav --- */
+.layout{
+  display:grid;
+  grid-template-columns:330px 1fr;
+  gap:var(--space-section, 20px);
+  align-items:start;
+  margin-top:0;
+}
+
+.left,
+.right{
+  display:grid;
+  gap:var(--space-section, 20px);
+  align-content:start;
+  margin:0;
+}
+
+.metrics{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:var(--space-section, 20px);
+  margin-bottom:var(--space-section, 20px);
+}
+
 .calendar-head{
   display:flex;
   justify-content:center;
@@ -1577,7 +1597,6 @@ body{
   min-width:160px;
 }
 
-/* --- Compact search card --- */
 .compact-search-card{
   padding-top:14px;
   padding-bottom:14px;
@@ -1604,7 +1623,12 @@ body{
   text-align:center;
 }
 
-/* --- Add grid (general layout — .add-card specifics in Zone 4) --- */
+#searchResultsHost{
+  display:grid;
+  gap:12px;
+  margin-top:12px;
+}
+
 .add-grid{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
@@ -1623,7 +1647,64 @@ body{
   border-radius:14px;
 }
 
-/* --- Block group shell --- */
+@media (max-width:980px){
+  .layout{
+    grid-template-columns:1fr;
+    gap:var(--space-section, 18px);
+  }
+  .metrics{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media (max-width:640px){
+  .layout,
+  .left,
+  .right{
+    gap:var(--space-section, 16px);
+  }
+
+  .metrics{
+    grid-template-columns:1fr 1fr;
+    gap:var(--space-section, 16px);
+    margin-bottom:var(--space-section, 16px);
+  }
+
+  .calendar-collapsible .section-title{
+    grid-template-columns:1fr;
+    justify-items:center;
+  }
+
+  #monthTitle{
+    font-size:20px;
+    min-width:0;
+  }
+
+  .compact-search-card .field{
+    min-height:38px;
+    padding:8px 11px;
+  }
+
+  .add-grid{
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+
+  .add-grid > .field,
+  .add-grid > .select,
+  .add-grid > .btn{
+    min-height:46px;
+    height:46px;
+  }
+}
+
+/* =========================================
+   PHASE 2 AUTHORITATIVE LAYER
+   Scope: exercise / block / set / workout UI
+   Protected zones intentionally excluded:
+   header / auth / overlays / sign out
+========================================= */
+
 .block-group{
   border-radius:22px;
   overflow:hidden;
@@ -1656,7 +1737,6 @@ body{
   font-size:13px;
 }
 
-/* --- Exercise shell --- */
 .exercise{
   padding:14px 12px;
   border-top:1px solid rgba(36,51,75,.55);
@@ -1680,6 +1760,19 @@ body{
   align-items:flex-start;
 }
 
+.codebox{
+  width:58px;
+  min-width:58px;
+  height:42px;
+  border-radius:12px;
+}
+
+.exercise-name{
+  width:100%;
+  font-size:18px;
+  line-height:1.12;
+}
+
 .exercise-meta{
   margin-top:5px;
   font-size:11px;
@@ -1687,12 +1780,18 @@ body{
   color:#96abc4;
 }
 
-/* --- Compare, field grid, sets (structural display) --- */
 .compare{
   display:grid;
   grid-template-columns:1fr;
   gap:10px;
   margin-top:10px;
+}
+
+.field-grid{
+  grid-template-columns:110px 1fr;
+  gap:12px;
+  align-items:start;
+  margin-top:12px;
 }
 
 .label{
@@ -1706,152 +1805,171 @@ body{
   margin-top:11px;
 }
 
-/* --- Finish summary overlay (structural base — visual overridden by Zone 8) --- */
-.finish-summary-overlay{
-  position:fixed;
-  inset:0;
-  z-index:10030;
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:20px;
-  background:rgba(3,8,18,.68);
-  backdrop-filter:blur(8px);
+.setrow{
+  display:grid;
+  grid-template-columns:54px minmax(0,1fr) minmax(0,1fr) 94px 44px 44px;
+  gap:8px;
+  align-items:end;
+  padding:8px;
+  border-radius:16px;
 }
 
-.finish-summary-card{
-  width:min(420px,100%);
-  background:linear-gradient(180deg,#132A4A,#0F243F);
-  border:1px solid var(--line);
-  border-radius:26px;
-  box-shadow:var(--shadow);
-  padding:24px 22px;
+.setn,
+.donebtn{
+  height:42px;
+  border-radius:12px;
+}
+
+.setinput{
+  width:100%;
+  min-height:42px;
+  padding:9px 10px;
+  border-radius:12px;
+}
+
+.exercise-actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  justify-content:center;
+  margin-top:12px;
+}
+
+.workout-focus-card{
+  display:grid;
+  gap:12px;
   text-align:center;
 }
 
-.finish-summary-kicker{
-  font-size:12px;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:rgba(255,255,255,.52);
-  margin-bottom:10px;
-  font-weight:700;
-}
-
-.finish-summary-title{
-  margin:0;
-  font-size:34px;
-  line-height:1.02;
-  letter-spacing:-.03em;
-  font-weight:800;
-  color:#f7f9fc;
-}
-
-.finish-summary-subline{
-  margin-top:10px;
-  color:var(--soft);
-  font-size:14px;
-  line-height:1.4;
-}
-
-.finish-summary-grid{
-  display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
-  gap:10px;
-  margin:18px 0 20px;
-}
-
-.finish-summary-stat{
-  background:rgba(255,255,255,.04);
-  border:1px solid rgba(255,255,255,.08);
-  border-radius:18px;
-  padding:14px 10px;
-}
-
-.finish-summary-stat .k{
-  font-size:10px;
-  letter-spacing:.10em;
-  text-transform:uppercase;
-  color:rgba(255,255,255,.52);
-  margin-bottom:6px;
-}
-
-.finish-summary-stat .v{
+.workout-date-big{
+  text-align:center;
   font-size:22px;
   font-weight:800;
   letter-spacing:-.02em;
-  color:#fff;
+  color:#f2c94c;
+  margin-bottom:8px;
 }
 
-.finish-summary-done{
+.workout-progress-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:12px;
+}
+
+.workout-progress-pill{
+  width:40px;
+  height:40px;
+  display:grid;
+  place-items:center;
+  padding:0;
+  border-radius:12px;
+  font-size:14px;
+  font-weight:800;
+}
+
+.workout-nav-row{
+  display:flex;
+  justify-content:center;
+  gap:8px;
+  margin-top:10px;
+}
+
+.workout-nav-row .btn{
+  min-width:120px;
+}
+
+.finish-workout-row{
+  display:flex;
+  justify-content:center;
+  margin:18px 14px 16px;
+}
+
+.finish-workout-btn{
+  min-width:min(100%,340px);
   min-height:48px;
-  padding:12px 18px;
+  padding:12px 20px;
   border-radius:14px;
   font-size:15px;
   font-weight:900;
   letter-spacing:.06em;
-  background:linear-gradient(180deg,#ffc247 0%,#ff9f0a 100%);
-  border:1px solid rgba(255,194,71,.38);
-  color:#1a1204;
-  box-shadow:0 10px 24px rgba(255,159,10,.24), inset 0 1px 0 rgba(255,255,255,.28);
-  min-width:min(100%,220px);
 }
 
-.finish-summary-done:active{
-  transform:scale(.985);
-  box-shadow:0 6px 14px rgba(255,159,10,.18), inset 0 1px 0 rgba(255,255,255,.22);
-}
-
-/* --- Responsive --- */
 @media (max-width:640px){
-  .calendar-collapsible .section-title{
+
+  .left-main{
+    gap:10px;
+  }
+
+  .codebox{
+    width:54px;
+    min-width:54px;
+    height:40px;
+    font-size:14px;
+    border-radius:12px;
+  }
+
+  .exercise-name{
+    font-size:17px;
+  }
+
+  .field-grid{
     grid-template-columns:1fr;
-    justify-items:center;
+    gap:7px;
+    margin-top:10px;
   }
 
-  #monthTitle{
-    font-size:20px;
-    min-width:0;
+  .label{
+    padding-top:0;
+    text-align:center;
   }
 
-  .compact-search-card .field{
-    min-height:38px;
-    padding:8px 11px;
+  .sets{
+    gap:8px;
+    margin-top:11px;
   }
 
-  .add-grid{
-    grid-template-columns:1fr;
-    gap:12px;
+  .setrow{
+    grid-template-columns:44px 1fr 1fr 70px 40px 40px;
+    gap:6px;
+    padding:7px;
+    border-radius:14px;
   }
 
-  .add-grid > .field,
-  .add-grid > .select,
-  .add-grid > .btn{
-    min-height:46px;
-    height:46px;
+  .setn,
+  .donebtn{
+    height:40px;
+    border-radius:10px;
   }
 
-  .finish-summary-card{
-    padding:22px 18px;
-    border-radius:24px;
-  }
-
-  .finish-summary-title{
-    font-size:30px;
-  }
-
-  .finish-summary-grid{
+  .workout-progress-row{
     gap:8px;
   }
 
-  .finish-summary-stat{
-    padding:12px 8px;
-    border-radius:16px;
+  .finish-workout-row{
+    margin:16px 0 14px;
   }
+}
 
-  .finish-summary-stat .v{
-    font-size:20px;
-  }
+.finish-summary-overlay{position:fixed;inset:0;z-index:10030;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(3,8,18,.68);backdrop-filter:blur(8px);}
+.finish-summary-card{width:min(420px,100%);background:linear-gradient(180deg,#132A4A,#0F243F);border:1px solid var(--line);border-radius:26px;box-shadow:var(--shadow);padding:24px 22px;text-align:center;}
+.finish-summary-kicker{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.52);margin-bottom:10px;font-weight:700;}
+.finish-summary-title{margin:0;font-size:34px;line-height:1.02;letter-spacing:-.03em;font-weight:800;color:#f7f9fc;}
+.finish-summary-subline{margin-top:10px;color:var(--soft);font-size:14px;line-height:1.4;}
+.finish-summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:18px 0 20px;}
+.finish-summary-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:14px 10px;}
+.finish-summary-stat .k{font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:rgba(255,255,255,.52);margin-bottom:6px;}
+.finish-summary-stat .v{font-size:22px;font-weight:800;letter-spacing:-.02em;color:#fff;}
+.finish-summary-done{min-height:48px;padding:12px 18px;border-radius:14px;font-size:15px;font-weight:900;letter-spacing:.06em;background:linear-gradient(180deg,#ffc247 0%,#ff9f0a 100%);border:1px solid rgba(255,194,71,.38);color:#1a1204;box-shadow:0 10px 24px rgba(255,159,10,.24), inset 0 1px 0 rgba(255,255,255,.28);min-width:min(100%,220px);}
+.finish-summary-done:active{transform:scale(.985);box-shadow:0 6px 14px rgba(255,159,10,.18), inset 0 1px 0 rgba(255,255,255,.22);}
+@media (max-width:640px){
+  .finish-summary-card{padding:22px 18px;border-radius:24px;}
+  .finish-summary-title{font-size:30px;}
+  .finish-summary-grid{gap:8px;}
+  .finish-summary-stat{padding:12px 8px;border-radius:16px;}
+  .finish-summary-stat .v{font-size:20px;}
 }
 
 /* =========================================
