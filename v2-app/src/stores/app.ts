@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import type { User } from '@supabase/supabase-js';
-import type { AppState, UIState, DayOfWeek } from '../types/workout';
+import type { AppState, UIState, DayOfWeek, WorkoutDay } from '../types/workout';
 import { emptyAppState, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud } from '../services/storage';
 
@@ -30,6 +30,18 @@ export const uiState = writable<UIState>({
 export type BootStatus = 'idle' | 'loading' | 'ready' | 'error';
 export const bootStatus = writable<BootStatus>('idle');
 
+// ---- Derived: all weeks that have data ----
+export const availableWeeks = derived(appState, ($state) => {
+  const weeks = new Set($state.weeks.map(w => w.week));
+  if (!weeks.size) weeks.add(1);
+  return Array.from(weeks).sort((a, b) => a - b);
+});
+
+// ---- Derived: days with data in current week ----
+export const currentWeekDays = derived([appState, uiState], ([$state, $ui]) =>
+  $state.weeks.filter(w => w.week === $ui.week)
+);
+
 // ---- Derived: current day exercises ----
 export const currentDayExercises = derived(
   [appState, uiState],
@@ -39,6 +51,11 @@ export const currentDayExercises = derived(
     );
     return day?.exercises ?? [];
   }
+);
+
+// ---- Derived: latest week (for default selection after boot) ----
+export const latestWeek = derived(availableWeeks, ($weeks) =>
+  $weeks[$weeks.length - 1] ?? 1
 );
 
 // ---- Actions ----
@@ -58,6 +75,10 @@ export async function bootForUser(user: User) {
   try {
     const state = await bootstrapState(user.id);
     appState.set(state);
+    // Auto-select latest week after boot
+    const weeks = new Set(state.weeks.map(w => w.week));
+    const latest = weeks.size ? Math.max(...weeks) : 1;
+    uiState.update(ui => ({ ...ui, week: latest }));
     bootStatus.set('ready');
   } catch {
     bootStatus.set('error');
@@ -75,4 +96,26 @@ export function updateState(updater: (s: AppState) => AppState) {
 
 export function updateUI(updater: (s: UIState) => UIState) {
   uiState.update(updater);
+}
+
+// ---- Toggle set done ----
+export function toggleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number) {
+  updateState(state => {
+    const days = state.weeks.map(w => {
+      if (w.week !== week || w.day !== day) return w;
+      return {
+        ...w,
+        exercises: w.exercises.map(ex => {
+          if (ex.id !== exId) return ex;
+          return {
+            ...ex,
+            sets: ex.sets.map((s, i) =>
+              i === setIndex ? { ...s, done: !s.done } : s
+            ),
+          };
+        }),
+      };
+    });
+    return { ...state, weeks: days };
+  });
 }
