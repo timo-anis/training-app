@@ -1,6 +1,7 @@
 import { supabase } from './supabase';
 import type { AppState } from '../types/workout';
 import { emptyAppState } from '../types/workout';
+import { parseAndMigrateState } from './migrator';
 
 // ---- Local storage ----
 
@@ -12,9 +13,7 @@ export function loadLocal(userId: string): AppState | null {
   try {
     const raw = localStorage.getItem(localKey(userId));
     if (!raw) return null;
-    const parsed = JSON.parse(raw) as AppState;
-    if (!Array.isArray(parsed.weeks)) return null;
-    return parsed;
+    return parseAndMigrateState(JSON.parse(raw));
   } catch {
     return null;
   }
@@ -39,9 +38,8 @@ export async function loadCloud(userId: string): Promise<AppState | null> {
       .maybeSingle();
     if (error) throw error;
     if (!data?.state_json) return null;
-    const parsed = data.state_json as AppState;
-    if (!Array.isArray(parsed.weeks)) return null;
-    return parsed;
+    // parseAndMigrateState handles both MVP1 flat format and V2 structured format
+    return parseAndMigrateState(data.state_json);
   } catch (e) {
     console.error('Cloud load failed', e);
     return null;
