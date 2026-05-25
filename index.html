@@ -24,7 +24,7 @@ Purpose:
 <link rel="apple-touch-icon" sizes="180x180" href="./icon_180.png" />
 <link rel="icon" type="image/png" sizes="192x192" href="./icon_192.png" />
 <link rel="icon" type="image/png" sizes="512x512" href="./icon_512.png" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
 <meta name="theme-color" content="#0b1220" />
 <title>Timo Training Logbook v3.6</title>
 <style>
@@ -605,7 +605,7 @@ input, select, textarea {
 .lock-overlay {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 10050;
   background: linear-gradient(180deg, rgba(15,17,21,.98), rgba(15,17,21,1));
   display: flex;
   align-items: center;
@@ -8206,6 +8206,7 @@ function updateLockTexts() {
   renderPinDots();
 }
 function openLockScreen() {
+  if(ui && ui.workoutMode) return;
   const overlay = document.getElementById("lockOverlay");
   const app = document.getElementById("mainApp");
   if(overlay) overlay.style.display = "flex";
