@@ -84,6 +84,7 @@ These are security-critical overlays. Any change here requires explicit intent.
 
 ## Next Recommended Steps
 
-- New user onboarding empty state
-- Automatic backup before import/cloud overwrite
+- V2 architecture migration planning
+- Rest timer sound/notification when target rest time reached
+- Per-set progression visibility improvements (inline previous set reference)
 - Cleanup only after baseline is confirmed

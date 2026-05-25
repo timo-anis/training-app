@@ -6785,7 +6785,7 @@ function renderExercises() {
           ...exerciseShellInputBase,
           mainMarkup,
           compareMarkup: "",
-          detailsMarkup: `${detailsMarkup}${compareMarkup}`,
+          detailsMarkup: `${compareMarkup}${detailsMarkup}`,
           actionsMarkup
         };
         if(!ui.workoutMode) {
@@ -7076,6 +7076,7 @@ function bindToggleSetButtons() {
     const shouldAdvance = String(updated.done||"")==="1";
     commitStateUpdate(() => {}, { renderMode:"exercises", toast: String(updated.done||"")==="1" ? "Set done" : "Set updated" });
     if(shouldAdvance){
+      if(ui.workoutMode) { resetTimer(); startTimer(); }
       requestAnimationFrame(() => {
         const nextRow = Array.from(document.querySelectorAll(".setrow")).find(row => row.classList.contains("is-next"));
         if(nextRow){
