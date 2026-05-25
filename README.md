@@ -121,7 +121,7 @@ The current baseline prioritizes:
 ## 👤 Author
 
 **Timo Anis**  
-Product Owner & Professional Motorsport Photographer
+Product Lead
 
 ---
 

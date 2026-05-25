@@ -255,15 +255,16 @@ This project is built using Claude via the Cowork desktop app.
 - Use **Cowork** (not the web chat) — Claude has direct access to the repo folder and memory persists across sessions
 - **One conversation = one task** — keep each session focused on a single change or bug fix
 - If a conversation gets long or slow, **open a new Cowork session** in the same project — memory and repo access reload automatically
-- Claude edits `index.html` directly in the repo
-- Timo tests locally in the browser before committing
-- Timo runs `git commit` + `git push` — Claude does not push
+- Claude edits `index.html` directly in the repo via Cowork
+- Claude may run `git` commands (rebase, commit, cleanup) when explicitly instructed
+- Timo tests locally in the browser before any push
+- Timo pushes: `git push` or `git push --force-with-lease` — Timo controls what reaches remote
 
 ### Git workflow
 
 1. Claude makes the change and explains exactly what was modified and why
 2. Timo tests locally
-3. Timo commits: `git commit -m "description"`
+3. Claude or Timo commits: `git commit -m "description"`
 4. Timo pushes: `git push`
 
-Claude never commits or pushes. Claude never assumes the change is safe — Timo confirms after local testing.
+Claude never assumes the change is safe — Timo confirms after local testing before pushing.
