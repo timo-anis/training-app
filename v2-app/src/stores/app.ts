@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import type { User } from '@supabase/supabase-js';
-import type { AppState, UIState, DayOfWeek, WorkoutDay } from '../types/workout';
+import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise } from '../types/workout';
 import { emptyAppState, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud } from '../services/storage';
 
@@ -98,24 +98,62 @@ export function updateUI(updater: (s: UIState) => UIState) {
   uiState.update(updater);
 }
 
-// ---- Toggle set done ----
-export function toggleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number) {
-  updateState(state => {
-    const days = state.weeks.map(w => {
+// ---- Shared exercise updater ----
+function mapExercise(
+  state: AppState,
+  week: number,
+  day: DayOfWeek,
+  exId: string,
+  updater: (ex: Exercise) => Exercise
+): AppState {
+  return {
+    ...state,
+    weeks: state.weeks.map(w => {
       if (w.week !== week || w.day !== day) return w;
       return {
         ...w,
-        exercises: w.exercises.map(ex => {
-          if (ex.id !== exId) return ex;
-          return {
-            ...ex,
-            sets: ex.sets.map((s, i) =>
-              i === setIndex ? { ...s, done: !s.done } : s
-            ),
-          };
-        }),
+        exercises: w.exercises.map(ex => ex.id === exId ? updater(ex) : ex),
       };
-    });
-    return { ...state, weeks: days };
-  });
+    }),
+  };
+}
+
+// ---- Toggle set done ----
+export function toggleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number) {
+  updateState(state =>
+    mapExercise(state, week, day, exId, ex => ({
+      ...ex,
+      sets: ex.sets.map((s, i) => i === setIndex ? { ...s, done: !s.done } : s),
+    }))
+  );
+}
+
+// ---- Update set field (kg or reps) ----
+export function updateSetField(
+  week: number,
+  day: DayOfWeek,
+  exId: string,
+  setIndex: number,
+  field: 'kg' | 'reps',
+  value: string
+) {
+  updateState(state =>
+    mapExercise(state, week, day, exId, ex => ({
+      ...ex,
+      sets: ex.sets.map((s, i) => i === setIndex ? { ...s, [field]: value } : s),
+    }))
+  );
+}
+
+// ---- Add set (copy last set's values, clear done) ----
+export function addSet(week: number, day: DayOfWeek, exId: string) {
+  updateState(state =>
+    mapExercise(state, week, day, exId, ex => {
+      const last = ex.sets[ex.sets.length - 1];
+      return {
+        ...ex,
+        sets: [...ex.sets, { kg: last?.kg ?? '', reps: last?.reps ?? '', done: false }],
+      };
+    })
+  );
 }

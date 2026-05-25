@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { Exercise, DayOfWeek } from '../types/workout';
+  import { addSet } from '../stores/app';
   import SetRow from './SetRow.svelte';
 
   export let exercise: Exercise;
@@ -30,10 +31,13 @@
 
   {#if !exercise.recovery}
     <div class="sets-list">
-      {#each exercise.sets as set, i}
+      {#each exercise.sets as set, i (i)}
         <SetRow {set} index={i} {week} {day} exId={exercise.id} />
       {/each}
     </div>
+    <button class="add-set-btn" on:click={() => addSet(week, day, exercise.id)}>
+      + Set
+    </button>
   {:else}
     <div class="recovery-row">
       <span class="recovery-label">Recovery block</span>
@@ -181,4 +185,24 @@
 
   .recovery-label { font-size: 13px; color: #7fa8d4; }
   .recovery-status { font-size: 13px; font-weight: 700; color: #4fc08d; }
+
+  .add-set-btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.03);
+    color: #7fa8d4;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.12s, border-color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .add-set-btn:active {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.14);
+  }
 </style>
