@@ -3979,6 +3979,40 @@ textarea.exercise-name{
   }
 }
 
+/* === ONBOARDING BANNER === */
+#onboardingBannerHost:empty { display:none; }
+.onboarding-banner-card {
+  display:grid;
+  gap:14px;
+  padding:22px 20px;
+  background:
+    radial-gradient(circle at top, rgba(255,194,71,.10), transparent 58%),
+    linear-gradient(180deg, rgba(24,30,38,.96), rgba(18,22,29,.98));
+  border-color:rgba(255,255,255,.08);
+}
+.onboarding-banner-inner {
+  display:grid;
+  gap:14px;
+}
+.onboarding-banner-body {
+  color:var(--text);
+  font-size:15px;
+  line-height:1.6;
+  max-width:36ch;
+}
+.onboarding-banner-cta {
+  width:100%;
+  justify-content:center;
+  min-height:48px;
+  font-weight:900;
+  box-shadow:0 14px 28px rgba(255,159,10,.18), inset 0 1px 0 rgba(255,255,255,.18);
+}
+@media (max-width:640px) {
+  .onboarding-banner-card { padding:20px 18px; gap:12px; }
+  .onboarding-banner-body { font-size:14px; }
+  .onboarding-banner-cta { min-height:52px; font-size:15px; }
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -4103,6 +4137,7 @@ textarea.exercise-name{
         </div>
         </div>
       </div>
+<div id="onboardingBannerHost"></div>
 <div class="card days-card">
         <div class="pills" id="dayPills"></div>
       </div>
@@ -6500,6 +6535,30 @@ function bindWorkoutActionPanelButtons(groupsForDay) {
   });
 }
 
+function renderOnboardingBanner() {
+  const host = document.getElementById("onboardingBannerHost");
+  if (!host) return;
+  const show = !!(currentUser && !hasWorkoutData(state));
+  if (!show) { host.innerHTML = ""; return; }
+  host.innerHTML = `<div class="card onboarding-banner-card">
+  <div class="onboarding-banner-inner">
+    <div class="empty-workout-hero">
+      <div class="empty-workout-eyebrow">Start here</div>
+      <div class="onboarding-banner-body">Add your first workout to get started. Your calendar will build from your own training data.</div>
+    </div>
+    <button class="btn primary onboarding-banner-cta" id="onboardingBannerCta" type="button">Add first workout</button>
+  </div>
+</div>`;
+  const btn = document.getElementById("onboardingBannerCta");
+  if (btn) btn.onclick = () => {
+    const target = document.getElementById("addExerciseName");
+    if (target) {
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+      setTimeout(() => target.focus(), 250);
+    }
+  };
+}
+
 function bindEmptyStateAddWorkoutCta() {
   const emptyStateAddWorkoutBtn = document.getElementById("emptyStateAddWorkoutBtn");
   if(emptyStateAddWorkoutBtn) emptyStateAddWorkoutBtn.onclick = () => {
@@ -7217,6 +7276,7 @@ function renderApp() {
   normalizeUiState();
   renderMetrics();
   renderCalendar();
+  renderOnboardingBanner();
   renderDays();
   refreshScopeLabels();
   renderRadar();
