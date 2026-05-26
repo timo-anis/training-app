@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Exercise, DayOfWeek } from '../types/workout';
-  import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone } from '../stores/app';
+  import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone, updateConditioningNote } from '../stores/app';
   import SetRow from './SetRow.svelte';
 
   export let exercise: Exercise;
@@ -9,9 +9,9 @@
   export let index: number = 0;
   export let total: number = 1;
 
-  $: doneCount = exercise.sets.filter(s => s.done).length;
-  $: totalCount = exercise.sets.length;
-  $: allDone = doneCount === totalCount && totalCount > 0;
+  $: doneCount = exercise.conditioning ? (exercise.conditioningNote.trim() ? 1 : 0) : exercise.sets.filter(s => s.done).length;
+  $: totalCount = exercise.conditioning ? 1 : exercise.sets.length;
+  $: allDone = exercise.conditioning ? exercise.conditioningNote.trim().length > 0 : (doneCount === totalCount && totalCount > 0);
   $: supersetLabel = exercise.type === 'superset' ? exercise.code : '';
 
   // 2-tap delete confirm
@@ -35,6 +35,15 @@
   let editNote = '';
   let editType: 'single' | 'superset' = 'single';
   let editCode = '';
+  let editConditioning = false;
+
+  // Local conditioning note (editable directly in card, not in edit panel)
+  let localCondNote = exercise.conditioningNote;
+  $: localCondNote = exercise.conditioningNote;
+
+  function onCondNoteBlur() {
+    updateConditioningNote(week, day, exercise.id, localCondNote);
+  }
 
   function openEdit() {
     editName = exercise.name;
@@ -42,6 +51,7 @@
     editNote = exercise.note;
     editType = exercise.type;
     editCode = exercise.code;
+    editConditioning = exercise.conditioning;
     editOpen = true;
   }
 
@@ -50,7 +60,7 @@
   function saveEdit() {
     const name = editName.trim();
     if (!name) return;
-    const type = editType;
+    const type = editConditioning ? 'single' : editType;
     const code = type === 'superset' ? editCode.trim().toUpperCase() : '';
     updateExerciseMeta(week, day, exercise.id, {
       name,
@@ -58,6 +68,7 @@
       note: editNote.trim(),
       type,
       code,
+      conditioning: editConditioning,
     });
     editOpen = false;
   }
@@ -70,7 +81,7 @@
     {/if}
     <div class="exercise-meta">
       <span class="exercise-name">{exercise.name}</span>
-      <span class="exercise-type">{exercise.type === 'superset' ? 'Superset' : 'Weighted'}</span>
+      <span class="exercise-type">{exercise.conditioning ? 'Conditioning' : exercise.type === 'superset' ? 'Superset' : 'Weighted'}</span>
     </div>
     {#if totalCount > 0}
       <span class="progress-chip" class:complete={allDone}>
@@ -112,18 +123,23 @@
         <div class="type-toggle">
           <button
             class="type-btn"
-            class:active={editType === 'single'}
-            on:click={() => { editType = 'single'; editCode = ''; }}
-          >Single</button>
+            class:active={!editConditioning && editType === 'single'}
+            on:click={() => { editConditioning = false; editType = 'single'; editCode = ''; }}
+          >Weighted</button>
           <button
             class="type-btn"
-            class:active={editType === 'superset'}
-            on:click={() => editType = 'superset'}
+            class:active={!editConditioning && editType === 'superset'}
+            on:click={() => { editConditioning = false; editType = 'superset'; }}
           >Superset</button>
+          <button
+            class="type-btn"
+            class:active={editConditioning}
+            on:click={() => { editConditioning = true; editType = 'single'; editCode = ''; }}
+          >Cardio</button>
         </div>
       </div>
 
-      {#if editType === 'superset'}
+      {#if !editConditioning && editType === 'superset'}
         <div class="edit-field">
           <label class="edit-label" for="edit-code-{exercise.id}">Group code (A, B, C…)</label>
           <input
@@ -168,7 +184,15 @@
     </div>
   {/if}
 
-  {#if !exercise.recovery}
+  {#if exercise.conditioning}
+    <textarea
+      class="cond-textarea"
+      bind:value={localCondNote}
+      on:blur={onCondNoteBlur}
+      placeholder="Log your session — e.g. 10 min @ 150W avg, felt strong"
+      rows="3"
+    ></textarea>
+  {:else if !exercise.recovery}
     <div class="sets-list">
       {#each exercise.sets as set, i (i)}
         <SetRow {set} index={i} {week} {day} exId={exercise.id} />
@@ -357,10 +381,31 @@
 
   .del-ex-btn:active { background: rgba(255,80,80,0.18); color: #ff6060; }
 
+  /* Conditioning textarea */
+  .cond-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #e8f2ff;
+    font-family: inherit;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    transition: border-color 0.12s;
+  }
+
+  .cond-textarea:focus { border-color: rgba(127,178,255,0.35); }
+  .cond-textarea::placeholder { color: rgba(255,255,255,0.22); }
+
   /* Type toggle */
   .type-toggle {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 6px;
   }
 

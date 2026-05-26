@@ -1,8 +1,13 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode, setActiveBlock, toggleSetDone, updateSetField, findLastSession, toggleRecoveryDone, updateUI } from '../stores/app';
-  import { addSet, deleteSet } from '../stores/app';
-  import type { WorkoutBlock, LastSession } from '../stores/app';
+  import {
+    uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode,
+    setActiveBlock, toggleSetDone, updateSetField, findLastSession,
+    findLastConditioningNote, toggleRecoveryDone, updateUI,
+    addSet, deleteSet, updateConditioningNote,
+  } from '../stores/app';
+  import type { WorkoutBlock } from '../stores/app';
+  import type { DayOfWeek } from '../types/workout';
   import RestTimer from './RestTimer.svelte';
 
   const DAY_SHORT: Record<string, string> = {
@@ -10,23 +15,18 @@
     Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
   };
 
-  // ---- Wake Lock — keep screen on during workout ----
+  // ---- Wake Lock ----
   let wakeLock: WakeLockSentinel | null = null;
 
   async function requestWakeLock() {
     try {
-      if ('wakeLock' in navigator) {
+      if ('wakeLock' in navigator)
         wakeLock = await (navigator as any).wakeLock.request('screen');
-      }
-    } catch { /* not supported or denied — silent */ }
+    } catch { /* silent */ }
   }
 
-  function releaseWakeLock() {
-    wakeLock?.release().catch(() => {});
-    wakeLock = null;
-  }
+  function releaseWakeLock() { wakeLock?.release().catch(() => {}); wakeLock = null; }
 
-  // Re-request after user returns from another app
   function onVisibilityChange() {
     if (document.visibilityState === 'visible') requestWakeLock();
   }
@@ -42,7 +42,7 @@
     clearInterval(clockInterval);
   });
 
-  // ---- Elapsed workout timer ----
+  // ---- Elapsed timer ----
   let elapsed = 0;
   const clockInterval = setInterval(() => {
     const start = $uiState.workoutStartTime;
@@ -64,14 +64,11 @@
   $: isFirst = activeIndex === 0;
   $: isLast = activeIndex === blocks.length - 1;
 
-  // ---- Rest timer — state lives in uiState so it survives overlay close/reopen ----
+  // ---- Rest timer (state in uiState — survives overlay close/reopen) ----
   function parseRestToSeconds(s: string): number {
     if (!s) return 0;
     s = s.trim().toLowerCase();
-    if (/^\d+:\d+$/.test(s)) {
-      const [m, sec] = s.split(':').map(Number);
-      return m * 60 + sec;
-    }
+    if (/^\d+:\d+$/.test(s)) { const [m, sec] = s.split(':').map(Number); return m * 60 + sec; }
     const minMatch = s.match(/^(\d+(?:\.\d+)?)\s*min?/);
     if (minMatch) return Math.round(parseFloat(minMatch[1]) * 60);
     const secMatch = s.match(/^(\d+(?:\.\d+)?)/);
@@ -83,18 +80,17 @@
 
   function startRest(restString: string) {
     const secs = parseRestToSeconds(restString);
-    if (secs > 0) {
-      updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: secs }));
-    }
+    if (secs > 0) updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: secs }));
   }
 
   function clearRest() {
     updateUI(ui => ({ ...ui, restStartTime: null, restTotal: null }));
   }
 
-  // ---- Exercise done helpers ----
+  // ---- Exercise/block done helpers ----
   function exDone(ex: import('../types/workout').Exercise): boolean {
     if (ex.recovery) return ex.recoveryDone;
+    if (ex.conditioning) return ex.conditioningNote.trim().length > 0;
     return ex.sets.length > 0 && ex.sets.every(s => s.done);
   }
 
@@ -104,23 +100,77 @@
     return b.exercises.every(exDone);
   }
 
-  function handleSetDone(week: number, day: import('../types/workout').DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string) {
+  function handleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string) {
     toggleSetDone(week, day, exId, setIndex);
-    if (!currentDone && exRestString) {
-      startRest(exRestString);
-    }
+    if (!currentDone && exRestString) startRest(exRestString);
   }
 
   function prev() { if (!isFirst) setActiveBlock(activeIndex - 1); }
   function next() { if (!isLast) setActiveBlock(activeIndex + 1); }
-
   function backToNormal() { closeWorkoutMode(); }
-  function finish() { exitWorkout(); }
 
-  // ---- Local editable inputs ----
+  // ---- Workout summary ----
+  let showSummary = false;
+
+  function openSummary() {
+    summaryElapsed = elapsed; // capture at tap time
+    showSummary = true;
+  }
+
+  let summaryElapsed = 0;
+
+  function confirmFinish() {
+    exitWorkout();
+    showSummary = false;
+  }
+
+  // Summary stats computed from the current workout day
+  $: summaryDay = $appState.weeks.find(w => w.week === $uiState.week && w.day === $uiState.day);
+
+  $: summarySetsDone = summaryDay
+    ? summaryDay.exercises
+        .filter(ex => !ex.recovery && !ex.conditioning)
+        .flatMap(ex => ex.sets)
+        .filter(s => s.done).length
+    : 0;
+
+  $: summaryVolume = (() => {
+    if (!summaryDay) return 0;
+    let v = 0;
+    for (const ex of summaryDay.exercises) {
+      if (ex.recovery || ex.conditioning) continue;
+      for (const s of ex.sets) {
+        if (!s.done) continue;
+        const kg = parseFloat(s.kg);
+        const reps = parseInt(s.reps);
+        if (!isNaN(kg) && !isNaN(reps)) v += kg * reps;
+      }
+    }
+    return v;
+  })();
+
+  function fmtVolume(v: number): string {
+    if (v >= 1000) return `${(v / 1000).toFixed(1)}t`;
+    return `${Math.round(v)}kg`;
+  }
+
+  $: summaryExercises = summaryDay
+    ? summaryDay.exercises.map(ex => ({
+        name: ex.name,
+        done: exDone(ex),
+        conditioning: ex.conditioning,
+        recovery: ex.recovery,
+        setsDone: ex.conditioning || ex.recovery ? 0 : ex.sets.filter(s => s.done).length,
+        setsTotal: ex.conditioning || ex.recovery ? 0 : ex.sets.length,
+      }))
+    : [];
+
+  // ---- Local editable inputs (sets) ----
   let localKg: Record<string, string> = {};
   let localReps: Record<string, string> = {};
+  let localCondNote: Record<string, string> = {};
 
+  // Sync locals when block changes
   $: {
     if (block) {
       for (const ex of block.exercises) {
@@ -129,40 +179,49 @@
           if (localKg[k] === undefined) localKg[k] = s.kg;
           if (localReps[k] === undefined) localReps[k] = s.reps;
         });
+        // Conditioning note: use current value or fall back to last session's note
+        if (ex.conditioning && localCondNote[ex.id] === undefined) {
+          localCondNote[ex.id] = ex.conditioningNote ||
+            findLastConditioningNote($appState, ex.name, $uiState.week, $uiState.day);
+        }
       }
     }
   }
 
-  // When block changes, reset local map for new block's exercises
+  // Reset locals on block navigation
   let prevActiveIndex = -1;
   $: if (activeIndex !== prevActiveIndex) {
     prevActiveIndex = activeIndex;
     localKg = {};
     localReps = {};
+    localCondNote = {};
   }
 
-  function commitKg(week: number, day: import('../types/workout').DayOfWeek, exId: string, i: number) {
+  function commitKg(week: number, day: DayOfWeek, exId: string, i: number) {
     const k = `${exId}-${i}`;
     const val = (localKg[k] ?? '').replace(',', '.').trim();
     localKg[k] = val;
     updateSetField(week, day, exId, i, 'kg', val);
   }
 
-  function commitReps(week: number, day: import('../types/workout').DayOfWeek, exId: string, i: number) {
+  function commitReps(week: number, day: DayOfWeek, exId: string, i: number) {
     const k = `${exId}-${i}`;
     const val = (localReps[k] ?? '').trim();
     localReps[k] = val;
     updateSetField(week, day, exId, i, 'reps', val);
   }
 
-  function handleAddSet(week: number, day: import('../types/workout').DayOfWeek, exId: string) {
+  function commitCondNote(week: number, day: DayOfWeek, exId: string) {
+    updateConditioningNote(week, day, exId, localCondNote[exId] ?? '');
+  }
+
+  function handleAddSet(week: number, day: DayOfWeek, exId: string) {
     addSet(week, day, exId);
-    // Reset local map so new set syncs
     localKg = {};
     localReps = {};
   }
 
-  function handleDeleteSet(week: number, day: import('../types/workout').DayOfWeek, exId: string, i: number) {
+  function handleDeleteSet(week: number, day: DayOfWeek, exId: string, i: number) {
     deleteSet(week, day, exId, i);
     localKg = {};
     localReps = {};
@@ -185,10 +244,12 @@
   <!-- Block content -->
   {#if block}
     <div class="wm-content">
-      <!-- Block title -->
+      <!-- Block badge -->
       <div class="block-title">
         {#if block.isSuperset}
           <span class="block-badge superset">Superset {block.code}</span>
+        {:else if block.exercises[0]?.conditioning}
+          <span class="block-badge cond">Cardio / Conditioning</span>
         {:else}
           <span class="block-badge single">Exercise</span>
         {/if}
@@ -199,14 +260,14 @@
         {#each block.exercises as ex}
           {@const week = $uiState.week}
           {@const day = $uiState.day}
-          {@const lastSession = findLastSession($appState, ex.name, week, day)}
+          {@const lastSession = ex.conditioning ? null : findLastSession($appState, ex.name, week, day)}
           <div class="ex-section">
             <div class="ex-name-row">
               {#if block.isSuperset}
                 <span class="ex-code">{ex.code}</span>
               {/if}
               <span class="ex-name">{ex.name}</span>
-              {#if ex.rest}
+              {#if ex.rest && !ex.conditioning}
                 <span class="ex-rest">Rest {ex.rest}</span>
               {/if}
             </div>
@@ -226,15 +287,34 @@
               <div class="ex-note">{ex.note}</div>
             {/if}
 
-            {#if ex.recovery}
+            {#if ex.conditioning}
+              <!-- Conditioning: large editable textarea, previous session shown above -->
+              {@const prevNote = findLastConditioningNote($appState, ex.name, week, day)}
+              {#if prevNote}
+                <div class="cond-prev">
+                  <span class="cond-prev-lbl">Last session</span>
+                  <span class="cond-prev-text">{prevNote}</span>
+                </div>
+              {/if}
+              <textarea
+                class="cond-textarea"
+                bind:value={localCondNote[ex.id]}
+                on:blur={() => commitCondNote(week, day, ex.id)}
+                placeholder="Log this session — e.g. 12 min @ 160W, RPE 7"
+                rows="4"
+              ></textarea>
+
+            {:else if ex.recovery}
               <button
                 class="recovery-toggle"
                 class:recovery-done={ex.recoveryDone}
-                on:click={() => toggleRecoveryDone($uiState.week, $uiState.day, ex.id)}
+                on:click={() => toggleRecoveryDone(week, day, ex.id)}
               >
                 {ex.recoveryDone ? '✓ Done' : 'Tap to mark done'}
               </button>
+
             {:else}
+              <!-- Strength sets -->
               <div class="sets-grid">
                 {#each ex.sets as set, i}
                   {@const k = `${ex.id}-${i}`}
@@ -290,7 +370,6 @@
                 {/each}
               </div>
 
-              <!-- Add set -->
               <button class="add-set-btn" on:click={() => handleAddSet(week, day, ex.id)}>
                 + Add set
               </button>
@@ -313,16 +392,68 @@
 
   <!-- Footer nav -->
   <footer class="wm-footer">
-    {#if allDone}
-      <button class="btn-back" on:click={backToNormal}>← Back</button>
-      <button class="btn-finish" on:click={finish}>Finish ✓</button>
+    {#if isLast}
+      <!-- Last block: always show Finish Workout -->
+      <button class="btn-nav" on:click={prev} disabled={isFirst}>‹ Prev</button>
+      <button class="btn-end" on:click={backToNormal}>← Back</button>
+      <button class="btn-finish-wod" on:click={openSummary}>Finish ✓</button>
     {:else}
       <button class="btn-nav" on:click={prev} disabled={isFirst}>‹ Prev</button>
       <button class="btn-end" on:click={backToNormal}>← Back</button>
-      <button class="btn-nav primary" on:click={next} disabled={isLast}>Next ›</button>
+      <button class="btn-nav primary" on:click={next}>Next ›</button>
     {/if}
   </footer>
 </div>
+
+<!-- ===== Workout Summary Overlay ===== -->
+{#if showSummary}
+  <div class="summary-overlay">
+    <div class="summary-card">
+      <div class="summary-header">
+        <span class="summary-icon">🏁</span>
+        <span class="summary-title">Workout Done</span>
+      </div>
+
+      <!-- Duration -->
+      <div class="summary-stat-row">
+        <div class="summary-stat">
+          <span class="sstat-val">{formatElapsed(summaryElapsed)}</span>
+          <span class="sstat-lbl">Duration</span>
+        </div>
+        <div class="summary-stat">
+          <span class="sstat-val">{summarySetsDone}</span>
+          <span class="sstat-lbl">Sets done</span>
+        </div>
+        <div class="summary-stat">
+          <span class="sstat-val">{fmtVolume(summaryVolume)}</span>
+          <span class="sstat-lbl">Volume</span>
+        </div>
+      </div>
+
+      <!-- Exercise list -->
+      <div class="summary-ex-list">
+        {#each summaryExercises as ex}
+          <div class="summary-ex-row" class:sdone={ex.done}>
+            <span class="sex-check">{ex.done ? '✓' : '○'}</span>
+            <span class="sex-name">{ex.name}</span>
+            {#if !ex.conditioning && !ex.recovery}
+              <span class="sex-sets">{ex.setsDone}/{ex.setsTotal}</span>
+            {:else if ex.conditioning}
+              <span class="sex-tag">Cardio</span>
+            {:else}
+              <span class="sex-tag">Recovery</span>
+            {/if}
+          </div>
+        {/each}
+      </div>
+
+      <!-- Done button -->
+      <button class="summary-done-btn" on:click={confirmFinish}>
+        Done
+      </button>
+    </div>
+  </div>
+{/if}
 
 <style>
   .wm-overlay {
@@ -398,41 +529,6 @@
     flex-shrink: 0;
   }
 
-  /* Last session */
-  .last-session {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 7px 12px;
-    border-radius: 10px;
-    background: rgba(255,194,71,0.06);
-    border: 1px solid rgba(255,194,71,0.14);
-    flex-wrap: wrap;
-  }
-
-  .last-label {
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #9a7828;
-    flex-shrink: 0;
-  }
-
-  .last-sets {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 4px;
-    flex: 1;
-  }
-
-  .last-set {
-    font-size: 13px;
-    font-weight: 700;
-    color: #d4a838;
-    font-variant-numeric: tabular-nums;
-  }
-
   /* Content */
   .wm-content {
     flex: 1;
@@ -469,6 +565,12 @@
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.12);
     color: rgba(255,255,255,0.45);
+  }
+
+  .block-badge.cond {
+    background: rgba(79,192,141,0.08);
+    border: 1px solid rgba(79,192,141,0.20);
+    color: #4fc08d;
   }
 
   .exercises-wrap {
@@ -533,14 +635,87 @@
     border: 1px solid rgba(255,255,255,0.06);
   }
 
-  /* Sets */
-  .sets-grid {
+  /* Last session (strength) */
+  .last-session {
     display: flex;
-    flex-direction: column;
+    align-items: baseline;
     gap: 8px;
+    padding: 7px 12px;
+    border-radius: 10px;
+    background: rgba(255,194,71,0.06);
+    border: 1px solid rgba(255,194,71,0.14);
+    flex-wrap: wrap;
   }
 
-  /* set-n | kg col | reps col | done btn | del btn */
+  .last-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #9a7828;
+    flex-shrink: 0;
+  }
+
+  .last-sets { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
+
+  .last-set {
+    font-size: 13px;
+    font-weight: 700;
+    color: #d4a838;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Conditioning: previous session */
+  .cond-prev {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px 13px;
+    border-radius: 12px;
+    background: rgba(79,192,141,0.05);
+    border: 1px solid rgba(79,192,141,0.14);
+  }
+
+  .cond-prev-lbl {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #3a8a6a;
+  }
+
+  .cond-prev-text {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.45;
+  }
+
+  /* Conditioning textarea */
+  .cond-textarea {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-weight: 500;
+    color: #ffffff;
+    font-family: inherit;
+    line-height: 1.55;
+    resize: none;
+    outline: none;
+    transition: border-color 0.12s;
+    min-height: 110px;
+  }
+
+  .cond-textarea:focus { border-color: rgba(79,192,141,0.40); }
+  .cond-textarea::placeholder { color: rgba(255,255,255,0.22); }
+
+  /* Sets */
+  .sets-grid { display: flex; flex-direction: column; gap: 8px; }
+
   .set-row {
     display: grid;
     grid-template-columns: 28px 1fr 1fr 54px 32px;
@@ -637,7 +812,6 @@
     background: transparent;
     color: rgba(255,255,255,0.22);
     font-size: 18px;
-    line-height: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -647,12 +821,8 @@
     flex-shrink: 0;
   }
 
-  .del-btn:active {
-    background: rgba(255,80,80,0.14);
-    color: #ff6060;
-  }
+  .del-btn:active { background: rgba(255,80,80,0.14); color: #ff6060; }
 
-  /* Add set button */
   .add-set-btn {
     width: 100%;
     padding: 13px;
@@ -663,7 +833,6 @@
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    letter-spacing: 0.02em;
     transition: background 0.12s, color 0.12s, border-color 0.12s;
     -webkit-tap-highlight-color: transparent;
   }
@@ -673,6 +842,30 @@
     color: rgba(255,255,255,0.65);
     border-color: rgba(255,255,255,0.28);
   }
+
+  /* Recovery toggle */
+  .recovery-toggle {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.45);
+    font-size: 16px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .recovery-toggle.recovery-done {
+    background: rgba(79,192,141,0.10);
+    border-color: rgba(79,192,141,0.30);
+    color: #4fc08d;
+  }
+
+  .recovery-toggle:active { background: rgba(255,255,255,0.08); }
+  .recovery-toggle.recovery-done:active { background: rgba(79,192,141,0.18); }
 
   /* Footer */
   .wm-footer {
@@ -704,15 +897,10 @@
     color: #ffc247;
   }
 
-  .btn-nav:disabled {
-    opacity: 0.25;
-    cursor: not-allowed;
-  }
-
+  .btn-nav:disabled { opacity: 0.25; cursor: not-allowed; }
   .btn-nav:not(:disabled):active { background: rgba(255,255,255,0.11); }
   .btn-nav.primary:not(:disabled):active { background: rgba(255,194,71,0.22); }
 
-  /* ← Back button (mid-workout) */
   .btn-end {
     flex: 0 0 auto;
     padding: 16px 14px;
@@ -729,31 +917,15 @@
 
   .btn-end:active { background: rgba(255,255,255,0.09); color: rgba(255,255,255,0.70); }
 
-  /* All done footer: ← Back + Finish ✓ */
-  .btn-back {
-    flex: 1;
-    padding: 16px;
-    border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.60);
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
-  }
-
-  .btn-back:active { background: rgba(255,255,255,0.11); }
-
-  .btn-finish {
+  /* Finish Workout — solid gold, last block footer */
+  .btn-finish-wod {
     flex: 2;
     padding: 16px;
     border-radius: 14px;
     border: none;
     background: #ffc247;
     color: #0c0c0e;
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 900;
     cursor: pointer;
     letter-spacing: 0.04em;
@@ -763,30 +935,175 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .btn-finish:active { background: #e8b030; transform: scale(0.98); }
+  .btn-finish-wod:active { background: #e8b030; transform: scale(0.98); }
 
-  /* Recovery toggle */
-  .recovery-toggle {
+  /* ===== Summary Overlay ===== */
+  .summary-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0,0,0,0.78);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 0 0 env(safe-area-inset-bottom);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    animation: sfade 0.2s ease;
+  }
+
+  @keyframes sfade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .summary-card {
+    width: 100%;
+    max-width: 640px;
+    background: #18181e;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 28px 28px 0 0;
+    padding: 28px 20px 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    animation: sslide 0.25s ease;
+  }
+
+  @keyframes sslide {
+    from { transform: translateY(60px); opacity: 0.4; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .summary-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .summary-icon { font-size: 28px; line-height: 1; }
+
+  .summary-title {
+    font-size: 22px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.03em;
+  }
+
+  .summary-stat-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .summary-stat {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 16px;
+    padding: 14px 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .sstat-val {
+    font-size: 22px;
+    font-weight: 900;
+    color: #ffc247;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .sstat-lbl {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.38);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .summary-ex-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  .summary-ex-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .summary-ex-row.sdone {
+    background: rgba(79,192,141,0.06);
+    border-color: rgba(79,192,141,0.15);
+  }
+
+  .sex-check {
+    font-size: 13px;
+    font-weight: 900;
+    color: rgba(255,255,255,0.25);
+    flex-shrink: 0;
+    width: 16px;
+    text-align: center;
+  }
+
+  .summary-ex-row.sdone .sex-check { color: #4fc08d; }
+
+  .sex-name {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.60);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .summary-ex-row.sdone .sex-name { color: rgba(255,255,255,0.85); }
+
+  .sex-sets {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.35);
+    flex-shrink: 0;
+  }
+
+  .summary-ex-row.sdone .sex-sets { color: #4fc08d; }
+
+  .sex-tag {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(79,192,141,0.70);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+
+  .summary-done-btn {
     width: 100%;
     padding: 18px;
     border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.04);
-    color: rgba(255,255,255,0.45);
-    font-size: 16px;
-    font-weight: 800;
-    letter-spacing: -0.01em;
+    border: none;
+    background: #ffc247;
+    color: #0c0c0e;
+    font-size: 17px;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    box-shadow: 0 4px 28px rgba(255,194,71,0.30);
+    transition: background 0.12s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .recovery-toggle.recovery-done {
-    background: rgba(79,192,141,0.10);
-    border-color: rgba(79,192,141,0.30);
-    color: #4fc08d;
-  }
-
-  .recovery-toggle:active { background: rgba(255,255,255,0.08); }
-  .recovery-toggle.recovery-done:active { background: rgba(79,192,141,0.18); }
+  .summary-done-btn:active { background: #e8b030; transform: scale(0.98); }
 </style>

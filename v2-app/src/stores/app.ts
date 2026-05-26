@@ -139,6 +139,39 @@ export function findLastSession(
   return result;
 }
 
+// ---- Progression: find last conditioning note for an exercise by name ----
+export function findLastConditioningNote(
+  state: AppState,
+  name: string,
+  currentWeek: number,
+  currentDay: DayOfWeek
+): string {
+  const lower = name.toLowerCase();
+  let result = '';
+  let bestWeek = -1;
+  let bestDayIdx = -1;
+
+  for (const wd of state.weeks) {
+    if (wd.week === currentWeek && wd.day === currentDay) continue;
+    for (const ex of wd.exercises) {
+      if (ex.name.toLowerCase() !== lower) continue;
+      if (!ex.conditioning) continue;
+      if (!ex.conditioningNote) continue;
+      const dayIdx = DAY_ORDER.indexOf(wd.day);
+      const isBetter =
+        wd.week > bestWeek ||
+        (wd.week === bestWeek && dayIdx > bestDayIdx);
+      if (isBetter) {
+        bestWeek = wd.week;
+        bestDayIdx = dayIdx;
+        result = ex.conditioningNote;
+      }
+    }
+  }
+
+  return result;
+}
+
 // ---- Add new week ----
 export function addNewWeek() {
   const state = get(appState);
@@ -165,9 +198,10 @@ export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
     exercises: sourceDay.exercises.map(ex => ({
       ...ex,
       id: `${ex.id}_w${targetWeek}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-      // Pre-fill with previous week's kg/reps, done reset
+      // Pre-fill with previous week's kg/reps, done reset; conditioning note cleared (fresh session)
       sets: ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false })),
       recoveryDone: false,
+      conditioningNote: '',
     })),
   };
 
@@ -281,10 +315,17 @@ export function updateExerciseMeta(
   week: number,
   day: DayOfWeek,
   exId: string,
-  fields: Partial<Pick<Exercise, 'name' | 'rest' | 'note' | 'type' | 'code'>>
+  fields: Partial<Pick<Exercise, 'name' | 'rest' | 'note' | 'type' | 'code' | 'conditioning'>>
 ) {
   updateState(state =>
     mapExercise(state, week, day, exId, ex => ({ ...ex, ...fields }))
+  );
+}
+
+// ---- Update conditioning note ----
+export function updateConditioningNote(week: number, day: DayOfWeek, exId: string, note: string) {
+  updateState(state =>
+    mapExercise(state, week, day, exId, ex => ({ ...ex, conditioningNote: note }))
   );
 }
 
