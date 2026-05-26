@@ -315,13 +315,35 @@ function applyPastDaysCompleted(state: AppState): { state: AppState; changed: bo
   return { state: changed ? { ...state, weeks } : state, changed };
 }
 
+// ---- One-time patch: clear exercise data from Wednesday recovery days (W2–W7) ----
+// These weeks were incorrectly imported from MVP1 as training days.
+// Clearing them lets the Wednesday default (active-recovery amber) take effect.
+const WEDNESDAY_RECOVERY_WEEKS = new Set([2, 3, 4, 5, 6, 7]);
+
+function clearWednesdayRecoveryDays(state: AppState): { state: AppState; changed: boolean } {
+  let changed = false;
+  const weeks = state.weeks.map(wd => {
+    if (wd.day !== 'Wednesday') return wd;
+    if (!WEDNESDAY_RECOVERY_WEEKS.has(wd.week)) return wd;
+    if (wd.exercises.length === 0 && !wd.completed) return wd;
+    changed = true;
+    const { completed: _c, ...rest } = wd;
+    return { ...rest, exercises: [] };
+  });
+  return { state: changed ? { ...state, weeks } : state, changed };
+}
+
 export async function bootForUser(user: User) {
   bootStatus.set('loading');
   try {
     const raw = await bootstrapState(user.id);
 
+    // Patch 1: clear incorrect exercise data from W2–W7 Wednesdays
+    const { state: patched, changed: p1 } = clearWednesdayRecoveryDays(raw);
+
     // Apply migration: mark all past days complete
-    const { state, changed } = applyPastDaysCompleted(raw);
+    const { state, changed: p2 } = applyPastDaysCompleted(patched);
+    const changed = p1 || p2;
     appState.set(state);
 
     if (changed) {
