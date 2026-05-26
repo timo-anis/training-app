@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Exercise, DayOfWeek } from '../types/workout';
-  import { addSet, deleteExercise } from '../stores/app';
+  import { addSet, deleteExercise, updateExerciseMeta } from '../stores/app';
   import SetRow from './SetRow.svelte';
 
   export let exercise: Exercise;
@@ -12,7 +12,7 @@
   $: allDone = doneCount === totalCount && totalCount > 0;
   $: supersetLabel = exercise.type === 'superset' ? exercise.code : '';
 
-  // 2-tap delete confirm — auto-resets after 3s
+  // 2-tap delete confirm
   let confirmDelete = false;
   let confirmTimer: ReturnType<typeof setTimeout>;
 
@@ -24,6 +24,32 @@
       confirmDelete = true;
       confirmTimer = setTimeout(() => { confirmDelete = false; }, 3000);
     }
+  }
+
+  // Edit panel
+  let editOpen = false;
+  let editName = '';
+  let editRest = '';
+  let editNote = '';
+
+  function openEdit() {
+    editName = exercise.name;
+    editRest = exercise.rest;
+    editNote = exercise.note;
+    editOpen = true;
+  }
+
+  function closeEdit() { editOpen = false; }
+
+  function saveEdit() {
+    const name = editName.trim();
+    if (!name) return;
+    updateExerciseMeta(week, day, exercise.id, {
+      name,
+      rest: editRest.trim(),
+      note: editNote.trim(),
+    });
+    editOpen = false;
   }
 </script>
 
@@ -41,6 +67,7 @@
         {doneCount}/{totalCount}
       </span>
     {/if}
+    <button class="edit-btn" on:click={openEdit} aria-label="Edit exercise">✎</button>
     <button
       class="del-ex-btn"
       class:confirm={confirmDelete}
@@ -50,6 +77,50 @@
       {confirmDelete ? 'Delete?' : '×'}
     </button>
   </div>
+
+  <!-- Edit panel -->
+  {#if editOpen}
+    <div class="edit-panel">
+      <div class="edit-field">
+        <label class="edit-label" for="edit-name-{exercise.id}">Name</label>
+        <input
+          id="edit-name-{exercise.id}"
+          class="edit-input"
+          type="text"
+          bind:value={editName}
+          on:keydown={e => e.key === 'Enter' && saveEdit()}
+          autocomplete="off"
+        />
+      </div>
+      <div class="edit-row">
+        <div class="edit-field">
+          <label class="edit-label" for="edit-rest-{exercise.id}">Rest</label>
+          <input
+            id="edit-rest-{exercise.id}"
+            class="edit-input"
+            type="text"
+            bind:value={editRest}
+            placeholder="e.g. 90s"
+            autocomplete="off"
+          />
+        </div>
+      </div>
+      <div class="edit-field">
+        <label class="edit-label" for="edit-note-{exercise.id}">Note</label>
+        <textarea
+          id="edit-note-{exercise.id}"
+          class="edit-input edit-textarea"
+          bind:value={editNote}
+          placeholder="Optional note…"
+          rows="2"
+        ></textarea>
+      </div>
+      <div class="edit-actions">
+        <button class="btn-cancel" on:click={closeEdit}>Cancel</button>
+        <button class="btn-save" on:click={saveEdit} disabled={!editName.trim()}>Save</button>
+      </div>
+    </div>
+  {/if}
 
   {#if !exercise.recovery}
     <div class="sets-list">
@@ -93,9 +164,7 @@
     transition: border-color 0.2s;
   }
 
-  .exercise-card.all-done {
-    border-color: rgba(79,192,141,0.25);
-  }
+  .exercise-card.all-done { border-color: rgba(79,192,141,0.25); }
 
   .exercise-header {
     display: flex;
@@ -117,7 +186,6 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    letter-spacing: 0;
   }
 
   .exercise-meta {
@@ -163,6 +231,25 @@
     color: #4fc08d;
   }
 
+  .edit-btn {
+    flex: 0 0 auto;
+    height: 28px;
+    width: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #2a4a6a;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .edit-btn:active { background: rgba(127,178,255,0.12); color: #7fb2ff; }
+
   .del-ex-btn {
     flex: 0 0 auto;
     height: 28px;
@@ -191,15 +278,91 @@
     padding: 0 10px;
   }
 
-  .del-ex-btn:active {
-    background: rgba(255,80,80,0.18);
-    color: #ff6060;
+  .del-ex-btn:active { background: rgba(255,80,80,0.18); color: #ff6060; }
+
+  /* Edit panel */
+  .edit-panel {
+    display: grid;
+    gap: 10px;
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(127,178,255,0.05);
+    border: 1px solid rgba(127,178,255,0.15);
   }
 
-  .sets-list {
-    display: grid;
+  .edit-row { display: grid; grid-template-columns: 1fr; gap: 10px; }
+
+  .edit-field {
+    display: flex;
+    flex-direction: column;
     gap: 4px;
   }
+
+  .edit-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #3a5a7a;
+  }
+
+  .edit-input {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #e8f2ff;
+    outline: none;
+    width: 100%;
+    box-sizing: border-box;
+    transition: border-color 0.12s;
+  }
+
+  .edit-input:focus { border-color: rgba(127,178,255,0.35); }
+  .edit-input::placeholder { color: #2a4a6a; }
+
+  .edit-textarea {
+    resize: none;
+    font-family: inherit;
+    line-height: 1.5;
+  }
+
+  .edit-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .btn-cancel {
+    padding: 11px;
+    border-radius: 11px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.03);
+    color: #4a6a8a;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-save {
+    padding: 11px;
+    border-radius: 11px;
+    border: 1px solid rgba(127,178,255,0.3);
+    background: rgba(127,178,255,0.12);
+    color: #7fb2ff;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .btn-save:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-save:not(:disabled):active { background: rgba(127,178,255,0.22); }
+
+  .sets-list { display: grid; gap: 4px; }
 
   .meta-row {
     display: flex;
@@ -222,11 +385,7 @@
     flex: 0 0 38px;
   }
 
-  .meta-value {
-    font-size: 13px;
-    font-weight: 600;
-    color: #7fa8d4;
-  }
+  .meta-value { font-size: 13px; font-weight: 600; color: #7fa8d4; }
 
   .recovery-row {
     display: flex;

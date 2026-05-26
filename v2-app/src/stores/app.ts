@@ -207,6 +207,18 @@ function mapExercise(
   };
 }
 
+// ---- Update exercise metadata ----
+export function updateExerciseMeta(
+  week: number,
+  day: DayOfWeek,
+  exId: string,
+  fields: Partial<Pick<Exercise, 'name' | 'rest' | 'note'>>
+) {
+  updateState(state =>
+    mapExercise(state, week, day, exId, ex => ({ ...ex, ...fields }))
+  );
+}
+
 // ---- Toggle set done ----
 export function toggleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number) {
   updateState(state =>
