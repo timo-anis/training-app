@@ -249,7 +249,7 @@ export function updateExerciseMeta(
   week: number,
   day: DayOfWeek,
   exId: string,
-  fields: Partial<Pick<Exercise, 'name' | 'rest' | 'note'>>
+  fields: Partial<Pick<Exercise, 'name' | 'rest' | 'note' | 'type' | 'code'>>
 ) {
   updateState(state =>
     mapExercise(state, week, day, exId, ex => ({ ...ex, ...fields }))

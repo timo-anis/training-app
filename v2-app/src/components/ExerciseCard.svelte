@@ -31,11 +31,15 @@
   let editName = '';
   let editRest = '';
   let editNote = '';
+  let editType: 'single' | 'superset' = 'single';
+  let editCode = '';
 
   function openEdit() {
     editName = exercise.name;
     editRest = exercise.rest;
     editNote = exercise.note;
+    editType = exercise.type;
+    editCode = exercise.code;
     editOpen = true;
   }
 
@@ -44,10 +48,14 @@
   function saveEdit() {
     const name = editName.trim();
     if (!name) return;
+    const type = editType;
+    const code = type === 'superset' ? editCode.trim().toUpperCase() : '';
     updateExerciseMeta(week, day, exercise.id, {
       name,
       rest: editRest.trim(),
       note: editNote.trim(),
+      type,
+      code,
     });
     editOpen = false;
   }
@@ -92,6 +100,38 @@
           autocomplete="off"
         />
       </div>
+      <!-- Type toggle -->
+      <div class="edit-field">
+        <span class="edit-label">Type</span>
+        <div class="type-toggle">
+          <button
+            class="type-btn"
+            class:active={editType === 'single'}
+            on:click={() => { editType = 'single'; editCode = ''; }}
+          >Single</button>
+          <button
+            class="type-btn"
+            class:active={editType === 'superset'}
+            on:click={() => editType = 'superset'}
+          >Superset</button>
+        </div>
+      </div>
+
+      {#if editType === 'superset'}
+        <div class="edit-field">
+          <label class="edit-label" for="edit-code-{exercise.id}">Group code (A, B, C…)</label>
+          <input
+            id="edit-code-{exercise.id}"
+            class="edit-input edit-code"
+            type="text"
+            maxlength="3"
+            bind:value={editCode}
+            placeholder="A"
+            autocomplete="off"
+          />
+        </div>
+      {/if}
+
       <div class="edit-row">
         <div class="edit-field">
           <label class="edit-label" for="edit-rest-{exercise.id}">Rest</label>
@@ -279,6 +319,34 @@
   }
 
   .del-ex-btn:active { background: rgba(255,80,80,0.18); color: #ff6060; }
+
+  /* Type toggle */
+  .type-toggle {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .type-btn {
+    padding: 9px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.03);
+    color: #4a6a8a;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .type-btn.active {
+    background: rgba(127,178,255,0.14);
+    border-color: rgba(127,178,255,0.35);
+    color: #7fb2ff;
+  }
+
+  .edit-code { text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
 
   /* Edit panel */
   .edit-panel {
