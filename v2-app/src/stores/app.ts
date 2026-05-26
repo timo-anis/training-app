@@ -192,6 +192,16 @@ export function addExercise(week: number, day: DayOfWeek, name: string) {
   });
 }
 
+// ---- Delete set ----
+export function deleteSet(week: number, day: DayOfWeek, exId: string, setIndex: number) {
+  updateState(state =>
+    mapExercise(state, week, day, exId, ex => ({
+      ...ex,
+      sets: ex.sets.filter((_, i) => i !== setIndex),
+    }))
+  );
+}
+
 // ---- Delete exercise ----
 export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
   updateState(state => ({

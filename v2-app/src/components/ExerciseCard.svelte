@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Exercise, DayOfWeek } from '../types/workout';
-  import { addSet } from '../stores/app';
+  import { addSet, deleteExercise } from '../stores/app';
   import SetRow from './SetRow.svelte';
 
   export let exercise: Exercise;
@@ -11,6 +11,20 @@
   $: totalCount = exercise.sets.length;
   $: allDone = doneCount === totalCount && totalCount > 0;
   $: supersetLabel = exercise.type === 'superset' ? exercise.code : '';
+
+  // 2-tap delete confirm — auto-resets after 3s
+  let confirmDelete = false;
+  let confirmTimer: ReturnType<typeof setTimeout>;
+
+  function onDeleteTap() {
+    if (confirmDelete) {
+      clearTimeout(confirmTimer);
+      deleteExercise(week, day, exercise.id);
+    } else {
+      confirmDelete = true;
+      confirmTimer = setTimeout(() => { confirmDelete = false; }, 3000);
+    }
+  }
 </script>
 
 <div class="exercise-card" class:all-done={allDone}>
@@ -27,6 +41,14 @@
         {doneCount}/{totalCount}
       </span>
     {/if}
+    <button
+      class="del-ex-btn"
+      class:confirm={confirmDelete}
+      on:click={onDeleteTap}
+      aria-label={confirmDelete ? 'Confirm delete exercise' : 'Delete exercise'}
+    >
+      {confirmDelete ? 'Delete?' : '×'}
+    </button>
   </div>
 
   {#if !exercise.recovery}
@@ -139,6 +161,39 @@
     background: rgba(79,192,141,0.12);
     border-color: rgba(79,192,141,0.30);
     color: #4fc08d;
+  }
+
+  .del-ex-btn {
+    flex: 0 0 auto;
+    height: 28px;
+    min-width: 28px;
+    padding: 0 8px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #2a4a6a;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .del-ex-btn.confirm {
+    background: rgba(255,80,80,0.12);
+    color: #ff6060;
+    font-size: 12px;
+    border: 1px solid rgba(255,80,80,0.25);
+    border-radius: 10px;
+    padding: 0 10px;
+  }
+
+  .del-ex-btn:active {
+    background: rgba(255,80,80,0.18);
+    color: #ff6060;
   }
 
   .sets-list {

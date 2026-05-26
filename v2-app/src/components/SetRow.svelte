@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { WorkoutSet, DayOfWeek } from '../types/workout';
-  import { toggleSetDone, updateSetField } from '../stores/app';
+  import { toggleSetDone, updateSetField, deleteSet } from '../stores/app';
 
   export let set: WorkoutSet;
   export let index: number;
@@ -80,12 +80,20 @@
   >
     {set.done ? '✓' : '○'}
   </button>
+
+  <button
+    class="delbtn"
+    on:click={() => deleteSet(week, day, exId, index)}
+    aria-label="Delete set"
+  >
+    ×
+  </button>
 </div>
 
 <style>
   .setrow {
     display: grid;
-    grid-template-columns: 28px 1fr 1fr 44px;
+    grid-template-columns: 28px 1fr 1fr 44px 28px;
     align-items: center;
     gap: 6px;
     padding: 4px 0;
@@ -173,4 +181,26 @@
   }
 
   .donebtn:active { transform: scale(0.96); }
+
+  .delbtn {
+    height: 28px;
+    width: 28px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: #2a4a6a;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .delbtn:active {
+    background: rgba(255,80,80,0.12);
+    color: #ff6060;
+  }
 </style>
