@@ -1,270 +1,202 @@
-# AGENT.md
+# AGENT.md — Timo Training App
 
-This project uses **Timo Training Agent v3**.
+## Active App
 
-Before making any change, read and follow:
+**V2 is the active production app.**
 
-```text
-docs/AGENT_V3.md
+- Source: `v2-app/` (Svelte + TypeScript + Vite)
+- Build output: `v2-dist/`
+- Deployed: GitHub Pages from `v2-dist/`
+- Legacy: `index.html` (MVP1) — do not touch unless explicitly requested
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Svelte 4 + TypeScript |
+| Build | Vite |
+| Auth + Cloud | Supabase |
+| Local storage | localStorage (schema 4.0) |
+| Deployment | GitHub Pages |
+
+---
+
+## Architecture
+
+### Component tree
+
+```
+App.svelte
+├── BootOverlay.svelte          — loading screen
+├── AuthView.svelte             — sign-in screen (signed out)
+└── [app-shell]                 — signed in
+    ├── scroll-content
+    │   └── MainView.svelte
+    │       ├── topbar          — sticky header (Minimal Crown + gold accent line)
+    │       ├── MonthCalendar.svelte
+    │       ├── Calendar.svelte — week strip + day picker
+    │       ├── [stats-toggle]  — collapsible Stats section
+    │       │   └── StatsView.svelte
+    │       │       └── BodyMap.svelte
+    │       ├── ExerciseCard.svelte (xN)
+    │       │   └── SetRow.svelte (xN)
+    │       └── AddExercise.svelte
+    ├── workout-bar             — bottom CTA (when exercises exist)
+    └── WorkoutMode.svelte      — full-screen overlay (when active)
+        └── RestTimer.svelte
 ```
 
-## Repo Track Clarification
+### State layer (v2-app/src/stores/app.ts)
 
-This repo contains separate tracks that must not be mixed by default:
+| Store | Type | Purpose |
+|-------|------|---------|
+| appState | AppState | All workout data — { weeks: WorkoutDay[], schema: '4.0' } |
+| uiState | UIState | Selected week/day/month, workout flags, timer timestamps |
+| currentUser | User or null | Supabase auth user |
+| bootStatus | 'idle' or 'loading' or 'ready' or 'error' | App boot phase |
 
-### MVP1 / current working app
+Key derived stores: currentDayExercises, workoutBlocks, availableWeeks, hasMvp1Data.
 
-- This is the active production-like solution
-- Source of truth is the current working `index.html`
-- Use this as the baseline for normal fixes unless explicitly told
-  otherwise
+### Services (v2-app/src/services/)
 
-### V2 architecture scaffold
-
-- This is a separate clean architecture base
-- It is not the active app
-- It is not the current production baseline
-- Do not treat it as the implementation source of truth unless the task
-  explicitly switches to V2
-
-### Pre-v2 stabilization docs
-
-- These docs exist to stabilize MVP1 before deeper V2 work
-- They do not replace MVP1 implementation
-
-Until explicitly stated otherwise, MVP1 remains the source of truth.
-
-## Core Rule
-
-**Stability over cleverness.**
-
-A working production-like state is more valuable than a cleaner but broken file.
+| File | Purpose |
+|------|---------|
+| auth.ts | Supabase auth (sign in, sign out, onAuthChange) |
+| storage.ts | bootstrapState, saveLocal, saveCloud — localStorage + Supabase sync |
+| supabase.ts | Supabase client singleton |
+| migrator.ts | MVP1 to V2 data migration (one-time import) |
 
 ---
 
-## Mandatory Development Rules
+## Data Model (v2-app/src/types/workout.ts, schema 4.0)
 
-### 1. Always start from the latest confirmed working baseline
+```typescript
+WorkoutDay {
+  week: number
+  day: DayOfWeek          // 'Monday' | 'Tuesday' | ... | 'Sunday'
+  date: string            // ISO: '2026-05-25'
+  exercises: Exercise[]
+}
 
-Do not build from:
-- broken versions
-- discarded versions
-- experimental files
-- unconfirmed branches
+Exercise {
+  id: string
+  name: string
+  type: 'single' | 'superset'
+  code: string            // superset group: 'A', 'B', ... — '' for singles
+  sets: WorkoutSet[]
+  rest: string
+  note: string
+  recovery: boolean       // recovery/mobility block — no sets, just toggle
+  recoveryDone: boolean
+  conditioning: boolean   // bike, row, etc. — free-text log
+  conditioningNote: string
+}
 
-If the baseline is unclear, stop and confirm it first.
-
----
-
-### 2. One iteration = one zone
-
-Each change must be limited to one clearly bounded area.
-
-Allowed examples:
-- CSS-only polish for one UI area
-- one isolated JS behavior
-- documentation-only update
-- one bug fix in one flow
-
-Not allowed:
-- calendar + auth + layout changes together
-- cleanup + new feature together
-- CSS + DOM movement + JS rewiring together
-
----
-
-### 3. Protected zones are high risk
-
-Do not touch these unless the task explicitly requires it:
-
-- auth flow
-- sign in / sign out
-- Supabase session handling
-- cloud sync
-- boot flow
-- render order
-- overlays
-- lock / PIN behavior
-- calendar logic
-- date alignment
-- storage / migration
-- workout completion flow
-- data normalization
-- localStorage schema
-- IDs, classes, JS hooks, or dataset attributes used by JavaScript
-
----
-
-### 4. Preserve workout data exactly
-
-Never:
-- mix weekdays and dates
-- change week numbers randomly
-- reorder exercises unless explicitly requested
-- break superset structure
-- convert supersets into singles
-- drop sets
-- drop reps
-- drop weights
-- drop done states
-- silently normalize data without explaining it
-
-Always preserve:
-- workout day
-- date
-- week number
-- exercise order
-- exercise type: `single` or `superset`
-- all sets
-- all reps
-- all weights
-- all done states
-
----
-
-### 5. Patch discipline
-
-Every patch must be:
-
-- narrow
-- reversible
-- based on the latest confirmed working version
-- limited to one zone
-- limited to one layer unless explicitly justified
-- tested manually
-- explained before delivery
-
-No broad rewrites.
-No hidden improvements.
-No “while I was here” changes.
-
----
-
-### 6. Required safety check before delivery
-
-Before delivering any change, confirm:
-
-- data structure preserved
-- supersets preserved
-- done states preserved
-- exercise order preserved
-- calendar/date logic untouched unless explicitly requested
-- auth/render/overlay flow untouched unless explicitly requested
-- patch is narrow and reversible
-
----
-
-### 7. Manual test checklist
-
-After every change, test at minimum:
-
-- normal browser load
-- incognito load
-- calendar selection
-- workout view
-- add exercise
-- search
-- delete set
-- delete exercise
-- finish workout
-- timer flow if relevant
-- sign in/sign out if touched or visually nearby
-
-If any critical flow fails:
-- rollback immediately
-- do not patch over a broken state
-
----
-
-## Default Prompt
-
-Use this when asking an AI coding tool to change the app:
-
-```text
-Use Timo Training Agent v3.
-
-Baseline:
-[latest confirmed working branch/file]
-
-Task:
-[exact requested change]
-
-Strict scope:
-- Change only the requested area.
-- Do not combine unrelated fixes.
-- Do not add extra improvements.
-- Keep the patch narrow and reversible.
-
-Protected zones:
-- Do not touch auth unless explicitly requested.
-- Do not touch overlays unless explicitly requested.
-- Do not touch render/boot flow unless explicitly requested.
-- Do not touch calendar/date logic unless explicitly requested.
-- Do not touch Supabase/cloud sync unless explicitly requested.
-- Do not touch storage/migration unless explicitly requested.
-- Do not rename IDs/classes/JS hooks/dataset attributes unless explicitly required.
-
-Data integrity:
-- Preserve all exercises.
-- Preserve all sets.
-- Preserve all reps and weights.
-- Preserve single vs superset structure.
-- Preserve all done states.
-- Preserve exercise order.
-- Preserve weekday/date/week alignment.
-
-After patch:
-- Explain what changed.
-- Explain what was intentionally untouched.
-- Explain risk level.
-- Explain why the patch is safe.
-- Provide manual test checklist.
-- Provide rollback instruction.
+WorkoutSet {
+  kg: string
+  reps: string
+  done: boolean
+}
 ```
 
+### Non-negotiable data rules
+
+- Never mix weekdays and dates
+- Never break superset structure (type + code must stay paired)
+- Never reorder exercises unless explicitly requested
+- Never drop sets, reps, weights, or done states
+- Never silently normalize or migrate data
+
 ---
 
-## Short Invocation
+## Design System
 
-Use this in ChatGPT / Codex / VS Code:
+Theme: Dark Glass
 
-```text
-Use Timo Training Agent v3 → [task]
+| Token | Value |
+|-------|-------|
+| Background | radial-gradient(ellipse at 50% 0%, #0d1a2e 0%, #08090f 52%, #050508 100%) |
+| Gold primary | #c49230 |
+| Gold title | #d4a038 |
+| Gold rgba base | rgba(196,148,46,x) |
+| Border default | rgba(60,90,165,0.16) |
+| Border card | rgba(70,110,185,0.22) |
+| Glass input bg | rgba(13,24,52,0.85) |
+| Card bg | linear-gradient(160deg, #0d1a30, #080e1c) |
+| Done / active | #4fc08d |
+| Text primary | #e8f0ff |
+| Topbar bg | rgba(7,9,18,0.92) + backdrop-filter: blur(12px) |
+
+Crown accent line (topbar top edge):
+linear-gradient(90deg, transparent, rgba(196,148,46,0.45) 15%, #c49230 50%, rgba(196,148,46,0.45) 85%, transparent)
+
+---
+
+## Development Rules
+
+### 1. Source of truth
+
+V2 source is v2-app/src/. Always build from there, deploy from v2-dist/.
+
+### 2. One change = one bounded area
+
+Do not combine unrelated fixes. Each patch must be narrow and reversible.
+
+### 3. Protected flows — do not touch unless explicitly requested
+
+- Auth flow (sign in / sign out / session)
+- Boot flow (bootstrapState, BootOverlay)
+- Cloud sync (saveCloud, Supabase session)
+- Storage schema (localStorage key names, schema version)
+- Date/weekday alignment logic
+- Superset structure logic
+
+### 4. Pre-patch checklist
+
+Before writing any change, confirm:
+
+- Working from latest main branch
+- Change is scoped to one file/area
+- Data structure unchanged (unless data change is the task)
+- Superset structure preserved
+- Done states preserved
+- Exercise order preserved
+- Calendar/date logic untouched (unless explicitly requested)
+- No store field names renamed without explicit reason
+
+### 5. Build before commit
+
+Always run npm run build in v2-app/ and confirm clean build before committing.
+
+---
+
+## Workflow
+
+1. Claude edits files in v2-app/src/
+2. Claude runs: cd v2-app && npm run build
+3. Claude commits and pushes: git add -A && git commit -m "..." && git push
+4. Changes are live on GitHub Pages after push
+
+---
+
+## File Map
+
 ```
-
-Example:
-
-```text
-Use Timo Training Agent v3 → fix mobile comma input in weight field
+training-app/
+├── v2-app/               ACTIVE SOURCE
+│   ├── src/
+│   │   ├── App.svelte
+│   │   ├── app.css
+│   │   ├── main.ts
+│   │   ├── components/   (12 components)
+│   │   ├── stores/app.ts
+│   │   ├── services/     (auth, storage, supabase, migrator)
+│   │   └── types/workout.ts
+│   └── package.json
+├── v2-dist/              DEPLOYED BUILD (auto-generated, do not edit)
+├── index.html            MVP1 LEGACY (do not touch)
+├── AGENT.md              this file
+└── CURRENT_BASELINE.md   current state summary
 ```
-
----
-
-## Final Rule
-
-Never trade a working production-like state for a cleaner file unless the change is bounded, tested, reversible, and based on the latest confirmed working baseline.
-
----
-
-## Claude Workflow (Cowork)
-
-This project is built using Claude via the Cowork desktop app.
-
-### How to work effectively
-
-- Use **Cowork** (not the web chat) — Claude has direct access to the repo folder and memory persists across sessions
-- **One conversation = one task** — keep each session focused on a single change or bug fix
-- If a conversation gets long or slow, **open a new Cowork session** in the same project — memory and repo access reload automatically
-- Claude edits `index.html` directly in the repo via Cowork
-- Claude may run `git` commands (rebase, commit, cleanup) when explicitly instructed
-- Timo tests locally in the browser before any push
-- Timo pushes: `git push` or `git push --force-with-lease` — Timo controls what reaches remote
-
-### Git workflow
-
-1. Claude makes the change and explains exactly what was modified and why
-2. Timo tests locally
-3. Claude or Timo commits: `git commit -m "description"`
-4. Timo pushes: `git push`
-
-Claude never assumes the change is safe — Timo confirms after local testing before pushing.

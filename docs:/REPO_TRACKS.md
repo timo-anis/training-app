@@ -1,81 +1,34 @@
-# REPOSITORY TRACKS OVERVIEW
+# Repository Tracks
 
-This repository contains three clearly different documentation and
-development tracks.
-
-They should not be mixed by default.
+This repository contains two tracks.
 
 ---
 
-## 1. MVP1 / Current Working App
+## Track 1: V2 — Active Production App
 
-This is the current production-like working solution.
+V2 is the current live app.
 
-It is the active app.
+- Source: `v2-app/`
+- Deployed: GitHub Pages from `v2-dist/`
+- Stack: Svelte 4 + TypeScript + Vite + Supabase
 
-Current source of truth:
-
-- `index.html`
-
-Rules:
-
-- treat MVP1 as the live behavior baseline
-- fix MVP1 directly only when the task explicitly targets the current app
-- do not migrate MVP1 toward V2 unless explicitly requested
-- do not assume V2 docs represent current implementation behavior
+All development happens here. See `AGENT.md` for architecture and rules.
 
 ---
 
-## 2. V2 Architecture Scaffold
+## Track 2: MVP1 — Legacy
 
-This is an existing clean architecture base for future work.
+`index.html` is the original single-file app. It is no longer the active app.
 
-It is not yet the active app.
+Do not modify MVP1 unless explicitly requested.
 
-It is not the current production baseline.
-
-Its purpose is to:
-
-- define long-term architecture direction
-- describe clean domain and layer boundaries
-- guide future implementation work beside MVP1
-
-Primary reference:
-
-- `docs:/V2_ARCHITECTURE.md`
-
-Rules:
-
-- do not treat V2 scaffold docs as current runtime behavior
-- do not connect MVP1 to V2 by default
-- do not refactor working MVP1 toward V2 unless explicitly requested
+It exists as:
+- Historical reference
+- Fallback if V2 needs to be compared against original behavior
+- Source for the one-time data migration (handled by `services/migrator.ts`)
 
 ---
 
-## 3. Pre-V2 Stabilization Documents
+## Rule
 
-These docs exist to make MVP1 stable enough to act as the reference
-baseline before serious V2 implementation starts.
-
-Primary references:
-
-- `docs:/PRE_V2_STABILIZATION.md`
-- `docs:/PRE_V2_STABILIZATION_CHECKLIST.md`
-
-Their purpose is to:
-
-- define what must be stable in MVP1
-- protect data integrity and real workout flows
-- reduce regression risk before V2 work expands
-- make the MVP1 to V2 transition explicit instead of accidental
-
----
-
-## Working Rule
-
-Until the project explicitly switches to V2 as the active app:
-
-- MVP1 remains the source of truth
-- `index.html` remains the current implementation baseline
-- V2 remains a scaffold and architecture track
-- stabilization docs remain support documents, not implementation
+V2 is the source of truth. When in doubt, work in `v2-app/src/`.
