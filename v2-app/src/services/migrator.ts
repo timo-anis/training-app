@@ -33,16 +33,21 @@ const DAY_MAP: Record<MVP1Day, DayOfWeek> = {
   sun: 'Sunday',
 };
 
-function addDays(date: Date, days: number): Date {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
+// Use UTC arithmetic — avoids DST shifts and toISOString() timezone issues
+const PS_UTC = Date.UTC(
+  PROGRAM_START.getFullYear(),
+  PROGRAM_START.getMonth(),
+  PROGRAM_START.getDate()
+);
 
 function dayDate(week: number, mvp1Day: MVP1Day): string {
   const dayIndex = MVP1_DAY_ORDER.indexOf(mvp1Day);
-  const d = addDays(PROGRAM_START, (week - 1) * 7 + dayIndex);
-  return d.toISOString().slice(0, 10);
+  const utc = PS_UTC + ((week - 1) * 7 + dayIndex) * 86400000;
+  const d = new Date(utc);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
 }
 
 // ---- Detect MVP1 format ----

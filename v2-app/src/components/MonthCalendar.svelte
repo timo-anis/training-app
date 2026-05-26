@@ -3,37 +3,55 @@
   import { appState, uiState, updateUI } from '../stores/app';
 
   const PROGRAM_START = new Date('2026-02-16T00:00:00');
+  // Pre-compute UTC midnight of PROGRAM_START to avoid DST issues
+  const PS_UTC = Date.UTC(
+    PROGRAM_START.getFullYear(),
+    PROGRAM_START.getMonth(),
+    PROGRAM_START.getDate()
+  );
 
+  // Use UTC arithmetic — avoids DST shifts (e.g. 28 Mar 2026 spring-forward)
   function dateToWeekDay(date: Date): { week: number; day: DayOfWeek } | null {
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const diff = Math.floor((date.getTime() - PROGRAM_START.getTime()) / msPerDay);
+    const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
+    const diff = Math.round((utc - PS_UTC) / 86400000);
     if (diff < 0) return null;
-    const week = Math.floor(diff / 7) + 1;
-    const dayIdx = diff % 7;
-    return { week, day: DAY_ORDER[dayIdx] };
+    return { week: Math.floor(diff / 7) + 1, day: DAY_ORDER[diff % 7] };
   }
 
-  type DayStatus = 'done' | 'active-recovery' | 'has-data' | 'rest' | 'future';
+  function weekToDate(week: number, day: DayOfWeek): Date {
+    const dayIdx = DAY_ORDER.indexOf(day);
+    const utc = PS_UTC + ((week - 1) * 7 + dayIdx) * 86400000;
+    const d = new Date(utc);
+    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  }
+
+  type DayStatus = 'done' | 'active-recovery' | 'has-data' | 'rest' | 'weekend' | 'future';
 
   function getDayStatus(date: Date): DayStatus {
     const wd = dateToWeekDay(date);
     if (!wd) return 'future';
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    if (date > today) return 'future';
+
+    const todayMid = new Date();
+    todayMid.setHours(0, 0, 0, 0);
+    if (date > todayMid) return 'future';
 
     const workoutDay = $appState.weeks.find(w => w.week === wd.week && w.day === wd.day);
-    if (!workoutDay || workoutDay.exercises.length === 0) return 'rest';
+    const hasData = workoutDay && workoutDay.exercises.length > 0;
 
-    const nonRecovery = workoutDay.exercises.filter(e => !e.recovery);
-    const hasRecovery = workoutDay.exercises.some(e => e.recovery && e.recoveryDone);
+    if (hasData) {
+      const nonRecovery = workoutDay!.exercises.filter(e => !e.recovery);
+      const hasRecovery = workoutDay!.exercises.some(e => e.recovery && e.recoveryDone);
+      if (nonRecovery.length === 0) return hasRecovery ? 'active-recovery' : 'has-data';
+      const allDone = nonRecovery.every(ex => ex.sets.length > 0 && ex.sets.every(s => s.done));
+      if (allDone) return 'done';
+      if (hasRecovery) return 'active-recovery';
+      return 'has-data';
+    }
 
-    if (nonRecovery.length === 0) return hasRecovery ? 'active-recovery' : 'has-data';
-
-    const allSetsDone = nonRecovery.every(ex => ex.sets.length > 0 && ex.sets.every(s => s.done));
-    if (allSetsDone) return 'done';
-    if (hasRecovery) return 'active-recovery';
-    return 'has-data';
+    // No data — day-of-week defaults
+    if (wd.day === 'Saturday' || wd.day === 'Sunday') return 'weekend';
+    if (wd.day === 'Wednesday') return 'active-recovery';
+    return 'rest';
   }
 
   function selectDay(date: Date) {
@@ -56,13 +74,6 @@
   }
 
   // Month navigation
-  function weekToDate(week: number, day: DayOfWeek): Date {
-    const dayIdx = DAY_ORDER.indexOf(day);
-    const d = new Date(PROGRAM_START);
-    d.setDate(d.getDate() + (week - 1) * 7 + dayIdx);
-    return d;
-  }
-
   let viewYear: number;
   let viewMonth: number;
 
@@ -135,8 +146,8 @@
   {#if !collapsed}
     <!-- Day header -->
     <div class="day-header">
-      {#each DAY_LABELS as lbl}
-        <span class="day-hdr">{lbl}</span>
+      {#each DAY_LABELS as lbl, i}
+        <span class="day-hdr" class:hdr-weekend={i >= 5}>{lbl}</span>
       {/each}
     </div>
 
@@ -161,6 +172,8 @@
                 <span class="status-dot"></span>
               {:else if status === 'active-recovery'}
                 <span class="status-mark rec">○</span>
+              {:else if status === 'weekend'}
+                <span class="status-mark wknd">–</span>
               {/if}
             </button>
           {:else}
@@ -175,6 +188,7 @@
       <span class="leg-item"><span class="leg-swatch done-sw">✓</span>Done</span>
       <span class="leg-item"><span class="leg-swatch data-sw"></span>Workout</span>
       <span class="leg-item"><span class="leg-swatch rec-sw">○</span>Recovery</span>
+      <span class="leg-item"><span class="leg-swatch wknd-sw">–</span>Weekend</span>
       <span class="leg-item"><span class="leg-swatch rest-sw"></span>Rest</span>
     </div>
   {/if}
@@ -222,12 +236,8 @@
 
   .nav-btn:active { background: rgba(255,255,255,0.10); }
 
-  .nav-placeholder {
-    width: 32px;
-    flex-shrink: 0;
-  }
+  .nav-placeholder { width: 32px; flex-shrink: 0; }
 
-  /* Month label + toggle */
   .month-label-btn {
     flex: 1;
     display: flex;
@@ -262,9 +272,7 @@
     line-height: 1;
   }
 
-  .chevron.open {
-    transform: rotate(-90deg);
-  }
+  .chevron.open { transform: rotate(-90deg); }
 
   /* ---- Day header ---- */
   .day-header {
@@ -280,8 +288,10 @@
     color: #3a5890;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    padding: 2px 0 2px;
+    padding: 2px 0;
   }
+
+  .day-hdr.hdr-weekend { color: #5a4878; }
 
   /* ---- Week row ---- */
   .week-row {
@@ -318,46 +328,53 @@
 
   /* ---- Status styles ---- */
 
-  /* Done: all sets ticked — green, prominent */
+  /* Done: all sets ticked — green */
   .status-done {
-    background: rgba(79,192,141,0.22);
-    border-color: rgba(79,192,141,0.50);
+    background: rgba(79,192,141,0.20);
+    border-color: rgba(79,192,141,0.48);
   }
   .status-done .day-num { color: #4fc08d; }
 
   /* Has-data: workout logged, not fully done — blue */
   .status-has-data {
-    background: rgba(127,178,255,0.16);
-    border-color: rgba(127,178,255,0.35);
+    background: rgba(100,155,255,0.14);
+    border-color: rgba(100,155,255,0.34);
   }
   .status-has-data .day-num { color: #7fb2ff; }
 
-  /* Active recovery — amber */
+  /* Active recovery — amber (incl. Wednesday default) */
   .status-active-recovery {
-    background: rgba(196,148,46,0.16);
-    border-color: rgba(196,148,46,0.36);
+    background: rgba(196,148,46,0.14);
+    border-color: rgba(196,148,46,0.34);
   }
   .status-active-recovery .day-num { color: #c49230; }
 
-  /* Rest: past day, no data — dim, no background */
-  .status-rest .day-num { color: #3a5878; }
+  /* Weekend (Sat/Sun) — muted violet-slate */
+  .status-weekend {
+    background: rgba(80,62,110,0.16);
+    border-color: rgba(90,70,125,0.32);
+  }
+  .status-weekend .day-num { color: #6a5490; }
 
-  /* Future: upcoming — very dim */
-  .status-future .day-num { color: #243650; }
+  /* Rest: past weekday, no data — very dim */
+  .status-rest .day-num { color: #2e4464; }
+
+  /* Future — invisible-ish */
+  .status-future .day-num { color: #1e2e44; }
   .status-future { cursor: default; }
 
   /* Today ring */
   .today {
-    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.28) !important;
-    border-color: rgba(255,255,255,0.28) !important;
+    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.30) !important;
+    border-color: rgba(255,255,255,0.30) !important;
   }
 
   /* Selected — gold override */
   .selected {
-    background: rgba(196,148,46,0.20) !important;
-    border-color: rgba(196,148,46,0.55) !important;
+    background: rgba(196,148,46,0.22) !important;
+    border-color: rgba(196,148,46,0.58) !important;
   }
-  .selected .day-num { color: #c49230 !important; }
+  .selected .day-num { color: #d4a038 !important; }
 
   /* Status marks */
   .status-mark {
@@ -367,22 +384,23 @@
     color: #4fc08d;
   }
 
-  .status-mark.rec { color: #c49230; font-weight: 400; }
+  .status-mark.rec  { color: #c49230; font-weight: 400; }
+  .status-mark.wknd { color: #6a5490; font-weight: 600; font-size: 10px; }
 
   .status-dot {
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: #5a8aff;
+    background: #6090e0;
   }
 
   /* ---- Legend ---- */
   .legend {
     display: flex;
-    gap: 10px;
+    gap: 8px;
     justify-content: center;
     flex-wrap: wrap;
-    padding-top: 2px;
+    padding-top: 4px;
     border-top: 1px solid rgba(60,90,160,0.13);
     margin-top: 2px;
   }
@@ -390,8 +408,8 @@
   .leg-item {
     display: flex;
     align-items: center;
-    gap: 5px;
-    font-size: 11px;
+    gap: 4px;
+    font-size: 10px;
     color: #3a5890;
     font-weight: 600;
   }
@@ -400,16 +418,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 16px;
-    height: 16px;
-    border-radius: 5px;
+    width: 15px;
+    height: 15px;
+    border-radius: 4px;
     font-size: 9px;
     font-weight: 900;
   }
 
-  .done-sw  { background: rgba(79,192,141,0.22); border: 1px solid rgba(79,192,141,0.50); color: #4fc08d; }
-  .data-sw  { background: rgba(127,178,255,0.16); border: 1px solid rgba(127,178,255,0.35); }
-  .data-sw::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #5a8aff; }
-  .rec-sw   { background: rgba(196,148,46,0.16); border: 1px solid rgba(196,148,46,0.36); color: #c49230; font-size: 10px; }
-  .rest-sw  { background: rgba(12,22,48,0.55); border: 1px solid rgba(65,100,170,0.16); }
+  .done-sw  { background: rgba(79,192,141,0.20); border: 1px solid rgba(79,192,141,0.48); color: #4fc08d; }
+  .data-sw  { background: rgba(100,155,255,0.14); border: 1px solid rgba(100,155,255,0.34); }
+  .data-sw::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #6090e0; }
+  .rec-sw   { background: rgba(196,148,46,0.14); border: 1px solid rgba(196,148,46,0.34); color: #c49230; font-size: 10px; }
+  .wknd-sw  { background: rgba(80,62,110,0.16); border: 1px solid rgba(90,70,125,0.32); color: #6a5490; font-size: 10px; }
+  .rest-sw  { background: rgba(12,22,48,0.55); border: 1px solid rgba(45,70,120,0.20); }
 </style>
