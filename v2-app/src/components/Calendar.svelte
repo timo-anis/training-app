@@ -111,9 +111,9 @@
   .new-week-btn {
     padding: 6px 12px;
     border-radius: 10px;
-    border: 1px solid rgba(255,194,71,0.28);
-    background: rgba(255,194,71,0.09);
-    color: #ffc247;
+    border: 1px solid rgba(196,148,46,0.28);
+    background: rgba(196,148,46,0.09);
+    color: #c49230;
     font-size: 12px;
     font-weight: 800;
     cursor: pointer;
@@ -123,7 +123,7 @@
     transition: background 0.12s;
   }
 
-  .new-week-btn:active { background: rgba(255,194,71,0.18); }
+  .new-week-btn:active { background: rgba(196,148,46,0.18); }
 
   .day-pills {
     display: grid;
@@ -147,8 +147,8 @@
   .pill.has-data { background: rgba(12,20,44,0.50); }
 
   .pill.active {
-    background: linear-gradient(180deg, rgba(255,194,71,0.18), rgba(255,159,10,0.10));
-    border-color: rgba(255,194,71,0.35);
+    background: linear-gradient(180deg, rgba(196,148,46,0.18), rgba(255,159,10,0.10));
+    border-color: rgba(196,148,46,0.35);
   }
 
   .pill-label {
@@ -160,7 +160,7 @@
   }
 
   .pill.has-data .pill-label { color: #97b8d8; }
-  .pill.active .pill-label  { color: #ffc247; }
+  .pill.active .pill-label  { color: #c49230; }
 
   .pill-dot {
     width: 4px;
@@ -169,7 +169,7 @@
     background: #4a7aaa;
   }
 
-  .pill.active .pill-dot { background: #ffc247; }
+  .pill.active .pill-dot { background: #c49230; }
 
   .copy-week-btn {
     width: 100%;

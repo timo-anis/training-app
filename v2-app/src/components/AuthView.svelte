@@ -78,7 +78,7 @@
     margin-top: 8px;
     border-radius: 12px;
     border: none;
-    background: linear-gradient(180deg, #ffc247, #ff9f0a);
+    background: linear-gradient(180deg, #c49230, #9e6818);
     color: #1a1204;
     font-size: 15px;
     font-weight: 900;

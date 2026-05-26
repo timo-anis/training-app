@@ -5,6 +5,7 @@
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import AddExercise from './AddExercise.svelte';
+  import StatsView from './StatsView.svelte';
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -22,6 +23,7 @@
   $: showMigrateBanner = totalWeeks === 0 && $hasMvp1Data;
 
   let migrateStatus: 'idle' | 'done' | 'error' = 'idle';
+  let statsOpen = false;
 
   function handleMigrate() {
     const ok = runMvp1Import();
@@ -72,6 +74,17 @@
   <section class="section section-tight">
     <Calendar />
   </section>
+
+  <!-- Stats toggle -->
+  <section class="section section-tight">
+    <button class="stats-toggle" on:click={() => statsOpen = !statsOpen}>
+      <span class="stats-toggle-label">Stats</span>
+      <span class="stats-chevron" class:open={statsOpen}>›</span>
+    </button>
+  </section>
+  {#if statsOpen}
+    <StatsView />
+  {/if}
 
   <!-- Exercise list -->
   <section class="section">
@@ -142,13 +155,13 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, transparent 0%, rgba(255,194,71,0.45) 15%, #ffc247 50%, rgba(255,194,71,0.45) 85%, transparent 100%);
+    background: linear-gradient(90deg, transparent 0%, rgba(196,148,46,0.45) 15%, #c49230 50%, rgba(196,148,46,0.45) 85%, transparent 100%);
   }
 
   .title-text {
     font-size: 17px;
     font-weight: 900;
-    color: #ffd060;
+    color: #d4a038;
     letter-spacing: -0.03em;
   }
 
@@ -180,6 +193,42 @@
   .section-tight {
     padding-top: 8px;
   }
+
+  /* ---- Stats toggle ---- */
+  .stats-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(65,100,170,0.18);
+    background: rgba(13,24,52,0.50);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .stats-toggle:active { background: rgba(13,24,52,0.80); }
+
+  .stats-toggle-label {
+    font-size: 13px;
+    font-weight: 800;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .stats-chevron {
+    display: inline-block;
+    transform: rotate(90deg);
+    transition: transform 0.2s;
+    font-size: 16px;
+    color: rgba(255,255,255,0.30);
+    line-height: 1;
+  }
+
+  .stats-chevron.open { transform: rotate(-90deg); }
 
   /* ---- Day heading ---- */
   .day-heading {
@@ -250,8 +299,8 @@
     gap: 12px;
     padding: 14px 16px;
     border-radius: 16px;
-    border: 1px solid rgba(255,194,71,0.22);
-    background: rgba(255,194,71,0.07);
+    border: 1px solid rgba(196,148,46,0.22);
+    background: rgba(196,148,46,0.07);
   }
 
   .migrate-icon { font-size: 20px; flex-shrink: 0; }
@@ -266,7 +315,7 @@
   .migrate-title {
     font-size: 13px;
     font-weight: 800;
-    color: #ffc247;
+    color: #c49230;
     letter-spacing: -0.01em;
   }
 
@@ -278,9 +327,9 @@
   .migrate-btn {
     padding: 8px 16px;
     border-radius: 10px;
-    border: 1px solid rgba(255,194,71,0.40);
-    background: rgba(255,194,71,0.14);
-    color: #ffc247;
+    border: 1px solid rgba(196,148,46,0.40);
+    background: rgba(196,148,46,0.14);
+    color: #c49230;
     font-size: 13px;
     font-weight: 800;
     cursor: pointer;
@@ -289,7 +338,7 @@
     transition: background 0.12s;
   }
 
-  .migrate-btn:active { background: rgba(255,194,71,0.24); }
+  .migrate-btn:active { background: rgba(196,148,46,0.24); }
 
   .migrate-done {
     font-size: 13px;

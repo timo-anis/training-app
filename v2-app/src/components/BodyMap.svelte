@@ -372,8 +372,8 @@
   }
 
   .mode-btn.active {
-    background: rgba(255,194,71,0.14);
-    color: #ffc247;
+    background: rgba(196,148,46,0.14);
+    color: #c49230;
   }
 
   /* Body SVG */

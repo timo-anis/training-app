@@ -201,7 +201,7 @@
   .chip-val {
     font-size: 22px;
     font-weight: 900;
-    color: #ffc247;
+    color: #c49230;
     letter-spacing: -0.03em;
     line-height: 1;
   }
@@ -251,7 +251,7 @@
   .week-num {
     font-size: 13px;
     font-weight: 900;
-    color: #ffc247;
+    color: #c49230;
     width: 28px;
     flex-shrink: 0;
     letter-spacing: -0.01em;
@@ -356,7 +356,7 @@
   .freq-count {
     font-size: 13px;
     font-weight: 800;
-    color: #ffc247;
+    color: #c49230;
     flex-shrink: 0;
   }
 

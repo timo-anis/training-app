@@ -159,7 +159,7 @@
     transition: stroke 0.3s;
   }
 
-  .fill-arc.warning { stroke: #ffc247; }
+  .fill-arc.warning { stroke: #c49230; }
   .fill-arc.done    { stroke: #4fc08d; }
 
   .center-text {
@@ -191,7 +191,7 @@
     transition: color 0.3s;
   }
 
-  .time.warning { color: #ffc247; }
+  .time.warning { color: #c49230; }
 
   .done-label {
     font-size: 64px;

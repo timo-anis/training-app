@@ -517,7 +517,7 @@
     transition: background 0.15s;
   }
 
-  .dot.active { background: #ffc247; }
+  .dot.active { background: #c49230; }
   .dot.done   { background: rgba(79,192,141,0.6); }
 
   .wm-clock {
@@ -642,8 +642,8 @@
     gap: 8px;
     padding: 7px 12px;
     border-radius: 10px;
-    background: rgba(255,194,71,0.06);
-    border: 1px solid rgba(255,194,71,0.14);
+    background: rgba(196,148,46,0.06);
+    border: 1px solid rgba(196,148,46,0.14);
     flex-wrap: wrap;
   }
 
@@ -895,14 +895,14 @@
   }
 
   .btn-nav.primary {
-    background: rgba(255,194,71,0.12);
-    border-color: rgba(255,194,71,0.30);
-    color: #ffc247;
+    background: rgba(196,148,46,0.12);
+    border-color: rgba(196,148,46,0.30);
+    color: #c49230;
   }
 
   .btn-nav:disabled { opacity: 0.25; cursor: not-allowed; }
   .btn-nav:not(:disabled):active { background: rgba(255,255,255,0.11); }
-  .btn-nav.primary:not(:disabled):active { background: rgba(255,194,71,0.22); }
+  .btn-nav.primary:not(:disabled):active { background: rgba(196,148,46,0.22); }
 
   .btn-end {
     flex: 0 0 auto;
@@ -926,19 +926,19 @@
     padding: 16px;
     border-radius: 14px;
     border: none;
-    background: #ffc247;
+    background: #c49230;
     color: #0c0c0e;
     font-size: 15px;
     font-weight: 900;
     cursor: pointer;
     letter-spacing: 0.04em;
     text-transform: uppercase;
-    box-shadow: 0 4px 24px rgba(255,194,71,0.25);
+    box-shadow: 0 4px 24px rgba(196,148,46,0.25);
     transition: background 0.12s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .btn-finish-wod:active { background: #e8b030; transform: scale(0.98); }
+  .btn-finish-wod:active { background: #b07e22; transform: scale(0.98); }
 
   /* ===== Summary Overlay ===== */
   .summary-overlay {
@@ -1013,7 +1013,7 @@
   .sstat-val {
     font-size: 22px;
     font-weight: 900;
-    color: #ffc247;
+    color: #c49230;
     letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -1096,17 +1096,17 @@
     padding: 18px;
     border-radius: 16px;
     border: none;
-    background: #ffc247;
+    background: #c49230;
     color: #0c0c0e;
     font-size: 17px;
     font-weight: 900;
     letter-spacing: 0.04em;
     text-transform: uppercase;
     cursor: pointer;
-    box-shadow: 0 4px 28px rgba(255,194,71,0.30);
+    box-shadow: 0 4px 28px rgba(196,148,46,0.30);
     transition: background 0.12s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .summary-done-btn:active { background: #e8b030; transform: scale(0.98); }
+  .summary-done-btn:active { background: #b07e22; transform: scale(0.98); }
 </style>

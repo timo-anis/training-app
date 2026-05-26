@@ -4,12 +4,10 @@
   import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout } from './stores/app';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
-  import StatsView from './components/StatsView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
   import WorkoutMode from './components/WorkoutMode.svelte';
 
   let unsubscribeAuth: (() => void) | null = null;
-  let activeTab: 'training' | 'stats' = 'training';
 
   // Elapsed timer for the bottom workout bar
   let elapsed = 0;
@@ -43,8 +41,7 @@
     clearInterval(clockInterval);
   });
 
-  // Show workout bar only: training tab, exercises exist, overlay not open
-  $: showWorkoutBar = activeTab === 'training' && $currentDayExercises.length > 0 && !$uiState.workoutMode;
+  $: showWorkoutBar = $currentDayExercises.length > 0 && !$uiState.workoutMode;
 </script>
 
 {#if $bootStatus === 'loading'}
@@ -52,30 +49,12 @@
 {:else if $currentUser && $bootStatus === 'ready'}
   <div class="app-shell">
 
-    <!-- ── Top tab toggle (Training / Stats) ── -->
-    <div class="top-tab-bar">
-      <button
-        class="top-tab"
-        class:active={activeTab === 'training'}
-        on:click={() => activeTab = 'training'}
-      >Training</button>
-      <button
-        class="top-tab"
-        class:active={activeTab === 'stats'}
-        on:click={() => activeTab = 'stats'}
-      >Stats</button>
-    </div>
-
     <!-- ── Scrollable content ── -->
-    <div class="tab-content">
-      {#if activeTab === 'training'}
-        <MainView />
-      {:else}
-        <StatsView />
-      {/if}
+    <div class="scroll-content">
+      <MainView />
     </div>
 
-    <!-- ── Bottom workout bar (training tab only) ── -->
+    <!-- ── Bottom workout bar ── -->
     {#if showWorkoutBar}
       <div class="workout-bar">
         {#if $uiState.workoutActive}
@@ -107,48 +86,8 @@
     background: radial-gradient(ellipse at 50% 0%, #0d1a2e 0%, #08090f 52%, #050508 100%);
   }
 
-  /* ── Top tab bar ── */
-  .top-tab-bar {
-    flex-shrink: 0;
-    display: flex;
-    gap: 6px;
-    padding: env(safe-area-inset-top, 0px) 14px 10px;
-    padding-top: max(env(safe-area-inset-top, 0px), 10px);
-    background: rgba(7,9,18,0.94);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(60,90,165,0.18);
-    z-index: 10;
-  }
-
-  .top-tab {
-    flex: 1;
-    padding: 10px 0;
-    border-radius: 12px;
-    border: 1px solid rgba(65,100,175,0.18);
-    background: rgba(12,20,44,0.50);
-    color: rgba(180,205,255,0.40);
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-    cursor: pointer;
-    transition: background 0.12s, color 0.12s, border-color 0.12s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .top-tab.active {
-    background: rgba(255,194,71,0.12);
-    border-color: rgba(255,194,71,0.32);
-    color: #ffc247;
-  }
-
-  .top-tab:not(.active):active {
-    background: rgba(14,26,55,0.70);
-    color: rgba(180,205,255,0.65);
-  }
-
   /* ── Scrollable content ── */
-  .tab-content {
+  .scroll-content {
     flex: 1 1 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
@@ -210,9 +149,9 @@
     flex: 1 1 0;
     padding: 16px;
     border-radius: 16px;
-    border: 1px solid rgba(255,194,71,0.45);
-    background: rgba(255,194,71,0.14);
-    color: #ffc247;
+    border: 1px solid rgba(196,148,46,0.45);
+    background: rgba(196,148,46,0.14);
+    color: #c49230;
     font-size: 16px;
     font-weight: 900;
     cursor: pointer;
@@ -221,7 +160,7 @@
   }
 
   .wm-btn.full {
-    background: #ffc247;
+    background: #c49230;
     color: #0c0c0e;
     border: none;
     font-size: 17px;
@@ -230,9 +169,9 @@
     text-transform: uppercase;
     padding: 18px;
     border-radius: 18px;
-    box-shadow: 0 4px 28px rgba(255,194,71,0.26);
+    box-shadow: 0 4px 28px rgba(196,148,46,0.22);
   }
 
-  .wm-btn:active { background: rgba(255,194,71,0.22); transform: scale(0.98); }
-  .wm-btn.full:active { background: #e8b030; transform: scale(0.98); box-shadow: none; }
+  .wm-btn:active { background: rgba(196,148,46,0.22); transform: scale(0.98); }
+  .wm-btn.full:active { background: #b07e22; transform: scale(0.98); box-shadow: none; }
 </style>

@@ -334,10 +334,10 @@
 
   /* Active recovery — amber */
   .status-active-recovery {
-    background: rgba(255,194,71,0.16);
-    border-color: rgba(255,194,71,0.36);
+    background: rgba(196,148,46,0.16);
+    border-color: rgba(196,148,46,0.36);
   }
-  .status-active-recovery .day-num { color: #ffc247; }
+  .status-active-recovery .day-num { color: #c49230; }
 
   /* Rest: past day, no data — dim, no background */
   .status-rest .day-num { color: #3a5878; }
@@ -354,10 +354,10 @@
 
   /* Selected — gold override */
   .selected {
-    background: rgba(255,194,71,0.20) !important;
-    border-color: rgba(255,194,71,0.55) !important;
+    background: rgba(196,148,46,0.20) !important;
+    border-color: rgba(196,148,46,0.55) !important;
   }
-  .selected .day-num { color: #ffc247 !important; }
+  .selected .day-num { color: #c49230 !important; }
 
   /* Status marks */
   .status-mark {
@@ -367,7 +367,7 @@
     color: #4fc08d;
   }
 
-  .status-mark.rec { color: #ffc247; font-weight: 400; }
+  .status-mark.rec { color: #c49230; font-weight: 400; }
 
   .status-dot {
     width: 4px;
@@ -410,6 +410,6 @@
   .done-sw  { background: rgba(79,192,141,0.22); border: 1px solid rgba(79,192,141,0.50); color: #4fc08d; }
   .data-sw  { background: rgba(127,178,255,0.16); border: 1px solid rgba(127,178,255,0.35); }
   .data-sw::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #5a8aff; }
-  .rec-sw   { background: rgba(255,194,71,0.16); border: 1px solid rgba(255,194,71,0.36); color: #ffc247; font-size: 10px; }
+  .rec-sw   { background: rgba(196,148,46,0.16); border: 1px solid rgba(196,148,46,0.36); color: #c49230; font-size: 10px; }
   .rest-sw  { background: rgba(12,22,48,0.55); border: 1px solid rgba(65,100,170,0.16); }
 </style>
