@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import { uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode, setActiveBlock, toggleSetDone, updateSetField, findLastSession, toggleRecoveryDone } from '../stores/app';
+  import { onMount, onDestroy } from 'svelte';
+  import { uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode, setActiveBlock, toggleSetDone, updateSetField, findLastSession, toggleRecoveryDone, updateUI } from '../stores/app';
+  import { addSet, deleteSet } from '../stores/app';
   import type { WorkoutBlock, LastSession } from '../stores/app';
   import RestTimer from './RestTimer.svelte';
 
@@ -9,13 +10,44 @@
     Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
   };
 
-  // Elapsed workout timer
+  // ---- Wake Lock — keep screen on during workout ----
+  let wakeLock: WakeLockSentinel | null = null;
+
+  async function requestWakeLock() {
+    try {
+      if ('wakeLock' in navigator) {
+        wakeLock = await (navigator as any).wakeLock.request('screen');
+      }
+    } catch { /* not supported or denied — silent */ }
+  }
+
+  function releaseWakeLock() {
+    wakeLock?.release().catch(() => {});
+    wakeLock = null;
+  }
+
+  // Re-request after user returns from another app
+  function onVisibilityChange() {
+    if (document.visibilityState === 'visible') requestWakeLock();
+  }
+
+  onMount(() => {
+    requestWakeLock();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+  });
+
+  onDestroy(() => {
+    releaseWakeLock();
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+    clearInterval(clockInterval);
+  });
+
+  // ---- Elapsed workout timer ----
   let elapsed = 0;
   const clockInterval = setInterval(() => {
     const start = $uiState.workoutStartTime;
     elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
   }, 1000);
-  onDestroy(() => clearInterval(clockInterval));
 
   function formatElapsed(s: number): string {
     const h = Math.floor(s / 3600);
@@ -25,68 +57,71 @@
     return `${m}:${String(sec).padStart(2,'0')}`;
   }
 
-  // Active block index comes from uiState.activeExerciseIndex
+  // ---- Blocks ----
   $: blocks = $workoutBlocks;
   $: activeIndex = $uiState.activeExerciseIndex;
   $: block = blocks[activeIndex] ?? null;
   $: isFirst = activeIndex === 0;
   $: isLast = activeIndex === blocks.length - 1;
 
-  // Rest timer state
-  let restActive = false;
-  let restString = '';
+  // ---- Rest timer — state lives in uiState so it survives overlay close/reopen ----
+  function parseRestToSeconds(s: string): number {
+    if (!s) return 0;
+    s = s.trim().toLowerCase();
+    if (/^\d+:\d+$/.test(s)) {
+      const [m, sec] = s.split(':').map(Number);
+      return m * 60 + sec;
+    }
+    const minMatch = s.match(/^(\d+(?:\.\d+)?)\s*min?/);
+    if (minMatch) return Math.round(parseFloat(minMatch[1]) * 60);
+    const secMatch = s.match(/^(\d+(?:\.\d+)?)/);
+    if (secMatch) return Math.round(parseFloat(secMatch[1]));
+    return 0;
+  }
 
-  // Helper: is a single exercise considered done?
+  $: restActive = $uiState.restStartTime !== null && $uiState.restTotal !== null && $uiState.restTotal > 0;
+
+  function startRest(restString: string) {
+    const secs = parseRestToSeconds(restString);
+    if (secs > 0) {
+      updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: secs }));
+    }
+  }
+
+  function clearRest() {
+    updateUI(ui => ({ ...ui, restStartTime: null, restTotal: null }));
+  }
+
+  // ---- Exercise done helpers ----
   function exDone(ex: import('../types/workout').Exercise): boolean {
     if (ex.recovery) return ex.recoveryDone;
     return ex.sets.length > 0 && ex.sets.every(s => s.done);
   }
 
-  // All blocks done across workout
   $: allDone = blocks.every(b => b.exercises.every(exDone));
 
-  // Is a specific block done (for dots)?
   function blockDone(b: WorkoutBlock): boolean {
     return b.exercises.every(exDone);
   }
 
   function handleSetDone(week: number, day: import('../types/workout').DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string) {
     toggleSetDone(week, day, exId, setIndex);
-    // Start rest timer only when marking done (not undoing)
     if (!currentDone && exRestString) {
-      restString = exRestString;
-      restActive = true;
+      startRest(exRestString);
     }
   }
 
-  function onRestDone() { restActive = false; }
-  function onRestSkip() { restActive = false; }
+  function prev() { if (!isFirst) setActiveBlock(activeIndex - 1); }
+  function next() { if (!isLast) setActiveBlock(activeIndex + 1); }
 
-  function prev() {
-    if (!isFirst) setActiveBlock(activeIndex - 1);
-  }
+  function backToNormal() { closeWorkoutMode(); }
+  function finish() { exitWorkout(); }
 
-  function next() {
-    if (!isLast) setActiveBlock(activeIndex + 1);
-  }
-
-  /** Close overlay, keep timer running */
-  function backToNormal() {
-    closeWorkoutMode();
-  }
-
-  /** End workout entirely */
-  function finish() {
-    exitWorkout();
-  }
-
-  // Local editable inputs per exercise per set
-  // We use a map keyed by `${exId}-${setIndex}`
+  // ---- Local editable inputs ----
   let localKg: Record<string, string> = {};
   let localReps: Record<string, string> = {};
 
   $: {
-    // Sync locals when block changes
     if (block) {
       for (const ex of block.exercises) {
         ex.sets.forEach((s, i) => {
@@ -96,6 +131,14 @@
         });
       }
     }
+  }
+
+  // When block changes, reset local map for new block's exercises
+  let prevActiveIndex = -1;
+  $: if (activeIndex !== prevActiveIndex) {
+    prevActiveIndex = activeIndex;
+    localKg = {};
+    localReps = {};
   }
 
   function commitKg(week: number, day: import('../types/workout').DayOfWeek, exId: string, i: number) {
@@ -110,6 +153,19 @@
     const val = (localReps[k] ?? '').trim();
     localReps[k] = val;
     updateSetField(week, day, exId, i, 'reps', val);
+  }
+
+  function handleAddSet(week: number, day: import('../types/workout').DayOfWeek, exId: string) {
+    addSet(week, day, exId);
+    // Reset local map so new set syncs
+    localKg = {};
+    localReps = {};
+  }
+
+  function handleDeleteSet(week: number, day: import('../types/workout').DayOfWeek, exId: string, i: number) {
+    deleteSet(week, day, exId, i);
+    localKg = {};
+    localReps = {};
   }
 </script>
 
@@ -179,62 +235,78 @@
                 {ex.recoveryDone ? '✓ Done' : 'Tap to mark done'}
               </button>
             {:else}
-            <div class="sets-grid">
-              {#each ex.sets as set, i}
-                {@const k = `${ex.id}-${i}`}
-                <div class="set-row" class:done={set.done}>
-                  <span class="set-n">{i + 1}</span>
+              <div class="sets-grid">
+                {#each ex.sets as set, i}
+                  {@const k = `${ex.id}-${i}`}
+                  <div class="set-row" class:done={set.done}>
+                    <span class="set-n">{i + 1}</span>
 
-                  <div class="set-col">
-                    <label class="set-lbl" for="wm-kg-{ex.id}-{i}">kg</label>
-                    <input
-                      id="wm-kg-{ex.id}-{i}"
-                      class="set-inp"
-                      type="text"
-                      inputmode="decimal"
-                      bind:value={localKg[k]}
-                      on:blur={() => commitKg(week, day, ex.id, i)}
-                      on:keydown={e => e.key === 'Enter' && (e.target as HTMLElement).blur()}
-                      placeholder="—"
-                      autocomplete="off"
-                    />
+                    <div class="set-col">
+                      <label class="set-lbl" for="wm-kg-{ex.id}-{i}">kg</label>
+                      <input
+                        id="wm-kg-{ex.id}-{i}"
+                        class="set-inp"
+                        type="text"
+                        inputmode="decimal"
+                        bind:value={localKg[k]}
+                        on:blur={() => commitKg(week, day, ex.id, i)}
+                        on:keydown={e => e.key === 'Enter' && (e.target as HTMLElement).blur()}
+                        placeholder="—"
+                        autocomplete="off"
+                      />
+                    </div>
+
+                    <div class="set-col">
+                      <label class="set-lbl" for="wm-reps-{ex.id}-{i}">reps</label>
+                      <input
+                        id="wm-reps-{ex.id}-{i}"
+                        class="set-inp"
+                        type="text"
+                        inputmode="numeric"
+                        bind:value={localReps[k]}
+                        on:blur={() => commitReps(week, day, ex.id, i)}
+                        on:keydown={e => e.key === 'Enter' && (e.target as HTMLElement).blur()}
+                        placeholder="—"
+                        autocomplete="off"
+                      />
+                    </div>
+
+                    <button
+                      class="done-btn"
+                      class:on={set.done}
+                      on:click={() => handleSetDone(week, day, ex.id, i, set.done, ex.rest)}
+                      aria-pressed={set.done}
+                      aria-label={set.done ? 'Undo set' : 'Mark set done'}
+                    >
+                      {set.done ? '✓' : '○'}
+                    </button>
+
+                    <button
+                      class="del-btn"
+                      on:click={() => handleDeleteSet(week, day, ex.id, i)}
+                      aria-label="Delete set"
+                    >×</button>
                   </div>
+                {/each}
+              </div>
 
-                  <div class="set-col">
-                    <label class="set-lbl" for="wm-reps-{ex.id}-{i}">reps</label>
-                    <input
-                      id="wm-reps-{ex.id}-{i}"
-                      class="set-inp"
-                      type="text"
-                      inputmode="numeric"
-                      bind:value={localReps[k]}
-                      on:blur={() => commitReps(week, day, ex.id, i)}
-                      on:keydown={e => e.key === 'Enter' && (e.target as HTMLElement).blur()}
-                      placeholder="—"
-                      autocomplete="off"
-                    />
-                  </div>
-
-                  <button
-                    class="done-btn"
-                    class:on={set.done}
-                    on:click={() => handleSetDone(week, day, ex.id, i, set.done, ex.rest)}
-                    aria-pressed={set.done}
-                    aria-label={set.done ? 'Undo set' : 'Mark set done'}
-                  >
-                    {set.done ? '✓' : '○'}
-                  </button>
-                </div>
-              {/each}
-            </div>
+              <!-- Add set -->
+              <button class="add-set-btn" on:click={() => handleAddSet(week, day, ex.id)}>
+                + Add set
+              </button>
             {/if}
           </div>
         {/each}
       </div>
 
       <!-- Rest timer -->
-      {#if restActive}
-        <RestTimer {restString} on:done={onRestDone} on:skip={onRestSkip} />
+      {#if restActive && $uiState.restStartTime !== null && $uiState.restTotal !== null}
+        <RestTimer
+          startTime={$uiState.restStartTime}
+          totalSeconds={$uiState.restTotal}
+          on:done={clearRest}
+          on:skip={clearRest}
+        />
       {/if}
     </div>
   {/if}
@@ -282,8 +354,8 @@
     border-radius: 10px;
     border: 1px solid rgba(255,255,255,0.12);
     background: rgba(255,255,255,0.05);
-    color: #6a8faa;
-    font-size: 15px;
+    color: rgba(255,255,255,0.65);
+    font-size: 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -295,7 +367,7 @@
   .wm-progress {
     font-size: 14px;
     font-weight: 700;
-    color: #6a8faa;
+    color: rgba(255,255,255,0.45);
     flex-shrink: 0;
   }
 
@@ -369,6 +441,7 @@
     display: flex;
     flex-direction: column;
     gap: 16px;
+    position: relative;
   }
 
   .block-title {
@@ -395,7 +468,7 @@
   .block-badge.single {
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.12);
-    color: #6a8faa;
+    color: rgba(255,255,255,0.45);
   }
 
   .exercises-wrap {
@@ -433,9 +506,9 @@
   }
 
   .ex-name {
-    font-size: 17px;
+    font-size: 18px;
     font-weight: 900;
-    color: #e8f2ff;
+    color: #ffffff;
     letter-spacing: -0.02em;
     flex: 1;
   }
@@ -453,7 +526,7 @@
 
   .ex-note {
     font-size: 14px;
-    color: #6a8faa;
+    color: rgba(255,255,255,0.45);
     padding: 8px 12px;
     border-radius: 10px;
     background: rgba(255,255,255,0.03);
@@ -464,23 +537,24 @@
   .sets-grid {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
   }
 
+  /* set-n | kg col | reps col | done btn | del btn */
   .set-row {
     display: grid;
-    grid-template-columns: 28px 1fr 1fr 48px;
+    grid-template-columns: 28px 1fr 1fr 54px 32px;
     align-items: center;
     gap: 6px;
-    padding: 4px 0;
-    border-radius: 10px;
+    padding: 2px 0;
+    border-radius: 12px;
     transition: background 0.15s;
   }
 
   .set-row.done { background: rgba(79,192,141,0.04); }
 
   .set-n {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: rgba(255,255,255,0.35);
     text-align: center;
@@ -492,15 +566,15 @@
   .set-col {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 10px;
-    padding: 6px 10px;
+    gap: 3px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.11);
+    border-radius: 12px;
+    padding: 8px 12px;
   }
 
   .set-row.done .set-col {
-    border-color: rgba(79,192,141,0.15);
+    border-color: rgba(79,192,141,0.18);
     background: rgba(79,192,141,0.05);
   }
 
@@ -509,7 +583,7 @@
     font-weight: 800;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
+    color: rgba(255,255,255,0.38);
     user-select: none;
   }
 
@@ -518,26 +592,26 @@
     border: none;
     outline: none;
     padding: 0;
-    font-size: 16px;
+    font-size: 20px;
     font-weight: 700;
-    color: #d8eafc;
+    color: #ffffff;
     letter-spacing: -0.01em;
     width: 100%;
     min-width: 0;
     font-variant-numeric: tabular-nums;
   }
 
-  .set-row.done .set-inp { color: rgba(79,192,141,0.85); }
-  .set-inp::placeholder { color: #2a4a6a; }
+  .set-row.done .set-inp { color: rgba(79,192,141,0.90); }
+  .set-inp::placeholder { color: rgba(255,255,255,0.18); }
   .set-inp:focus { color: #ffffff; }
 
   .done-btn {
-    height: 44px;
-    border-radius: 10px;
+    height: 52px;
+    border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.18);
-    background: rgba(255,255,255,0.04);
-    color: #7fa8d4;
-    font-size: 20px;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.55);
+    font-size: 22px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -547,13 +621,58 @@
   }
 
   .done-btn.on {
-    background: rgba(79,192,141,0.13);
-    border-color: rgba(79,192,141,0.45);
+    background: rgba(79,192,141,0.15);
+    border-color: rgba(79,192,141,0.50);
     color: #4fc08d;
     font-weight: 700;
   }
 
-  .done-btn:active { transform: scale(0.95); }
+  .done-btn:active { transform: scale(0.94); }
+
+  .del-btn {
+    height: 32px;
+    width: 32px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.22);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+
+  .del-btn:active {
+    background: rgba(255,80,80,0.14);
+    color: #ff6060;
+  }
+
+  /* Add set button */
+  .add-set-btn {
+    width: 100%;
+    padding: 13px;
+    border-radius: 12px;
+    border: 1px dashed rgba(255,255,255,0.14);
+    background: transparent;
+    color: rgba(255,255,255,0.38);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .add-set-btn:active {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.65);
+    border-color: rgba(255,255,255,0.28);
+  }
 
   /* Footer */
   .wm-footer {
@@ -567,7 +686,7 @@
 
   .btn-nav {
     flex: 1;
-    padding: 15px;
+    padding: 16px;
     border-radius: 14px;
     border: 1px solid rgba(255,255,255,0.14);
     background: rgba(255,255,255,0.06);
@@ -581,7 +700,7 @@
 
   .btn-nav.primary {
     background: rgba(255,194,71,0.12);
-    border-color: rgba(255,194,71,0.3);
+    border-color: rgba(255,194,71,0.30);
     color: #ffc247;
   }
 
@@ -596,7 +715,7 @@
   /* ← Back button (mid-workout) */
   .btn-end {
     flex: 0 0 auto;
-    padding: 15px 14px;
+    padding: 16px 14px;
     border-radius: 14px;
     border: 1px solid rgba(255,255,255,0.12);
     background: rgba(255,255,255,0.05);
@@ -653,7 +772,7 @@
     border-radius: 16px;
     border: 1px solid rgba(255,255,255,0.09);
     background: rgba(255,255,255,0.04);
-    color: #4a6a8a;
+    color: rgba(255,255,255,0.45);
     font-size: 16px;
     font-weight: 800;
     letter-spacing: -0.01em;

@@ -1,23 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher, onDestroy } from 'svelte';
 
-  export let restString: string = ''; // e.g. "90", "90s", "2min", "2:30"
+  /** Epoch ms when this rest period started (from uiState) */
+  export let startTime: number;
+  /** Total rest duration in seconds */
+  export let totalSeconds: number;
 
   const dispatch = createEventDispatcher<{ done: void; skip: void }>();
-
-  function parseRest(s: string): number {
-    if (!s) return 0;
-    s = s.trim().toLowerCase();
-    if (/^\d+:\d+$/.test(s)) {
-      const [m, sec] = s.split(':').map(Number);
-      return m * 60 + sec;
-    }
-    const minMatch = s.match(/^(\d+(?:\.\d+)?)\s*min?/);
-    if (minMatch) return Math.round(parseFloat(minMatch[1]) * 60);
-    const secMatch = s.match(/^(\d+(?:\.\d+)?)/);
-    if (secMatch) return Math.round(parseFloat(secMatch[1]));
-    return 0;
-  }
 
   function playBeep(freq = 880, duration = 0.18, volume = 0.5) {
     try {
@@ -42,21 +31,32 @@
     try { navigator.vibrate?.([200, 100, 200]); } catch { /* ignore */ }
   }
 
-  const totalSeconds = parseRest(restString);
-  let remaining = totalSeconds;
+  // Compute remaining from timestamp so re-mounting after background resumes correctly
+  let remaining = Math.max(0, totalSeconds - Math.floor((Date.now() - startTime) / 1000));
+  let didPlaySound = false;
   let interval: ReturnType<typeof setInterval> | null = null;
 
-  if (totalSeconds > 0) {
+  if (remaining > 0) {
     interval = setInterval(() => {
-      remaining -= 1;
+      remaining = Math.max(0, totalSeconds - Math.floor((Date.now() - startTime) / 1000));
       if (remaining <= 0) {
         remaining = 0;
         clearInterval(interval!);
         interval = null;
-        playDoneSound();
-        setTimeout(() => dispatch('done'), 800);
+        if (!didPlaySound) {
+          didPlaySound = true;
+          playDoneSound();
+          setTimeout(() => dispatch('done'), 800);
+        }
       }
-    }, 1000);
+    }, 500);
+  } else {
+    // Already elapsed while we were away — fire immediately
+    if (!didPlaySound) {
+      didPlaySound = true;
+      playDoneSound();
+      setTimeout(() => dispatch('done'), 400);
+    }
   }
 
   onDestroy(() => { if (interval) clearInterval(interval); });

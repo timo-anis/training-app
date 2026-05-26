@@ -26,6 +26,8 @@ export const uiState = writable<UIState>({
   radarMode: 'day',
   calendarCollapsed: false,
   workoutStartTime: null,
+  restStartTime: null,
+  restTotal: null,
 });
 
 // ---- Boot status ----

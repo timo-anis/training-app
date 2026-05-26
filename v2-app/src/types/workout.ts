@@ -57,6 +57,9 @@ export interface UIState {
   radarMode: 'day' | 'week' | 'lifetime';
   calendarCollapsed: boolean;
   workoutStartTime: number | null; // Date.now() when workout started
+  // Rest timer — stored in state so it survives overlay close/reopen
+  restStartTime: number | null;    // Date.now() when current rest started
+  restTotal: number | null;        // total rest duration in seconds
 }
 
 // ---- Helpers ----
