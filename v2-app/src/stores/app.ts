@@ -1,7 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import type { User } from '@supabase/supabase-js';
 import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise } from '../types/workout';
-import { emptyAppState, DAY_ORDER } from '../types/workout';
+import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud } from '../services/storage';
 
 // ---- Auth store ----
@@ -156,4 +156,49 @@ export function addSet(week: number, day: DayOfWeek, exId: string) {
       };
     })
   );
+}
+
+// ---- Date helper ----
+const PROGRAM_START = new Date('2026-02-16T00:00:00');
+const DAY_OFFSET: Record<DayOfWeek, number> = {
+  Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3,
+  Friday: 4, Saturday: 5, Sunday: 6,
+};
+
+function getDateForWeekDay(week: number, day: DayOfWeek): string {
+  const d = new Date(PROGRAM_START);
+  d.setDate(d.getDate() + (week - 1) * 7 + DAY_OFFSET[day]);
+  return d.toISOString().slice(0, 10);
+}
+
+// ---- Add exercise ----
+export function addExercise(week: number, day: DayOfWeek, name: string) {
+  const id = `${name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
+  updateState(state => {
+    const exists = state.weeks.find(w => w.week === week && w.day === day);
+    if (exists) {
+      return {
+        ...state,
+        weeks: state.weeks.map(w => {
+          if (w.week !== week || w.day !== day) return w;
+          return { ...w, exercises: [...w.exercises, emptyExercise(id, name)] };
+        }),
+      };
+    }
+    // Day doesn't exist yet — create it
+    const date = getDateForWeekDay(week, day);
+    const newDay: WorkoutDay = { week, day, date, exercises: [emptyExercise(id, name)] };
+    return { ...state, weeks: [...state.weeks, newDay] };
+  });
+}
+
+// ---- Delete exercise ----
+export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
+  updateState(state => ({
+    ...state,
+    weeks: state.weeks.map(w => {
+      if (w.week !== week || w.day !== day) return w;
+      return { ...w, exercises: w.exercises.filter(ex => ex.id !== exId) };
+    }),
+  }));
 }

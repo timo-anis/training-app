@@ -3,6 +3,7 @@
   import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
+  import AddExercise from './AddExercise.svelte';
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -47,6 +48,10 @@
         {/each}
       </div>
     {/if}
+
+    <div class="add-ex-wrap">
+      <AddExercise week={$uiState.week} day={$uiState.day} />
+    </div>
   </section>
 </div>
 
@@ -140,6 +145,11 @@
   .exercise-list {
     display: grid;
     gap: 10px;
+  }
+
+  /* ---- Add exercise wrapper ---- */
+  .add-ex-wrap {
+    margin-top: 10px;
   }
 
   /* ---- Empty state ---- */
