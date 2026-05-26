@@ -74,3 +74,33 @@ export async function bootstrapState(userId: string): Promise<AppState> {
 
   return emptyAppState();
 }
+
+// ---- MVP1 → V2 migration from local storage ----
+// MVP1 stored data under "timo_training_v81_real__user__{userId}" (or global key).
+// Returns migrated AppState or null if no MVP1 data found.
+
+const MVP1_KEYS = (userId: string) => [
+  `timo_training_v81_real__user__${userId}`,
+  'timo_training_v81_real',
+];
+
+export function detectMvp1Data(userId: string): boolean {
+  return MVP1_KEYS(userId).some(k => {
+    try { return !!localStorage.getItem(k); } catch { return false; }
+  });
+}
+
+export function importFromMvp1(userId: string): AppState | null {
+  for (const key of MVP1_KEYS(userId)) {
+    try {
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      const migrated = parseAndMigrateState(parsed);
+      if (migrated && migrated.weeks.length > 0) return migrated;
+    } catch {
+      continue;
+    }
+  }
+  return null;
+}

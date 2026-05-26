@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, startWorkout, copyPreviousDay } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, startWorkout, copyPreviousDay, hasMvp1Data, runMvp1Import } from '../stores/app';
   import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -15,6 +15,17 @@
     w => w.week === $uiState.week - 1 && w.day === $uiState.day && w.exercises.length > 0
   );
   $: canCopyDay = $currentDayExercises.length === 0 && hasPrevDay;
+
+  // Show MVP1 import banner when V2 has zero weeks and MVP1 data exists
+  $: totalWeeks = $appState.weeks.filter(w => w.exercises.length > 0).length;
+  $: showMigrateBanner = totalWeeks === 0 && $hasMvp1Data;
+
+  let migrateStatus: 'idle' | 'done' | 'error' = 'idle';
+
+  function handleMigrate() {
+    const ok = runMvp1Import();
+    migrateStatus = ok ? 'done' : 'error';
+  }
 </script>
 
 <div class="main">
@@ -26,6 +37,26 @@
     </div>
     <button class="signout-btn" on:click={signOut}>Sign out</button>
   </header>
+
+  <!-- MVP1 migration banner -->
+  {#if showMigrateBanner}
+    <section class="section">
+      <div class="migrate-banner">
+        <span class="migrate-icon">📦</span>
+        <div class="migrate-text">
+          <span class="migrate-title">Import previous data</span>
+          <span class="migrate-sub">Old app data found on this device</span>
+        </div>
+        {#if migrateStatus === 'done'}
+          <span class="migrate-done">Imported ✓</span>
+        {:else if migrateStatus === 'error'}
+          <span class="migrate-err">Failed</span>
+        {:else}
+          <button class="migrate-btn" on:click={handleMigrate}>Import</button>
+        {/if}
+      </div>
+    </section>
+  {/if}
 
   <!-- Calendar -->
   <section class="section">
@@ -218,4 +249,66 @@
   }
 
   .copy-day-btn:active { background: rgba(127,178,255,0.15); }
+
+  /* ---- Migration banner ---- */
+  .migrate-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,194,71,0.22);
+    background: rgba(255,194,71,0.07);
+  }
+
+  .migrate-icon { font-size: 20px; flex-shrink: 0; }
+
+  .migrate-text {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .migrate-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: #ffc247;
+    letter-spacing: -0.01em;
+  }
+
+  .migrate-sub {
+    font-size: 11px;
+    color: #7a6030;
+  }
+
+  .migrate-btn {
+    padding: 8px 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,194,71,0.40);
+    background: rgba(255,194,71,0.14);
+    color: #ffc247;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .migrate-btn:active { background: rgba(255,194,71,0.24); }
+
+  .migrate-done {
+    font-size: 13px;
+    font-weight: 700;
+    color: #4fc08d;
+    flex-shrink: 0;
+  }
+
+  .migrate-err {
+    font-size: 13px;
+    font-weight: 700;
+    color: #ff6060;
+    flex-shrink: 0;
+  }
 </style>

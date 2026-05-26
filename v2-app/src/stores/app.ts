@@ -2,7 +2,7 @@ import { writable, derived, get } from 'svelte/store';
 import type { User } from '@supabase/supabase-js';
 import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
-import { bootstrapState, saveLocal, saveCloud } from '../services/storage';
+import { bootstrapState, saveLocal, saveCloud, detectMvp1Data, importFromMvp1 } from '../services/storage';
 
 // ---- Auth store ----
 export const currentUser = writable<User | null>(null);
@@ -366,4 +366,31 @@ export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
       return { ...w, exercises: w.exercises.filter(ex => ex.id !== exId) };
     }),
   }));
+}
+
+// ---- MVP1 migration ----
+
+// Reactive: true if MVP1 data exists in localStorage for current user
+export const hasMvp1Data = derived(currentUser, ($user) => {
+  if (!$user) return false;
+  return detectMvp1Data($user.id);
+});
+
+// Import MVP1 data, overwrite V2 state, save
+export function runMvp1Import(): boolean {
+  const user = get(currentUser);
+  if (!user) return false;
+
+  const migrated = importFromMvp1(user.id);
+  if (!migrated || migrated.weeks.length === 0) return false;
+
+  appState.set(migrated);
+  saveLocal(user.id, migrated);
+  saveCloud(user.id, migrated);
+
+  // Jump to latest week
+  const maxWeek = Math.max(...migrated.weeks.map(w => w.week));
+  uiState.update(ui => ({ ...ui, week: maxWeek }));
+
+  return true;
 }
