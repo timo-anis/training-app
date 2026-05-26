@@ -272,11 +272,64 @@ function scheduleSave(userId: string, state: AppState) {
   }, 3000);
 }
 
+// ---- One-time migration: mark all past training days complete ----
+// Runs on boot. Marks completed=true + all sets done=true for every
+// WorkoutDay that has exercises and is strictly before today.
+const MIGRATION_PS_UTC = Date.UTC(2026, 1, 16);
+
+function applyPastDaysCompleted(state: AppState): { state: AppState; changed: boolean } {
+  const todayUTC = (() => {
+    const t = new Date();
+    return Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+  })();
+
+  let changed = false;
+
+  const weeks = state.weeks.map(wd => {
+    if (wd.exercises.length === 0) return wd;
+
+    const dayIdx = DAY_ORDER.indexOf(wd.day);
+    const dayUTC = MIGRATION_PS_UTC + ((wd.week - 1) * 7 + dayIdx) * 86400000;
+    if (dayUTC >= todayUTC) return wd; // today or future — skip
+
+    // Check if already fully done
+    const alreadyDone =
+      wd.completed === true &&
+      wd.exercises.every(ex =>
+        ex.recovery ? ex.recoveryDone : ex.sets.every(s => s.done)
+      );
+    if (alreadyDone) return wd;
+
+    changed = true;
+    return {
+      ...wd,
+      completed: true,
+      exercises: wd.exercises.map(ex => ({
+        ...ex,
+        recoveryDone: ex.recovery ? true : ex.recoveryDone,
+        sets: ex.sets.map(s => ({ ...s, done: true })),
+      })),
+    };
+  });
+
+  return { state: changed ? { ...state, weeks } : state, changed };
+}
+
 export async function bootForUser(user: User) {
   bootStatus.set('loading');
   try {
-    const state = await bootstrapState(user.id);
+    const raw = await bootstrapState(user.id);
+
+    // Apply migration: mark all past days complete
+    const { state, changed } = applyPastDaysCompleted(raw);
     appState.set(state);
+
+    if (changed) {
+      // Save migrated state immediately to both local + cloud
+      saveLocal(user.id, state);
+      saveCloud(user.id, state);
+    }
+
     // Auto-select latest week after boot
     const weeks = new Set(state.weeks.map(w => w.week));
     const latest = weeks.size ? Math.max(...weeks) : 1;
