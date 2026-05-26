@@ -1,7 +1,12 @@
 <script lang="ts">
-  import { uiState, workoutBlocks, exitWorkout, setActiveBlock, toggleSetDone, updateSetField } from '../stores/app';
-  import type { WorkoutBlock } from '../stores/app';
+  import { uiState, appState, workoutBlocks, exitWorkout, setActiveBlock, toggleSetDone, updateSetField, findLastSession } from '../stores/app';
+  import type { WorkoutBlock, LastSession } from '../stores/app';
   import RestTimer from './RestTimer.svelte';
+
+  const DAY_SHORT: Record<string, string> = {
+    Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
+    Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
+  };
 
   // Active block index comes from uiState.activeExerciseIndex
   $: blocks = $workoutBlocks;
@@ -105,6 +110,7 @@
         {#each block.exercises as ex}
           {@const week = $uiState.week}
           {@const day = $uiState.day}
+          {@const lastSession = findLastSession($appState, ex.name, week, day)}
           <div class="ex-section">
             <div class="ex-name-row">
               {#if block.isSuperset}
@@ -115,6 +121,17 @@
                 <span class="ex-rest">Rest {ex.rest}</span>
               {/if}
             </div>
+
+            {#if lastSession}
+              <div class="last-session">
+                <span class="last-label">W{lastSession.week} {DAY_SHORT[lastSession.day]}</span>
+                <span class="last-sets">
+                  {#each lastSession.sets as s, i}
+                    <span class="last-set">{s.kg || '—'} × {s.reps || '—'}{i < lastSession.sets.length - 1 ? ' ·' : ''}</span>
+                  {/each}
+                </span>
+              </div>
+            {/if}
 
             {#if ex.note}
               <div class="ex-note">{ex.note}</div>
@@ -253,6 +270,41 @@
 
   .dot.active { background: #ffc247; }
   .dot.done   { background: rgba(79,192,141,0.6); }
+
+  /* Last session */
+  .last-session {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 10px;
+    background: rgba(255,194,71,0.06);
+    border: 1px solid rgba(255,194,71,0.14);
+    flex-wrap: wrap;
+  }
+
+  .last-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #8a6a20;
+    flex-shrink: 0;
+  }
+
+  .last-sets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
+  }
+
+  .last-set {
+    font-size: 12px;
+    font-weight: 700;
+    color: #c8962a;
+    font-variant-numeric: tabular-nums;
+  }
 
   /* Content */
   .wm-content {

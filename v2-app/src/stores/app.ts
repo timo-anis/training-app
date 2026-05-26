@@ -86,6 +86,54 @@ export const workoutBlocks = derived(currentDayExercises, ($exercises) => {
   return blocks;
 });
 
+// ---- Progression: find last session for an exercise by name ----
+export interface LastSession {
+  week: number;
+  day: DayOfWeek;
+  sets: { kg: string; reps: string }[];
+}
+
+export function findLastSession(
+  state: AppState,
+  name: string,
+  currentWeek: number,
+  currentDay: DayOfWeek
+): LastSession | null {
+  const lower = name.toLowerCase();
+  let result: LastSession | null = null;
+  let bestWeek = -1;
+  let bestDayIdx = -1;
+
+  for (const wd of state.weeks) {
+    // Skip current day
+    if (wd.week === currentWeek && wd.day === currentDay) continue;
+
+    for (const ex of wd.exercises) {
+      if (ex.name.toLowerCase() !== lower) continue;
+      if (ex.sets.length === 0) continue;
+
+      const dayIdx = DAY_ORDER.indexOf(wd.day);
+
+      // Pick the most recent: higher week wins; same week → later day wins
+      const isBetter =
+        wd.week > bestWeek ||
+        (wd.week === bestWeek && dayIdx > bestDayIdx);
+
+      if (isBetter) {
+        bestWeek = wd.week;
+        bestDayIdx = dayIdx;
+        result = {
+          week: wd.week,
+          day: wd.day,
+          sets: ex.sets.map(s => ({ kg: s.kg, reps: s.reps })),
+        };
+      }
+    }
+  }
+
+  return result;
+}
+
 // ---- Workout mode actions ----
 export function startWorkout() {
   uiState.update(ui => ({ ...ui, workoutMode: true, activeExerciseIndex: 0 }));
