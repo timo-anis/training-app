@@ -569,9 +569,9 @@
     flex: 1;
     padding: 15px;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.05);
-    color: #6a8faa;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.65);
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -590,17 +590,17 @@
     cursor: not-allowed;
   }
 
-  .btn-nav:not(:disabled):active { background: rgba(255,255,255,0.09); }
-  .btn-nav.primary:not(:disabled):active { background: rgba(255,194,71,0.2); }
+  .btn-nav:not(:disabled):active { background: rgba(255,255,255,0.11); }
+  .btn-nav.primary:not(:disabled):active { background: rgba(255,194,71,0.22); }
 
   /* ← Back button (mid-workout) */
   .btn-end {
     flex: 0 0 auto;
     padding: 15px 14px;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.03);
-    color: #4a7090;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.50);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -608,16 +608,16 @@
     transition: background 0.12s;
   }
 
-  .btn-end:active { background: rgba(255,255,255,0.06); color: #7fa8d4; }
+  .btn-end:active { background: rgba(255,255,255,0.09); color: rgba(255,255,255,0.70); }
 
   /* All done footer: ← Back + Finish ✓ */
   .btn-back {
     flex: 1;
     padding: 16px;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.04);
-    color: #4a6a8a;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.60);
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -625,7 +625,7 @@
     transition: background 0.12s;
   }
 
-  .btn-back:active { background: rgba(255,255,255,0.09); }
+  .btn-back:active { background: rgba(255,255,255,0.11); }
 
   .btn-finish {
     flex: 2;

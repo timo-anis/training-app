@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, startWorkout, openWorkoutMode, exitWorkout, copyPreviousDay, hasMvp1Data, runMvp1Import } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, openWorkoutMode, exitWorkout, copyPreviousDay, hasMvp1Data, runMvp1Import } from '../stores/app';
   import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
@@ -126,22 +126,19 @@
 {#if $currentDayExercises.length > 0}
   <div class="workout-bar">
     {#if $uiState.workoutActive}
-      <!-- Workout running: show timer + Workout Mode + Finish -->
+      <!-- Workout running: timer chip + Resume -->
       <button class="timer-btn" on:click={exitWorkout} title="Finish workout">
         <span class="timer-dot"></span>
         <span class="timer-val">{fmtElapsed(elapsed)}</span>
         <span class="timer-stop">■</span>
       </button>
       <button class="wm-btn" on:click={openWorkoutMode}>
-        Workout Mode →
+        Resume →
       </button>
     {:else}
-      <!-- Not started: start timer OR jump straight to workout mode -->
-      <button class="start-btn" on:click={startWorkout}>
-        ▶ Start
-      </button>
-      <button class="wm-btn" on:click={openWorkoutMode}>
-        Workout Mode →
+      <!-- Single CTA — starts timer + opens overlay -->
+      <button class="wm-btn full" on:click={openWorkoutMode}>
+        ▶ Start Workout
       </button>
     {/if}
   </div>
@@ -276,24 +273,6 @@
     gap: 8px;
   }
 
-  /* ▶ Start button */
-  .start-btn {
-    flex: 0 0 auto;
-    padding: 15px 22px;
-    border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.05);
-    color: #c8ddf4;
-    font-size: 15px;
-    font-weight: 800;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
-    white-space: nowrap;
-  }
-
-  .start-btn:active { background: rgba(255,255,255,0.10); }
-
   /* ⏱ Running timer button */
   .timer-btn {
     flex: 0 0 auto;
@@ -338,25 +317,32 @@
     opacity: 0.5;
   }
 
-  /* Workout Mode button — primary, takes remaining space */
+  /* Workout CTA button */
   .wm-btn {
     flex: 1 1 0;
-    padding: 15px;
+    padding: 16px;
     border-radius: 16px;
-    border: 1px solid rgba(255,194,71,0.40);
-    background: rgba(255,194,71,0.14);
+    border: 1px solid rgba(255,194,71,0.45);
+    background: rgba(255,194,71,0.16);
     color: #ffc247;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 900;
     letter-spacing: -0.01em;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.12s, transform 0.1s;
-    box-shadow: 0 4px 20px rgba(255,194,71,0.10);
+    box-shadow: 0 4px 24px rgba(255,194,71,0.14);
+  }
+
+  /* Full-width single CTA */
+  .wm-btn.full {
+    font-size: 17px;
+    padding: 18px;
+    box-shadow: 0 4px 28px rgba(255,194,71,0.18);
   }
 
   .wm-btn:active {
-    background: rgba(255,194,71,0.24);
+    background: rgba(255,194,71,0.26);
     transform: scale(0.98);
   }
 

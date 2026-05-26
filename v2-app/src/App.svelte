@@ -111,7 +111,9 @@
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: #08172d;
+    background: rgba(8,23,45,0.96);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border-top: 1px solid rgba(255,255,255,0.08);
     padding-bottom: env(safe-area-inset-bottom, 0px);
     z-index: 50;
@@ -122,8 +124,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 3px;
-    padding: 10px 0 8px;
+    gap: 2px;
+    padding: 7px 0 6px;
     border: none;
     background: transparent;
     cursor: pointer;
@@ -132,18 +134,18 @@
   }
 
   .tab-icon {
-    font-size: 20px;
+    font-size: 18px;
     line-height: 1;
-    filter: grayscale(1) opacity(0.4);
+    filter: grayscale(1) opacity(0.35);
     transition: filter 0.15s;
   }
 
   .tab-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 700;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: #4a7090;
+    color: rgba(255,255,255,0.30);
     transition: color 0.15s;
   }
 
