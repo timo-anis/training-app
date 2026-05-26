@@ -160,6 +160,25 @@
   $: strongest = legendItems[0] ?? null;
   $: weakest = legendItems[legendItems.length - 1] ?? null;
 
+  // ---- Manual selection (click to highlight individual muscles) ----
+  let selected = new Set<MuscleKey>();
+
+  function toggleMuscle(key: MuscleKey) {
+    if (selected.has(key)) selected.delete(key);
+    else selected.add(key);
+    selected = selected; // trigger Svelte reactivity
+  }
+
+  function clearSelection() { selected = new Set(); }
+
+  // When selection active: highlight selected, dim others
+  function effectiveOpacity(key: MuscleKey): number {
+    const base = zoneOpacity(key);
+    if (selected.size === 0) return base;
+    if (selected.has(key)) return Math.max(base, 0.88);
+    return Math.min(base, 0.07);
+  }
+
   const MODES: { key: RadarMode; label: string }[] = [
     { key: 'day',     label: 'Day' },
     { key: 'week',    label: 'Week' },
@@ -190,63 +209,90 @@
 
       <!-- Shoulders -->
       <path
-        class="zone"
+        class="zone" class:zone-sel={selected.has('shoulders')}
         fill={MUSCLE_COLORS.shoulders}
-        opacity={zoneOpacity('shoulders')}
+        opacity={effectiveOpacity('shoulders')}
+        stroke={selected.has('shoulders') ? MUSCLE_COLORS.shoulders : 'none'}
+        stroke-width="1.5"
+        on:click={() => toggleMuscle('shoulders')}
         d="M62 82 C73 63,89 54,110 54 C131 54,147 63,158 82 C151 89,144 95,136 99 C128 88,120 83,110 83 C100 83,92 88,84 99 C76 95,69 89,62 82 Z"
       />
       <!-- Chest -->
       <path
-        class="zone"
+        class="zone" class:zone-sel={selected.has('chest')}
         fill={MUSCLE_COLORS.chest}
-        opacity={zoneOpacity('chest')}
+        opacity={effectiveOpacity('chest')}
+        stroke={selected.has('chest') ? MUSCLE_COLORS.chest : 'none'}
+        stroke-width="1.5"
+        on:click={() => toggleMuscle('chest')}
         d="M85 98 C92 90,100 86,110 86 C120 86,128 90,135 98 C132 112,124 123,110 128 C96 123,88 112,85 98 Z"
       />
-      <!-- Back (shown on same figure, slightly lighter) -->
+      <!-- Back -->
       <path
-        class="zone zone-back"
+        class="zone zone-back" class:zone-sel={selected.has('back')}
         fill={MUSCLE_COLORS.back}
-        opacity={zoneOpacity('back') * 0.7}
+        opacity={selected.size === 0 ? zoneOpacity('back') * 0.7 : effectiveOpacity('back')}
+        stroke={selected.has('back') ? MUSCLE_COLORS.back : 'none'}
+        stroke-width="1.5"
+        on:click={() => toggleMuscle('back')}
         d="M85 92 C93 83,101 80,110 80 C119 80,127 83,135 92 C135 116,127 139,110 151 C93 139,85 116,85 92 Z"
       />
       <!-- Arms (both) -->
       <path
-        class="zone"
+        class="zone" class:zone-sel={selected.has('arms')}
         fill={MUSCLE_COLORS.arms}
-        opacity={zoneOpacity('arms')}
+        opacity={effectiveOpacity('arms')}
+        stroke={selected.has('arms') ? MUSCLE_COLORS.arms : 'none'}
+        stroke-width="1.5"
+        on:click={() => toggleMuscle('arms')}
         d="M61 90 C54 102,51 117,52 135 C53 152,57 168,61 183 C64 194,69 204,76 212 C79 198,80 185,79 172 C76 148,74 125,75 105 C75 100,72 94,67 90 Z"
       />
       <path
-        class="zone"
+        class="zone" class:zone-sel={selected.has('arms')}
         fill={MUSCLE_COLORS.arms}
-        opacity={zoneOpacity('arms')}
+        opacity={effectiveOpacity('arms')}
+        stroke={selected.has('arms') ? MUSCLE_COLORS.arms : 'none'}
+        stroke-width="1.5"
+        on:click={() => toggleMuscle('arms')}
         d="M159 90 C166 102,169 117,168 135 C167 152,163 168,159 183 C156 194,151 204,144 212 C141 198,140 185,141 172 C144 148,146 125,145 105 C145 100,148 94,153 90 Z"
       />
       <!-- Core -->
       <path
-        class="zone"
+        class="zone" class:zone-sel={selected.has('core')}
         fill={MUSCLE_COLORS.core}
-        opacity={zoneOpacity('core')}
+        opacity={effectiveOpacity('core')}
+        stroke={selected.has('core') ? MUSCLE_COLORS.core : 'none'}
+        stroke-width="1.5"
+        on:click={() => toggleMuscle('core')}
         d="M92 128 C98 122,103 120,110 120 C117 120,122 122,128 128 C126 148,122 165,110 179 C98 165,94 148,92 128 Z"
       />
-      <!-- Posterior (glutes) -->
+      <!-- Posterior -->
       <path
-        class="zone"
+        class="zone" class:zone-sel={selected.has('posterior')}
         fill={MUSCLE_COLORS.posterior}
-        opacity={zoneOpacity('posterior')}
+        opacity={effectiveOpacity('posterior')}
+        stroke={selected.has('posterior') ? MUSCLE_COLORS.posterior : 'none'}
+        stroke-width="1.5"
+        on:click={() => toggleMuscle('posterior')}
         d="M91 182 C97 176,103 173,110 173 C117 173,123 176,129 182 C127 193,122 204,110 210 C98 204,93 193,91 182 Z"
       />
       <!-- Quads (both legs) -->
       <path
-        class="zone"
+        class="zone" class:zone-sel={selected.has('quads')}
         fill={MUSCLE_COLORS.quads}
-        opacity={zoneOpacity('quads')}
+        opacity={effectiveOpacity('quads')}
+        stroke={selected.has('quads') ? MUSCLE_COLORS.quads : 'none'}
+        stroke-width="1.5"
+        on:click={() => toggleMuscle('quads')}
         d="M83 212 C91 213,97 217,101 224 C102 240,99 269,95 304 L76 304 C79 270,80 241,83 212 Z"
       />
       <path
-        class="zone"
+        class="zone" class:zone-sel={selected.has('quads')}
         fill={MUSCLE_COLORS.quads}
-        opacity={zoneOpacity('quads')}
+        opacity={effectiveOpacity('quads')}
+        stroke={selected.has('quads') ? MUSCLE_COLORS.quads : 'none'}
+        stroke-width="1.5"
+        on:click={() => toggleMuscle('quads')}
         d="M137 212 C129 213,123 217,119 224 C118 240,121 269,125 304 L144 304 C141 270,140 241,137 212 Z"
       />
     </svg>
@@ -256,6 +302,13 @@
       <div class="no-data-overlay">No training data<br>for this period</div>
     {/if}
   </div>
+
+  <!-- Clear selection button -->
+  {#if selected.size > 0}
+    <button class="clear-sel-btn" on:click={clearSelection}>
+      Clear selection ×
+    </button>
+  {/if}
 
   <!-- Legend chips -->
   {#if legendItems.length > 0}
@@ -350,6 +403,32 @@
   .zone {
     transition: opacity 0.3s, fill 0.3s;
     stroke: none;
+    cursor: pointer;
+  }
+
+  .zone:active {
+    opacity: 0.5 !important;
+  }
+
+  /* Clear selection button */
+  .clear-sel-btn {
+    width: 100%;
+    padding: 9px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: transparent;
+    color: rgba(255,255,255,0.40);
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.03em;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .clear-sel-btn:active {
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.65);
   }
 
   .zone-back {

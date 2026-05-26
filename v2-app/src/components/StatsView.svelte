@@ -74,10 +74,20 @@
   $: totalWeeks = weekStats.length;
   $: totalSets = weekStats.reduce((s, w) => s + w.setsDone, 0);
   $: totalVolume = weekStats.reduce((s, w) => s + w.volume, 0);
+
+  // Collapse/expand
+  const PREVIEW = 3;
+  let weekExpanded = false;
+  let exExpanded = false;
+  $: weekHidden = Math.max(0, weekStats.length - PREVIEW);
+  $: exHidden = Math.max(0, exFreq.length - PREVIEW);
+  $: displayedWeeks = weekExpanded ? weekStats : weekStats.slice(0, PREVIEW);
+  $: displayedEx = exExpanded ? exFreq : exFreq.slice(0, PREVIEW);
 </script>
 
 <div class="stats-view">
   <!-- Body map -->
+
   <div class="section-head">Muscle groups</div>
   <div class="bodymap-wrap">
     <BodyMap />
@@ -105,7 +115,7 @@
     <div class="empty">No data yet.</div>
   {:else}
     <div class="week-list">
-      {#each weekStats as w}
+      {#each displayedWeeks as w}
         <div class="week-row">
           <span class="week-num">W{w.week}</span>
           <div class="week-bars">
@@ -125,6 +135,12 @@
         </div>
       {/each}
     </div>
+    {#if weekHidden > 0 || weekExpanded}
+      <button class="expand-btn" on:click={() => weekExpanded = !weekExpanded}>
+        <span class="expand-chevron" class:open={weekExpanded}>›</span>
+        {weekExpanded ? 'Show less' : `${weekHidden} more week${weekHidden > 1 ? 's' : ''}`}
+      </button>
+    {/if}
   {/if}
 
   <!-- Exercise frequency -->
@@ -133,7 +149,7 @@
     <div class="empty">No exercises logged.</div>
   {:else}
     <div class="freq-list">
-      {#each exFreq as ex, i}
+      {#each displayedEx as ex, i}
         <div class="freq-row">
           <span class="freq-rank">{i + 1}</span>
           <span class="freq-name">{ex.name}</span>
@@ -142,6 +158,12 @@
         </div>
       {/each}
     </div>
+    {#if exHidden > 0 || exExpanded}
+      <button class="expand-btn" on:click={() => exExpanded = !exExpanded}>
+        <span class="expand-chevron" class:open={exExpanded}>›</span>
+        {exExpanded ? 'Show less' : `${exHidden} more`}
+      </button>
+    {/if}
   {/if}
 </div>
 
@@ -261,6 +283,38 @@
     color: #c8ddf4;
     letter-spacing: -0.02em;
   }
+
+  /* Expand toggle */
+  .expand-btn {
+    width: 100%;
+    padding: 11px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: transparent;
+    color: rgba(255,255,255,0.38);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 2px;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .expand-btn:active { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.60); }
+
+  .expand-chevron {
+    display: inline-block;
+    transform: rotate(90deg);
+    transition: transform 0.2s;
+    font-size: 15px;
+    line-height: 1;
+  }
+
+  .expand-chevron.open { transform: rotate(-90deg); }
 
   /* Exercise frequency */
   .freq-list {

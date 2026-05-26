@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, openWorkoutMode, exitWorkout, copyPreviousDay, hasMvp1Data, runMvp1Import } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import } from '../stores/app';
   import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
@@ -28,22 +28,6 @@
     migrateStatus = ok ? 'done' : 'error';
   }
 
-  // Elapsed timer display for workout bar
-  import { onDestroy } from 'svelte';
-  let elapsed = 0;
-  const clockInterval = setInterval(() => {
-    const start = $uiState.workoutStartTime;
-    elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
-  }, 1000);
-  onDestroy(() => clearInterval(clockInterval));
-
-  function fmtElapsed(s: number): string {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-    return `${m}:${String(sec).padStart(2,'0')}`;
-  }
 </script>
 
 <div class="main">
@@ -122,34 +106,13 @@
   </section>
 </div>
 
-<!-- Workout bar — sticky above tab bar, visible whenever exercises exist -->
-{#if $currentDayExercises.length > 0}
-  <div class="workout-bar">
-    {#if $uiState.workoutActive}
-      <!-- Workout running: timer chip + Resume -->
-      <button class="timer-btn" on:click={exitWorkout} title="Finish workout">
-        <span class="timer-dot"></span>
-        <span class="timer-val">{fmtElapsed(elapsed)}</span>
-        <span class="timer-stop">■</span>
-      </button>
-      <button class="wm-btn" on:click={openWorkoutMode}>
-        Resume →
-      </button>
-    {:else}
-      <!-- Single CTA — starts timer + opens overlay -->
-      <button class="wm-btn full" on:click={openWorkoutMode}>
-        ▶ Start Workout
-      </button>
-    {/if}
-  </div>
-{/if}
 
 <style>
   .main {
-    min-height: 100dvh;
+    min-height: 100%;
     background: #0c0c0e;
     color: #f0f0ee;
-    padding: 0 0 140px;
+    padding: 0 0 32px;
     max-width: 640px;
     margin: 0 auto;
   }
@@ -258,97 +221,6 @@
 
   .empty-state p { margin: 0; }
 
-  /* ---- Workout sticky bar ---- */
-  .workout-bar {
-    position: fixed;
-    bottom: 58px;
-    left: 0;
-    right: 0;
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 10px 14px;
-    background: linear-gradient(to top, #0c0c0e 70%, transparent);
-    z-index: 40;
-    display: flex;
-    gap: 8px;
-  }
-
-  /* ⏱ Running timer button */
-  .timer-btn {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    gap: 7px;
-    padding: 15px 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(79,192,141,0.28);
-    background: rgba(79,192,141,0.08);
-    color: #4fc08d;
-    font-size: 15px;
-    font-weight: 800;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
-    white-space: nowrap;
-  }
-
-  .timer-btn:active { background: rgba(79,192,141,0.16); }
-
-  .timer-dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
-    background: #4fc08d;
-    animation: blink 1.2s ease-in-out infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.3; }
-  }
-
-  .timer-val {
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-
-  .timer-stop {
-    font-size: 10px;
-    opacity: 0.5;
-  }
-
-  /* Resume button (workout running, overlay closed) */
-  .wm-btn {
-    flex: 1 1 0;
-    padding: 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(255,194,71,0.45);
-    background: rgba(255,194,71,0.14);
-    color: #ffc247;
-    font-size: 16px;
-    font-weight: 900;
-    letter-spacing: -0.01em;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s, transform 0.1s;
-  }
-
-  /* Full-width single solid CTA — Start Workout */
-  .wm-btn.full {
-    background: #ffc247;
-    color: #0c0c0e;
-    border: none;
-    font-size: 17px;
-    font-weight: 900;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    padding: 19px;
-    border-radius: 18px;
-    box-shadow: 0 4px 32px rgba(255,194,71,0.28);
-  }
-
-  .wm-btn:active { background: rgba(255,194,71,0.22); transform: scale(0.98); }
-  .wm-btn.full:active { background: #e8b030; transform: scale(0.98); box-shadow: none; }
 
   .copy-day-btn {
     margin-top: 12px;
