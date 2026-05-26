@@ -1,6 +1,7 @@
 <script lang="ts">
   import { appState } from '../stores/app';
   import type { WorkoutDay } from '../types/workout';
+  import BodyMap from './BodyMap.svelte';
 
   // ---- Per-week stats ----
   interface WeekStat {
@@ -76,6 +77,12 @@
 </script>
 
 <div class="stats-view">
+  <!-- Body map -->
+  <div class="section-head">Muscle groups</div>
+  <div class="bodymap-wrap">
+    <BodyMap />
+  </div>
+
   <!-- Summary chips -->
   <div class="summary-row">
     <div class="chip">
@@ -143,6 +150,11 @@
     padding: 14px 14px 100px;
     display: grid;
     gap: 0;
+  }
+
+  /* Body map wrapper */
+  .bodymap-wrap {
+    margin-bottom: 28px;
   }
 
   /* Summary chips */

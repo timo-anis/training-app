@@ -2,6 +2,7 @@
   import { currentUser, uiState, appState, currentDayExercises, startWorkout, openWorkoutMode, exitWorkout, copyPreviousDay, hasMvp1Data, runMvp1Import } from '../stores/app';
   import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
+  import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import AddExercise from './AddExercise.svelte';
 
@@ -75,8 +76,13 @@
     </section>
   {/if}
 
-  <!-- Calendar -->
+  <!-- Monthly calendar -->
   <section class="section">
+    <MonthCalendar />
+  </section>
+
+  <!-- Week strip + day picker -->
+  <section class="section section-tight">
     <Calendar />
   </section>
 
@@ -204,6 +210,10 @@
   /* ---- Sections ---- */
   .section {
     padding: 14px 14px 0;
+  }
+
+  .section-tight {
+    padding-top: 8px;
   }
 
   /* ---- Day heading ---- */
