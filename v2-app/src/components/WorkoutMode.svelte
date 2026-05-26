@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { uiState, appState, workoutBlocks, exitWorkout, setActiveBlock, toggleSetDone, updateSetField, findLastSession } from '../stores/app';
+  import { uiState, appState, workoutBlocks, exitWorkout, setActiveBlock, toggleSetDone, updateSetField, findLastSession, toggleRecoveryDone } from '../stores/app';
   import type { WorkoutBlock, LastSession } from '../stores/app';
   import RestTimer from './RestTimer.svelte';
 
@@ -36,10 +36,19 @@
   let restActive = false;
   let restString = '';
 
-  // All sets done across all exercises
-  $: allDone = blocks.every(b =>
-    b.exercises.every(ex => ex.sets.length > 0 && ex.sets.every(s => s.done))
-  );
+  // Helper: is a single exercise considered done?
+  function exDone(ex: import('../types/workout').Exercise): boolean {
+    if (ex.recovery) return ex.recoveryDone;
+    return ex.sets.length > 0 && ex.sets.every(s => s.done);
+  }
+
+  // All blocks done across workout
+  $: allDone = blocks.every(b => b.exercises.every(exDone));
+
+  // Is a specific block done (for dots)?
+  function blockDone(b: WorkoutBlock): boolean {
+    return b.exercises.every(exDone);
+  }
 
   function handleSetDone(week: number, day: import('../types/workout').DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string) {
     toggleSetDone(week, day, exId, setIndex);
@@ -104,8 +113,8 @@
     <button class="wm-exit" on:click={finish}>✕</button>
     <span class="wm-progress">{activeIndex + 1} / {blocks.length}</span>
     <div class="wm-dots">
-      {#each blocks as _, i}
-        <span class="dot" class:active={i === activeIndex} class:done={blocks[i].exercises.every(ex => ex.sets.every(s => s.done))}></span>
+      {#each blocks as b, i}
+        <span class="dot" class:active={i === activeIndex} class:done={blockDone(b)}></span>
       {/each}
     </div>
     <span class="wm-clock">{formatElapsed(elapsed)}</span>
@@ -155,6 +164,15 @@
               <div class="ex-note">{ex.note}</div>
             {/if}
 
+            {#if ex.recovery}
+              <button
+                class="recovery-toggle"
+                class:recovery-done={ex.recoveryDone}
+                on:click={() => toggleRecoveryDone($uiState.week, $uiState.day, ex.id)}
+              >
+                {ex.recoveryDone ? '✓ Done' : 'Tap to mark done'}
+              </button>
+            {:else}
             <div class="sets-grid">
               {#each ex.sets as set, i}
                 {@const k = `${ex.id}-${i}`}
@@ -203,6 +221,7 @@
                 </div>
               {/each}
             </div>
+            {/if}
           </div>
         {/each}
       </div>
@@ -581,4 +600,29 @@
   }
 
   .btn-finish:active { background: rgba(79,192,141,0.25); }
+
+  /* Recovery toggle */
+  .recovery-toggle {
+    width: 100%;
+    padding: 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.04);
+    color: #4a6a8a;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .recovery-toggle.recovery-done {
+    background: rgba(79,192,141,0.10);
+    border-color: rgba(79,192,141,0.30);
+    color: #4fc08d;
+  }
+
+  .recovery-toggle:active { background: rgba(255,255,255,0.08); }
+  .recovery-toggle.recovery-done:active { background: rgba(79,192,141,0.18); }
 </style>

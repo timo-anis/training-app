@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Exercise, DayOfWeek } from '../types/workout';
-  import { addSet, deleteExercise, updateExerciseMeta, moveExercise } from '../stores/app';
+  import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone } from '../stores/app';
   import SetRow from './SetRow.svelte';
 
   export let exercise: Exercise;
@@ -178,10 +178,14 @@
       + Set
     </button>
   {:else}
-    <div class="recovery-row">
-      <span class="recovery-label">Recovery block</span>
-      <span class="recovery-status">{exercise.recoveryDone ? 'Done ✓' : 'Not done'}</span>
-    </div>
+    <button
+      class="recovery-row"
+      class:recovery-done={exercise.recoveryDone}
+      on:click={() => toggleRecoveryDone(week, day, exercise.id)}
+    >
+      <span class="recovery-label">Recovery</span>
+      <span class="recovery-status">{exercise.recoveryDone ? 'Done ✓' : 'Tap to mark done'}</span>
+    </button>
   {/if}
 
   {#if exercise.rest}
@@ -492,14 +496,34 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
-    border-radius: 10px;
+    padding: 12px 14px;
+    border-radius: 12px;
     background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.07);
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background 0.12s, border-color 0.12s;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .recovery-label { font-size: 13px; color: #7fa8d4; }
-  .recovery-status { font-size: 13px; font-weight: 700; color: #4fc08d; }
+  .recovery-row.recovery-done {
+    background: rgba(79,192,141,0.08);
+    border-color: rgba(79,192,141,0.25);
+  }
+
+  .recovery-row:active { background: rgba(255,255,255,0.07); }
+  .recovery-row.recovery-done:active { background: rgba(79,192,141,0.14); }
+
+  .recovery-label { font-size: 13px; font-weight: 700; color: #7fa8d4; }
+
+  .recovery-status {
+    font-size: 12px;
+    font-weight: 700;
+    color: #3a5a7a;
+  }
+
+  .recovery-row.recovery-done .recovery-status { color: #4fc08d; }
 
   .add-set-btn {
     width: 100%;

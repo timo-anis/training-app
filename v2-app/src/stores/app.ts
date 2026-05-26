@@ -357,6 +357,13 @@ export function deleteSet(week: number, day: DayOfWeek, exId: string, setIndex: 
   );
 }
 
+// ---- Toggle recovery block done ----
+export function toggleRecoveryDone(week: number, day: DayOfWeek, exId: string) {
+  updateState(state =>
+    mapExercise(state, week, day, exId, ex => ({ ...ex, recoveryDone: !ex.recoveryDone }))
+  );
+}
+
 // ---- Delete exercise ----
 export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
   updateState(state => ({
