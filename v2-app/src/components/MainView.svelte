@@ -163,6 +163,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 16px 18px 14px;
+    padding-top: calc(16px + env(safe-area-inset-top));
     border-bottom: 1px solid rgba(255,255,255,0.06);
     position: sticky;
     top: 0;
