@@ -234,7 +234,7 @@
 
   .day-sub {
     font-size: 13px;
-    color: #4a6a8a;
+    color: #6a8faa;
     font-weight: 600;
   }
 

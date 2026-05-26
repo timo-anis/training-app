@@ -166,8 +166,8 @@
   }
 
   .chip {
-    background: linear-gradient(180deg, #0f1c30, #0b1726);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: linear-gradient(180deg, #131f32, #0e1b2c);
+    border: 1px solid rgba(255,255,255,0.11);
     border-radius: 16px;
     padding: 14px 10px;
     display: flex;
@@ -185,18 +185,18 @@
   }
 
   .chip-lbl {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
-    color: #3a5a7a;
+    color: #4a7090;
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
 
   /* Section head */
   .section-head {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
-    color: #3a5a7a;
+    color: #4a7090;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: 8px;
@@ -220,8 +220,8 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: linear-gradient(180deg, #0f1c30, #0b1726);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: linear-gradient(180deg, #131f32, #0e1b2c);
+    border: 1px solid rgba(255,255,255,0.11);
     border-radius: 14px;
     padding: 12px 14px;
   }
@@ -248,9 +248,9 @@
   }
 
   .wlbl {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
-    color: #2a4a6a;
+    color: #4a7090;
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -274,15 +274,15 @@
     align-items: center;
     gap: 10px;
     padding: 11px 14px;
-    background: linear-gradient(180deg, #0f1c30, #0b1726);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: linear-gradient(180deg, #131f32, #0e1b2c);
+    border: 1px solid rgba(255,255,255,0.11);
     border-radius: 12px;
   }
 
   .freq-rank {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 900;
-    color: #2a4a6a;
+    color: #4a7090;
     width: 16px;
     flex-shrink: 0;
     text-align: right;
@@ -307,9 +307,9 @@
   }
 
   .freq-sets {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    color: #2a4a6a;
+    color: #4a7090;
     flex-shrink: 0;
     min-width: 44px;
     text-align: right;

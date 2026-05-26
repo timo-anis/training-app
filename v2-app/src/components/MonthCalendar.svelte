@@ -187,8 +187,8 @@
 
 <style>
   .month-cal {
-    background: linear-gradient(180deg, #0f1c30, #0b1726);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: linear-gradient(180deg, #131f32, #0e1b2c);
+    border: 1px solid rgba(255,255,255,0.11);
     border-radius: 18px;
     padding: 14px 12px 12px;
     display: grid;
@@ -214,8 +214,8 @@
     width: 32px;
     height: 32px;
     border-radius: 9px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
     color: #7fa8d4;
     font-size: 17px;
     cursor: pointer;
@@ -237,9 +237,9 @@
 
   .day-hdr {
     text-align: center;
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
-    color: #2a4a6a;
+    color: #4a7090;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     padding: 2px 0 4px;
@@ -273,9 +273,9 @@
   .day-cell.empty { cursor: default; }
 
   .day-num {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    color: #3a5a7a;
+    color: #4a7090;
     line-height: 1;
   }
 
@@ -283,8 +283,8 @@
   .day-cell.has-data .day-num  { color: #7fa8d4; }
   .day-cell.done .day-num      { color: #4fc08d; }
   .day-cell.active-recovery .day-num { color: #ffc247; }
-  .day-cell.rest .day-num      { color: #2a4060; }
-  .day-cell.future .day-num    { color: #1e3050; }
+  .day-cell.rest .day-num      { color: #3a5878; }
+  .day-cell.future .day-num    { color: #2a4060; }
 
   .day-cell.done            { background: rgba(79,192,141,0.08); border-color: rgba(79,192,141,0.20); }
   .day-cell.active-recovery { background: rgba(255,194,71,0.08); border-color: rgba(255,194,71,0.20); }
@@ -331,8 +331,8 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 10px;
-    color: #2a4a6a;
+    font-size: 11px;
+    color: #4a7090;
     font-weight: 600;
   }
 

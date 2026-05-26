@@ -205,8 +205,8 @@
 
 <style>
   .exercise-card {
-    background: linear-gradient(180deg, #0f1c30, #0b1726);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: linear-gradient(180deg, #131f32, #0e1b2c);
+    border: 1px solid rgba(255,255,255,0.11);
     border-radius: 18px;
     padding: 16px 14px;
     display: grid;
@@ -247,7 +247,7 @@
   }
 
   .exercise-name {
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 800;
     color: #e8f2ff;
     letter-spacing: -0.02em;
@@ -257,9 +257,9 @@
   }
 
   .exercise-type {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
-    color: #4a6a8a;
+    color: #5a8aaa;
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
@@ -268,10 +268,10 @@
     flex: 0 0 auto;
     padding: 4px 10px;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
     background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
+    border: 1px solid rgba(255,255,255,0.12);
     color: #7fa8d4;
   }
 
@@ -294,7 +294,7 @@
     border-radius: 5px;
     border: none;
     background: transparent;
-    color: #2a4a6a;
+    color: #4a7090;
     font-size: 11px;
     cursor: pointer;
     display: flex;
@@ -315,7 +315,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #2a4a6a;
+    color: #4a7090;
     font-size: 15px;
     cursor: pointer;
     display: flex;
@@ -335,7 +335,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #2a4a6a;
+    color: #4a7090;
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
@@ -367,9 +367,9 @@
   .type-btn {
     padding: 9px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.03);
-    color: #4a6a8a;
+    border: 1px solid rgba(255,255,255,0.11);
+    background: rgba(255,255,255,0.04);
+    color: #6a8faa;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
@@ -404,11 +404,11 @@
   }
 
   .edit-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #3a5a7a;
+    color: #4a7090;
   }
 
   .edit-input {
@@ -482,15 +482,15 @@
   .meta-row.note { align-items: flex-start; }
 
   .meta-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #3a5a7a;
+    color: #4a7090;
     flex: 0 0 38px;
   }
 
-  .meta-value { font-size: 13px; font-weight: 600; color: #7fa8d4; }
+  .meta-value { font-size: 14px; font-weight: 600; color: #7fa8d4; }
 
   .recovery-row {
     display: flex;
@@ -515,12 +515,12 @@
   .recovery-row:active { background: rgba(255,255,255,0.07); }
   .recovery-row.recovery-done:active { background: rgba(79,192,141,0.14); }
 
-  .recovery-label { font-size: 13px; font-weight: 700; color: #7fa8d4; }
+  .recovery-label { font-size: 14px; font-weight: 700; color: #7fa8d4; }
 
   .recovery-status {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    color: #3a5a7a;
+    color: #4a7090;
   }
 
   .recovery-row.recovery-done .recovery-status { color: #4fc08d; }
@@ -529,10 +529,10 @@
     width: 100%;
     padding: 11px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
     color: #7fa8d4;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     letter-spacing: 0.03em;

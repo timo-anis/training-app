@@ -104,9 +104,9 @@
   .setrow.is-done { background: rgba(79,192,141,0.04); border-radius: 10px; }
 
   .setn {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    color: #4a6a8a;
+    color: #6a8faa;
     text-align: center;
     user-select: none;
   }
@@ -117,8 +117,8 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.11);
     border-radius: 10px;
     padding: 6px 10px;
   }
@@ -129,11 +129,11 @@
   }
 
   .k {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: #3a5a7a;
+    color: #4a7090;
     cursor: default;
     user-select: none;
   }
@@ -161,9 +161,9 @@
   .donebtn {
     height: 40px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.03);
-    color: #4a6a8a;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.04);
+    color: #7fa8d4;
     font-size: 16px;
     cursor: pointer;
     display: flex;
@@ -188,7 +188,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #2a4a6a;
+    color: #4a7090;
     font-size: 16px;
     line-height: 1;
     cursor: pointer;

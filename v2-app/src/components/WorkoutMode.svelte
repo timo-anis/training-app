@@ -271,7 +271,8 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-top: calc(14px + env(safe-area-inset-top));
+    border-bottom: 1px solid rgba(255,255,255,0.08);
     flex-shrink: 0;
   }
 
@@ -279,9 +280,9 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.04);
-    color: #4a6a8a;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: #6a8faa;
     font-size: 15px;
     cursor: pointer;
     display: flex;
@@ -292,9 +293,9 @@
   }
 
   .wm-progress {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
-    color: #4a6a8a;
+    color: #6a8faa;
     flex-shrink: 0;
   }
 
@@ -317,9 +318,9 @@
   .dot.done   { background: rgba(79,192,141,0.6); }
 
   .wm-clock {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 800;
-    color: #4a6a8a;
+    color: #7fa8d4;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
     flex-shrink: 0;
@@ -338,11 +339,11 @@
   }
 
   .last-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #8a6a20;
+    color: #9a7828;
     flex-shrink: 0;
   }
 
@@ -354,9 +355,9 @@
   }
 
   .last-set {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    color: #c8962a;
+    color: #d4a838;
     font-variant-numeric: tabular-nums;
   }
 
@@ -377,7 +378,7 @@
   }
 
   .block-badge {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -387,14 +388,14 @@
 
   .block-badge.superset {
     background: rgba(127,178,255,0.12);
-    border: 1px solid rgba(127,178,255,0.25);
+    border: 1px solid rgba(127,178,255,0.28);
     color: #7fb2ff;
   }
 
   .block-badge.single {
     background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
-    color: #4a6a8a;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: #6a8faa;
   }
 
   .exercises-wrap {
@@ -440,19 +441,19 @@
   }
 
   .ex-rest {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 700;
-    color: #3a6a5a;
+    color: #4a8070;
     background: rgba(79,192,141,0.08);
-    border: 1px solid rgba(79,192,141,0.15);
+    border: 1px solid rgba(79,192,141,0.18);
     border-radius: 8px;
     padding: 3px 8px;
     flex-shrink: 0;
   }
 
   .ex-note {
-    font-size: 13px;
-    color: #4a7aaa;
+    font-size: 14px;
+    color: #6a8faa;
     padding: 8px 12px;
     border-radius: 10px;
     background: rgba(255,255,255,0.03);
@@ -479,9 +480,9 @@
   .set-row.done { background: rgba(79,192,141,0.04); }
 
   .set-n {
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 700;
-    color: #4a6a8a;
+    color: #6a8faa;
     text-align: center;
     user-select: none;
   }
@@ -492,8 +493,8 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.11);
     border-radius: 10px;
     padding: 6px 10px;
   }
@@ -504,11 +505,11 @@
   }
 
   .set-lbl {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: #3a5a7a;
+    color: #4a7090;
     user-select: none;
   }
 
@@ -533,10 +534,10 @@
   .done-btn {
     height: 44px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.03);
-    color: #4a6a8a;
-    font-size: 18px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.04);
+    color: #7fa8d4;
+    font-size: 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -568,9 +569,9 @@
     flex: 1;
     padding: 15px;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.04);
-    color: #4a6a8a;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: #6a8faa;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -597,10 +598,10 @@
     flex: 0 0 auto;
     padding: 15px 14px;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.07);
-    background: transparent;
-    color: #2a4a6a;
-    font-size: 13px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.03);
+    color: #4a7090;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;

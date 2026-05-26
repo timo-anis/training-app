@@ -87,7 +87,8 @@
 
   .stats-header {
     padding: 16px 18px 4px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    padding-top: calc(16px + env(safe-area-inset-top));
+    border-bottom: 1px solid rgba(255,255,255,0.08);
     background: #08172d;
     position: sticky;
     top: 0;
@@ -138,11 +139,11 @@
   }
 
   .tab-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: #2a4a6a;
+    color: #4a7090;
     transition: color 0.15s;
   }
 
