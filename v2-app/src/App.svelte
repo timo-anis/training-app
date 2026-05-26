@@ -1,10 +1,11 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
-  import { currentUser, bootStatus, bootForUser } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState } from './stores/app';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
+  import WorkoutMode from './components/WorkoutMode.svelte';
 
   let unsubscribeAuth: (() => void) | null = null;
 
@@ -29,6 +30,9 @@
   <BootOverlay />
 {:else if $currentUser && $bootStatus === 'ready'}
   <MainView />
+  {#if $uiState.workoutMode}
+    <WorkoutMode />
+  {/if}
 {:else}
   <AuthView />
 {/if}

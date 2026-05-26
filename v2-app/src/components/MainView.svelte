@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, currentDayExercises } from '../stores/app';
+  import { currentUser, uiState, currentDayExercises, startWorkout } from '../stores/app';
   import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -52,6 +52,12 @@
     <div class="add-ex-wrap">
       <AddExercise week={$uiState.week} day={$uiState.day} />
     </div>
+
+    {#if $currentDayExercises.length > 0}
+      <button class="start-workout-btn" on:click={startWorkout}>
+        Start Workout
+      </button>
+    {/if}
   </section>
 </div>
 
@@ -163,4 +169,25 @@
   }
 
   .empty-state p { margin: 0; }
+
+  /* ---- Start workout button ---- */
+  .start-workout-btn {
+    width: 100%;
+    margin-top: 14px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,194,71,0.35);
+    background: rgba(255,194,71,0.12);
+    color: #ffc247;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    transition: background 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .start-workout-btn:active {
+    background: rgba(255,194,71,0.22);
+  }
 </style>

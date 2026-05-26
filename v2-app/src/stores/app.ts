@@ -58,6 +58,47 @@ export const latestWeek = derived(availableWeeks, ($weeks) =>
   $weeks[$weeks.length - 1] ?? 1
 );
 
+// ---- Workout blocks ----
+// A block is either a single exercise or a superset group (same code)
+export interface WorkoutBlock {
+  id: string;           // unique block id
+  exercises: Exercise[]; // 1 for single, 2+ for superset
+  isSuperset: boolean;
+  code: string;         // superset code e.g. 'A', or '' for single
+}
+
+export const workoutBlocks = derived(currentDayExercises, ($exercises) => {
+  const blocks: WorkoutBlock[] = [];
+  const seenCodes = new Set<string>();
+
+  for (const ex of $exercises) {
+    if (ex.type === 'single' || !ex.code) {
+      blocks.push({ id: ex.id, exercises: [ex], isSuperset: false, code: '' });
+    } else {
+      // Superset — group by code
+      if (!seenCodes.has(ex.code)) {
+        seenCodes.add(ex.code);
+        const group = $exercises.filter(e => e.type === 'superset' && e.code === ex.code);
+        blocks.push({ id: `superset_${ex.code}`, exercises: group, isSuperset: true, code: ex.code });
+      }
+    }
+  }
+  return blocks;
+});
+
+// ---- Workout mode actions ----
+export function startWorkout() {
+  uiState.update(ui => ({ ...ui, workoutMode: true, activeExerciseIndex: 0 }));
+}
+
+export function exitWorkout() {
+  uiState.update(ui => ({ ...ui, workoutMode: false, activeExerciseIndex: 0 }));
+}
+
+export function setActiveBlock(index: number) {
+  uiState.update(ui => ({ ...ui, activeExerciseIndex: index }));
+}
+
 // ---- Actions ----
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
