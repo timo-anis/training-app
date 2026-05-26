@@ -30,9 +30,10 @@ export const uiState = writable<UIState>({
 export type BootStatus = 'idle' | 'loading' | 'ready' | 'error';
 export const bootStatus = writable<BootStatus>('idle');
 
-// ---- Derived: all weeks that have data ----
-export const availableWeeks = derived(appState, ($state) => {
+// ---- Derived: all weeks that have data + current selected week ----
+export const availableWeeks = derived([appState, uiState], ([$state, $ui]) => {
   const weeks = new Set($state.weeks.map(w => w.week));
+  weeks.add($ui.week); // always include current (handles new empty week)
   if (!weeks.size) weeks.add(1);
   return Array.from(weeks).sort((a, b) => a - b);
 });
@@ -132,6 +133,14 @@ export function findLastSession(
   }
 
   return result;
+}
+
+// ---- Add new week ----
+export function addNewWeek() {
+  const state = get(appState);
+  const weeks = state.weeks.map(w => w.week);
+  const nextWeek = weeks.length > 0 ? Math.max(...weeks) + 1 : 1;
+  uiState.update(ui => ({ ...ui, week: nextWeek }));
 }
 
 // ---- Workout mode actions ----

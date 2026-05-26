@@ -1,6 +1,6 @@
 <script lang="ts">
   import { DAY_ORDER, type DayOfWeek } from '../types/workout';
-  import { uiState, appState, availableWeeks, currentWeekDays, updateUI } from '../stores/app';
+  import { uiState, appState, availableWeeks, currentWeekDays, updateUI, addNewWeek } from '../stores/app';
 
   const DAY_SHORT: Record<DayOfWeek, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -27,6 +27,7 @@
 
   $: canPrev = $availableWeeks.indexOf($uiState.week) > 0;
   $: canNext = $availableWeeks.indexOf($uiState.week) < $availableWeeks.length - 1;
+  $: isLastWeek = !canNext;
   $: weekLabel = `Week ${$uiState.week}`;
 </script>
 
@@ -35,6 +36,9 @@
     <button class="nav-btn" on:click={prevWeek} disabled={!canPrev} aria-label="Previous week">‹</button>
     <span class="week-label">{weekLabel}</span>
     <button class="nav-btn" on:click={nextWeek} disabled={!canNext} aria-label="Next week">›</button>
+    {#if isLastWeek}
+      <button class="new-week-btn" on:click={addNewWeek} aria-label="New week">+ Week</button>
+    {/if}
   </div>
 
   <div class="day-pills">
@@ -79,6 +83,8 @@
     font-weight: 700;
     color: #c8ddf4;
     letter-spacing: -0.01em;
+    flex: 1;
+    text-align: center;
   }
 
   .nav-btn {
@@ -95,16 +101,28 @@
     align-items: center;
     justify-content: center;
     transition: background 0.15s;
+    flex-shrink: 0;
   }
 
-  .nav-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
+  .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .nav-btn:not(:disabled):active { background: rgba(255,255,255,0.08); }
+
+  .new-week-btn {
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,194,71,0.28);
+    background: rgba(255,194,71,0.09);
+    color: #ffc247;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
   }
 
-  .nav-btn:not(:disabled):active {
-    background: rgba(255,255,255,0.08);
-  }
+  .new-week-btn:active { background: rgba(255,194,71,0.18); }
 
   .day-pills {
     display: grid;
@@ -125,9 +143,7 @@
     transition: background 0.12s, border-color 0.12s;
   }
 
-  .pill.has-data {
-    background: rgba(255,255,255,0.03);
-  }
+  .pill.has-data { background: rgba(255,255,255,0.03); }
 
   .pill.active {
     background: linear-gradient(180deg, rgba(255,194,71,0.18), rgba(255,159,10,0.10));
