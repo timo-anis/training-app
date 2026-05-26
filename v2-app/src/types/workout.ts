@@ -53,6 +53,7 @@ export interface UIState {
   activeExerciseIndex: number;
   radarMode: 'day' | 'week' | 'lifetime';
   calendarCollapsed: boolean;
+  workoutStartTime: number | null; // Date.now() when workout started
 }
 
 // ---- Helpers ----

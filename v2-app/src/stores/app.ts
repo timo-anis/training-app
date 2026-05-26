@@ -24,6 +24,7 @@ export const uiState = writable<UIState>({
   activeExerciseIndex: 0,
   radarMode: 'day',
   calendarCollapsed: false,
+  workoutStartTime: null,
 });
 
 // ---- Boot status ----
@@ -145,11 +146,11 @@ export function addNewWeek() {
 
 // ---- Workout mode actions ----
 export function startWorkout() {
-  uiState.update(ui => ({ ...ui, workoutMode: true, activeExerciseIndex: 0 }));
+  uiState.update(ui => ({ ...ui, workoutMode: true, activeExerciseIndex: 0, workoutStartTime: Date.now() }));
 }
 
 export function exitWorkout() {
-  uiState.update(ui => ({ ...ui, workoutMode: false, activeExerciseIndex: 0 }));
+  uiState.update(ui => ({ ...ui, workoutMode: false, activeExerciseIndex: 0, workoutStartTime: null }));
 }
 
 export function setActiveBlock(index: number) {

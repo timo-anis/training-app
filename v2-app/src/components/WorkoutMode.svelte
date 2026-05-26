@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onDestroy } from 'svelte';
   import { uiState, appState, workoutBlocks, exitWorkout, setActiveBlock, toggleSetDone, updateSetField, findLastSession } from '../stores/app';
   import type { WorkoutBlock, LastSession } from '../stores/app';
   import RestTimer from './RestTimer.svelte';
@@ -7,6 +8,22 @@
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
     Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
   };
+
+  // Elapsed workout timer
+  let elapsed = 0;
+  const clockInterval = setInterval(() => {
+    const start = $uiState.workoutStartTime;
+    elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
+  }, 1000);
+  onDestroy(() => clearInterval(clockInterval));
+
+  function formatElapsed(s: number): string {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    return `${m}:${String(sec).padStart(2,'0')}`;
+  }
 
   // Active block index comes from uiState.activeExerciseIndex
   $: blocks = $workoutBlocks;
@@ -91,6 +108,7 @@
         <span class="dot" class:active={i === activeIndex} class:done={blocks[i].exercises.every(ex => ex.sets.every(s => s.done))}></span>
       {/each}
     </div>
+    <span class="wm-clock">{formatElapsed(elapsed)}</span>
   </header>
 
   <!-- Block content -->
@@ -270,6 +288,15 @@
 
   .dot.active { background: #ffc247; }
   .dot.done   { background: rgba(79,192,141,0.6); }
+
+  .wm-clock {
+    font-size: 13px;
+    font-weight: 800;
+    color: #4a6a8a;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+  }
 
   /* Last session */
   .last-session {
