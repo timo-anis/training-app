@@ -39,6 +39,8 @@
     const hasData = workoutDay && workoutDay.exercises.length > 0;
 
     if (hasData) {
+      // Explicit finish → always green
+      if (workoutDay!.completed === true) return 'done';
       const nonRecovery = workoutDay!.exercises.filter(e => !e.recovery);
       const hasRecovery = workoutDay!.exercises.some(e => e.recovery && e.recoveryDone);
       if (nonRecovery.length === 0) return hasRecovery ? 'active-recovery' : 'has-data';
@@ -342,12 +344,12 @@
   }
   .status-has-data .day-num { color: #7fb2ff; }
 
-  /* Active recovery — amber (incl. Wednesday default) */
+  /* Active recovery — amber box (incl. Wednesday default) */
   .status-active-recovery {
-    background: rgba(196,148,46,0.14);
-    border-color: rgba(196,148,46,0.34);
+    background: rgba(196,148,46,0.22);
+    border-color: rgba(196,148,46,0.58);
   }
-  .status-active-recovery .day-num { color: #c49230; }
+  .status-active-recovery .day-num { color: #d4a038; }
 
   /* Weekend (Sat/Sun) — muted violet-slate */
   .status-weekend {
@@ -363,11 +365,13 @@
   .status-future .day-num { color: #1e2e44; }
   .status-future { cursor: default; }
 
-  /* Today ring */
+  /* Today — red box, draws attention */
   .today {
-    box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.30) !important;
-    border-color: rgba(255,255,255,0.30) !important;
+    background: rgba(210,60,60,0.18) !important;
+    border-color: rgba(220,70,70,0.65) !important;
+    box-shadow: inset 0 0 0 1px rgba(220,70,70,0.30) !important;
   }
+  .today .day-num { color: #e87070 !important; }
 
   /* Selected — gold override */
   .selected {
@@ -428,7 +432,7 @@
   .done-sw  { background: rgba(79,192,141,0.20); border: 1px solid rgba(79,192,141,0.48); color: #4fc08d; }
   .data-sw  { background: rgba(100,155,255,0.14); border: 1px solid rgba(100,155,255,0.34); }
   .data-sw::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #6090e0; }
-  .rec-sw   { background: rgba(196,148,46,0.14); border: 1px solid rgba(196,148,46,0.34); color: #c49230; font-size: 10px; }
+  .rec-sw   { background: rgba(196,148,46,0.22); border: 1px solid rgba(196,148,46,0.58); color: #d4a038; font-size: 10px; }
   .wknd-sw  { background: rgba(80,62,110,0.16); border: 1px solid rgba(90,70,125,0.32); color: #6a5490; font-size: 10px; }
   .rest-sw  { background: rgba(12,22,48,0.55); border: 1px solid rgba(45,70,120,0.20); }
 </style>

@@ -40,6 +40,8 @@ export interface WorkoutDay {
   /** ISO date string e.g. '2026-05-25' */
   date: string;
   exercises: Exercise[];
+  /** Set to true when user taps "Finish Training" — drives green calendar dot */
+  completed?: boolean;
 }
 
 export interface AppState {

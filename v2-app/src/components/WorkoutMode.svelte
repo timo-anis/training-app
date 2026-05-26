@@ -4,7 +4,7 @@
     uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode,
     setActiveBlock, toggleSetDone, updateSetField, findLastSession,
     findLastConditioningNote, toggleRecoveryDone, updateUI,
-    addSet, deleteSet, updateConditioningNote,
+    addSet, deleteSet, updateConditioningNote, markWorkoutComplete,
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
   import type { DayOfWeek } from '../types/workout';
@@ -120,6 +120,7 @@
   let summaryElapsed = 0;
 
   function confirmFinish() {
+    markWorkoutComplete($uiState.week, $uiState.day);
     exitWorkout();
     showSummary = false;
   }

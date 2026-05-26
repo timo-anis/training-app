@@ -235,6 +235,16 @@ export function closeWorkoutMode() {
   uiState.update(ui => ({ ...ui, workoutMode: false }));
 }
 
+/** Mark current workout day as completed — triggers green in calendar */
+export function markWorkoutComplete(week: number, day: DayOfWeek) {
+  updateState(state => ({
+    ...state,
+    weeks: state.weeks.map(w =>
+      w.week === week && w.day === day ? { ...w, completed: true } : w
+    ),
+  }));
+}
+
 /** Finish workout entirely — stop timer, close overlay */
 export function exitWorkout() {
   uiState.update(ui => ({
