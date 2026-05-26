@@ -93,18 +93,18 @@
 <style>
   .setrow {
     display: grid;
-    grid-template-columns: 28px 1fr 1fr 44px 28px;
+    grid-template-columns: 30px 1fr 1fr 46px 30px;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     padding: 4px 0;
-    border-radius: 10px;
+    border-radius: 11px;
     transition: background 0.15s;
   }
 
   .setrow.is-done { background: rgba(79,192,141,0.04); border-radius: 10px; }
 
   .setn {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
     color: rgba(255,255,255,0.35);
     text-align: center;
@@ -116,11 +116,11 @@
   .setcol {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     background: rgba(255,255,255,0.06);
     border: 1px solid rgba(255,255,255,0.10);
-    border-radius: 10px;
-    padding: 6px 10px;
+    border-radius: 11px;
+    padding: 8px 12px;
   }
 
   .setrow.is-done .setcol {
@@ -143,13 +143,14 @@
     border: none;
     outline: none;
     padding: 0;
-    font-size: 16px;
+    font-size: 19px;
     font-weight: 700;
     color: #d8eafc;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
     width: 100%;
     min-width: 0;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
 
   .setrow.is-done .setinput { color: rgba(79,192,141,0.85); }
@@ -159,12 +160,12 @@
   .setinput:focus { color: #ffffff; }
 
   .donebtn {
-    height: 40px;
-    border-radius: 10px;
+    height: 46px;
+    border-radius: 11px;
     border: 1px solid rgba(255,255,255,0.18);
     background: rgba(255,255,255,0.04);
     color: #7fa8d4;
-    font-size: 16px;
+    font-size: 18px;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -183,8 +184,8 @@
   .donebtn:active { transform: scale(0.96); }
 
   .delbtn {
-    height: 28px;
-    width: 28px;
+    height: 30px;
+    width: 30px;
     border-radius: 8px;
     border: none;
     background: transparent;

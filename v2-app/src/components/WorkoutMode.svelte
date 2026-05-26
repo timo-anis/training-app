@@ -714,22 +714,22 @@
   .cond-textarea::placeholder { color: rgba(255,255,255,0.22); }
 
   /* Sets */
-  .sets-grid { display: flex; flex-direction: column; gap: 8px; }
+  .sets-grid { display: flex; flex-direction: column; gap: 10px; }
 
   .set-row {
     display: grid;
-    grid-template-columns: 28px 1fr 1fr 54px 32px;
+    grid-template-columns: 32px 1fr 1fr 62px 34px;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     padding: 2px 0;
-    border-radius: 12px;
+    border-radius: 14px;
     transition: background 0.15s;
   }
 
   .set-row.done { background: rgba(79,192,141,0.04); }
 
   .set-n {
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 700;
     color: rgba(255,255,255,0.35);
     text-align: center;
@@ -741,11 +741,13 @@
   .set-col {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 4px;
     background: rgba(255,255,255,0.07);
     border: 1px solid rgba(255,255,255,0.11);
-    border-radius: 12px;
-    padding: 8px 12px;
+    border-radius: 13px;
+    padding: 11px 14px;
+    min-height: 68px;
+    justify-content: center;
   }
 
   .set-row.done .set-col {
@@ -767,13 +769,14 @@
     border: none;
     outline: none;
     padding: 0;
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 26px;
+    font-weight: 800;
     color: #ffffff;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
     width: 100%;
     min-width: 0;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
 
   .set-row.done .set-inp { color: rgba(79,192,141,0.90); }
@@ -781,12 +784,12 @@
   .set-inp:focus { color: #ffffff; }
 
   .done-btn {
-    height: 52px;
-    border-radius: 12px;
+    height: 68px;
+    border-radius: 13px;
     border: 1px solid rgba(255,255,255,0.18);
     background: rgba(255,255,255,0.05);
     color: rgba(255,255,255,0.55);
-    font-size: 22px;
+    font-size: 24px;
     cursor: pointer;
     display: flex;
     align-items: center;
