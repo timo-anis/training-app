@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, startWorkout, copyPreviousDay, hasMvp1Data, runMvp1Import } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, startWorkout, openWorkoutMode, exitWorkout, copyPreviousDay, hasMvp1Data, runMvp1Import } from '../stores/app';
   import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -25,6 +25,23 @@
   function handleMigrate() {
     const ok = runMvp1Import();
     migrateStatus = ok ? 'done' : 'error';
+  }
+
+  // Elapsed timer display for workout bar
+  import { onDestroy } from 'svelte';
+  let elapsed = 0;
+  const clockInterval = setInterval(() => {
+    const start = $uiState.workoutStartTime;
+    elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
+  }, 1000);
+  onDestroy(() => clearInterval(clockInterval));
+
+  function fmtElapsed(s: number): string {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+    return `${m}:${String(sec).padStart(2,'0')}`;
   }
 </script>
 
@@ -99,12 +116,28 @@
   </section>
 </div>
 
-<!-- Start Workout — sticky above tab bar, visible whenever exercises exist -->
+<!-- Workout bar — sticky above tab bar, visible whenever exercises exist -->
 {#if $currentDayExercises.length > 0}
   <div class="workout-bar">
-    <button class="start-workout-btn" on:click={startWorkout}>
-      💪 Start Workout
-    </button>
+    {#if $uiState.workoutActive}
+      <!-- Workout running: show timer + Workout Mode + Finish -->
+      <button class="timer-btn" on:click={exitWorkout} title="Finish workout">
+        <span class="timer-dot"></span>
+        <span class="timer-val">{fmtElapsed(elapsed)}</span>
+        <span class="timer-stop">■</span>
+      </button>
+      <button class="wm-btn" on:click={openWorkoutMode}>
+        Workout Mode →
+      </button>
+    {:else}
+      <!-- Not started: start timer OR jump straight to workout mode -->
+      <button class="start-btn" on:click={startWorkout}>
+        ▶ Start
+      </button>
+      <button class="wm-btn" on:click={openWorkoutMode}>
+        Workout Mode →
+      </button>
+    {/if}
   </div>
 {/if}
 
@@ -217,38 +250,101 @@
 
   .empty-state p { margin: 0; }
 
-  /* ---- Start workout sticky bar ---- */
+  /* ---- Workout sticky bar ---- */
   .workout-bar {
     position: fixed;
-    bottom: 58px; /* above tab bar */
+    bottom: 58px;
     left: 0;
     right: 0;
     max-width: 640px;
     margin: 0 auto;
     padding: 10px 14px;
-    background: linear-gradient(to top, #08172d 60%, transparent);
+    background: linear-gradient(to top, #08172d 70%, transparent);
     z-index: 40;
-    pointer-events: none;
+    display: flex;
+    gap: 8px;
   }
 
-  .start-workout-btn {
-    width: 100%;
-    padding: 17px;
+  /* ▶ Start button */
+  .start-btn {
+    flex: 0 0 auto;
+    padding: 15px 22px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.05);
+    color: #c8ddf4;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+    white-space: nowrap;
+  }
+
+  .start-btn:active { background: rgba(255,255,255,0.10); }
+
+  /* ⏱ Running timer button */
+  .timer-btn {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 15px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(79,192,141,0.28);
+    background: rgba(79,192,141,0.08);
+    color: #4fc08d;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+    white-space: nowrap;
+  }
+
+  .timer-btn:active { background: rgba(79,192,141,0.16); }
+
+  .timer-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #4fc08d;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.3; }
+  }
+
+  .timer-val {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .timer-stop {
+    font-size: 10px;
+    opacity: 0.5;
+  }
+
+  /* Workout Mode button — primary, takes remaining space */
+  .wm-btn {
+    flex: 1 1 0;
+    padding: 15px;
     border-radius: 16px;
     border: 1px solid rgba(255,194,71,0.40);
     background: rgba(255,194,71,0.14);
     color: #ffc247;
-    font-size: 17px;
+    font-size: 15px;
     font-weight: 900;
     letter-spacing: -0.01em;
     cursor: pointer;
-    transition: background 0.12s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
-    pointer-events: all;
-    box-shadow: 0 4px 24px rgba(255,194,71,0.12);
+    transition: background 0.12s, transform 0.1s;
+    box-shadow: 0 4px 20px rgba(255,194,71,0.10);
   }
 
-  .start-workout-btn:active {
+  .wm-btn:active {
     background: rgba(255,194,71,0.24);
     transform: scale(0.98);
   }

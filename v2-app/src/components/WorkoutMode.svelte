@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { uiState, appState, workoutBlocks, exitWorkout, setActiveBlock, toggleSetDone, updateSetField, findLastSession, toggleRecoveryDone } from '../stores/app';
+  import { uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode, setActiveBlock, toggleSetDone, updateSetField, findLastSession, toggleRecoveryDone } from '../stores/app';
   import type { WorkoutBlock, LastSession } from '../stores/app';
   import RestTimer from './RestTimer.svelte';
 
@@ -70,6 +70,12 @@
     if (!isLast) setActiveBlock(activeIndex + 1);
   }
 
+  /** Close overlay, keep timer running */
+  function backToNormal() {
+    closeWorkoutMode();
+  }
+
+  /** End workout entirely */
   function finish() {
     exitWorkout();
   }
@@ -110,7 +116,7 @@
 <div class="wm-overlay">
   <!-- Header -->
   <header class="wm-header">
-    <button class="wm-exit" on:click={finish}>✕</button>
+    <button class="wm-exit" on:click={backToNormal} title="Back to normal view">‹</button>
     <span class="wm-progress">{activeIndex + 1} / {blocks.length}</span>
     <div class="wm-dots">
       {#each blocks as b, i}
@@ -236,9 +242,11 @@
   <!-- Footer nav -->
   <footer class="wm-footer">
     {#if allDone}
-      <button class="btn-finish" on:click={finish}>Workout Done ✓</button>
+      <button class="btn-back" on:click={backToNormal}>← Back</button>
+      <button class="btn-finish" on:click={finish}>Finish ✓</button>
     {:else}
       <button class="btn-nav" on:click={prev} disabled={isFirst}>‹ Prev</button>
+      <button class="btn-end" on:click={backToNormal}>← Back</button>
       <button class="btn-nav primary" on:click={next} disabled={isLast}>Next ›</button>
     {/if}
   </footer>
@@ -584,8 +592,42 @@
   .btn-nav:not(:disabled):active { background: rgba(255,255,255,0.09); }
   .btn-nav.primary:not(:disabled):active { background: rgba(255,194,71,0.2); }
 
+  /* ← Back button (mid-workout) */
+  .btn-end {
+    flex: 0 0 auto;
+    padding: 15px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: transparent;
+    color: #2a4a6a;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .btn-end:active { background: rgba(255,255,255,0.06); color: #7fa8d4; }
+
+  /* All done footer: ← Back + Finish ✓ */
+  .btn-back {
+    flex: 1;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.04);
+    color: #4a6a8a;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .btn-back:active { background: rgba(255,255,255,0.09); }
+
   .btn-finish {
-    width: 100%;
+    flex: 2;
     padding: 16px;
     border-radius: 14px;
     border: 1px solid rgba(79,192,141,0.4);

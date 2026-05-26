@@ -20,6 +20,7 @@ export const uiState = writable<UIState>({
   day: defaultDay,
   month: defaultMonth,
   search: '',
+  workoutActive: false,
   workoutMode: false,
   activeExerciseIndex: 0,
   radarMode: 'day',
@@ -172,12 +173,41 @@ export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
 }
 
 // ---- Workout mode actions ----
+
+/** Start the workout timer — keeps normal view open */
 export function startWorkout() {
-  uiState.update(ui => ({ ...ui, workoutMode: true, activeExerciseIndex: 0, workoutStartTime: Date.now() }));
+  uiState.update(ui => ({
+    ...ui,
+    workoutActive: true,
+    workoutStartTime: ui.workoutStartTime ?? Date.now(),
+  }));
 }
 
+/** Open the focused block-by-block overlay */
+export function openWorkoutMode() {
+  uiState.update(ui => ({
+    ...ui,
+    workoutActive: true,
+    workoutMode: true,
+    activeExerciseIndex: 0,
+    workoutStartTime: ui.workoutStartTime ?? Date.now(),
+  }));
+}
+
+/** Close the overlay but keep the timer running */
+export function closeWorkoutMode() {
+  uiState.update(ui => ({ ...ui, workoutMode: false }));
+}
+
+/** Finish workout entirely — stop timer, close overlay */
 export function exitWorkout() {
-  uiState.update(ui => ({ ...ui, workoutMode: false, activeExerciseIndex: 0, workoutStartTime: null }));
+  uiState.update(ui => ({
+    ...ui,
+    workoutActive: false,
+    workoutMode: false,
+    activeExerciseIndex: 0,
+    workoutStartTime: null,
+  }));
 }
 
 export function setActiveBlock(index: number) {

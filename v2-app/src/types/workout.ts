@@ -49,6 +49,9 @@ export interface UIState {
   day: DayOfWeek;
   month: string; // 'YYYY-MM'
   search: string;
+  /** Timer is running — workout has started */
+  workoutActive: boolean;
+  /** Focused overlay is open (block-by-block navigation) */
   workoutMode: boolean;
   activeExerciseIndex: number;
   radarMode: 'day' | 'week' | 'lifetime';
