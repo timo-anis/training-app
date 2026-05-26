@@ -147,8 +147,8 @@
 <style>
   .main {
     min-height: 100dvh;
-    background: #08172d;
-    color: #f0f6ff;
+    background: #0c0c0e;
+    color: #f0f0ee;
     padding: 0 0 140px;
     max-width: 640px;
     margin: 0 auto;
@@ -161,10 +161,10 @@
     justify-content: space-between;
     padding: 16px 18px 14px;
     padding-top: calc(16px + env(safe-area-inset-top));
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-bottom: 1px solid rgba(255,255,255,0.07);
     position: sticky;
     top: 0;
-    background: #08172d;
+    background: #0c0c0e;
     z-index: 10;
   }
 
@@ -195,9 +195,9 @@
   .signout-btn {
     padding: 8px 14px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: transparent;
-    color: #7fa8d4;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.60);
     font-size: 13px;
     cursor: pointer;
     transition: background 0.12s;
@@ -225,13 +225,13 @@
   .day-label {
     font-size: 20px;
     font-weight: 900;
-    color: #e8f2ff;
+    color: #f0f0ee;
     letter-spacing: -0.03em;
   }
 
   .day-sub {
     font-size: 13px;
-    color: #6a8faa;
+    color: rgba(255,255,255,0.40);
     font-weight: 600;
   }
 
@@ -250,9 +250,9 @@
   .empty-state {
     padding: 32px 20px;
     text-align: center;
-    color: #3a5a7a;
+    color: rgba(255,255,255,0.30);
     font-size: 14px;
-    border: 1px dashed rgba(255,255,255,0.07);
+    border: 1px dashed rgba(255,255,255,0.08);
     border-radius: 18px;
   }
 
@@ -267,7 +267,7 @@
     max-width: 640px;
     margin: 0 auto;
     padding: 10px 14px;
-    background: linear-gradient(to top, #08172d 70%, transparent);
+    background: linear-gradient(to top, #0c0c0e 70%, transparent);
     z-index: 40;
     display: flex;
     gap: 8px;
@@ -317,13 +317,13 @@
     opacity: 0.5;
   }
 
-  /* Workout CTA button */
+  /* Resume button (workout running, overlay closed) */
   .wm-btn {
     flex: 1 1 0;
     padding: 16px;
     border-radius: 16px;
     border: 1px solid rgba(255,194,71,0.45);
-    background: rgba(255,194,71,0.16);
+    background: rgba(255,194,71,0.14);
     color: #ffc247;
     font-size: 16px;
     font-weight: 900;
@@ -331,20 +331,24 @@
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.12s, transform 0.1s;
-    box-shadow: 0 4px 24px rgba(255,194,71,0.14);
   }
 
-  /* Full-width single CTA */
+  /* Full-width single solid CTA — Start Workout */
   .wm-btn.full {
+    background: #ffc247;
+    color: #0c0c0e;
+    border: none;
     font-size: 17px;
-    padding: 18px;
-    box-shadow: 0 4px 28px rgba(255,194,71,0.18);
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 19px;
+    border-radius: 18px;
+    box-shadow: 0 4px 32px rgba(255,194,71,0.28);
   }
 
-  .wm-btn:active {
-    background: rgba(255,194,71,0.26);
-    transform: scale(0.98);
-  }
+  .wm-btn:active { background: rgba(255,194,71,0.22); transform: scale(0.98); }
+  .wm-btn.full:active { background: #e8b030; transform: scale(0.98); box-shadow: none; }
 
   .copy-day-btn {
     margin-top: 12px;

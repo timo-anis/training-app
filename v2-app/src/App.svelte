@@ -89,7 +89,7 @@
     padding: 16px 18px 4px;
     padding-top: calc(16px + env(safe-area-inset-top));
     border-bottom: 1px solid rgba(255,255,255,0.08);
-    background: #08172d;
+    background: #0c0c0e;
     position: sticky;
     top: 0;
     z-index: 10;
@@ -111,7 +111,7 @@
     margin: 0 auto;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    background: rgba(8,23,45,0.96);
+    background: rgba(12,12,14,0.97);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-top: 1px solid rgba(255,255,255,0.08);

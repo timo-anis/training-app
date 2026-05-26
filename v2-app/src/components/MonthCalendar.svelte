@@ -182,8 +182,8 @@
 
 <style>
   .month-cal {
-    background: linear-gradient(180deg, #131f32, #0e1b2c);
-    border: 1px solid rgba(255,255,255,0.11);
+    background: linear-gradient(180deg, #1a1a20, #141418);
+    border: 1px solid rgba(255,255,255,0.09);
     border-radius: 18px;
     padding: 12px 12px 10px;
     display: grid;

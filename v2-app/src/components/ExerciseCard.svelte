@@ -205,8 +205,8 @@
 
 <style>
   .exercise-card {
-    background: linear-gradient(180deg, #131f32, #0e1b2c);
-    border: 1px solid rgba(255,255,255,0.11);
+    background: linear-gradient(180deg, #1a1a20, #141418);
+    border: 1px solid rgba(255,255,255,0.09);
     border-radius: 18px;
     padding: 16px 14px;
     display: grid;
@@ -259,7 +259,7 @@
   .exercise-type {
     font-size: 12px;
     font-weight: 600;
-    color: #5a8aaa;
+    color: rgba(255,255,255,0.38);
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
@@ -270,9 +270,9 @@
     border-radius: 999px;
     font-size: 13px;
     font-weight: 700;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: #7fa8d4;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.13);
+    color: rgba(255,255,255,0.65);
   }
 
   .progress-chip.complete {
@@ -408,7 +408,7 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #4a7090;
+    color: rgba(255,255,255,0.38);
   }
 
   .edit-input {
@@ -486,11 +486,11 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #4a7090;
+    color: rgba(255,255,255,0.35);
     flex: 0 0 38px;
   }
 
-  .meta-value { font-size: 14px; font-weight: 600; color: #7fa8d4; }
+  .meta-value { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.65); }
 
   .recovery-row {
     display: flex;
@@ -515,12 +515,12 @@
   .recovery-row:active { background: rgba(255,255,255,0.07); }
   .recovery-row.recovery-done:active { background: rgba(79,192,141,0.14); }
 
-  .recovery-label { font-size: 14px; font-weight: 700; color: #7fa8d4; }
+  .recovery-label { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.70); }
 
   .recovery-status {
     font-size: 13px;
     font-weight: 700;
-    color: #4a7090;
+    color: rgba(255,255,255,0.38);
   }
 
   .recovery-row.recovery-done .recovery-status { color: #4fc08d; }
@@ -531,7 +531,7 @@
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.12);
     background: rgba(255,255,255,0.04);
-    color: #7fa8d4;
+    color: rgba(255,255,255,0.60);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;

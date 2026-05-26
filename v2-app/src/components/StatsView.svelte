@@ -166,7 +166,7 @@
   }
 
   .chip {
-    background: linear-gradient(180deg, #131f32, #0e1b2c);
+    background: linear-gradient(180deg, #1a1a20, #141418);
     border: 1px solid rgba(255,255,255,0.11);
     border-radius: 16px;
     padding: 14px 10px;
@@ -187,7 +187,7 @@
   .chip-lbl {
     font-size: 11px;
     font-weight: 700;
-    color: #4a7090;
+    color: rgba(255,255,255,0.38);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -196,7 +196,7 @@
   .section-head {
     font-size: 12px;
     font-weight: 800;
-    color: #4a7090;
+    color: rgba(255,255,255,0.38);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: 8px;
@@ -220,7 +220,7 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: linear-gradient(180deg, #131f32, #0e1b2c);
+    background: linear-gradient(180deg, #1a1a20, #141418);
     border: 1px solid rgba(255,255,255,0.11);
     border-radius: 14px;
     padding: 12px 14px;
@@ -250,7 +250,7 @@
   .wlbl {
     font-size: 10px;
     font-weight: 700;
-    color: #4a7090;
+    color: rgba(255,255,255,0.35);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -274,7 +274,7 @@
     align-items: center;
     gap: 10px;
     padding: 11px 14px;
-    background: linear-gradient(180deg, #131f32, #0e1b2c);
+    background: linear-gradient(180deg, #1a1a20, #141418);
     border: 1px solid rgba(255,255,255,0.11);
     border-radius: 12px;
   }
@@ -282,7 +282,7 @@
   .freq-rank {
     font-size: 12px;
     font-weight: 900;
-    color: #4a7090;
+    color: rgba(255,255,255,0.30);
     width: 16px;
     flex-shrink: 0;
     text-align: right;
@@ -309,7 +309,7 @@
   .freq-sets {
     font-size: 12px;
     font-weight: 600;
-    color: #4a7090;
+    color: rgba(255,255,255,0.35);
     flex-shrink: 0;
     min-width: 44px;
     text-align: right;

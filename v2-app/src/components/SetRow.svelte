@@ -106,7 +106,7 @@
   .setn {
     font-size: 13px;
     font-weight: 700;
-    color: #6a8faa;
+    color: rgba(255,255,255,0.35);
     text-align: center;
     user-select: none;
   }
@@ -117,8 +117,8 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.11);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
     border-radius: 10px;
     padding: 6px 10px;
   }
@@ -133,7 +133,7 @@
     font-weight: 800;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: #4a7090;
+    color: rgba(255,255,255,0.35);
     cursor: default;
     user-select: none;
   }

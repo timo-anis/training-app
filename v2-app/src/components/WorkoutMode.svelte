@@ -256,7 +256,7 @@
   .wm-overlay {
     position: fixed;
     inset: 0;
-    background: #08172d;
+    background: #0c0c0e;
     z-index: 100;
     display: flex;
     flex-direction: column;
@@ -482,7 +482,7 @@
   .set-n {
     font-size: 13px;
     font-weight: 700;
-    color: #6a8faa;
+    color: rgba(255,255,255,0.35);
     text-align: center;
     user-select: none;
   }
@@ -493,8 +493,8 @@
     display: flex;
     flex-direction: column;
     gap: 2px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.11);
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.10);
     border-radius: 10px;
     padding: 6px 10px;
   }
@@ -509,7 +509,7 @@
     font-weight: 800;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: #4a7090;
+    color: rgba(255,255,255,0.35);
     user-select: none;
   }
 
@@ -631,18 +631,20 @@
     flex: 2;
     padding: 16px;
     border-radius: 14px;
-    border: 1px solid rgba(79,192,141,0.4);
-    background: rgba(79,192,141,0.15);
-    color: #4fc08d;
+    border: none;
+    background: #ffc247;
+    color: #0c0c0e;
     font-size: 16px;
     font-weight: 900;
     cursor: pointer;
-    letter-spacing: -0.01em;
-    transition: background 0.12s;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    box-shadow: 0 4px 24px rgba(255,194,71,0.25);
+    transition: background 0.12s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
   }
 
-  .btn-finish:active { background: rgba(79,192,141,0.25); }
+  .btn-finish:active { background: #e8b030; transform: scale(0.98); }
 
   /* Recovery toggle */
   .recovery-toggle {
