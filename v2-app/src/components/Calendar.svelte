@@ -1,6 +1,6 @@
 <script lang="ts">
   import { DAY_ORDER, type DayOfWeek } from '../types/workout';
-  import { uiState, appState, availableWeeks, currentWeekDays, updateUI, addNewWeek } from '../stores/app';
+  import { uiState, appState, availableWeeks, currentWeekDays, updateUI, addNewWeek, copyPreviousWeek } from '../stores/app';
 
   const DAY_SHORT: Record<DayOfWeek, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -29,6 +29,9 @@
   $: canNext = $availableWeeks.indexOf($uiState.week) < $availableWeeks.length - 1;
   $: isLastWeek = !canNext;
   $: weekLabel = `Week ${$uiState.week}`;
+  $: currentWeekEmpty = $currentWeekDays.every(w => w.exercises.length === 0) && $currentWeekDays.length === 0;
+  $: hasPreviousWeek = $appState.weeks.some(w => w.week === $uiState.week - 1);
+  $: canCopy = currentWeekEmpty && hasPreviousWeek;
 </script>
 
 <div class="calendar-card">
@@ -59,6 +62,12 @@
       </button>
     {/each}
   </div>
+
+  {#if canCopy}
+    <button class="copy-week-btn" on:click={copyPreviousWeek}>
+      Copy Week {$uiState.week - 1} →
+    </button>
+  {/if}
 </div>
 
 <style>
@@ -169,4 +178,21 @@
   }
 
   .pill.active .pill-dot { background: #ffc247; }
+
+  .copy-week-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(127,178,255,0.22);
+    background: rgba(127,178,255,0.07);
+    color: #7fb2ff;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.01em;
+    transition: background 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .copy-week-btn:active { background: rgba(127,178,255,0.15); }
 </style>
