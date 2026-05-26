@@ -1,6 +1,6 @@
 <script lang="ts">
   import { DAY_ORDER, type DayOfWeek } from '../types/workout';
-  import { uiState, appState, availableWeeks, currentWeekDays, updateUI, addNewWeek, copyPreviousWeek } from '../stores/app';
+  import { uiState, appState, availableWeeks, currentWeekDays, updateUI, addNewWeek } from '../stores/app';
 
   const DAY_SHORT: Record<DayOfWeek, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -29,9 +29,6 @@
   $: canNext = $availableWeeks.indexOf($uiState.week) < $availableWeeks.length - 1;
   $: isLastWeek = !canNext;
   $: weekLabel = `Week ${$uiState.week}`;
-  $: currentWeekEmpty = $currentWeekDays.every(w => w.exercises.length === 0) && $currentWeekDays.length === 0;
-  $: hasPreviousWeek = $appState.weeks.some(w => w.week === $uiState.week - 1);
-  $: canCopy = currentWeekEmpty && hasPreviousWeek;
 </script>
 
 <div class="calendar-card">
@@ -63,11 +60,6 @@
     {/each}
   </div>
 
-  {#if canCopy}
-    <button class="copy-week-btn" on:click={copyPreviousWeek}>
-      Copy Week {$uiState.week - 1} →
-    </button>
-  {/if}
 </div>
 
 <style>

@@ -144,33 +144,31 @@ export function addNewWeek() {
   uiState.update(ui => ({ ...ui, week: nextWeek }));
 }
 
-// ---- Copy previous week to current week ----
-export function copyPreviousWeek() {
-  const ui = get(uiState);
+// ---- Copy previous week's same day to current day ----
+export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
   const state = get(appState);
-  const targetWeek = ui.week;
   const sourceWeek = targetWeek - 1;
 
-  const sourceDays = state.weeks.filter(w => w.week === sourceWeek);
-  if (!sourceDays.length) return;
+  const sourceDay = state.weeks.find(w => w.week === sourceWeek && w.day === day);
+  if (!sourceDay || sourceDay.exercises.length === 0) return;
 
-  // Remove any existing days in target week first
-  const filtered = state.weeks.filter(w => w.week !== targetWeek);
+  // Remove existing target day if any
+  const filtered = state.weeks.filter(w => !(w.week === targetWeek && w.day === day));
 
-  // Clone source days into target week — fresh sets, done reset
-  const cloned: WorkoutDay[] = sourceDays.map(wd => ({
+  const cloned: WorkoutDay = {
     week: targetWeek,
-    day: wd.day,
-    date: getDateForWeekDay(targetWeek, wd.day),
-    exercises: wd.exercises.map(ex => ({
+    day,
+    date: getDateForWeekDay(targetWeek, day),
+    exercises: sourceDay.exercises.map(ex => ({
       ...ex,
       id: `${ex.id}_w${targetWeek}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
+      // Pre-fill with previous week's kg/reps, done reset
       sets: ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false })),
       recoveryDone: false,
     })),
-  }));
+  };
 
-  updateState(() => ({ ...state, weeks: [...filtered, ...cloned] }));
+  updateState(() => ({ ...state, weeks: [...filtered, cloned] }));
 }
 
 // ---- Workout mode actions ----

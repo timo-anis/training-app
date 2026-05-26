@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, currentDayExercises, startWorkout } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, startWorkout, copyPreviousDay } from '../stores/app';
   import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -9,6 +9,12 @@
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
     Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
   };
+
+  // Show copy button when current day is empty but prev week has same day
+  $: hasPrevDay = $appState.weeks.some(
+    w => w.week === $uiState.week - 1 && w.day === $uiState.day && w.exercises.length > 0
+  );
+  $: canCopyDay = $currentDayExercises.length === 0 && hasPrevDay;
 </script>
 
 <div class="main">
@@ -36,6 +42,11 @@
     {#if $currentDayExercises.length === 0}
       <div class="empty-state">
         <p>No exercises logged for this day.</p>
+        {#if canCopyDay}
+          <button class="copy-day-btn" on:click={() => copyPreviousDay($uiState.week, $uiState.day)}>
+            Copy from Week {$uiState.week - 1}
+          </button>
+        {/if}
       </div>
     {:else}
       <div class="exercise-list">
@@ -187,7 +198,22 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .start-workout-btn:active {
-    background: rgba(255,194,71,0.22);
+  .start-workout-btn:active { background: rgba(255,194,71,0.22); }
+
+  .copy-day-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(127,178,255,0.22);
+    background: rgba(127,178,255,0.07);
+    color: #7fb2ff;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.12s;
+    -webkit-tap-highlight-color: transparent;
   }
+
+  .copy-day-btn:active { background: rgba(127,178,255,0.15); }
 </style>
