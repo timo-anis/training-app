@@ -33,11 +33,14 @@
 <div class="main">
   <!-- Header -->
   <header class="topbar">
-    <div class="topbar-title">
-      <span class="title-text">Timo Training</span>
-      <span class="v2-badge">V2</span>
-    </div>
-    <button class="signout-btn" on:click={signOut}>Sign out</button>
+    <span class="title-text">Timo Training</span>
+    <button class="signout-btn" on:click={signOut} title="Sign out" aria-label="Sign out">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+        <polyline points="16 17 21 12 16 7"/>
+        <line x1="21" y1="12" x2="9" y2="12"/>
+      </svg>
+    </button>
   </header>
 
   <!-- MVP1 migration banner -->
@@ -122,8 +125,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 18px 14px;
-    padding-top: calc(16px + env(safe-area-inset-top));
+    padding: 11px 18px;
+    padding-top: calc(11px + env(safe-area-inset-top));
     border-bottom: 1px solid rgba(60,90,165,0.16);
     position: sticky;
     top: 0;
@@ -131,45 +134,43 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     z-index: 10;
+    overflow: hidden;
   }
 
-  .topbar-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  .topbar::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(255,194,71,0.45) 15%, #ffc247 50%, rgba(255,194,71,0.45) 85%, transparent 100%);
   }
 
   .title-text {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 900;
     color: #ffd060;
     letter-spacing: -0.03em;
-    text-shadow: 0 0 22px rgba(255,200,70,0.22);
-  }
-
-  .v2-badge {
-    font-size: 10px;
-    font-weight: 900;
-    color: #ffc247;
-    background: rgba(255,194,71,0.12);
-    border: 1px solid rgba(255,194,71,0.28);
-    border-radius: 6px;
-    padding: 2px 7px;
-    letter-spacing: 0.06em;
   }
 
   .signout-btn {
-    padding: 8px 14px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 10px;
-    border: 1px solid rgba(75,115,195,0.26);
-    background: rgba(14,25,55,0.65);
-    color: rgba(255,255,255,0.60);
-    font-size: 13px;
+    border: 1px solid rgba(65,100,170,0.20);
+    background: transparent;
+    color: rgba(255,255,255,0.30);
     cursor: pointer;
-    transition: background 0.12s;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  .signout-btn:active { background: rgba(14,26,55,0.70); }
+  .signout-btn:active {
+    background: rgba(14,26,55,0.70);
+    color: rgba(255,255,255,0.65);
+  }
 
   /* ---- Sections ---- */
   .section {
