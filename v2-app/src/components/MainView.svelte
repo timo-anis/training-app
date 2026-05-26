@@ -50,11 +50,13 @@
       </div>
     {:else}
       <div class="exercise-list">
-        {#each $currentDayExercises as exercise (exercise.id)}
+        {#each $currentDayExercises as exercise, i (exercise.id)}
           <ExerciseCard
             {exercise}
             week={$uiState.week}
             day={$uiState.day}
+            index={i}
+            total={$currentDayExercises.length}
           />
         {/each}
       </div>

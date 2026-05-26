@@ -256,6 +256,23 @@ export function updateExerciseMeta(
   );
 }
 
+// ---- Move exercise up or down ----
+export function moveExercise(week: number, day: DayOfWeek, exId: string, direction: 'up' | 'down') {
+  updateState(state => ({
+    ...state,
+    weeks: state.weeks.map(w => {
+      if (w.week !== week || w.day !== day) return w;
+      const exs = [...w.exercises];
+      const idx = exs.findIndex(e => e.id === exId);
+      if (idx === -1) return w;
+      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+      if (swapIdx < 0 || swapIdx >= exs.length) return w;
+      [exs[idx], exs[swapIdx]] = [exs[swapIdx], exs[idx]];
+      return { ...w, exercises: exs };
+    }),
+  }));
+}
+
 // ---- Toggle set done ----
 export function toggleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number) {
   updateState(state =>

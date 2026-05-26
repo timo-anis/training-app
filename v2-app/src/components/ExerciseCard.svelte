@@ -1,11 +1,13 @@
 <script lang="ts">
   import type { Exercise, DayOfWeek } from '../types/workout';
-  import { addSet, deleteExercise, updateExerciseMeta } from '../stores/app';
+  import { addSet, deleteExercise, updateExerciseMeta, moveExercise } from '../stores/app';
   import SetRow from './SetRow.svelte';
 
   export let exercise: Exercise;
   export let week: number;
   export let day: DayOfWeek;
+  export let index: number = 0;
+  export let total: number = 1;
 
   $: doneCount = exercise.sets.filter(s => s.done).length;
   $: totalCount = exercise.sets.length;
@@ -75,6 +77,10 @@
         {doneCount}/{totalCount}
       </span>
     {/if}
+    <div class="order-btns">
+      <button class="order-btn" disabled={index === 0} on:click={() => moveExercise(week, day, exercise.id, 'up')} aria-label="Move up">↑</button>
+      <button class="order-btn" disabled={index === total - 1} on:click={() => moveExercise(week, day, exercise.id, 'down')} aria-label="Move down">↓</button>
+    </div>
     <button class="edit-btn" on:click={openEdit} aria-label="Edit exercise">✎</button>
     <button
       class="del-ex-btn"
@@ -270,6 +276,33 @@
     border-color: rgba(79,192,141,0.30);
     color: #4fc08d;
   }
+
+  .order-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+  }
+
+  .order-btn {
+    width: 24px;
+    height: 18px;
+    border-radius: 5px;
+    border: none;
+    background: transparent;
+    color: #2a4a6a;
+    font-size: 11px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+    padding: 0;
+  }
+
+  .order-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+  .order-btn:not(:disabled):active { background: rgba(255,255,255,0.08); color: #7fa8d4; }
 
   .edit-btn {
     flex: 0 0 auto;
