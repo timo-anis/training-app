@@ -96,21 +96,24 @@
     <div class="add-ex-wrap">
       <AddExercise week={$uiState.week} day={$uiState.day} />
     </div>
-
-    {#if $currentDayExercises.length > 0}
-      <button class="start-workout-btn" on:click={startWorkout}>
-        Start Workout
-      </button>
-    {/if}
   </section>
 </div>
+
+<!-- Start Workout — sticky above tab bar, visible whenever exercises exist -->
+{#if $currentDayExercises.length > 0}
+  <div class="workout-bar">
+    <button class="start-workout-btn" on:click={startWorkout}>
+      💪 Start Workout
+    </button>
+  </div>
+{/if}
 
 <style>
   .main {
     min-height: 100dvh;
     background: #08172d;
     color: #f0f6ff;
-    padding: 0 0 80px;
+    padding: 0 0 140px;
     max-width: 640px;
     margin: 0 auto;
   }
@@ -214,24 +217,41 @@
 
   .empty-state p { margin: 0; }
 
-  /* ---- Start workout button ---- */
+  /* ---- Start workout sticky bar ---- */
+  .workout-bar {
+    position: fixed;
+    bottom: 58px; /* above tab bar */
+    left: 0;
+    right: 0;
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 10px 14px;
+    background: linear-gradient(to top, #08172d 60%, transparent);
+    z-index: 40;
+    pointer-events: none;
+  }
+
   .start-workout-btn {
     width: 100%;
-    margin-top: 14px;
-    padding: 16px;
+    padding: 17px;
     border-radius: 16px;
-    border: 1px solid rgba(255,194,71,0.35);
-    background: rgba(255,194,71,0.12);
+    border: 1px solid rgba(255,194,71,0.40);
+    background: rgba(255,194,71,0.14);
     color: #ffc247;
-    font-size: 16px;
+    font-size: 17px;
     font-weight: 900;
     letter-spacing: -0.01em;
     cursor: pointer;
-    transition: background 0.12s;
+    transition: background 0.12s, transform 0.1s;
     -webkit-tap-highlight-color: transparent;
+    pointer-events: all;
+    box-shadow: 0 4px 24px rgba(255,194,71,0.12);
   }
 
-  .start-workout-btn:active { background: rgba(255,194,71,0.22); }
+  .start-workout-btn:active {
+    background: rgba(255,194,71,0.24);
+    transform: scale(0.98);
+  }
 
   .copy-day-btn {
     margin-top: 12px;

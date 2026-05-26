@@ -5,28 +5,46 @@
 
   const dispatch = createEventDispatcher<{ done: void; skip: void }>();
 
-  // Parse rest string to seconds
   function parseRest(s: string): number {
     if (!s) return 0;
     s = s.trim().toLowerCase();
-    // "2:30" → 150s
     if (/^\d+:\d+$/.test(s)) {
       const [m, sec] = s.split(':').map(Number);
       return m * 60 + sec;
     }
-    // "2min" or "2m"
     const minMatch = s.match(/^(\d+(?:\.\d+)?)\s*min?/);
     if (minMatch) return Math.round(parseFloat(minMatch[1]) * 60);
-    // "90s" or "90"
     const secMatch = s.match(/^(\d+(?:\.\d+)?)/);
     if (secMatch) return Math.round(parseFloat(secMatch[1]));
     return 0;
   }
 
+  function playBeep(freq = 880, duration = 0.18, volume = 0.5) {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(volume, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + duration);
+    } catch { /* AudioContext not available */ }
+  }
+
+  function playDoneSound() {
+    playBeep(660, 0.15, 0.45);
+    setTimeout(() => playBeep(880, 0.15, 0.45), 180);
+    setTimeout(() => playBeep(1100, 0.25, 0.5), 360);
+    try { navigator.vibrate?.([200, 100, 200]); } catch { /* ignore */ }
+  }
+
   const totalSeconds = parseRest(restString);
   let remaining = totalSeconds;
   let interval: ReturnType<typeof setInterval> | null = null;
-  let running = true;
 
   if (totalSeconds > 0) {
     interval = setInterval(() => {
@@ -35,155 +53,175 @@
         remaining = 0;
         clearInterval(interval!);
         interval = null;
-        running = false;
-        dispatch('done');
+        playDoneSound();
+        setTimeout(() => dispatch('done'), 800);
       }
     }, 1000);
   }
 
-  onDestroy(() => {
-    if (interval) clearInterval(interval);
-  });
+  onDestroy(() => { if (interval) clearInterval(interval); });
 
   function skip() {
     if (interval) clearInterval(interval);
     interval = null;
-    running = false;
     dispatch('skip');
   }
 
   $: pct = totalSeconds > 0 ? (remaining / totalSeconds) : 0;
   $: mins = Math.floor(remaining / 60);
   $: secs = remaining % 60;
-  $: display = mins > 0
-    ? `${mins}:${String(secs).padStart(2, '0')}`
-    : `${secs}s`;
+  $: display = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${remaining}`;
+  $: warning = remaining <= 5 && remaining > 0;
+  $: done = remaining === 0;
 
-  // Arc path for progress ring
-  function arc(pct: number, r = 44): string {
+  function arc(pct: number, r = 80): string {
     const angle = pct * 2 * Math.PI;
-    const x = 50 + r * Math.sin(angle);
-    const y = 50 - r * Math.cos(angle);
+    const x = 100 + r * Math.sin(angle);
+    const y = 100 - r * Math.cos(angle);
     const large = angle > Math.PI ? 1 : 0;
     return pct >= 1
-      ? `M 50 6 A 44 44 0 1 1 49.999 6`
-      : `M 50 6 A 44 44 0 ${large} 1 ${x.toFixed(2)} ${y.toFixed(2)}`;
+      ? `M 100 20 A 80 80 0 1 1 99.999 20`
+      : `M 100 20 A 80 80 0 ${large} 1 ${x.toFixed(2)} ${y.toFixed(2)}`;
   }
 </script>
 
 {#if totalSeconds > 0}
-  <div class="rest-timer">
-    <svg class="ring" viewBox="0 0 100 100">
-      <circle class="track" cx="50" cy="50" r="44" />
-      <path class="fill-arc" d={arc(pct)} />
-    </svg>
-
-    <div class="inner">
-      <span class="label">REST</span>
-      <span class="time">{display}</span>
+  <div class="overlay" class:done>
+    <div class="timer-wrap">
+      <div class="ring-wrap">
+        <svg class="ring" viewBox="0 0 200 200">
+          <circle class="track" cx="100" cy="100" r="80" />
+          <path class="fill-arc" class:warning class:done d={arc(pct)} />
+        </svg>
+        <div class="center-text">
+          {#if done}
+            <span class="done-label">GO!</span>
+          {:else}
+            <span class="rest-label">REST</span>
+            <span class="time" class:warning>{display}</span>
+          {/if}
+        </div>
+      </div>
+      <button class="skip-btn" on:click={skip}>Skip rest</button>
     </div>
-
-    <button class="skip-btn" on:click={skip}>Skip</button>
   </div>
 {/if}
 
 <style>
-  .rest-timer {
+  .overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 23, 45, 0.95);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    animation: fade-in 0.15s ease;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  .timer-wrap {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 14px;
-    padding: 20px 0 10px;
+    gap: 36px;
+  }
+
+  .ring-wrap {
+    position: relative;
+    width: 230px;
+    height: 230px;
   }
 
   .ring {
-    width: 120px;
-    height: 120px;
-    position: relative;
+    width: 230px;
+    height: 230px;
+    display: block;
   }
 
   .track {
     fill: none;
     stroke: rgba(255,255,255,0.06);
-    stroke-width: 6;
+    stroke-width: 10;
   }
 
   .fill-arc {
     fill: none;
     stroke: #4fc08d;
-    stroke-width: 6;
+    stroke-width: 10;
     stroke-linecap: round;
-    transition: d 0.3s linear;
+    transition: stroke 0.3s;
   }
 
-  .inner {
+  .fill-arc.warning { stroke: #ffc247; }
+  .fill-arc.done    { stroke: #4fc08d; }
+
+  .center-text {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    pointer-events: none;
-    /* positioned inside ring via parent relative */
-  }
-
-  /* SVG + inner overlay trick */
-  .rest-timer {
-    position: relative;
-  }
-
-  .ring {
-    display: block;
-  }
-
-  .inner {
-    position: absolute;
-    top: 20px; /* padding-top offset */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120px;
-    height: 120px;
+    inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 4px;
     pointer-events: none;
   }
 
-  .label {
-    font-size: 10px;
+  .rest-label {
+    font-size: 12px;
     font-weight: 800;
-    letter-spacing: 0.1em;
+    letter-spacing: 0.14em;
     color: #3a8a6a;
     text-transform: uppercase;
   }
 
   .time {
-    font-size: 28px;
+    font-size: 72px;
     font-weight: 900;
     color: #4fc08d;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
+    transition: color 0.3s;
+  }
+
+  .time.warning { color: #ffc247; }
+
+  .done-label {
+    font-size: 64px;
+    font-weight: 900;
+    color: #4fc08d;
+    letter-spacing: -0.04em;
+    animation: pop 0.35s ease;
+  }
+
+  @keyframes pop {
+    0%   { transform: scale(0.7); opacity: 0.4; }
+    65%  { transform: scale(1.15); }
+    100% { transform: scale(1);   opacity: 1; }
   }
 
   .skip-btn {
-    padding: 10px 28px;
-    border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.04);
+    padding: 15px 48px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.05);
     color: #4a6a8a;
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
-    letter-spacing: 0.03em;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
+    transition: background 0.12s, color 0.12s;
   }
 
   .skip-btn:active {
-    background: rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.10);
     color: #7fa8d4;
   }
 </style>
