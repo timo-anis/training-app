@@ -229,8 +229,8 @@
 
 <style>
   .exercise-card {
-    background: linear-gradient(180deg, #1a1a20, #141418);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: linear-gradient(160deg, #0d1a30, #080e1c);
+    border: 1px solid rgba(65,100,175,0.18);
     border-radius: 18px;
     padding: 16px 14px;
     display: grid;
@@ -294,7 +294,7 @@
     border-radius: 999px;
     font-size: 13px;
     font-weight: 700;
-    background: rgba(255,255,255,0.06);
+    background: rgba(14,26,55,0.70);
     border: 1px solid rgba(255,255,255,0.13);
     color: rgba(255,255,255,0.65);
   }
@@ -318,7 +318,7 @@
     border-radius: 5px;
     border: none;
     background: transparent;
-    color: #4a7090;
+    color: #3a5890;
     font-size: 11px;
     cursor: pointer;
     display: flex;
@@ -330,7 +330,7 @@
   }
 
   .order-btn:disabled { opacity: 0.2; cursor: not-allowed; }
-  .order-btn:not(:disabled):active { background: rgba(255,255,255,0.08); color: #7fa8d4; }
+  .order-btn:not(:disabled):active { background: rgba(15,28,58,0.80); color: #7fa8d4; }
 
   .edit-btn {
     flex: 0 0 auto;
@@ -339,7 +339,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #4a7090;
+    color: #3a5890;
     font-size: 15px;
     cursor: pointer;
     display: flex;
@@ -359,7 +359,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #4a7090;
+    color: #3a5890;
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
@@ -385,8 +385,8 @@
   .cond-textarea {
     width: 100%;
     box-sizing: border-box;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(14,25,55,0.65);
+    border: 1px solid rgba(65,100,175,0.20);
     border-radius: 12px;
     padding: 12px 14px;
     font-size: 15px;
@@ -412,8 +412,8 @@
   .type-btn {
     padding: 9px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.11);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(70,110,185,0.22);
+    background: rgba(12,22,48,0.55);
     color: #6a8faa;
     font-size: 13px;
     font-weight: 700;
@@ -457,8 +457,8 @@
   }
 
   .edit-input {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(14,25,55,0.65);
+    border: 1px solid rgba(65,100,175,0.18);
     border-radius: 10px;
     padding: 10px 12px;
     font-size: 14px;
@@ -471,7 +471,7 @@
   }
 
   .edit-input:focus { border-color: rgba(127,178,255,0.35); }
-  .edit-input::placeholder { color: #2a4a6a; }
+  .edit-input::placeholder { color: #1e3870; }
 
   .edit-textarea {
     resize: none;
@@ -488,9 +488,9 @@
   .btn-cancel {
     padding: 11px;
     border-radius: 11px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.03);
-    color: #4a6a8a;
+    border: 1px solid rgba(65,100,175,0.18);
+    background: rgba(12,20,44,0.50);
+    color: #3a5888;
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
@@ -520,8 +520,8 @@
     gap: 10px;
     padding: 6px 10px;
     border-radius: 10px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(12,20,44,0.50);
+    border: 1px solid rgba(60,90,160,0.13);
   }
 
   .meta-row.note { align-items: flex-start; }
@@ -543,8 +543,8 @@
     justify-content: space-between;
     padding: 12px 14px;
     border-radius: 12px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(12,20,44,0.50);
+    border: 1px solid rgba(60,90,165,0.14);
     cursor: pointer;
     width: 100%;
     text-align: left;
@@ -557,7 +557,7 @@
     border-color: rgba(79,192,141,0.25);
   }
 
-  .recovery-row:active { background: rgba(255,255,255,0.07); }
+  .recovery-row:active { background: rgba(13,24,52,0.85); }
   .recovery-row.recovery-done:active { background: rgba(79,192,141,0.14); }
 
   .recovery-label { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.70); }
@@ -574,8 +574,8 @@
     width: 100%;
     padding: 11px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(70,110,185,0.24);
+    background: rgba(12,22,48,0.55);
     color: rgba(255,255,255,0.60);
     font-size: 14px;
     font-weight: 700;
@@ -586,7 +586,7 @@
   }
 
   .add-set-btn:active {
-    background: rgba(255,255,255,0.07);
-    border-color: rgba(255,255,255,0.14);
+    background: rgba(13,24,52,0.85);
+    border-color: rgba(75,115,195,0.26);
   }
 </style>

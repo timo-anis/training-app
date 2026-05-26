@@ -94,7 +94,7 @@
     width: 100%;
     padding: 14px;
     border-radius: 14px;
-    border: 1px dashed rgba(255,255,255,0.12);
+    border: 1px dashed rgba(70,110,185,0.24);
     background: transparent;
     color: #4a7aaa;
     font-size: 14px;
@@ -106,7 +106,7 @@
   }
 
   .add-ex-trigger:active {
-    background: rgba(255,255,255,0.04);
+    background: rgba(12,22,48,0.55);
     border-color: rgba(255,255,255,0.2);
     color: #7fa8d4;
   }
@@ -122,8 +122,8 @@
 
   .add-ex-input {
     width: 100%;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(14,25,55,0.65);
+    border: 1px solid rgba(65,100,175,0.20);
     border-radius: 12px;
     padding: 12px 14px;
     font-size: 16px;
@@ -135,7 +135,7 @@
     transition: border-color 0.12s;
   }
 
-  .add-ex-input::placeholder { color: #2a4a6a; }
+  .add-ex-input::placeholder { color: #1e3870; }
 
   .add-ex-input:focus {
     border-color: rgba(127,178,255,0.35);
@@ -183,9 +183,9 @@
   .btn-cancel {
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.03);
-    color: #4a6a8a;
+    border: 1px solid rgba(65,100,175,0.18);
+    background: rgba(12,20,44,0.50);
+    color: #3a5888;
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -193,7 +193,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .btn-cancel:active { background: rgba(255,255,255,0.07); }
+  .btn-cancel:active { background: rgba(13,24,52,0.85); }
 
   .btn-confirm {
     padding: 12px;

@@ -65,7 +65,7 @@
 <style>
   .calendar-card {
     background: linear-gradient(180deg, #0f1c30, #0b1726);
-    border: 1px solid rgba(255,255,255,0.07);
+    border: 1px solid rgba(60,90,165,0.14);
     border-radius: 18px;
     padding: 16px 14px 14px;
     display: grid;
@@ -92,8 +92,8 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(65,100,175,0.20);
+    background: rgba(12,22,48,0.55);
     color: #7fa8d4;
     font-size: 18px;
     line-height: 1;
@@ -106,7 +106,7 @@
   }
 
   .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-  .nav-btn:not(:disabled):active { background: rgba(255,255,255,0.08); }
+  .nav-btn:not(:disabled):active { background: rgba(15,28,58,0.80); }
 
   .new-week-btn {
     padding: 6px 12px;
@@ -144,7 +144,7 @@
     transition: background 0.12s, border-color 0.12s;
   }
 
-  .pill.has-data { background: rgba(255,255,255,0.03); }
+  .pill.has-data { background: rgba(12,20,44,0.50); }
 
   .pill.active {
     background: linear-gradient(180deg, rgba(255,194,71,0.18), rgba(255,159,10,0.10));

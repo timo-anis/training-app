@@ -104,7 +104,7 @@
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    background: #0c0c0e;
+    background: radial-gradient(ellipse at 50% 0%, #0d1a2e 0%, #08090f 52%, #050508 100%);
   }
 
   /* ── Top tab bar ── */
@@ -114,8 +114,10 @@
     gap: 6px;
     padding: env(safe-area-inset-top, 0px) 14px 10px;
     padding-top: max(env(safe-area-inset-top, 0px), 10px);
-    background: #0c0c0e;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    background: rgba(7,9,18,0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(60,90,165,0.18);
     z-index: 10;
   }
 
@@ -123,9 +125,9 @@
     flex: 1;
     padding: 10px 0;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.03);
-    color: rgba(255,255,255,0.38);
+    border: 1px solid rgba(65,100,175,0.18);
+    background: rgba(12,20,44,0.50);
+    color: rgba(180,205,255,0.40);
     font-size: 14px;
     font-weight: 800;
     letter-spacing: 0.01em;
@@ -141,8 +143,8 @@
   }
 
   .top-tab:not(.active):active {
-    background: rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.60);
+    background: rgba(14,26,55,0.70);
+    color: rgba(180,205,255,0.65);
   }
 
   /* ── Scrollable content ── */
@@ -159,8 +161,10 @@
     gap: 8px;
     padding: 10px 14px;
     padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
-    background: #0c0c0e;
-    border-top: 1px solid rgba(255,255,255,0.07);
+    background: rgba(7,9,18,0.94);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(60,90,165,0.16);
   }
 
   /* Timer chip */

@@ -352,8 +352,8 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(12,20,44,0.50);
+    border: 1px solid rgba(60,90,165,0.14);
     border-radius: 14px;
     padding: 4px;
   }
@@ -363,7 +363,7 @@
     border-radius: 10px;
     border: none;
     background: transparent;
-    color: #3a5a7a;
+    color: #2a4880;
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
@@ -415,7 +415,7 @@
     width: 100%;
     padding: 9px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.10);
+    border: 1px solid rgba(65,100,175,0.20);
     background: transparent;
     color: rgba(255,255,255,0.40);
     font-size: 12px;
@@ -427,7 +427,7 @@
   }
 
   .clear-sel-btn:active {
-    background: rgba(255,255,255,0.05);
+    background: rgba(14,25,55,0.65);
     color: rgba(255,255,255,0.65);
   }
 
@@ -442,7 +442,7 @@
     align-items: center;
     justify-content: center;
     font-size: 13px;
-    color: #2a4a6a;
+    color: #1e3870;
     text-align: center;
     line-height: 1.6;
     pointer-events: none;
@@ -461,8 +461,8 @@
     gap: 8px;
     padding: 9px 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.06);
-    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(60,90,160,0.13);
+    background: rgba(12,20,44,0.50);
   }
 
   .chip-dot {
@@ -484,7 +484,7 @@
   .chip-sets {
     font-size: 11px;
     font-weight: 800;
-    color: #4a6a8a;
+    color: #3a5888;
   }
 
   /* Insights */
@@ -499,14 +499,14 @@
     justify-content: space-between;
     padding: 8px 12px;
     border-radius: 10px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(12,20,44,0.50);
+    border: 1px solid rgba(60,90,160,0.13);
   }
 
   .insight-lbl {
     font-size: 11px;
     font-weight: 700;
-    color: #2a4a6a;
+    color: #1e3870;
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }

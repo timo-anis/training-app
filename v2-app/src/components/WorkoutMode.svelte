@@ -459,7 +459,7 @@
   .wm-overlay {
     position: fixed;
     inset: 0;
-    background: #0c0c0e;
+    background: radial-gradient(ellipse at 50% 0%, #0d1a2e 0%, #08090f 55%, #050508 100%);
     z-index: 100;
     display: flex;
     flex-direction: column;
@@ -475,7 +475,7 @@
     gap: 12px;
     padding: 14px 16px 12px;
     padding-top: calc(14px + env(safe-area-inset-top));
-    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(65,100,170,0.16);
     flex-shrink: 0;
   }
 
@@ -483,8 +483,8 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(70,110,185,0.24);
+    background: rgba(14,25,55,0.65);
     color: rgba(255,255,255,0.65);
     font-size: 20px;
     cursor: pointer;
@@ -513,7 +513,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.08);
+    background: rgba(15,28,58,0.80);
     transition: background 0.15s;
   }
 
@@ -562,8 +562,8 @@
   }
 
   .block-badge.single {
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(14,25,55,0.65);
+    border: 1px solid rgba(70,110,185,0.24);
     color: rgba(255,255,255,0.45);
   }
 
@@ -631,8 +631,8 @@
     color: rgba(255,255,255,0.45);
     padding: 8px 12px;
     border-radius: 10px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(12,20,44,0.50);
+    border: 1px solid rgba(60,90,160,0.13);
   }
 
   /* Last session (strength) */
@@ -695,8 +695,8 @@
   .cond-textarea {
     width: 100%;
     box-sizing: border-box;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(14,26,55,0.70);
+    border: 1px solid rgba(70,110,185,0.24);
     border-radius: 14px;
     padding: 14px 16px;
     font-size: 16px;
@@ -742,8 +742,8 @@
     display: flex;
     flex-direction: column;
     gap: 4px;
-    background: rgba(255,255,255,0.07);
-    border: 1px solid rgba(255,255,255,0.11);
+    background: rgba(13,24,52,0.85);
+    border: 1px solid rgba(70,110,185,0.22);
     border-radius: 13px;
     padding: 11px 14px;
     min-height: 68px;
@@ -786,8 +786,8 @@
   .done-btn {
     height: 68px;
     border-radius: 13px;
-    border: 1px solid rgba(255,255,255,0.18);
-    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(80,120,200,0.30);
+    background: rgba(14,25,55,0.65);
     color: rgba(255,255,255,0.55);
     font-size: 24px;
     cursor: pointer;
@@ -830,7 +830,7 @@
     width: 100%;
     padding: 13px;
     border-radius: 12px;
-    border: 1px dashed rgba(255,255,255,0.14);
+    border: 1px dashed rgba(75,115,195,0.26);
     background: transparent;
     color: rgba(255,255,255,0.38);
     font-size: 14px;
@@ -841,7 +841,7 @@
   }
 
   .add-set-btn:active {
-    background: rgba(255,255,255,0.05);
+    background: rgba(14,25,55,0.65);
     color: rgba(255,255,255,0.65);
     border-color: rgba(255,255,255,0.28);
   }
@@ -851,8 +851,8 @@
     width: 100%;
     padding: 18px;
     border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(65,100,175,0.18);
+    background: rgba(12,22,48,0.55);
     color: rgba(255,255,255,0.45);
     font-size: 16px;
     font-weight: 800;
@@ -867,14 +867,14 @@
     color: #4fc08d;
   }
 
-  .recovery-toggle:active { background: rgba(255,255,255,0.08); }
+  .recovery-toggle:active { background: rgba(15,28,58,0.80); }
   .recovery-toggle.recovery-done:active { background: rgba(79,192,141,0.18); }
 
   /* Footer */
   .wm-footer {
     padding: 12px 14px;
     padding-bottom: max(12px, env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(255,255,255,0.06);
+    border-top: 1px solid rgba(60,90,160,0.13);
     display: flex;
     gap: 10px;
     flex-shrink: 0;
@@ -884,8 +884,8 @@
     flex: 1;
     padding: 16px;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(75,115,195,0.26);
+    background: rgba(14,26,55,0.70);
     color: rgba(255,255,255,0.65);
     font-size: 15px;
     font-weight: 700;
@@ -908,8 +908,8 @@
     flex: 0 0 auto;
     padding: 16px 14px;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(70,110,185,0.24);
+    background: rgba(14,25,55,0.65);
     color: rgba(255,255,255,0.50);
     font-size: 14px;
     font-weight: 700;
@@ -963,8 +963,8 @@
   .summary-card {
     width: 100%;
     max-width: 640px;
-    background: #18181e;
-    border: 1px solid rgba(255,255,255,0.10);
+    background: #0d1828;
+    border: 1px solid rgba(70,110,185,0.28);
     border-radius: 28px 28px 0 0;
     padding: 28px 20px 28px;
     display: flex;
@@ -1000,8 +1000,8 @@
   }
 
   .summary-stat {
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(12,22,48,0.55);
+    border: 1px solid rgba(65,100,170,0.16);
     border-radius: 16px;
     padding: 14px 10px;
     display: flex;
@@ -1041,8 +1041,8 @@
     gap: 10px;
     padding: 9px 12px;
     border-radius: 10px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(255,255,255,0.06);
+    background: rgba(12,20,44,0.50);
+    border: 1px solid rgba(60,90,160,0.13);
   }
 
   .summary-ex-row.sdone {

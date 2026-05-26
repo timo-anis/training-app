@@ -50,13 +50,13 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: #08172d;
+    background: radial-gradient(ellipse at 50% 0%, #0d1a2e 0%, #08090f 55%, #050508 100%);
   }
   .auth-card {
     width: 100%;
     max-width: 380px;
-    background: #0f1c30;
-    border: 1px solid rgba(255,255,255,0.08);
+    background: linear-gradient(160deg, #0d1a30, #080e1c);
+    border: 1px solid rgba(65,100,170,0.16);
     border-radius: 20px;
     padding: 32px 24px;
   }
@@ -66,8 +66,8 @@
   input {
     padding: 12px 14px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(65,100,175,0.20);
+    background: rgba(12,22,48,0.55);
     color: #f0f6ff;
     font-size: 15px;
   }

@@ -210,9 +210,9 @@
   .skip-btn {
     padding: 15px 48px;
     border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.05);
-    color: #4a6a8a;
+    border: 1px solid rgba(65,100,175,0.20);
+    background: rgba(14,25,55,0.65);
+    color: #3a5888;
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;

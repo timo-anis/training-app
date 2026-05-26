@@ -110,8 +110,8 @@
 <style>
   .main {
     min-height: 100%;
-    background: #0c0c0e;
-    color: #f0f0ee;
+    background: transparent;
+    color: #e8f0ff;
     padding: 0 0 32px;
     max-width: 640px;
     margin: 0 auto;
@@ -124,10 +124,12 @@
     justify-content: space-between;
     padding: 16px 18px 14px;
     padding-top: calc(16px + env(safe-area-inset-top));
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    border-bottom: 1px solid rgba(60,90,165,0.16);
     position: sticky;
     top: 0;
-    background: #0c0c0e;
+    background: rgba(7,9,18,0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 10;
   }
 
@@ -140,8 +142,9 @@
   .title-text {
     font-size: 18px;
     font-weight: 900;
-    color: #f0f6ff;
+    color: #ffd060;
     letter-spacing: -0.03em;
+    text-shadow: 0 0 22px rgba(255,200,70,0.22);
   }
 
   .v2-badge {
@@ -158,15 +161,15 @@
   .signout-btn {
     padding: 8px 14px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(75,115,195,0.26);
+    background: rgba(14,25,55,0.65);
     color: rgba(255,255,255,0.60);
     font-size: 13px;
     cursor: pointer;
     transition: background 0.12s;
   }
 
-  .signout-btn:active { background: rgba(255,255,255,0.06); }
+  .signout-btn:active { background: rgba(14,26,55,0.70); }
 
   /* ---- Sections ---- */
   .section {
@@ -188,7 +191,7 @@
   .day-label {
     font-size: 20px;
     font-weight: 900;
-    color: #f0f0ee;
+    color: #e8f0ff;
     letter-spacing: -0.03em;
   }
 
@@ -215,7 +218,7 @@
     text-align: center;
     color: rgba(255,255,255,0.30);
     font-size: 14px;
-    border: 1px dashed rgba(255,255,255,0.08);
+    border: 1px dashed rgba(65,100,170,0.16);
     border-radius: 18px;
   }
 

@@ -188,8 +188,8 @@
   }
 
   .chip {
-    background: linear-gradient(180deg, #1a1a20, #141418);
-    border: 1px solid rgba(255,255,255,0.11);
+    background: linear-gradient(160deg, #0d1a30, #080e1c);
+    border: 1px solid rgba(70,110,185,0.22);
     border-radius: 16px;
     padding: 14px 10px;
     display: flex;
@@ -226,7 +226,7 @@
 
   .empty {
     font-size: 13px;
-    color: #3a5a7a;
+    color: #2a4880;
     padding: 20px 0;
     text-align: center;
   }
@@ -242,8 +242,8 @@
     display: flex;
     align-items: center;
     gap: 12px;
-    background: linear-gradient(180deg, #1a1a20, #141418);
-    border: 1px solid rgba(255,255,255,0.11);
+    background: linear-gradient(160deg, #0d1a30, #080e1c);
+    border: 1px solid rgba(70,110,185,0.22);
     border-radius: 14px;
     padding: 12px 14px;
   }
@@ -289,7 +289,7 @@
     width: 100%;
     padding: 11px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.09);
+    border: 1px solid rgba(65,100,175,0.18);
     background: transparent;
     color: rgba(255,255,255,0.38);
     font-size: 13px;
@@ -304,7 +304,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .expand-btn:active { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.60); }
+  .expand-btn:active { background: rgba(14,25,55,0.65); color: rgba(255,255,255,0.60); }
 
   .expand-chevron {
     display: inline-block;
@@ -328,8 +328,8 @@
     align-items: center;
     gap: 10px;
     padding: 11px 14px;
-    background: linear-gradient(180deg, #1a1a20, #141418);
-    border: 1px solid rgba(255,255,255,0.11);
+    background: linear-gradient(160deg, #0d1a30, #080e1c);
+    border: 1px solid rgba(70,110,185,0.22);
     border-radius: 12px;
   }
 

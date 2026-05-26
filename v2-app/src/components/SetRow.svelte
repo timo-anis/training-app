@@ -117,8 +117,8 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(14,26,55,0.70);
+    border: 1px solid rgba(65,100,175,0.20);
     border-radius: 11px;
     padding: 8px 12px;
   }
@@ -155,15 +155,15 @@
 
   .setrow.is-done .setinput { color: rgba(79,192,141,0.85); }
 
-  .setinput::placeholder { color: #2a4a6a; }
+  .setinput::placeholder { color: #1e3870; }
 
   .setinput:focus { color: #ffffff; }
 
   .donebtn {
     height: 46px;
     border-radius: 11px;
-    border: 1px solid rgba(255,255,255,0.18);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(80,120,200,0.30);
+    background: rgba(12,22,48,0.55);
     color: #7fa8d4;
     font-size: 18px;
     cursor: pointer;
@@ -189,7 +189,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #4a7090;
+    color: #3a5890;
     font-size: 16px;
     line-height: 1;
     cursor: pointer;

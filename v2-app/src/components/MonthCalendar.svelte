@@ -182,8 +182,8 @@
 
 <style>
   .month-cal {
-    background: linear-gradient(180deg, #1a1a20, #141418);
-    border: 1px solid rgba(255,255,255,0.09);
+    background: linear-gradient(160deg, #0d1a30, #080e1c);
+    border: 1px solid rgba(65,100,175,0.18);
     border-radius: 18px;
     padding: 12px 12px 10px;
     display: grid;
@@ -208,8 +208,8 @@
     width: 32px;
     height: 32px;
     border-radius: 9px;
-    border: 1px solid rgba(255,255,255,0.12);
-    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(70,110,185,0.24);
+    background: rgba(14,25,55,0.65);
     color: rgba(255,255,255,0.70);
     font-size: 18px;
     cursor: pointer;
@@ -242,7 +242,7 @@
     border-radius: 8px;
   }
 
-  .month-label-btn:active { background: rgba(255,255,255,0.05); }
+  .month-label-btn:active { background: rgba(14,25,55,0.65); }
 
   .month-label {
     font-size: 14px;
@@ -277,7 +277,7 @@
     text-align: center;
     font-size: 11px;
     font-weight: 800;
-    color: #4a7090;
+    color: #3a5890;
     letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 2px 0 2px;
@@ -383,7 +383,7 @@
     justify-content: center;
     flex-wrap: wrap;
     padding-top: 2px;
-    border-top: 1px solid rgba(255,255,255,0.06);
+    border-top: 1px solid rgba(60,90,160,0.13);
     margin-top: 2px;
   }
 
@@ -392,7 +392,7 @@
     align-items: center;
     gap: 5px;
     font-size: 11px;
-    color: #4a7090;
+    color: #3a5890;
     font-weight: 600;
   }
 
@@ -411,5 +411,5 @@
   .data-sw  { background: rgba(127,178,255,0.16); border: 1px solid rgba(127,178,255,0.35); }
   .data-sw::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #5a8aff; }
   .rec-sw   { background: rgba(255,194,71,0.16); border: 1px solid rgba(255,194,71,0.36); color: #ffc247; font-size: 10px; }
-  .rest-sw  { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); }
+  .rest-sw  { background: rgba(12,22,48,0.55); border: 1px solid rgba(65,100,170,0.16); }
 </style>
