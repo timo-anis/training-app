@@ -172,6 +172,7 @@
   .search-overlay {
     position: fixed;
     left: 0; right: 0; bottom: 0;
+    height: 88dvh;
     max-height: 88dvh;
     background: linear-gradient(180deg, #0d1a2e 0%, #080c18 100%);
     border-top: 1px solid rgba(65,100,175,0.20);
@@ -265,6 +266,7 @@
   /* ── Results area ── */
   .results-area {
     flex: 1 1 0;
+    min-height: 0;        /* critical: allows flex child to shrink + scroll */
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     padding: 12px 14px 32px;
@@ -369,16 +371,18 @@
       left: 50%;
       right: auto;
       width: 480px;
-      transform: translateX(-50%);
+      bottom: auto;
+      top: 50%;
+      transform: translateX(-50%) translateY(-50%);
       border-radius: 22px;
-      bottom: 50%;
+      height: min(72vh, 600px);
       max-height: 72vh;
       animation: fade-scale 0.18s ease both;
     }
 
     @keyframes fade-scale {
-      from { opacity: 0; transform: translateX(-50%) scale(0.96); }
-      to   { opacity: 1; transform: translateX(-50%) scale(1); }
+      from { opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.96); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
     }
   }
 </style>
