@@ -199,32 +199,45 @@
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 11px 14px;
+    justify-content: center;
+    padding: 12px 14px 12px 16px;
     border-radius: 14px;
-    border: 1px solid rgba(65,100,170,0.18);
-    background: rgba(13,24,52,0.50);
+    border: 1px solid rgba(196,148,46,0.28);
+    background: rgba(13,24,52,0.70);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.12s;
+    position: relative;
+    overflow: hidden;
   }
 
-  .stats-toggle:active { background: rgba(13,24,52,0.80); }
+  .stats-toggle::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: #c49230;
+    border-radius: 3px 0 0 3px;
+  }
+
+  .stats-toggle:active { background: rgba(13,24,52,0.90); }
 
   .stats-toggle-label {
     font-size: 13px;
     font-weight: 800;
-    color: rgba(255,255,255,0.45);
+    color: rgba(255,255,255,0.80);
     text-transform: uppercase;
     letter-spacing: 0.08em;
   }
 
   .stats-chevron {
+    position: absolute;
+    right: 14px;
     display: inline-block;
     transform: rotate(90deg);
     transition: transform 0.2s;
     font-size: 16px;
-    color: rgba(255,255,255,0.30);
+    color: #c49230;
     line-height: 1;
   }
 

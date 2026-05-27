@@ -106,7 +106,7 @@
     'July','August','September','October','November','December'
   ];
 
-  const DAY_LABELS = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+  const DAY_LABELS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 
   function buildGrid(year: number, month: number): (Date | null)[][] {
     const firstDay = new Date(year, month, 1);
@@ -323,7 +323,7 @@
   .day-cell.empty { cursor: default; }
 
   .day-num {
-    font-size: 13px;
+    font-size: 15px;
     font-weight: 700;
     line-height: 1;
   }
@@ -382,18 +382,18 @@
 
   /* Status marks */
   .status-mark {
-    font-size: 9px;
+    font-size: 11px;
     font-weight: 900;
     line-height: 1;
     color: #4fc08d;
   }
 
-  .status-mark.rec  { color: #c49230; font-weight: 400; }
-  .status-mark.wknd { color: #6a5490; font-weight: 600; font-size: 10px; }
+  .status-mark.rec  { color: #c49230; font-weight: 400; font-size: 12px; }
+  .status-mark.wknd { color: #6a5490; font-weight: 600; font-size: 11px; }
 
   .status-dot {
-    width: 4px;
-    height: 4px;
+    width: 5px;
+    height: 5px;
     border-radius: 50%;
     background: #6090e0;
   }
