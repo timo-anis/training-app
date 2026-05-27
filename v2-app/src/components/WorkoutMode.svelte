@@ -106,6 +106,9 @@
   }
 
   function handleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string) {
+    // Commit current local values (including any prefill) before toggling done
+    commitKg(week, day, exId, setIndex);
+    commitReps(week, day, exId, setIndex);
     toggleSetDone(week, day, exId, setIndex);
     if (!currentDone && exRestString) startRest(exRestString);
   }
@@ -172,14 +175,15 @@
   let localReps: Record<string, string> = {};
   let localCondNote: Record<string, string> = {};
 
-  // Sync locals when block changes
+  // Sync locals when block changes — prefill from last session when set is empty
   $: {
     if (block) {
       for (const ex of block.exercises) {
+        const lastSess = ex.conditioning ? null : findLastSession($appState, ex.name, $uiState.week, $uiState.day);
         ex.sets.forEach((s, i) => {
           const k = `${ex.id}-${i}`;
-          if (localKg[k] === undefined) localKg[k] = s.kg;
-          if (localReps[k] === undefined) localReps[k] = s.reps;
+          if (localKg[k] === undefined)   localKg[k]   = s.kg   || lastSess?.sets[i]?.kg   || '';
+          if (localReps[k] === undefined)  localReps[k] = s.reps || lastSess?.sets[i]?.reps || '';
         });
         // Conditioning note: use current value or fall back to last session's note
         if (ex.conditioning && localCondNote[ex.id] === undefined) {
@@ -278,16 +282,16 @@
   <!-- Block content -->
   {#if block}
     <div class="wm-content" on:touchstart={onTouchStart} on:touchend={onTouchEnd}>
-      <!-- Block badge -->
-      <div class="block-title">
-        {#if block.isSuperset}
-          <span class="block-badge superset">Superset {block.code}</span>
-        {:else if block.exercises[0]?.conditioning}
-          <span class="block-badge cond">No weights</span>
-        {:else}
-          <span class="block-badge single">Exercise</span>
-        {/if}
-      </div>
+      <!-- Block badge — only for supersets and conditioning blocks -->
+      {#if block.isSuperset || block.exercises[0]?.conditioning}
+        <div class="block-title">
+          {#if block.isSuperset}
+            <span class="block-badge superset">Superset {block.code}</span>
+          {:else}
+            <span class="block-badge cond">No weights</span>
+          {/if}
+        </div>
+      {/if}
 
       <!-- Exercises in this block -->
       <div class="exercises-wrap">

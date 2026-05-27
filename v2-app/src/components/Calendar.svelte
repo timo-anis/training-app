@@ -2,6 +2,25 @@
   import { DAY_ORDER, type DayOfWeek } from '../types/workout';
   import { uiState, appState, availableWeeks, currentWeekDays, updateUI, addNewWeek } from '../stores/app';
 
+  // Compute today's week number using the same epoch as the rest of the app
+  const PROGRAM_START_UTC = Date.UTC(2026, 1, 16); // Feb 16 2026
+
+  function getTodayWeek(): number {
+    const now = new Date();
+    const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    const days = Math.floor((todayUTC - PROGRAM_START_UTC) / 86400000);
+    if (days < 0) return 1;
+    return Math.floor(days / 7) + 1;
+  }
+
+  const todayWeek = getTodayWeek();
+
+  function goToToday() {
+    if ($availableWeeks.includes(todayWeek)) {
+      updateUI(ui => ({ ...ui, week: todayWeek }));
+    }
+  }
+
   const DAY_SHORT: Record<DayOfWeek, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
     Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
@@ -29,6 +48,7 @@
   $: canNext = $availableWeeks.indexOf($uiState.week) < $availableWeeks.length - 1;
   $: isLastWeek = !canNext;
   $: weekLabel = `Week ${$uiState.week}`;
+  $: showTodayBtn = $uiState.week !== todayWeek && $availableWeeks.includes(todayWeek);
 </script>
 
 <div class="calendar-card">
@@ -36,7 +56,9 @@
     <button class="nav-btn" on:click={prevWeek} disabled={!canPrev} aria-label="Previous week">‹</button>
     <span class="week-label">{weekLabel}</span>
     <button class="nav-btn" on:click={nextWeek} disabled={!canNext} aria-label="Next week">›</button>
-    {#if isLastWeek}
+    {#if showTodayBtn}
+      <button class="today-btn" on:click={goToToday} aria-label="Go to today">Today</button>
+    {:else if isLastWeek}
       <button class="new-week-btn" on:click={addNewWeek} aria-label="New week">+ Week</button>
     {/if}
   </div>
@@ -124,6 +146,23 @@
   }
 
   .new-week-btn:active { background: rgba(196,148,46,0.18); }
+
+  .today-btn {
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.70);
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .today-btn:active { background: rgba(255,255,255,0.14); color: #ffffff; }
 
   .day-pills {
     display: grid;

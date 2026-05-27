@@ -75,6 +75,10 @@
   $: totalSets = weekStats.reduce((s, w) => s + w.setsDone, 0);
   $: totalVolume = weekStats.reduce((s, w) => s + w.volume, 0);
 
+  // Volume sparkline — last 8 weeks, oldest first
+  $: sparkBars = weekStats.slice(0, 8).reverse();
+  $: sparkMax = Math.max(...sparkBars.map(w => w.volume), 1);
+
   // Collapse/expand
   const PREVIEW = 3;
   let weekExpanded = false;
@@ -108,6 +112,29 @@
       <span class="chip-lbl">Volume</span>
     </div>
   </div>
+
+  <!-- Volume sparkline -->
+  {#if sparkBars.length > 0}
+    <div class="section-head">Volume trend</div>
+    <div class="sparkline-card">
+      <div class="spark-bars">
+        {#each sparkBars as w}
+          {@const barH = Math.max(4, Math.round((w.volume / sparkMax) * 56))}
+          <div class="spark-col">
+            <span class="spark-val">{w.volume > 0 ? fmtVolume(w.volume) : ''}</span>
+            <div class="spark-bar-wrap">
+              <div
+                class="spark-bar"
+                class:active={w.volume > 0}
+                style="height: {barH}px"
+              ></div>
+            </div>
+            <span class="spark-lbl">W{w.week}</span>
+          </div>
+        {/each}
+      </div>
+    </div>
+  {/if}
 
   <!-- Weekly breakdown -->
   <div class="section-head">Weekly breakdown</div>
@@ -229,6 +256,66 @@
     color: #2a4880;
     padding: 20px 0;
     text-align: center;
+  }
+
+  /* Volume sparkline */
+  .sparkline-card {
+    background: linear-gradient(160deg, #0d1a30, #080e1c);
+    border: 1px solid rgba(70,110,185,0.22);
+    border-radius: 16px;
+    padding: 14px 14px 10px;
+    margin-bottom: 20px;
+  }
+
+  .spark-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 6px;
+  }
+
+  .spark-col {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .spark-val {
+    font-size: 9px;
+    font-weight: 800;
+    color: #c49230;
+    letter-spacing: -0.01em;
+    min-height: 12px;
+    white-space: nowrap;
+  }
+
+  .spark-bar-wrap {
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 56px;
+  }
+
+  .spark-bar {
+    width: 100%;
+    max-width: 28px;
+    border-radius: 4px 4px 2px 2px;
+    background: rgba(255,255,255,0.08);
+    transition: height 0.4s ease;
+  }
+
+  .spark-bar.active {
+    background: linear-gradient(180deg, rgba(196,148,46,0.90) 0%, rgba(196,148,46,0.45) 100%);
+  }
+
+  .spark-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.30);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
   }
 
   /* Weekly list */

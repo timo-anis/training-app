@@ -99,17 +99,17 @@
     {/if}
     <div class="exercise-meta">
       <span class="exercise-name">{exercise.name}</span>
-      <span class="exercise-type">{exercise.conditioning ? 'No weights' : exercise.type === 'superset' ? `Superset${exercise.code ? ' · ' + exercise.code : ''}` : 'Weighted'}</span>
+      {#if exercise.conditioning || exercise.type === 'superset'}
+        <span class="exercise-type">
+          {exercise.conditioning ? 'No weights' : `Superset${exercise.code ? ' · ' + exercise.code : ''}`}
+        </span>
+      {/if}
     </div>
     {#if totalCount > 0}
       <span class="progress-chip" class:complete={allDone}>
         {doneCount}/{totalCount}
       </span>
     {/if}
-    <div class="order-btns">
-      <button class="order-btn" disabled={index === 0} on:click={() => moveExercise(week, day, exercise.id, 'up')} aria-label="Move up">↑</button>
-      <button class="order-btn" disabled={index === total - 1} on:click={() => moveExercise(week, day, exercise.id, 'down')} aria-label="Move down">↓</button>
-    </div>
     <button class="edit-btn" on:click={openEdit} aria-label="Edit exercise">✎</button>
     <button
       class="del-ex-btn"
@@ -120,88 +120,6 @@
       {confirmDelete ? 'Delete?' : '×'}
     </button>
   </div>
-
-  <!-- Edit panel -->
-  {#if editOpen}
-    <div class="edit-panel">
-      <div class="edit-field">
-        <label class="edit-label" for="edit-name-{exercise.id}">Name</label>
-        <input
-          id="edit-name-{exercise.id}"
-          class="edit-input"
-          type="text"
-          bind:value={editName}
-          on:keydown={e => e.key === 'Enter' && saveEdit()}
-          autocomplete="off"
-        />
-      </div>
-      <!-- Type toggle -->
-      <div class="edit-field">
-        <span class="edit-label">Type</span>
-        <div class="type-toggle">
-          <button
-            class="type-btn"
-            class:active={!editConditioning && editType === 'single'}
-            on:click={() => { editConditioning = false; editType = 'single'; editCode = ''; }}
-          >Weighted</button>
-          <button
-            class="type-btn"
-            class:active={!editConditioning && editType === 'superset'}
-            on:click={() => { editConditioning = false; editType = 'superset'; }}
-          >Superset</button>
-          <button
-            class="type-btn"
-            class:active={editConditioning}
-            on:click={() => { editConditioning = true; editType = 'single'; }}
-          >No weights</button>
-        </div>
-        <span class="type-hint">
-          {#if editConditioning}Done toggle + log field — no sets{:else if editType === 'superset'}Grouped sets — uses group code{:else}Individual sets with kg / reps{/if}
-        </span>
-      </div>
-
-      <div class="edit-field">
-        <label class="edit-label" for="edit-code-{exercise.id}">Group code (A, B, C…)</label>
-        <input
-          id="edit-code-{exercise.id}"
-          class="edit-input edit-code"
-          type="text"
-          maxlength="3"
-          bind:value={editCode}
-          placeholder="—"
-          autocomplete="off"
-        />
-      </div>
-
-      <div class="edit-row">
-        <div class="edit-field">
-          <label class="edit-label" for="edit-rest-{exercise.id}">Rest</label>
-          <input
-            id="edit-rest-{exercise.id}"
-            class="edit-input"
-            type="text"
-            bind:value={editRest}
-            placeholder="e.g. 90s"
-            autocomplete="off"
-          />
-        </div>
-      </div>
-      <div class="edit-field">
-        <label class="edit-label" for="edit-note-{exercise.id}">Note</label>
-        <textarea
-          id="edit-note-{exercise.id}"
-          class="edit-input edit-textarea"
-          bind:value={editNote}
-          placeholder="Optional note…"
-          rows="2"
-        ></textarea>
-      </div>
-      <div class="edit-actions">
-        <button class="btn-cancel" on:click={closeEdit}>Cancel</button>
-        <button class="btn-save" on:click={saveEdit} disabled={!editName.trim()}>Save</button>
-      </div>
-    </div>
-  {/if}
 
   {#if exercise.conditioning}
     <button
@@ -252,6 +170,112 @@
     </div>
   {/if}
 </div>
+
+<!-- ── Edit bottom sheet ── -->
+{#if editOpen}
+  <div class="edit-backdrop" on:click={closeEdit} aria-hidden="true"></div>
+  <div class="edit-sheet" role="dialog" aria-label="Edit exercise">
+    <div class="sheet-handle"></div>
+    <div class="sheet-body">
+
+      <div class="edit-field">
+        <label class="edit-label" for="edit-name-{exercise.id}">Name</label>
+        <input
+          id="edit-name-{exercise.id}"
+          class="edit-input"
+          type="text"
+          bind:value={editName}
+          on:keydown={e => e.key === 'Enter' && saveEdit()}
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="edit-field">
+        <span class="edit-label">Type</span>
+        <div class="type-toggle">
+          <button
+            class="type-btn"
+            class:active={!editConditioning && editType === 'single'}
+            on:click={() => { editConditioning = false; editType = 'single'; editCode = ''; }}
+          >Weighted</button>
+          <button
+            class="type-btn"
+            class:active={!editConditioning && editType === 'superset'}
+            on:click={() => { editConditioning = false; editType = 'superset'; }}
+          >Superset</button>
+          <button
+            class="type-btn"
+            class:active={editConditioning}
+            on:click={() => { editConditioning = true; editType = 'single'; }}
+          >No weights</button>
+        </div>
+        <span class="type-hint">
+          {#if editConditioning}Done toggle + log field — no sets{:else if editType === 'superset'}Grouped sets — uses group code{:else}Individual sets with kg / reps{/if}
+        </span>
+      </div>
+
+      <div class="edit-field">
+        <label class="edit-label" for="edit-code-{exercise.id}">Group code (A, B, C…)</label>
+        <input
+          id="edit-code-{exercise.id}"
+          class="edit-input edit-code"
+          type="text"
+          maxlength="3"
+          bind:value={editCode}
+          placeholder="—"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="edit-field">
+        <label class="edit-label" for="edit-rest-{exercise.id}">Rest</label>
+        <input
+          id="edit-rest-{exercise.id}"
+          class="edit-input"
+          type="text"
+          bind:value={editRest}
+          placeholder="e.g. 90s"
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="edit-field">
+        <label class="edit-label" for="edit-note-{exercise.id}">Note</label>
+        <textarea
+          id="edit-note-{exercise.id}"
+          class="edit-input edit-textarea"
+          bind:value={editNote}
+          placeholder="Optional note…"
+          rows="2"
+        ></textarea>
+      </div>
+
+      <!-- Order buttons -->
+      {#if total > 1}
+        <div class="edit-field">
+          <span class="edit-label">Order</span>
+          <div class="order-row">
+            <button
+              class="order-sheet-btn"
+              disabled={index === 0}
+              on:click={() => { moveExercise(week, day, exercise.id, 'up'); closeEdit(); }}
+            >↑ Move up</button>
+            <button
+              class="order-sheet-btn"
+              disabled={index === total - 1}
+              on:click={() => { moveExercise(week, day, exercise.id, 'down'); closeEdit(); }}
+            >↓ Move down</button>
+          </div>
+        </div>
+      {/if}
+
+    </div>
+    <div class="sheet-actions">
+      <button class="btn-cancel" on:click={closeEdit}>Cancel</button>
+      <button class="btn-save" on:click={saveEdit} disabled={!editName.trim()}>Save</button>
+    </div>
+  </div>
+{/if}
 
 <style>
   .exercise-card {
@@ -343,33 +367,6 @@
     border-color: rgba(255,255,255,0.22);
     color: rgba(255,255,255,0.90);
   }
-
-  .order-btns {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-    flex-shrink: 0;
-  }
-
-  .order-btn {
-    width: 24px;
-    height: 18px;
-    border-radius: 5px;
-    border: none;
-    background: transparent;
-    color: rgba(255,255,255,0.38);
-    font-size: 11px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.12s, color 0.12s;
-    -webkit-tap-highlight-color: transparent;
-    padding: 0;
-  }
-
-  .order-btn:disabled { opacity: 0.18; cursor: not-allowed; }
-  .order-btn:not(:disabled):active { background: rgba(255,255,255,0.08); color: #ffffff; }
 
   .edit-btn {
     flex: 0 0 auto;
@@ -504,17 +501,104 @@
 
   .edit-code { text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
 
-  /* Edit panel */
-  .edit-panel {
-    display: grid;
-    gap: 10px;
-    padding: 14px;
-    border-radius: 14px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.12);
+  /* ── Edit bottom sheet ── */
+  .edit-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 94;
+    background: rgba(0,0,0,0.65);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
   }
 
-  .edit-row { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .edit-sheet {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 95;
+    max-height: 90dvh;
+    display: flex;
+    flex-direction: column;
+    background: linear-gradient(180deg, #0d1a2e 0%, #080c18 100%);
+    border-top: 1px solid rgba(65,100,175,0.22);
+    border-radius: 22px 22px 0 0;
+    animation: sheet-up 0.24s cubic-bezier(0.32, 0.72, 0, 1) both;
+  }
+
+  @keyframes sheet-up {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  .sheet-handle {
+    width: 36px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.14);
+    margin: 10px auto 4px;
+    flex-shrink: 0;
+  }
+
+  .sheet-body {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 12px 16px 4px;
+    display: grid;
+    gap: 14px;
+  }
+
+  .sheet-actions {
+    flex-shrink: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 12px 16px;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(255,255,255,0.07);
+  }
+
+  /* Desktop: center sheet */
+  @media (min-width: 640px) {
+    .edit-sheet {
+      left: 50%;
+      right: auto;
+      bottom: auto;
+      top: 50%;
+      transform: translateX(-50%) translateY(-50%);
+      width: 480px;
+      border-radius: 22px;
+      max-height: 80vh;
+      animation: sheet-scale 0.18s ease both;
+    }
+    @keyframes sheet-scale {
+      from { opacity: 0; transform: translateX(-50%) translateY(-50%) scale(0.96); }
+      to   { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
+    }
+  }
+
+  /* Order in edit sheet */
+  .order-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .order-sheet-btn {
+    padding: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(70,110,185,0.22);
+    background: rgba(12,22,48,0.55);
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .order-sheet-btn:disabled { opacity: 0.22; cursor: not-allowed; }
+  .order-sheet-btn:not(:disabled):active { background: rgba(255,255,255,0.09); color: #ffffff; }
 
   .edit-field {
     display: flex;

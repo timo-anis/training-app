@@ -12,6 +12,15 @@
     Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
   };
 
+  // Day progress — X/Y exercises done
+  $: dayExDone = $currentDayExercises.filter(ex => {
+    if (ex.recovery)     return ex.recoveryDone;
+    if (ex.conditioning) return ex.conditioningDone === true;
+    return ex.sets.length > 0 && ex.sets.every(s => s.done);
+  }).length;
+  $: dayExTotal = $currentDayExercises.length;
+  $: dayAllDone = dayExTotal > 0 && dayExDone === dayExTotal;
+
   // Show copy button when current day is empty but prev week has same day
   $: hasPrevDay = $appState.weeks.some(
     w => w.week === $uiState.week - 1 && w.day === $uiState.day && w.exercises.length > 0
@@ -108,6 +117,11 @@
     <div class="day-heading">
       <span class="day-label">{DAY_SHORT[$uiState.day] ?? $uiState.day}</span>
       <span class="day-sub">Week {$uiState.week}</span>
+      {#if dayExTotal > 0}
+        <span class="day-progress" class:all-done={dayAllDone}>
+          {dayExDone}/{dayExTotal}
+        </span>
+      {/if}
     </div>
 
     {#if $currentDayExercises.length === 0}
@@ -272,7 +286,7 @@
   /* ---- Day heading ---- */
   .day-heading {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
     margin-bottom: 12px;
   }
@@ -288,6 +302,26 @@
     font-size: 13px;
     color: rgba(255,255,255,0.40);
     font-weight: 600;
+    flex: 1;
+  }
+
+  .day-progress {
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 800;
+    background: rgba(14,26,55,0.70);
+    border: 1px solid rgba(255,255,255,0.13);
+    color: rgba(255,255,255,0.50);
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+
+  .day-progress.all-done {
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.90);
   }
 
   /* ---- Exercise list ---- */
