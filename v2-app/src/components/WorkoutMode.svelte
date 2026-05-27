@@ -283,7 +283,7 @@
         {#if block.isSuperset}
           <span class="block-badge superset">Superset {block.code}</span>
         {:else if block.exercises[0]?.conditioning}
-          <span class="block-badge cond">Cardio / Conditioning</span>
+          <span class="block-badge cond">No weights</span>
         {:else}
           <span class="block-badge single">Exercise</span>
         {/if}

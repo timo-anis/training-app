@@ -12,7 +12,7 @@
   $: doneCount = exercise.conditioning ? (exercise.conditioningDone ? 1 : 0) : exercise.sets.filter(s => s.done).length;
   $: totalCount = exercise.conditioning ? 1 : exercise.sets.length;
   $: allDone = exercise.conditioning ? exercise.conditioningDone === true : (doneCount === totalCount && totalCount > 0);
-  $: supersetLabel = exercise.type === 'superset' ? exercise.code : '';
+  $: supersetLabel = exercise.code || '';
 
   // 2-tap delete confirm
   let confirmDelete = false;
@@ -61,7 +61,7 @@
     const name = editName.trim();
     if (!name) return;
     const type = editConditioning ? 'single' : editType;
-    const code = type === 'superset' ? editCode.trim().toUpperCase() : '';
+    const code = editCode.trim().toUpperCase();
     updateExerciseMeta(week, day, exercise.id, {
       name,
       rest: editRest.trim(),
@@ -81,7 +81,7 @@
     {/if}
     <div class="exercise-meta">
       <span class="exercise-name">{exercise.name}</span>
-      <span class="exercise-type">{exercise.conditioning ? 'Conditioning' : exercise.type === 'superset' ? 'Superset' : 'Weighted'}</span>
+      <span class="exercise-type">{exercise.conditioning ? 'No weights' : exercise.type === 'superset' ? `Superset${exercise.code ? ' · ' + exercise.code : ''}` : 'Weighted'}</span>
     </div>
     {#if totalCount > 0}
       <span class="progress-chip" class:complete={allDone}>
@@ -134,25 +134,26 @@
           <button
             class="type-btn"
             class:active={editConditioning}
-            on:click={() => { editConditioning = true; editType = 'single'; editCode = ''; }}
-          >Cardio</button>
+            on:click={() => { editConditioning = true; editType = 'single'; }}
+          >No weights</button>
         </div>
+        <span class="type-hint">
+          {#if editConditioning}Done toggle + log field — no sets{:else if editType === 'superset'}Grouped sets — uses group code{:else}Individual sets with kg / reps{/if}
+        </span>
       </div>
 
-      {#if !editConditioning && editType === 'superset'}
-        <div class="edit-field">
-          <label class="edit-label" for="edit-code-{exercise.id}">Group code (A, B, C…)</label>
-          <input
-            id="edit-code-{exercise.id}"
-            class="edit-input edit-code"
-            type="text"
-            maxlength="3"
-            bind:value={editCode}
-            placeholder="A"
-            autocomplete="off"
-          />
-        </div>
-      {/if}
+      <div class="edit-field">
+        <label class="edit-label" for="edit-code-{exercise.id}">Group code (A, B, C…)</label>
+        <input
+          id="edit-code-{exercise.id}"
+          class="edit-input edit-code"
+          type="text"
+          maxlength="3"
+          bind:value={editCode}
+          placeholder="—"
+          autocomplete="off"
+        />
+      </div>
 
       <div class="edit-row">
         <div class="edit-field">
@@ -433,7 +434,7 @@
     transition: border-color 0.12s;
   }
 
-  .cond-textarea:focus { border-color: rgba(127,178,255,0.35); }
+  .cond-textarea:focus { border-color: rgba(255,255,255,0.25); }
   .cond-textarea::placeholder { color: rgba(255,255,255,0.22); }
 
   /* Type toggle */
@@ -460,6 +461,14 @@
     background: rgba(255,255,255,0.12);
     border-color: rgba(255,255,255,0.30);
     color: #ffffff;
+  }
+
+  .type-hint {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.28);
+    text-align: center;
+    letter-spacing: 0.01em;
   }
 
   .edit-code { text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
@@ -504,7 +513,7 @@
     transition: border-color 0.12s;
   }
 
-  .edit-input:focus { border-color: rgba(127,178,255,0.35); }
+  .edit-input:focus { border-color: rgba(255,255,255,0.25); }
   .edit-input::placeholder { color: #1e3870; }
 
   .edit-textarea {
@@ -522,9 +531,9 @@
   .btn-cancel {
     padding: 11px;
     border-radius: 11px;
-    border: 1px solid rgba(65,100,175,0.18);
+    border: 1px solid rgba(255,255,255,0.10);
     background: rgba(12,20,44,0.50);
-    color: #3a5888;
+    color: rgba(255,255,255,0.45);
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
@@ -555,7 +564,7 @@
     padding: 6px 10px;
     border-radius: 10px;
     background: rgba(12,20,44,0.50);
-    border: 1px solid rgba(60,90,160,0.13);
+    border: 1px solid rgba(255,255,255,0.07);
   }
 
   .meta-row.note { align-items: flex-start; }
@@ -578,7 +587,7 @@
     padding: 12px 14px;
     border-radius: 12px;
     background: rgba(12,20,44,0.50);
-    border: 1px solid rgba(60,90,165,0.14);
+    border: 1px solid rgba(255,255,255,0.08);
     cursor: pointer;
     width: 100%;
     text-align: left;
@@ -608,9 +617,9 @@
     width: 100%;
     padding: 11px;
     border-radius: 12px;
-    border: 1px solid rgba(70,110,185,0.24);
+    border: 1px solid rgba(255,255,255,0.10);
     background: rgba(12,22,48,0.55);
-    color: rgba(255,255,255,0.60);
+    color: rgba(255,255,255,0.45);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -621,6 +630,6 @@
 
   .add-set-btn:active {
     background: rgba(13,24,52,0.85);
-    border-color: rgba(75,115,195,0.26);
+    border-color: rgba(255,255,255,0.18);
   }
 </style>
