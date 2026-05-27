@@ -328,74 +328,71 @@
     line-height: 1;
   }
 
-  /* ---- Status styles ---- */
+  /* ---- Status styles — Monochrome + single gold (palette B) ---- */
 
-  /* Done: all sets ticked — green */
+  /* Done: subtle white box — "done, nothing special" */
   .status-done {
-    background: rgba(79,192,141,0.20);
-    border-color: rgba(79,192,141,0.48);
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.18);
   }
-  .status-done .day-num { color: #4fc08d; }
+  .status-done .day-num { color: rgba(255,255,255,0.85); }
 
-  /* Has-data: workout logged, not fully done — blue */
+  /* Has-data: workout logged, not fully done — slightly lighter white */
   .status-has-data {
-    background: rgba(100,155,255,0.14);
-    border-color: rgba(100,155,255,0.34);
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.12);
   }
-  .status-has-data .day-num { color: #7fb2ff; }
+  .status-has-data .day-num { color: rgba(255,255,255,0.65); }
 
-  /* Active recovery — amber box (incl. Wednesday default) */
+  /* Active recovery — gentle amber tint, same family as gold */
   .status-active-recovery {
-    background: rgba(196,148,46,0.22);
-    border-color: rgba(196,148,46,0.58);
+    background: rgba(196,148,46,0.10);
+    border-color: rgba(196,148,46,0.28);
   }
-  .status-active-recovery .day-num { color: #d4a038; }
+  .status-active-recovery .day-num { color: #c49230; }
 
-  /* Weekend (Sat/Sun) — muted violet-slate */
-  .status-weekend {
-    background: rgba(80,62,110,0.16);
-    border-color: rgba(90,70,125,0.32);
-  }
-  .status-weekend .day-num { color: #6a5490; }
+  /* Weekend — invisible, just dim text */
+  .status-weekend .day-num { color: #1e2e44; }
 
   /* Rest: past weekday, no data — very dim */
-  .status-rest .day-num { color: #2e4464; }
+  .status-rest .day-num { color: #182438; }
 
-  /* Future — invisible-ish */
-  .status-future .day-num { color: #1e2e44; }
+  /* Future — nearly invisible */
+  .status-future .day-num { color: #0e1825; }
   .status-future { cursor: default; }
 
-  /* Today — red box, draws attention */
+  /* Today — solid gold, THE single strong accent */
   .today {
-    background: rgba(210,60,60,0.18) !important;
-    border-color: rgba(220,70,70,0.65) !important;
-    box-shadow: inset 0 0 0 1px rgba(220,70,70,0.30) !important;
+    background: rgba(196,148,46,0.88) !important;
+    border-color: #c49230 !important;
+    box-shadow: none !important;
   }
-  .today .day-num { color: #e87070 !important; }
+  .today .day-num { color: #0a0800 !important; font-weight: 900 !important; }
+  .today .status-mark { color: rgba(0,0,0,0.55) !important; }
 
-  /* Selected — gold override */
+  /* Selected — white box, distinct from today */
   .selected {
-    background: rgba(196,148,46,0.22) !important;
-    border-color: rgba(196,148,46,0.58) !important;
+    background: rgba(255,255,255,0.12) !important;
+    border-color: rgba(255,255,255,0.35) !important;
   }
-  .selected .day-num { color: #d4a038 !important; }
+  .selected .day-num { color: #ffffff !important; }
 
   /* Status marks */
   .status-mark {
     font-size: 11px;
     font-weight: 900;
     line-height: 1;
-    color: #4fc08d;
+    color: rgba(255,255,255,0.60);
   }
 
   .status-mark.rec  { color: #c49230; font-weight: 400; font-size: 12px; }
-  .status-mark.wknd { color: #6a5490; font-weight: 600; font-size: 11px; }
+  .status-mark.wknd { color: #182438; font-weight: 600; font-size: 11px; }
 
   .status-dot {
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: #6090e0;
+    background: rgba(100,155,255,0.60);
   }
 
   /* ---- Legend ---- */
@@ -429,10 +426,10 @@
     font-weight: 900;
   }
 
-  .done-sw  { background: rgba(79,192,141,0.20); border: 1px solid rgba(79,192,141,0.48); color: #4fc08d; }
-  .data-sw  { background: rgba(100,155,255,0.14); border: 1px solid rgba(100,155,255,0.34); }
-  .data-sw::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: #6090e0; }
-  .rec-sw   { background: rgba(196,148,46,0.22); border: 1px solid rgba(196,148,46,0.58); color: #d4a038; font-size: 10px; }
-  .wknd-sw  { background: rgba(80,62,110,0.16); border: 1px solid rgba(90,70,125,0.32); color: #6a5490; font-size: 10px; }
-  .rest-sw  { background: rgba(12,22,48,0.55); border: 1px solid rgba(45,70,120,0.20); }
+  .done-sw  { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.60); }
+  .data-sw  { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); }
+  .data-sw::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: rgba(100,155,255,0.60); }
+  .rec-sw   { background: rgba(196,148,46,0.10); border: 1px solid rgba(196,148,46,0.28); color: #c49230; font-size: 10px; }
+  .wknd-sw  { background: transparent; border: 1px solid rgba(255,255,255,0.10); color: #2e4060; font-size: 10px; }
+  .rest-sw  { background: transparent; border: 1px solid rgba(255,255,255,0.08); }
 </style>
