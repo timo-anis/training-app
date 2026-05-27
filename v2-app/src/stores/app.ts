@@ -28,6 +28,7 @@ export const uiState = writable<UIState>({
   workoutStartTime: null,
   restStartTime: null,
   restTotal: null,
+  highlightExercise: null,
 });
 
 // ---- Boot status ----

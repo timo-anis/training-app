@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import type { Exercise, DayOfWeek } from '../types/workout';
-  import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone, toggleConditioningDone, updateConditioningNote } from '../stores/app';
+  import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone, toggleConditioningDone, updateConditioningNote, uiState, updateUI } from '../stores/app';
   import SetRow from './SetRow.svelte';
 
   export let exercise: Exercise;
@@ -8,6 +9,23 @@
   export let day: DayOfWeek;
   export let index: number = 0;
   export let total: number = 1;
+
+  // Scroll into view + brief highlight when navigated to from search
+  let cardEl: HTMLDivElement;
+  let highlighted = false;
+
+  onMount(() => {
+    if ($uiState.highlightExercise === exercise.name) {
+      // Clear flag immediately so only first card reacts
+      updateUI(ui => ({ ...ui, highlightExercise: null }));
+      // Small delay so the DOM is fully painted
+      setTimeout(() => {
+        cardEl?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        highlighted = true;
+        setTimeout(() => { highlighted = false; }, 1200);
+      }, 80);
+    }
+  });
 
   $: doneCount = exercise.conditioning ? (exercise.conditioningDone ? 1 : 0) : exercise.sets.filter(s => s.done).length;
   $: totalCount = exercise.conditioning ? 1 : exercise.sets.length;
@@ -74,7 +92,7 @@
   }
 </script>
 
-<div class="exercise-card" class:all-done={allDone}>
+<div class="exercise-card" class:all-done={allDone} class:highlighted bind:this={cardEl}>
   <div class="exercise-header">
     {#if supersetLabel}
       <span class="superset-badge">{supersetLabel}</span>
@@ -247,6 +265,19 @@
   }
 
   .exercise-card.all-done { border-color: rgba(255,255,255,0.20); }
+
+  /* Search navigation highlight — brief gold pulse */
+  .exercise-card.highlighted {
+    border-color: rgba(196,148,46,0.65);
+    box-shadow: 0 0 0 2px rgba(196,148,46,0.18);
+    animation: highlight-pulse 1.2s ease forwards;
+  }
+
+  @keyframes highlight-pulse {
+    0%   { border-color: rgba(196,148,46,0.80); box-shadow: 0 0 0 3px rgba(196,148,46,0.22); }
+    60%  { border-color: rgba(196,148,46,0.55); box-shadow: 0 0 0 2px rgba(196,148,46,0.12); }
+    100% { border-color: rgba(65,100,175,0.18);  box-shadow: none; }
+  }
 
   .exercise-header {
     display: flex;

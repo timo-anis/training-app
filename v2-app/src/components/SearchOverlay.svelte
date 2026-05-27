@@ -74,8 +74,8 @@
     return out;
   })();
 
-  function openDay(week: number, day: string) {
-    updateUI(ui => ({ ...ui, week, day: day as any }));
+  function openDay(week: number, day: string, exName: string) {
+    updateUI(ui => ({ ...ui, week, day: day as any, highlightExercise: exName }));
     close();
   }
 
@@ -132,7 +132,7 @@
       <div class="results-count">{results.length} result{results.length !== 1 ? 's' : ''}</div>
       <div class="results-list">
         {#each results as r}
-          <button class="result-item" on:click={() => openDay(r.week, r.day)}>
+          <button class="result-item" on:click={() => openDay(r.week, r.day, r.exName)}>
             <div class="result-main">
               <span class="result-name">{r.exName}</span>
               {#if r.completed}
