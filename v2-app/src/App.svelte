@@ -1,11 +1,12 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen } from './stores/app';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
   import WorkoutMode from './components/WorkoutMode.svelte';
+  import SearchOverlay from './components/SearchOverlay.svelte';
 
   let unsubscribeAuth: (() => void) | null = null;
 
@@ -73,6 +74,10 @@
 
   {#if $uiState.workoutMode}
     <WorkoutMode />
+  {/if}
+
+  {#if $searchOpen}
+    <SearchOverlay onClose={() => $searchOpen = false} />
   {/if}
 {:else}
   <AuthView />

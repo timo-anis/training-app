@@ -161,7 +161,10 @@ export const EXERCISE_LIBRARY: ExerciseEntry[] = [
   { name: 'Muscle-Up',                  aliases: ['muscle-up', 'muscle up', 'mup'] },
 ];
 
-/** Match: starts-with name → starts-with alias → contains name → contains alias */
+const byName = (a: ExerciseEntry, b: ExerciseEntry) => a.name.localeCompare(b.name);
+
+/** Match: starts-with name → starts-with alias → contains name → contains alias
+ *  Each tier sorted alphabetically. */
 export function searchExercises(query: string): ExerciseEntry[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
@@ -179,5 +182,10 @@ export function searchExercises(query: string): ExerciseEntry[] {
     if (e.aliases.some(a => a.includes(q))) { containsAlias.push(e); }
   }
 
-  return [...startsName, ...startsAlias, ...containsName, ...containsAlias];
+  return [
+    ...startsName.sort(byName),
+    ...startsAlias.sort(byName),
+    ...containsName.sort(byName),
+    ...containsAlias.sort(byName),
+  ];
 }

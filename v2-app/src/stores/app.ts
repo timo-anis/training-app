@@ -34,6 +34,9 @@ export const uiState = writable<UIState>({
 export type BootStatus = 'idle' | 'loading' | 'ready' | 'error';
 export const bootStatus = writable<BootStatus>('idle');
 
+// ---- Search overlay (global, rendered at App level) ----
+export const searchOpen = writable<boolean>(false);
+
 // ---- Derived: all weeks that have data + current selected week ----
 export const availableWeeks = derived([appState, uiState], ([$state, $ui]) => {
   const weeks = new Set($state.weeks.map(w => w.week));

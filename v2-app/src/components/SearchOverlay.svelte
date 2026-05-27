@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { appState, updateUI } from '../stores/app';
+  import { appState, updateUI, searchOpen } from '../stores/app';
   import { DAY_ORDER } from '../types/workout';
 
-  export let onClose: () => void;
+  function close() { $searchOpen = false; }
 
   const PROGRAM_START = new Date('2026-02-16T00:00:00');
   const PS_UTC = Date.UTC(
@@ -76,11 +76,11 @@
 
   function openDay(week: number, day: string) {
     updateUI(ui => ({ ...ui, week, day: day as any }));
-    onClose();
+    close();
   }
 
   function onKeydown(e: KeyboardEvent) {
-    if (e.key === 'Escape') onClose();
+    if (e.key === 'Escape') close();
   }
 
   // Focus input on mount
@@ -91,7 +91,7 @@
 </script>
 
 <!-- Backdrop -->
-<div class="backdrop" on:click={onClose} aria-hidden="true"></div>
+<div class="backdrop" on:click={close} aria-hidden="true"></div>
 
 <!-- Panel -->
 <div class="search-overlay" role="dialog" aria-label="Search exercises">
@@ -118,7 +118,7 @@
         <button class="clear-btn" on:click={() => { query = ''; inputEl?.focus(); }} aria-label="Clear">✕</button>
       {/if}
     </div>
-    <button class="close-btn" on:click={onClose}>Cancel</button>
+    <button class="close-btn" on:click={close}>Cancel</button>
   </div>
 
   <div class="results-area">

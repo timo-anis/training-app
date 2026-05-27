@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen } from '../stores/app';
   import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import AddExercise from './AddExercise.svelte';
   import StatsView from './StatsView.svelte';
-  import SearchOverlay from './SearchOverlay.svelte';
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -25,7 +24,6 @@
 
   let migrateStatus: 'idle' | 'done' | 'error' = 'idle';
   let statsOpen = false;
-  let searchOpen = false;
 
   const REST_DAYS = new Set(['Saturday', 'Sunday']);
   const RECOVERY_DAYS = new Set(['Wednesday']);
@@ -48,7 +46,7 @@
   <header class="topbar">
     <span class="title-text">Timo Training</span>
     <div class="topbar-actions">
-      <button class="icon-btn" on:click={() => searchOpen = true} title="Search exercises" aria-label="Search exercises">
+      <button class="icon-btn" on:click={() => $searchOpen = true} title="Search exercises" aria-label="Search exercises">
         <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="9" cy="9" r="6"/>
           <line x1="14.2" y1="14.2" x2="18" y2="18"/>
@@ -63,10 +61,6 @@
       </button>
     </div>
   </header>
-
-  {#if searchOpen}
-    <SearchOverlay onClose={() => searchOpen = false} />
-  {/if}
 
   <!-- MVP1 migration banner -->
   {#if showMigrateBanner}
