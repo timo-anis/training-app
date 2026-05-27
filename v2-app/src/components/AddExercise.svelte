@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { DayOfWeek } from '../types/workout';
-  import { appState, uiState, addExercise } from '../stores/app';
+  import { appState, addExercise } from '../stores/app';
+  import { searchExercises } from '../data/exercises';
 
   export let week: number;
   export let day: DayOfWeek;
@@ -8,12 +9,24 @@
   let open = false;
   let name = '';
   let inputEl: HTMLInputElement;
+  let page = 0;          // current suggestion page (0-indexed)
 
-  // History: find last occurrence of this exercise name in appState
+  const PAGE_SIZE = 3;
+
+  // ── Suggestions ────────────────────────────────────────────
   $: trimmed = name.trim();
-  $: history = trimmed.length >= 2
-    ? findLastOccurrence(trimmed, $appState)
-    : null;
+  $: allMatches = trimmed.length >= 1 ? searchExercises(trimmed) : [];
+  $: totalPages = Math.ceil(allMatches.length / PAGE_SIZE);
+  $: pageSuggestions = allMatches.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+
+  // Reset page when query changes
+  $: if (trimmed) page = 0;
+
+  function prevPage() { if (page > 0) page -= 1; }
+  function nextPage() { if (page < totalPages - 1) page += 1; }
+
+  // ── History hint ────────────────────────────────────────────
+  $: history = trimmed.length >= 2 ? findLastOccurrence(trimmed, $appState) : null;
 
   function findLastOccurrence(search: string, state: typeof $appState) {
     const lower = search.toLowerCase();
@@ -32,15 +45,18 @@
     return found;
   }
 
+  // ── Actions ─────────────────────────────────────────────────
   function openPanel() {
     open = true;
     name = '';
+    page = 0;
     setTimeout(() => inputEl?.focus(), 50);
   }
 
   function cancel() {
     open = false;
     name = '';
+    page = 0;
   }
 
   function confirm() {
@@ -50,9 +66,16 @@
     cancel();
   }
 
+  function pickSuggestion(n: string) {
+    addExercise(week, day, n);
+    cancel();
+  }
+
   function onKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') confirm();
     if (e.key === 'Escape') cancel();
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); nextPage(); }
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); prevPage(); }
   }
 </script>
 
@@ -74,6 +97,36 @@
       spellcheck="false"
     />
 
+    <!-- Suggestions -->
+    {#if allMatches.length > 0}
+      <div class="suggestions">
+        {#if totalPages > 1}
+          <div class="sugg-nav">
+            <button
+              class="nav-arrow"
+              on:click={prevPage}
+              disabled={page === 0}
+              aria-label="Previous suggestions"
+            >‹</button>
+            <span class="nav-count">{page + 1} / {totalPages}</span>
+            <button
+              class="nav-arrow"
+              on:click={nextPage}
+              disabled={page >= totalPages - 1}
+              aria-label="Next suggestions"
+            >›</button>
+          </div>
+        {/if}
+
+        {#each pageSuggestions as entry}
+          <button class="sugg-item" on:click={() => pickSuggestion(entry.name)}>
+            {entry.name}
+          </button>
+        {/each}
+      </div>
+    {/if}
+
+    <!-- History hint -->
     {#if history}
       <div class="history-hint">
         <span class="history-label">Last time</span>
@@ -120,6 +173,7 @@
     gap: 10px;
   }
 
+  /* ── Input ── */
   .add-ex-input {
     width: 100%;
     background: rgba(14,25,55,0.65);
@@ -136,11 +190,83 @@
   }
 
   .add-ex-input::placeholder { color: #1e3870; }
+  .add-ex-input:focus { border-color: rgba(255,255,255,0.25); }
 
-  .add-ex-input:focus {
-    border-color: rgba(255,255,255,0.25);
+  /* ── Suggestions ── */
+  .suggestions {
+    display: grid;
+    gap: 5px;
   }
 
+  /* Pagination row */
+  .sugg-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    padding-bottom: 2px;
+  }
+
+  .nav-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.30);
+    min-width: 28px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .nav-arrow {
+    width: 26px;
+    height: 26px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.50);
+    font-size: 16px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, color 0.1s;
+    padding: 0;
+  }
+
+  .nav-arrow:disabled {
+    opacity: 0.25;
+    cursor: default;
+  }
+
+  .nav-arrow:not(:disabled):active {
+    background: rgba(255,255,255,0.10);
+    color: rgba(255,255,255,0.85);
+  }
+
+  /* Suggestion item */
+  .sugg-item {
+    width: 100%;
+    text-align: left;
+    padding: 10px 13px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.80);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, border-color 0.1s;
+    letter-spacing: -0.01em;
+  }
+
+  .sugg-item:active {
+    background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.20);
+    color: #ffffff;
+  }
+
+  /* ── History hint ── */
   .history-hint {
     display: flex;
     align-items: center;
@@ -174,6 +300,7 @@
     flex: 0 0 auto;
   }
 
+  /* ── Actions ── */
   .add-ex-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
