@@ -6,7 +6,7 @@
   /** Total rest duration in seconds */
   export let totalSeconds: number;
 
-  const dispatch = createEventDispatcher<{ done: void; skip: void }>();
+  const dispatch = createEventDispatcher<{ done: void; skip: void; reset: void }>();
 
   function playBeep(freq = 880, duration = 0.18, volume = 0.5) {
     try {
@@ -67,6 +67,12 @@
     dispatch('skip');
   }
 
+  function reset() {
+    if (interval) clearInterval(interval);
+    interval = null;
+    dispatch('reset');
+  }
+
   $: pct = totalSeconds > 0 ? (remaining / totalSeconds) : 0;
   $: mins = Math.floor(remaining / 60);
   $: secs = remaining % 60;
@@ -102,7 +108,10 @@
           {/if}
         </div>
       </div>
-      <button class="skip-btn" on:click={skip}>Skip rest</button>
+      <div class="timer-actions">
+        <button class="skip-btn" on:click={reset}>Reset</button>
+        <button class="skip-btn" on:click={skip}>Skip rest</button>
+      </div>
     </div>
   </div>
 {/if}
@@ -131,6 +140,11 @@
     flex-direction: column;
     align-items: center;
     gap: 36px;
+  }
+
+  .timer-actions {
+    display: flex;
+    gap: 12px;
   }
 
   .ring-wrap {

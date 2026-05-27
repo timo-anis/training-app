@@ -13,20 +13,28 @@
   // Local input values — sync from prop, commit on blur
   let kgLocal = set.kg;
   let repsLocal = set.reps;
+  let flashing = false;
 
   $: kgLocal = set.kg;
   $: repsLocal = set.reps;
+
+  function flashCommit() {
+    flashing = true;
+    setTimeout(() => { flashing = false; }, 160);
+  }
 
   function onKgBlur() {
     const normalised = kgLocal.replace(',', '.').trim();
     kgLocal = normalised;
     updateSetField(week, day, exId, index, 'kg', normalised);
+    flashCommit();
   }
 
   function onRepsBlur() {
     const normalised = repsLocal.trim();
     repsLocal = normalised;
     updateSetField(week, day, exId, index, 'reps', normalised);
+    flashCommit();
   }
 
   function onKgKeydown(e: KeyboardEvent) {
@@ -41,7 +49,7 @@
 <div class="setrow" class:is-done={set.done}>
   <span class="setn">{displayIndex}</span>
 
-  <div class="setcol">
+  <div class="setcol" class:flash={flashing}>
     <label class="k" for="kg-{exId}-{index}">kg</label>
     <input
       id="kg-{exId}-{index}"
@@ -56,7 +64,7 @@
     />
   </div>
 
-  <div class="setcol">
+  <div class="setcol" class:flash={flashing}>
     <label class="k" for="reps-{exId}-{index}">reps</label>
     <input
       id="reps-{exId}-{index}"
@@ -126,6 +134,11 @@
   .setrow.is-done .setcol {
     border-color: rgba(255,255,255,0.14);
     background: rgba(255,255,255,0.05);
+  }
+
+  .setcol.flash {
+    border-color: rgba(255,255,255,0.45);
+    transition: border-color 0.05s ease;
   }
 
   .k {

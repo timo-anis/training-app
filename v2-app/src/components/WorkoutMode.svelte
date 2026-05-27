@@ -87,6 +87,11 @@
     updateUI(ui => ({ ...ui, restStartTime: null, restTotal: null }));
   }
 
+  function resetRest() {
+    const total = $uiState.restTotal;
+    if (total) updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: total }));
+  }
+
   // ---- Exercise/block done helpers ----
   function exDone(ex: import('../types/workout').Exercise): boolean {
     if (ex.recovery) return ex.recoveryDone;
@@ -119,11 +124,7 @@
 
   let summaryElapsed = 0;
 
-  function confirmFinish() {
-    markWorkoutComplete($uiState.week, $uiState.day);
-    exitWorkout();
-    showSummary = false;
-  }
+  // confirmFinish is defined below (after swipe/flash helpers)
 
   // Summary stats computed from the current workout day
   $: summaryDay = $appState.weeks.find(w => w.week === $uiState.week && w.day === $uiState.day);
@@ -227,6 +228,35 @@
     localKg = {};
     localReps = {};
   }
+
+  // ---- Swipe navigation ----
+  let touchStartX = 0;
+
+  function onTouchStart(e: TouchEvent) {
+    touchStartX = e.touches[0].clientX;
+  }
+
+  function onTouchEnd(e: TouchEvent) {
+    if (restActive) return; // don't swipe while rest timer is visible
+    const delta = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(delta) > 55) {
+      if (delta < 0) next();
+      else prev();
+    }
+  }
+
+  // ---- Completion flash ----
+  let showCompletionFlash = false;
+
+  function confirmFinish() {
+    markWorkoutComplete($uiState.week, $uiState.day);
+    showSummary = false;
+    showCompletionFlash = true;
+    setTimeout(() => {
+      showCompletionFlash = false;
+      exitWorkout();
+    }, 550);
+  }
 </script>
 
 <div class="wm-overlay">
@@ -235,7 +265,7 @@
     <div class="wm-header-row">
       <button class="wm-exit" on:click={backToNormal} title="Back to normal view">‹</button>
       <div class="wm-mid">
-        <span class="wm-blk-label">Blokk</span>
+        <span class="wm-blk-label">Block</span>
         <span class="wm-progress">{activeIndex + 1} / {blocks.length}</span>
       </div>
       <span class="wm-clock">{formatElapsed(elapsed)}</span>
@@ -247,7 +277,7 @@
 
   <!-- Block content -->
   {#if block}
-    <div class="wm-content">
+    <div class="wm-content" on:touchstart={onTouchStart} on:touchend={onTouchEnd}>
       <!-- Block badge -->
       <div class="block-title">
         {#if block.isSuperset}
@@ -396,6 +426,7 @@
           totalSeconds={$uiState.restTotal}
           on:done={clearRest}
           on:skip={clearRest}
+          on:reset={resetRest}
         />
       {/if}
     </div>
@@ -415,6 +446,13 @@
     {/if}
   </footer>
 </div>
+
+<!-- ===== Completion Flash ===== -->
+{#if showCompletionFlash}
+  <div class="completion-flash">
+    <span class="completion-check">✓</span>
+  </div>
+{/if}
 
 <!-- ===== Workout Summary Overlay ===== -->
 {#if showSummary}
@@ -585,21 +623,21 @@
   }
 
   .block-badge.superset {
-    background: rgba(127,178,255,0.12);
-    border: 1px solid rgba(127,178,255,0.28);
-    color: #7fb2ff;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.20);
+    color: rgba(255,255,255,0.70);
   }
 
   .block-badge.single {
     background: rgba(14,25,55,0.65);
-    border: 1px solid rgba(70,110,185,0.24);
+    border: 1px solid rgba(255,255,255,0.12);
     color: rgba(255,255,255,0.45);
   }
 
   .block-badge.cond {
-    background: rgba(79,192,141,0.08);
-    border: 1px solid rgba(79,192,141,0.20);
-    color: #4fc08d;
+    background: rgba(196,148,46,0.08);
+    border: 1px solid rgba(196,148,46,0.22);
+    color: #c49230;
   }
 
   .exercises-wrap {
@@ -647,9 +685,9 @@
   .ex-rest {
     font-size: 12px;
     font-weight: 700;
-    color: #4a8070;
-    background: rgba(79,192,141,0.08);
-    border: 1px solid rgba(79,192,141,0.18);
+    color: rgba(255,255,255,0.40);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.10);
     border-radius: 8px;
     padding: 3px 8px;
     flex-shrink: 0;
@@ -701,8 +739,8 @@
     gap: 4px;
     padding: 10px 13px;
     border-radius: 12px;
-    background: rgba(79,192,141,0.05);
-    border: 1px solid rgba(79,192,141,0.14);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.09);
   }
 
   .cond-prev-lbl {
@@ -710,7 +748,7 @@
     font-weight: 800;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #3a8a6a;
+    color: rgba(255,255,255,0.35);
   }
 
   .cond-prev-text {
@@ -739,7 +777,7 @@
     min-height: 110px;
   }
 
-  .cond-textarea:focus { border-color: rgba(79,192,141,0.40); }
+  .cond-textarea:focus { border-color: rgba(255,255,255,0.25); }
   .cond-textarea::placeholder { color: rgba(255,255,255,0.22); }
 
   /* Sets */
@@ -755,7 +793,7 @@
     transition: background 0.15s;
   }
 
-  .set-row.done { background: rgba(79,192,141,0.04); }
+  .set-row.done { background: rgba(255,255,255,0.03); }
 
   .set-n {
     font-size: 16px;
@@ -765,7 +803,7 @@
     user-select: none;
   }
 
-  .set-row.done .set-n { color: rgba(79,192,141,0.55); }
+  .set-row.done .set-n { color: rgba(255,255,255,0.55); }
 
   .set-col {
     display: flex;
@@ -780,8 +818,8 @@
   }
 
   .set-row.done .set-col {
-    border-color: rgba(79,192,141,0.18);
-    background: rgba(79,192,141,0.05);
+    border-color: rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.05);
   }
 
   .set-lbl {
@@ -808,7 +846,7 @@
     line-height: 1;
   }
 
-  .set-row.done .set-inp { color: rgba(79,192,141,0.90); }
+  .set-row.done .set-inp { color: rgba(255,255,255,0.90); }
   .set-inp::placeholder { color: rgba(255,255,255,0.18); }
   .set-inp:focus { color: #ffffff; }
 
@@ -891,13 +929,13 @@
   }
 
   .recovery-toggle.recovery-done {
-    background: rgba(79,192,141,0.10);
-    border-color: rgba(79,192,141,0.30);
-    color: #4fc08d;
+    background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.30);
+    color: rgba(255,255,255,0.92);
   }
 
   .recovery-toggle:active { background: rgba(15,28,58,0.80); }
-  .recovery-toggle.recovery-done:active { background: rgba(79,192,141,0.18); }
+  .recovery-toggle.recovery-done:active { background: rgba(255,255,255,0.16); }
 
   /* Footer */
   .wm-footer {
@@ -1075,8 +1113,8 @@
   }
 
   .summary-ex-row.sdone {
-    background: rgba(79,192,141,0.06);
-    border-color: rgba(79,192,141,0.15);
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.14);
   }
 
   .sex-check {
@@ -1088,7 +1126,7 @@
     text-align: center;
   }
 
-  .summary-ex-row.sdone .sex-check { color: #4fc08d; }
+  .summary-ex-row.sdone .sex-check { color: rgba(255,255,255,0.80); }
 
   .sex-name {
     flex: 1;
@@ -1109,12 +1147,12 @@
     flex-shrink: 0;
   }
 
-  .summary-ex-row.sdone .sex-sets { color: #4fc08d; }
+  .summary-ex-row.sdone .sex-sets { color: rgba(255,255,255,0.55); }
 
   .sex-tag {
     font-size: 11px;
     font-weight: 700;
-    color: rgba(79,192,141,0.70);
+    color: rgba(255,255,255,0.40);
     letter-spacing: 0.04em;
     text-transform: uppercase;
     flex-shrink: 0;
@@ -1138,4 +1176,35 @@
   }
 
   .summary-done-btn:active { background: #b07e22; transform: scale(0.98); }
+
+  /* ===== Completion Flash ===== */
+  .completion-flash {
+    position: fixed;
+    inset: 0;
+    z-index: 300;
+    background: rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: flash-in 0.55s ease forwards;
+    pointer-events: none;
+  }
+
+  @keyframes flash-in {
+    0%   { opacity: 0; background: rgba(255,255,255,0.18); }
+    20%  { opacity: 1; background: rgba(255,255,255,0.10); }
+    100% { opacity: 0; background: rgba(255,255,255,0.00); }
+  }
+
+  .completion-check {
+    font-size: 96px;
+    color: #ffffff;
+    animation: check-pop 0.45s cubic-bezier(0.34,1.56,0.64,1) forwards;
+  }
+
+  @keyframes check-pop {
+    0%   { transform: scale(0.3); opacity: 0; }
+    60%  { transform: scale(1.1); opacity: 1; }
+    100% { transform: scale(1);   opacity: 0.9; }
+  }
 </style>

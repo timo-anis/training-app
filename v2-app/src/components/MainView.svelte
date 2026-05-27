@@ -25,6 +25,15 @@
   let migrateStatus: 'idle' | 'done' | 'error' = 'idle';
   let statsOpen = false;
 
+  const REST_DAYS = new Set(['Saturday', 'Sunday']);
+  const RECOVERY_DAYS = new Set(['Wednesday']);
+
+  $: emptyLabel = (() => {
+    if (REST_DAYS.has($uiState.day)) return { title: 'Rest day', sub: 'Recover and recharge.' };
+    if (RECOVERY_DAYS.has($uiState.day)) return { title: 'Active recovery', sub: 'Mobility, foam rolling, light movement.' };
+    return { title: 'No training logged', sub: null };
+  })();
+
   function handleMigrate() {
     const ok = runMvp1Import();
     migrateStatus = ok ? 'done' : 'error';
@@ -95,7 +104,10 @@
 
     {#if $currentDayExercises.length === 0}
       <div class="empty-state">
-        <p>No exercises logged for this day.</p>
+        <span class="empty-title">{emptyLabel.title}</span>
+        {#if emptyLabel.sub}
+          <span class="empty-sub">{emptyLabel.sub}</span>
+        {/if}
         {#if canCopyDay}
           <button class="copy-day-btn" on:click={() => copyPreviousDay($uiState.week, $uiState.day)}>
             Copy from Week {$uiState.week - 1}
@@ -277,15 +289,28 @@
 
   /* ---- Empty state ---- */
   .empty-state {
-    padding: 32px 20px;
+    padding: 36px 20px;
     text-align: center;
-    color: rgba(255,255,255,0.30);
-    font-size: 14px;
-    border: 1px dashed rgba(65,100,170,0.16);
+    border: 1px dashed rgba(255,255,255,0.08);
     border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
   }
 
-  .empty-state p { margin: 0; }
+  .empty-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.28);
+    letter-spacing: -0.01em;
+  }
+
+  .empty-sub {
+    font-size: 13px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.16);
+  }
 
 
   .copy-day-btn {
