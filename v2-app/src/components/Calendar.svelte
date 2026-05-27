@@ -65,7 +65,7 @@
 <style>
   .calendar-card {
     background: linear-gradient(180deg, #0f1c30, #0b1726);
-    border: 1px solid rgba(60,90,165,0.14);
+    border: 1px solid rgba(255,255,255,0.07);
     border-radius: 18px;
     padding: 16px 14px 14px;
     display: grid;
@@ -92,9 +92,9 @@
     width: 36px;
     height: 36px;
     border-radius: 10px;
-    border: 1px solid rgba(65,100,175,0.20);
+    border: 1px solid rgba(255,255,255,0.12);
     background: rgba(12,22,48,0.55);
-    color: #7fa8d4;
+    color: rgba(255,255,255,0.60);
     font-size: 18px;
     line-height: 1;
     cursor: pointer;
@@ -166,25 +166,8 @@
     width: 4px;
     height: 4px;
     border-radius: 50%;
-    background: #4a7aaa;
+    background: rgba(255,255,255,0.30);
   }
 
   .pill.active .pill-dot { background: #c49230; }
-
-  .copy-week-btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid rgba(127,178,255,0.22);
-    background: rgba(127,178,255,0.07);
-    color: #7fb2ff;
-    font-size: 13px;
-    font-weight: 800;
-    cursor: pointer;
-    letter-spacing: 0.01em;
-    transition: background 0.12s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .copy-week-btn:active { background: rgba(127,178,255,0.15); }
 </style>

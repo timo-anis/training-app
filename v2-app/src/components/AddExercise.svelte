@@ -94,9 +94,9 @@
     width: 100%;
     padding: 14px;
     border-radius: 14px;
-    border: 1px dashed rgba(70,110,185,0.24);
+    border: 1px dashed rgba(255,255,255,0.14);
     background: transparent;
-    color: #4a7aaa;
+    color: rgba(255,255,255,0.40);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -107,13 +107,13 @@
 
   .add-ex-trigger:active {
     background: rgba(12,22,48,0.55);
-    border-color: rgba(255,255,255,0.2);
-    color: #7fa8d4;
+    border-color: rgba(255,255,255,0.25);
+    color: rgba(255,255,255,0.75);
   }
 
   .add-ex-panel {
     background: linear-gradient(180deg, #0f1c30, #0b1726);
-    border: 1px solid rgba(127,178,255,0.2);
+    border: 1px solid rgba(255,255,255,0.10);
     border-radius: 18px;
     padding: 14px;
     display: grid;
@@ -138,7 +138,7 @@
   .add-ex-input::placeholder { color: #1e3870; }
 
   .add-ex-input:focus {
-    border-color: rgba(127,178,255,0.35);
+    border-color: rgba(255,255,255,0.25);
   }
 
   .history-hint {
@@ -147,8 +147,8 @@
     gap: 8px;
     padding: 8px 12px;
     border-radius: 10px;
-    background: rgba(79,192,141,0.07);
-    border: 1px solid rgba(79,192,141,0.18);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.10);
   }
 
   .history-label {
@@ -156,21 +156,21 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: #3a8a6a;
+    color: rgba(255,255,255,0.35);
     flex: 0 0 auto;
   }
 
   .history-val {
     font-size: 13px;
     font-weight: 700;
-    color: #4fc08d;
+    color: rgba(255,255,255,0.80);
     flex: 1 1 0;
   }
 
   .history-sets {
     font-size: 11px;
     font-weight: 700;
-    color: #3a8a6a;
+    color: rgba(255,255,255,0.35);
     flex: 0 0 auto;
   }
 
@@ -183,9 +183,9 @@
   .btn-cancel {
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(65,100,175,0.18);
+    border: 1px solid rgba(255,255,255,0.10);
     background: rgba(12,20,44,0.50);
-    color: #3a5888;
+    color: rgba(255,255,255,0.45);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -198,9 +198,9 @@
   .btn-confirm {
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(127,178,255,0.3);
-    background: rgba(127,178,255,0.12);
-    color: #7fb2ff;
+    border: 1px solid rgba(255,255,255,0.20);
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.90);
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
@@ -209,8 +209,8 @@
   }
 
   .btn-confirm:not(:disabled):active {
-    background: rgba(127,178,255,0.2);
-    border-color: rgba(127,178,255,0.5);
+    background: rgba(255,255,255,0.14);
+    border-color: rgba(255,255,255,0.35);
   }
 
   .btn-confirm:disabled {

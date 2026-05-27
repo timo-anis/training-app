@@ -153,14 +153,14 @@
 
   .fill-arc {
     fill: none;
-    stroke: #4fc08d;
+    stroke: rgba(255,255,255,0.85);
     stroke-width: 10;
     stroke-linecap: round;
     transition: stroke 0.3s;
   }
 
   .fill-arc.warning { stroke: #c49230; }
-  .fill-arc.done    { stroke: #4fc08d; }
+  .fill-arc.done    { stroke: rgba(255,255,255,0.85); }
 
   .center-text {
     position: absolute;
@@ -177,14 +177,14 @@
     font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.14em;
-    color: #3a8a6a;
+    color: rgba(255,255,255,0.40);
     text-transform: uppercase;
   }
 
   .time {
     font-size: 72px;
     font-weight: 900;
-    color: #4fc08d;
+    color: rgba(255,255,255,0.95);
     letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -196,7 +196,7 @@
   .done-label {
     font-size: 64px;
     font-weight: 900;
-    color: #4fc08d;
+    color: rgba(255,255,255,0.95);
     letter-spacing: -0.04em;
     animation: pop 0.35s ease;
   }
@@ -210,9 +210,9 @@
   .skip-btn {
     padding: 15px 48px;
     border-radius: 16px;
-    border: 1px solid rgba(65,100,175,0.20);
+    border: 1px solid rgba(255,255,255,0.12);
     background: rgba(14,25,55,0.65);
-    color: #3a5888;
+    color: rgba(255,255,255,0.55);
     font-size: 15px;
     font-weight: 700;
     cursor: pointer;
@@ -222,6 +222,6 @@
 
   .skip-btn:active {
     background: rgba(255,255,255,0.10);
-    color: #7fa8d4;
+    color: rgba(255,255,255,0.90);
   }
 </style>

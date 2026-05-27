@@ -198,9 +198,10 @@ export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
     exercises: sourceDay.exercises.map(ex => ({
       ...ex,
       id: `${ex.id}_w${targetWeek}_${Date.now()}_${Math.random().toString(36).slice(2,6)}`,
-      // Pre-fill with previous week's kg/reps, done reset; conditioning note cleared (fresh session)
+      // Pre-fill with previous week's kg/reps; all done states reset; conditioning note cleared
       sets: ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false })),
       recoveryDone: false,
+      conditioningDone: false,
       conditioningNote: '',
     })),
   };
@@ -295,9 +296,11 @@ function applyPastDaysCompleted(state: AppState): { state: AppState; changed: bo
     // Check if already fully done
     const alreadyDone =
       wd.completed === true &&
-      wd.exercises.every(ex =>
-        ex.recovery ? ex.recoveryDone : ex.sets.every(s => s.done)
-      );
+      wd.exercises.every(ex => {
+        if (ex.recovery) return ex.recoveryDone;
+        if (ex.conditioning) return ex.conditioningDone === true;
+        return ex.sets.every(s => s.done);
+      });
     if (alreadyDone) return wd;
 
     changed = true;
@@ -307,6 +310,7 @@ function applyPastDaysCompleted(state: AppState): { state: AppState; changed: bo
       exercises: wd.exercises.map(ex => ({
         ...ex,
         recoveryDone: ex.recovery ? true : ex.recoveryDone,
+        conditioningDone: ex.conditioning ? true : ex.conditioningDone,
         sets: ex.sets.map(s => ({ ...s, done: true })),
       })),
     };

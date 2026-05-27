@@ -121,6 +121,9 @@ function extractExercise(state: RawObject, week: number, day: MVP1Day, exId: str
     note: String(state[`note_w${week}_${day}_${exId}`] ?? ''),
     recovery,
     recoveryDone,
+    conditioning: false,
+    conditioningNote: '',
+    conditioningDone: false,
   };
 }
 
@@ -194,7 +197,22 @@ export function parseAndMigrateState(raw: unknown): AppState | null {
   }
 
   const v2 = raw as AppState;
-  if (Array.isArray(v2.weeks)) return v2;
+  if (Array.isArray(v2.weeks)) {
+    // Normalise any exercises that predate the conditioningDone field
+    const normalised: AppState = {
+      ...v2,
+      weeks: v2.weeks.map(wd => ({
+        ...wd,
+        exercises: wd.exercises.map(ex => ({
+          conditioning: false,
+          conditioningNote: '',
+          conditioningDone: false,
+          ...ex, // existing fields win — only fills in what's missing
+        })),
+      })),
+    };
+    return normalised;
+  }
 
   return emptyAppState();
 }
