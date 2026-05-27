@@ -30,9 +30,15 @@
   function getDayStatus(date: Date): DayStatus {
     const todayMid = new Date();
     todayMid.setHours(0, 0, 0, 0);
-    if (date > todayMid) return 'future';
 
     const wd = dateToWeekDay(date);
+
+    if (date > todayMid) {
+      // Future — but Wednesdays in the program year always show amber
+      if (wd && wd.day === 'Wednesday') return 'active-recovery';
+      return 'future';
+    }
+
     // Before program start — past day, no data possible
     if (!wd) {
       const dow = (date.getDay() + 6) % 7; // 0=Mon … 6=Sun
