@@ -101,7 +101,7 @@
     transition: background 0.15s;
   }
 
-  .setrow.is-done { background: rgba(79,192,141,0.04); border-radius: 10px; }
+  .setrow.is-done { background: rgba(255,255,255,0.03); border-radius: 10px; }
 
   .setn {
     font-size: 14px;
@@ -111,7 +111,7 @@
     user-select: none;
   }
 
-  .setrow.is-done .setn { color: rgba(79,192,141,0.55); }
+  .setrow.is-done .setn { color: rgba(255,255,255,0.55); }
 
   .setcol {
     display: flex;
@@ -124,8 +124,8 @@
   }
 
   .setrow.is-done .setcol {
-    border-color: rgba(79,192,141,0.15);
-    background: rgba(79,192,141,0.05);
+    border-color: rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.05);
   }
 
   .k {
@@ -153,7 +153,7 @@
     line-height: 1;
   }
 
-  .setrow.is-done .setinput { color: rgba(79,192,141,0.85); }
+  .setrow.is-done .setinput { color: rgba(255,255,255,0.90); }
 
   .setinput::placeholder { color: #1e3870; }
 
@@ -162,9 +162,9 @@
   .donebtn {
     height: 46px;
     border-radius: 11px;
-    border: 1px solid rgba(80,120,200,0.30);
+    border: 1px solid rgba(255,255,255,0.14);
     background: rgba(12,22,48,0.55);
-    color: #7fa8d4;
+    color: rgba(255,255,255,0.45);
     font-size: 18px;
     cursor: pointer;
     display: flex;
@@ -175,9 +175,9 @@
   }
 
   .donebtn.on {
-    background: rgba(79,192,141,0.13);
-    border-color: rgba(79,192,141,0.45);
-    color: #4fc08d;
+    background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.30);
+    color: rgba(255,255,255,0.92);
     font-weight: 700;
   }
 
@@ -189,7 +189,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #3a5890;
+    color: rgba(255,255,255,0.22);
     font-size: 16px;
     line-height: 1;
     cursor: pointer;

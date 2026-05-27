@@ -3,7 +3,7 @@
   import {
     uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode,
     setActiveBlock, toggleSetDone, updateSetField, findLastSession,
-    findLastConditioningNote, toggleRecoveryDone, updateUI,
+    findLastConditioningNote, toggleRecoveryDone, toggleConditioningDone, updateUI,
     addSet, deleteSet, updateConditioningNote, markWorkoutComplete,
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
@@ -90,7 +90,7 @@
   // ---- Exercise/block done helpers ----
   function exDone(ex: import('../types/workout').Exercise): boolean {
     if (ex.recovery) return ex.recoveryDone;
-    if (ex.conditioning) return ex.conditioningNote.trim().length > 0;
+    if (ex.conditioning) return ex.conditioningDone === true;
     return ex.sets.length > 0 && ex.sets.every(s => s.done);
   }
 
@@ -292,7 +292,14 @@
             {/if}
 
             {#if ex.conditioning}
-              <!-- Conditioning: large editable textarea, previous session shown above -->
+              <!-- Conditioning: done toggle + textarea + previous session -->
+              <button
+                class="recovery-toggle"
+                class:recovery-done={ex.conditioningDone}
+                on:click={() => toggleConditioningDone(week, day, ex.id)}
+              >
+                {ex.conditioningDone ? '✓ Done' : 'Tap to mark done'}
+              </button>
               {@const prevNote = findLastConditioningNote($appState, ex.name, week, day)}
               {#if prevNote}
                 <div class="cond-prev">
@@ -615,13 +622,13 @@
   }
 
   .ex-code {
-    width: 26px;
-    height: 26px;
-    border-radius: 7px;
-    background: rgba(127,178,255,0.12);
-    border: 1px solid rgba(127,178,255,0.25);
-    color: #7fb2ff;
-    font-size: 11px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.28);
+    color: #ffffff;
+    font-size: 13px;
     font-weight: 900;
     display: flex;
     align-items: center;
@@ -821,9 +828,9 @@
   }
 
   .done-btn.on {
-    background: rgba(79,192,141,0.15);
-    border-color: rgba(79,192,141,0.50);
-    color: #4fc08d;
+    background: rgba(255,255,255,0.10);
+    border-color: rgba(255,255,255,0.30);
+    color: rgba(255,255,255,0.92);
     font-weight: 700;
   }
 

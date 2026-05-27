@@ -522,6 +522,12 @@ export function toggleRecoveryDone(week: number, day: DayOfWeek, exId: string) {
   );
 }
 
+export function toggleConditioningDone(week: number, day: DayOfWeek, exId: string) {
+  updateState(state =>
+    mapExercise(state, week, day, exId, ex => ({ ...ex, conditioningDone: !ex.conditioningDone }))
+  );
+}
+
 // ---- Delete exercise ----
 export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
   updateState(state => ({

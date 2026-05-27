@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Exercise, DayOfWeek } from '../types/workout';
-  import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone, updateConditioningNote } from '../stores/app';
+  import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone, toggleConditioningDone, updateConditioningNote } from '../stores/app';
   import SetRow from './SetRow.svelte';
 
   export let exercise: Exercise;
@@ -9,9 +9,9 @@
   export let index: number = 0;
   export let total: number = 1;
 
-  $: doneCount = exercise.conditioning ? (exercise.conditioningNote.trim() ? 1 : 0) : exercise.sets.filter(s => s.done).length;
+  $: doneCount = exercise.conditioning ? (exercise.conditioningDone ? 1 : 0) : exercise.sets.filter(s => s.done).length;
   $: totalCount = exercise.conditioning ? 1 : exercise.sets.length;
-  $: allDone = exercise.conditioning ? exercise.conditioningNote.trim().length > 0 : (doneCount === totalCount && totalCount > 0);
+  $: allDone = exercise.conditioning ? exercise.conditioningDone === true : (doneCount === totalCount && totalCount > 0);
   $: supersetLabel = exercise.type === 'superset' ? exercise.code : '';
 
   // 2-tap delete confirm
@@ -185,6 +185,13 @@
   {/if}
 
   {#if exercise.conditioning}
+    <button
+      class="cond-done-btn"
+      class:cond-done={exercise.conditioningDone}
+      on:click={() => toggleConditioningDone(week, day, exercise.id)}
+    >
+      {exercise.conditioningDone ? '✓ Done' : 'Tap to mark done'}
+    </button>
     <textarea
       class="cond-textarea"
       bind:value={localCondNote}
@@ -238,7 +245,7 @@
     transition: border-color 0.2s;
   }
 
-  .exercise-card.all-done { border-color: rgba(79,192,141,0.25); }
+  .exercise-card.all-done { border-color: rgba(255,255,255,0.20); }
 
   .exercise-header {
     display: flex;
@@ -249,13 +256,13 @@
 
   .superset-badge {
     flex: 0 0 auto;
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: rgba(127,178,255,0.12);
-    border: 1px solid rgba(127,178,255,0.25);
-    color: #7fb2ff;
-    font-size: 12px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.28);
+    color: #ffffff;
+    font-size: 13px;
     font-weight: 900;
     display: flex;
     align-items: center;
@@ -300,9 +307,9 @@
   }
 
   .progress-chip.complete {
-    background: rgba(79,192,141,0.12);
-    border-color: rgba(79,192,141,0.30);
-    color: #4fc08d;
+    background: rgba(255,255,255,0.09);
+    border-color: rgba(255,255,255,0.22);
+    color: rgba(255,255,255,0.90);
   }
 
   .order-btns {
@@ -318,7 +325,7 @@
     border-radius: 5px;
     border: none;
     background: transparent;
-    color: #3a5890;
+    color: rgba(255,255,255,0.38);
     font-size: 11px;
     cursor: pointer;
     display: flex;
@@ -329,8 +336,8 @@
     padding: 0;
   }
 
-  .order-btn:disabled { opacity: 0.2; cursor: not-allowed; }
-  .order-btn:not(:disabled):active { background: rgba(15,28,58,0.80); color: #7fa8d4; }
+  .order-btn:disabled { opacity: 0.18; cursor: not-allowed; }
+  .order-btn:not(:disabled):active { background: rgba(255,255,255,0.08); color: #ffffff; }
 
   .edit-btn {
     flex: 0 0 auto;
@@ -339,7 +346,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #3a5890;
+    color: rgba(255,255,255,0.38);
     font-size: 15px;
     cursor: pointer;
     display: flex;
@@ -349,7 +356,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .edit-btn:active { background: rgba(127,178,255,0.12); color: #7fb2ff; }
+  .edit-btn:active { background: rgba(255,255,255,0.08); color: #ffffff; }
 
   .del-ex-btn {
     flex: 0 0 auto;
@@ -359,7 +366,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: #3a5890;
+    color: rgba(255,255,255,0.38);
     font-size: 16px;
     font-weight: 700;
     cursor: pointer;
@@ -380,6 +387,33 @@
   }
 
   .del-ex-btn:active { background: rgba(255,80,80,0.18); color: #ff6060; }
+
+  /* Conditioning done toggle */
+  .cond-done-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: rgba(12,20,44,0.50);
+    border: 1px solid rgba(255,255,255,0.10);
+    color: rgba(255,255,255,0.45);
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .cond-done-btn.cond-done {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.20);
+    color: rgba(255,255,255,0.85);
+  }
+
+  .cond-done-btn:active { background: rgba(13,24,52,0.85); }
+  .cond-done-btn.cond-done:active { background: rgba(255,255,255,0.12); }
 
   /* Conditioning textarea */
   .cond-textarea {
@@ -423,9 +457,9 @@
   }
 
   .type-btn.active {
-    background: rgba(127,178,255,0.14);
-    border-color: rgba(127,178,255,0.35);
-    color: #7fb2ff;
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.30);
+    color: #ffffff;
   }
 
   .edit-code { text-transform: uppercase; letter-spacing: 0.1em; font-weight: 900; }
@@ -436,8 +470,8 @@
     gap: 10px;
     padding: 14px;
     border-radius: 14px;
-    background: rgba(127,178,255,0.05);
-    border: 1px solid rgba(127,178,255,0.15);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
   }
 
   .edit-row { display: grid; grid-template-columns: 1fr; gap: 10px; }
@@ -500,9 +534,9 @@
   .btn-save {
     padding: 11px;
     border-radius: 11px;
-    border: 1px solid rgba(127,178,255,0.3);
-    background: rgba(127,178,255,0.12);
-    color: #7fb2ff;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.10);
+    color: #ffffff;
     font-size: 13px;
     font-weight: 800;
     cursor: pointer;
@@ -510,7 +544,7 @@
   }
 
   .btn-save:disabled { opacity: 0.35; cursor: not-allowed; }
-  .btn-save:not(:disabled):active { background: rgba(127,178,255,0.22); }
+  .btn-save:not(:disabled):active { background: rgba(255,255,255,0.18); }
 
   .sets-list { display: grid; gap: 4px; }
 
@@ -553,12 +587,12 @@
   }
 
   .recovery-row.recovery-done {
-    background: rgba(79,192,141,0.08);
-    border-color: rgba(79,192,141,0.25);
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.20);
   }
 
   .recovery-row:active { background: rgba(13,24,52,0.85); }
-  .recovery-row.recovery-done:active { background: rgba(79,192,141,0.14); }
+  .recovery-row.recovery-done:active { background: rgba(255,255,255,0.12); }
 
   .recovery-label { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.70); }
 
@@ -568,7 +602,7 @@
     color: rgba(255,255,255,0.38);
   }
 
-  .recovery-row.recovery-done .recovery-status { color: #4fc08d; }
+  .recovery-row.recovery-done .recovery-status { color: rgba(255,255,255,0.85); }
 
   .add-set-btn {
     width: 100%;

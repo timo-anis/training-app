@@ -32,6 +32,8 @@ export interface Exercise {
   /** Conditioning block (bike, row, etc.) — free-text log instead of sets */
   conditioning: boolean;
   conditioningNote: string;
+  /** Explicit done toggle for conditioning exercises */
+  conditioningDone: boolean;
 }
 
 export interface WorkoutDay {
@@ -86,6 +88,7 @@ export function emptyExercise(id: string, name: string): Exercise {
     recoveryDone: false,
     conditioning: false,
     conditioningNote: '',
+    conditioningDone: false,
   };
 }
 
