@@ -232,14 +232,17 @@
 <div class="wm-overlay">
   <!-- Header -->
   <header class="wm-header">
-    <button class="wm-exit" on:click={backToNormal} title="Back to normal view">‹</button>
-    <span class="wm-progress">{activeIndex + 1} / {blocks.length}</span>
-    <div class="wm-dots">
-      {#each blocks as b, i}
-        <span class="dot" class:active={i === activeIndex} class:done={blockDone(b)}></span>
-      {/each}
+    <div class="wm-header-row">
+      <button class="wm-exit" on:click={backToNormal} title="Back to normal view">‹</button>
+      <div class="wm-mid">
+        <span class="wm-blk-label">Blokk</span>
+        <span class="wm-progress">{activeIndex + 1} / {blocks.length}</span>
+      </div>
+      <span class="wm-clock">{formatElapsed(elapsed)}</span>
     </div>
-    <span class="wm-clock">{formatElapsed(elapsed)}</span>
+    <div class="wm-progress-bar">
+      <div class="wm-progress-fill" style="width: {((activeIndex + 1) / blocks.length) * 100}%"></div>
+    </div>
   </header>
 
   <!-- Block content -->
@@ -472,12 +475,17 @@
   /* Header */
   .wm-header {
     display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px 12px;
-    padding-top: calc(14px + env(safe-area-inset-top));
+    flex-direction: column;
+    padding-top: env(safe-area-inset-top);
     border-bottom: 1px solid rgba(65,100,170,0.16);
     flex-shrink: 0;
+  }
+
+  .wm-header-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px 10px;
   }
 
   .wm-exit {
@@ -496,35 +504,48 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .wm-progress {
-    font-size: 14px;
-    font-weight: 700;
-    color: rgba(255,255,255,0.45);
-    flex-shrink: 0;
-  }
-
-  .wm-dots {
-    display: flex;
-    gap: 5px;
+  .wm-mid {
     flex: 1;
-    flex-wrap: wrap;
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
   }
 
-  .dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: rgba(15,28,58,0.80);
-    transition: background 0.15s;
+  .wm-blk-label {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.38);
   }
 
-  .dot.active { background: #c49230; }
-  .dot.done   { background: rgba(79,192,141,0.6); }
+  .wm-progress {
+    font-size: 20px;
+    font-weight: 900;
+    color: #ffffff;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  .wm-progress-bar {
+    height: 3px;
+    background: rgba(20,35,70,0.85);
+    margin: 0 16px 12px;
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .wm-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: #c49230;
+    transition: width 0.3s ease;
+  }
 
   .wm-clock {
     font-size: 15px;
     font-weight: 800;
-    color: #7fa8d4;
+    color: #ffffff;
     font-variant-numeric: tabular-nums;
     letter-spacing: 0.02em;
     flex-shrink: 0;
