@@ -323,6 +323,55 @@ function applyPastDaysCompleted(state: AppState): { state: AppState; changed: bo
   return { state: changed ? { ...state, weeks } : state, changed };
 }
 
+// ---- One-time migration: backfill Active Recovery on every Wednesday W1–W46 ----
+// Wednesdays are designated active recovery days for the full 2026 training year.
+// This adds an Active Recovery exercise to any Wednesday that is missing one,
+// and creates the WorkoutDay entry if it doesn't exist yet.
+const TOTAL_TRAINING_WEEKS = 46; // W1 Mon Feb 16 → W46 Sun Dec 27 2026
+
+function backfillWednesdayRecovery(state: AppState): { state: AppState; changed: boolean } {
+  let changed = false;
+  let weeks = [...state.weeks];
+
+  for (let w = 1; w <= TOTAL_TRAINING_WEEKS; w++) {
+    const existing = weeks.find(wd => wd.week === w && wd.day === 'Wednesday');
+    const hasRecovery = existing?.exercises.some(ex => ex.recovery) ?? false;
+
+    if (hasRecovery) continue; // already has Active Recovery — skip
+
+    changed = true;
+    const recoveryEx: Exercise = {
+      id: `active_recovery_w${w}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      name: 'Active Recovery',
+      type: 'single',
+      code: '',
+      sets: [],
+      rest: '',
+      note: '',
+      recovery: true,
+      recoveryDone: false,
+      conditioning: false,
+      conditioningNote: '',
+      conditioningDone: false,
+    };
+
+    if (existing) {
+      // Day exists — prepend Active Recovery
+      weeks = weeks.map(wd =>
+        wd.week === w && wd.day === 'Wednesday'
+          ? { ...wd, exercises: [recoveryEx, ...wd.exercises] }
+          : wd
+      );
+    } else {
+      // Create the Wednesday WorkoutDay
+      const date = getDateForWeekDay(w, 'Wednesday');
+      weeks.push({ week: w, day: 'Wednesday', date, exercises: [recoveryEx] });
+    }
+  }
+
+  return { state: changed ? { ...state, weeks } : state, changed };
+}
+
 // ---- One-time patch: clear exercise data from Wednesday recovery days (W2–W7) ----
 // These weeks were incorrectly imported from MVP1 as training days.
 // Clearing them lets the Wednesday default (active-recovery amber) take effect.
@@ -349,9 +398,12 @@ export async function bootForUser(user: User) {
     // Patch 1: clear incorrect exercise data from W2–W7 Wednesdays
     const { state: patched, changed: p1 } = clearWednesdayRecoveryDays(raw);
 
+    // Patch 2: ensure every Wednesday W1–W46 has Active Recovery
+    const { state: patched2, changed: p2 } = backfillWednesdayRecovery(patched);
+
     // Apply migration: mark all past days complete
-    const { state, changed: p2 } = applyPastDaysCompleted(patched);
-    const changed = p1 || p2;
+    const { state, changed: p3 } = applyPastDaysCompleted(patched2);
+    const changed = p1 || p2 || p3;
     appState.set(state);
 
     if (changed) {

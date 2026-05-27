@@ -115,7 +115,7 @@
   <!-- Exercise list -->
   <section class="section">
     <div class="day-heading">
-      <span class="day-label">{DAY_SHORT[$uiState.day] ?? $uiState.day}</span>
+      <span class="day-label">{$uiState.day}</span>
       <span class="day-sub">Week {$uiState.week}</span>
       {#if dayExTotal > 0}
         <span class="day-progress" class:all-done={dayAllDone}>

@@ -515,6 +515,7 @@
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 95;
+    height: min(88dvh, 600px);
     max-height: 90dvh;
     display: flex;
     flex-direction: column;
