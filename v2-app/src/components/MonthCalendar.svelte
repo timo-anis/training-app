@@ -28,12 +28,16 @@
   type DayStatus = 'done' | 'active-recovery' | 'has-data' | 'rest' | 'weekend' | 'future';
 
   function getDayStatus(date: Date): DayStatus {
-    const wd = dateToWeekDay(date);
-    if (!wd) return 'future';
-
     const todayMid = new Date();
     todayMid.setHours(0, 0, 0, 0);
     if (date > todayMid) return 'future';
+
+    const wd = dateToWeekDay(date);
+    // Before program start — past day, no data possible
+    if (!wd) {
+      const dow = (date.getDay() + 6) % 7; // 0=Mon … 6=Sun
+      return dow >= 5 ? 'weekend' : 'rest';
+    }
 
     const workoutDay = $appState.weeks.find(w => w.week === wd.week && w.day === wd.day);
     const hasData = workoutDay && workoutDay.exercises.length > 0;
@@ -351,14 +355,14 @@
   }
   .status-active-recovery .day-num { color: #c49230; }
 
-  /* Weekend — invisible, just dim text */
-  .status-weekend .day-num { color: #1e2e44; }
+  /* Weekend — dim but readable */
+  .status-weekend .day-num { color: rgba(255,255,255,0.22); }
 
-  /* Rest: past weekday, no data — very dim */
-  .status-rest .day-num { color: #182438; }
+  /* Rest: past weekday, no data — visible but subdued */
+  .status-rest .day-num { color: rgba(255,255,255,0.28); }
 
-  /* Future — nearly invisible */
-  .status-future .day-num { color: #0e1825; }
+  /* Future — visible but clearly lighter than past */
+  .status-future .day-num { color: rgba(255,255,255,0.18); }
   .status-future { cursor: default; }
 
   /* Today — solid gold, THE single strong accent */
