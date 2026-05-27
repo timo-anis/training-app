@@ -114,9 +114,9 @@
     gap: 7px;
     padding: 15px 16px;
     border-radius: 16px;
-    border: 1px solid rgba(79,192,141,0.28);
-    background: rgba(79,192,141,0.08);
-    color: #4fc08d;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.80);
     font-size: 15px;
     font-weight: 800;
     cursor: pointer;
@@ -125,13 +125,13 @@
     white-space: nowrap;
   }
 
-  .timer-btn:active { background: rgba(79,192,141,0.16); }
+  .timer-btn:active { background: rgba(255,255,255,0.12); }
 
   .timer-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: #4fc08d;
+    background: rgba(255,255,255,0.70);
     animation: blink 1.2s ease-in-out infinite;
     flex-shrink: 0;
   }
@@ -174,4 +174,25 @@
 
   .wm-btn:active { background: rgba(196,148,46,0.22); transform: scale(0.98); }
   .wm-btn.full:active { background: #b07e22; transform: scale(0.98); box-shadow: none; }
+
+  /* Desktop — constrain the bar and shrink the button */
+  @media (min-width: 640px) {
+    .workout-bar {
+      justify-content: center;
+      padding: 10px 24px;
+      border-top-color: rgba(255,255,255,0.07);
+    }
+
+    .wm-btn {
+      flex: 0 0 auto;
+      max-width: 280px;
+    }
+
+    .wm-btn.full {
+      padding: 12px 28px;
+      font-size: 14px;
+      border-radius: 14px;
+      box-shadow: 0 2px 14px rgba(196,148,46,0.18);
+    }
+  }
 </style>
