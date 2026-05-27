@@ -6,6 +6,7 @@
   import ExerciseCard from './ExerciseCard.svelte';
   import AddExercise from './AddExercise.svelte';
   import StatsView from './StatsView.svelte';
+  import SearchOverlay from './SearchOverlay.svelte';
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -24,6 +25,7 @@
 
   let migrateStatus: 'idle' | 'done' | 'error' = 'idle';
   let statsOpen = false;
+  let searchOpen = false;
 
   const REST_DAYS = new Set(['Saturday', 'Sunday']);
   const RECOVERY_DAYS = new Set(['Wednesday']);
@@ -45,14 +47,26 @@
   <!-- Header -->
   <header class="topbar">
     <span class="title-text">Timo Training</span>
-    <button class="signout-btn" on:click={signOut} title="Sign out" aria-label="Sign out">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-        <polyline points="16 17 21 12 16 7"/>
-        <line x1="21" y1="12" x2="9" y2="12"/>
-      </svg>
-    </button>
+    <div class="topbar-actions">
+      <button class="icon-btn" on:click={() => searchOpen = true} title="Search exercises" aria-label="Search exercises">
+        <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="9" cy="9" r="6"/>
+          <line x1="14.2" y1="14.2" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <button class="icon-btn" on:click={signOut} title="Sign out" aria-label="Sign out">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+      </button>
+    </div>
   </header>
+
+  {#if searchOpen}
+    <SearchOverlay onClose={() => searchOpen = false} />
+  {/if}
 
   <!-- MVP1 migration banner -->
   {#if showMigrateBanner}
@@ -177,7 +191,13 @@
     letter-spacing: -0.03em;
   }
 
-  .signout-btn {
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .icon-btn {
     width: 36px;
     height: 36px;
     display: flex;
@@ -192,7 +212,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .signout-btn:active {
+  .icon-btn:active {
     background: rgba(14,26,55,0.70);
     color: rgba(255,255,255,0.65);
   }
