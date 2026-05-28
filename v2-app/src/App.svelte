@@ -1,14 +1,36 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, appState } from './stores/app';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
   import WorkoutMode from './components/WorkoutMode.svelte';
   import SearchOverlay from './components/SearchOverlay.svelte';
+  import OnboardingOverlay from './components/OnboardingOverlay.svelte';
 
   let unsubscribeAuth: (() => void) | null = null;
+
+  // Onboarding — show once per user, dismissed flag in localStorage
+  let showOnboarding = false;
+
+  function onboardingKey(userId: string) {
+    return `timo_training_v4_onboarded__${userId}`;
+  }
+
+  function checkOnboarding(userId: string) {
+    try {
+      return !localStorage.getItem(onboardingKey(userId));
+    } catch { return false; }
+  }
+
+  function dismissOnboarding() {
+    showOnboarding = false;
+    const user = $currentUser;
+    if (user) {
+      try { localStorage.setItem(onboardingKey(user.id), '1'); } catch { /* ignore */ }
+    }
+  }
 
   // Elapsed timer for the bottom workout bar
   let elapsed = 0;
@@ -30,6 +52,8 @@
       if (state.status === 'signed_in') {
         currentUser.set(state.user);
         await bootForUser(state.user);
+        // Show onboarding for new users who haven't seen it yet
+        showOnboarding = checkOnboarding(state.user.id);
       } else if (state.status === 'signed_out') {
         currentUser.set(null);
         bootStatus.set('idle');
@@ -42,7 +66,7 @@
     clearInterval(clockInterval);
   });
 
-  $: showWorkoutBar = $currentDayExercises.length > 0 && !$uiState.workoutMode;
+  $: showWorkoutBar = $currentDayExercises.length > 0 && !$uiState.workoutMode && !showOnboarding;
 </script>
 
 {#if $bootStatus === 'loading'}
@@ -78,6 +102,10 @@
 
   {#if $searchOpen}
     <SearchOverlay onClose={() => $searchOpen = false} />
+  {/if}
+
+  {#if showOnboarding}
+    <OnboardingOverlay on:done={dismissOnboarding} />
   {/if}
 {:else}
   <AuthView />
