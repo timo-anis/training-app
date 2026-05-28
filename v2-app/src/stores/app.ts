@@ -259,7 +259,7 @@ export function markWorkoutComplete(week: number, day: DayOfWeek) {
     weeks: state.weeks.map(w =>
       w.week === week && w.day === day ? { ...w, completed: true } : w
     ),
-  }));
+  }), true);
 }
 
 /** Finish workout entirely — stop timer, close overlay */
@@ -281,13 +281,19 @@ export function setActiveBlock(index: number) {
 
 let saveTimer: ReturnType<typeof setTimeout> | null = null;
 
-function scheduleSave(userId: string, state: AppState) {
+function scheduleSave(userId: string, state: AppState, immediate = false) {
   saveLocal(userId, state);
   if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(async () => {
-    const ok = await saveCloud(userId, state);
-    if (!ok) showToast('Cloud sync failed — data saved locally', 'error');
-  }, 3000);
+  if (immediate) {
+    // Fire-and-forget — don't await, don't block the UI
+    saveTimer = null;
+    saveCloud(userId, state);
+  } else {
+    saveTimer = setTimeout(async () => {
+      const ok = await saveCloud(userId, state);
+      if (!ok) showToast('Cloud sync failed — data saved locally', 'error');
+    }, 3000);
+  }
 }
 
 // ---- One-time migration: mark all past training days complete ----
@@ -455,11 +461,11 @@ export async function bootForUser(user: User) {
   }
 }
 
-export function updateState(updater: (s: AppState) => AppState) {
+export function updateState(updater: (s: AppState) => AppState, immediate = false) {
   appState.update(s => {
     const next = updater(s);
     const user = get(currentUser);
-    if (user) scheduleSave(user.id, next);
+    if (user) scheduleSave(user.id, next, immediate);
     return next;
   });
 }
@@ -530,7 +536,8 @@ export function toggleSetDone(week: number, day: DayOfWeek, exId: string, setInd
     mapExercise(state, week, day, exId, ex => ({
       ...ex,
       sets: ex.sets.map((s, i) => i === setIndex ? { ...s, done: !s.done } : s),
-    }))
+    })),
+    true  // immediate cloud save — prevents losing done state if app reloads within 3s
   );
 }
 
@@ -613,13 +620,15 @@ export function deleteSet(week: number, day: DayOfWeek, exId: string, setIndex: 
 // ---- Toggle recovery block done ----
 export function toggleRecoveryDone(week: number, day: DayOfWeek, exId: string) {
   updateState(state =>
-    mapExercise(state, week, day, exId, ex => ({ ...ex, recoveryDone: !ex.recoveryDone }))
+    mapExercise(state, week, day, exId, ex => ({ ...ex, recoveryDone: !ex.recoveryDone })),
+    true
   );
 }
 
 export function toggleConditioningDone(week: number, day: DayOfWeek, exId: string) {
   updateState(state =>
-    mapExercise(state, week, day, exId, ex => ({ ...ex, conditioningDone: !ex.conditioningDone }))
+    mapExercise(state, week, day, exId, ex => ({ ...ex, conditioningDone: !ex.conditioningDone })),
+    true
   );
 }
 
