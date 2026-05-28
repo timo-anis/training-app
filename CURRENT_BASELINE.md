@@ -1,6 +1,6 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-05-26
+**Last updated:** 2026-05-28
 
 ## Active App: V2
 
@@ -8,7 +8,7 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 
 - Source: `v2-app/`
 - Deployed: GitHub Pages from `v2-dist/`
-- Latest commit: `f4e7686` — feat: remove top tabs, Stats inline toggle, premium gold #c49230
+- Latest commit: `2837839` — Workout mode: inline exercise rename without leaving workout
 
 ---
 
@@ -38,24 +38,31 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 
 ### Workout mode
 - Full-screen overlay, block-by-block navigation
-- Set done toggle per set
+- Swipe left/right to navigate blocks
+- Set done toggle per set — immediate cloud save (no done state loss)
 - Wake Lock — screen stays on during workout
-- Timer with elapsed display in bottom bar
+- Timer with elapsed display in header
 - Rest timer — auto-starts after set done, persists through overlay close/reopen
-- Progress from previous session shown inline
-- Workout summary overlay on finish
+- Rest timer: sound toggle (default OFF — no music interruption on iOS)
+- Rest timer: 5-second vibration countdown (one buzz/second on Android)
+- Rest timer: pulse animation on number during last 5 seconds
+- Progress from previous session shown inline (last session kg × reps)
+- Inline exercise rename — ✎ button next to name, edits without leaving workout mode
+- Workout summary overlay on finish (duration, sets done, total volume)
 - Conditioning block: free-text note field
 - Recovery block: single done toggle
 
 ### Data persistence
-- localStorage (schema 4.0) — primary local storage
-- Supabase cloud sync — saves on every change, loads on boot
+- localStorage (schema 4.0) — primary local storage, always written first
+- Supabase cloud sync — 3s debounced on normal changes
+- Critical state changes (set done, workout complete) bypass debounce → immediate cloud save
 - MVP1 → V2 import migration (one-time banner if old data detected)
 
 ### Stats (inline, collapsible)
 - Positioned after week strip, before exercise list
-- Body map (muscle group visualization by zone)
+- Body map (muscle group visualization by zone, clickable toggle per muscle group)
 - Summary chips: total weeks, sets done, volume
+- Volume sparkline (last 8 weeks)
 - Weekly breakdown table
 - Most trained exercises
 
@@ -71,9 +78,10 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 ## Data Model: Schema 4.0
 
 ```
-WorkoutDay { week, day, date, exercises[] }
+WorkoutDay { week, day, date, exercises[], completed? }
 Exercise   { id, name, type, code, sets[], rest, note,
-             recovery, recoveryDone, conditioning, conditioningNote }
+             recovery, recoveryDone,
+             conditioning, conditioningNote, conditioningDone }
 WorkoutSet { kg, reps, done }
 ```
 
@@ -83,11 +91,13 @@ Superset uses `type: 'superset'` + matching `code` ('A', 'B', ...) across exerci
 
 ## Known Limitations / Not Yet Implemented
 
-- No per-exercise progression charts (only raw history visible)
+- No per-exercise progression charts (only raw last-session data visible)
 - No workout scheduling / planned vs actual
 - No notifications or reminders
 - No export / backup UI (cloud sync is implicit)
 - PWA install available but no push notifications
+- No progressive overload suggestions
+- No plateau detection
 
 ---
 
@@ -95,7 +105,8 @@ Superset uses `type: 'superset'` + matching `code` ('A', 'B', ...) across exerci
 
 - Auth flow and session handling
 - Boot flow and bootstrapState
-- Cloud sync logic (saveCloud)
+- Cloud sync logic (saveCloud / scheduleSave)
 - Storage schema key names and version
 - Date/weekday alignment logic in Calendar and MonthCalendar
 - Superset code pairing logic
+- `immediate=true` flag on `updateState` — only for critical state (set done, workout complete, rename)

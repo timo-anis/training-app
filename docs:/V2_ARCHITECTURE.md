@@ -105,9 +105,13 @@ Single store in `src/stores/app.ts`. No external state library.
 
 ### Actions (all in `stores/app.ts`)
 
-All state mutations go through `updateState(updater)`, which calls `scheduleSave` on every change.
+All state mutations go through `updateState(updater, immediate?)`, which calls `scheduleSave` on every change.
 
-Core actions: `addExercise`, `deleteExercise`, `moveExercise`, `updateExerciseMeta`, `addSet`, `deleteSet`, `toggleSetDone`, `updateSetField`, `toggleRecoveryDone`, `toggleConditioningDone`, `updateConditioningNote`, `copyPreviousDay`, `addNewWeek`, `markWorkoutComplete`, `startWorkout`, `openWorkoutMode`, `closeWorkoutMode`, `exitWorkout`
+`immediate = true` bypasses the 3s cloud debounce and fires a cloud save immediately (fire-and-forget). Only use for state changes where data loss on sudden app close would be unacceptable.
+
+Core actions: `addExercise`, `deleteExercise`, `moveExercise`, `updateExerciseMeta`, `renameExercise`, `addSet`, `deleteSet`, `toggleSetDone`, `updateSetField`, `toggleRecoveryDone`, `toggleConditioningDone`, `updateConditioningNote`, `copyPreviousDay`, `addNewWeek`, `markWorkoutComplete`, `startWorkout`, `openWorkoutMode`, `closeWorkoutMode`, `exitWorkout`
+
+Actions using `immediate = true`: `toggleSetDone`, `toggleRecoveryDone`, `toggleConditioningDone`, `markWorkoutComplete`, `renameExercise`
 
 ---
 
@@ -130,11 +134,13 @@ Cloud always wins. This means the last device to sync is the source of truth.
 
 ### Save strategy
 
-Every `updateState` call:
-1. `saveLocal(userId, state)` — synchronous, immediate
-2. `scheduleSave` — debounced 3 seconds → `saveCloud(userId, state)`
+Every `updateState(updater, immediate?)` call:
+1. `saveLocal(userId, state)` — synchronous, always immediate
+2. `scheduleSave(userId, state, immediate)`:
+   - If `immediate = false` (default): debounced 3 seconds → `saveCloud(userId, state)`
+   - If `immediate = true`: fire-and-forget `saveCloud(userId, state)` with no delay
 
-This protects against excessive Supabase writes during rapid set logging.
+Default debounce protects against excessive Supabase writes during rapid set logging. `immediate = true` prevents done-state loss if iOS kills the PWA within 3s of the last interaction.
 
 ---
 
@@ -215,8 +221,16 @@ Single set row — kg input, reps input, done button. Commits values on blur.
 ### WorkoutMode.svelte
 Full-screen focused overlay (`z-index: 100`). Renders exercise blocks one at a time with swipe navigation. Shows last session values. Prefills kg/reps from last session. Rest timer inline per block. Summary screen after last block.
 
+Inline exercise rename: small ✎ button next to exercise name. Tapping opens an inline input (gold border, auto-focus, select-all). Enter or blur commits via `renameExercise`. Escape cancels. Rename resets on block navigation.
+
 ### RestTimer.svelte
 Compact inline pill. Progress bar fill, countdown display, GO! on completion. Reset and Skip buttons. Timer state lives in `uiState` (survives overlay close).
+
+Sound toggle (🔇/🔔) defaults to OFF — preserves iOS background audio. Preference persisted to `timo_training_v4_sound_enabled` in localStorage. `playBeep()` is a no-op when sound is off.
+
+5-second countdown: one 60ms vibration per second via `navigator.vibrate(60)`, tracked by `lastCountdownAt` to prevent double-fires. Pulse animation on the timer number.
+
+On completion: always vibrates `[220, 80, 220]`; plays ascending three-tone beep only when sound is on.
 
 ### StatsView.svelte
 Collapsible panel below week strip. Summary chips (weeks / sets / volume). Volume sparkline (last 8 weeks). Weekly breakdown table. Exercise frequency list. Body map.
