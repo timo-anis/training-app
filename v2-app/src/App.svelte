@@ -34,9 +34,8 @@
     }
   }
 
-  // Help chip visible after first dismissal, until the first workout is completed
-  $: hasCompletedWorkout = $appState.weeks.some(w => w.completed === true);
-  $: showHelpChip = onboardingDone && !hasCompletedWorkout && !showOnboarding;
+  // Help chip always visible after first dismissal
+  $: showHelpChip = onboardingDone && !showOnboarding;
 
   // Elapsed timer for the bottom workout bar
   let elapsed = 0;
