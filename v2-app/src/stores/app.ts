@@ -617,6 +617,16 @@ export function deleteSet(week: number, day: DayOfWeek, exId: string, setIndex: 
   );
 }
 
+// ---- Rename exercise (usable during workout mode) ----
+export function renameExercise(week: number, day: DayOfWeek, exId: string, newName: string) {
+  const trimmed = newName.trim();
+  if (!trimmed) return;
+  updateState(
+    state => mapExercise(state, week, day, exId, ex => ({ ...ex, name: trimmed })),
+    true // immediate cloud save — name change should persist even if app closes quickly
+  );
+}
+
 // ---- Toggle recovery block done ----
 export function toggleRecoveryDone(week: number, day: DayOfWeek, exId: string) {
   updateState(state =>

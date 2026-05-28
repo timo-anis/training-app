@@ -4,7 +4,7 @@
     uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode,
     setActiveBlock, toggleSetDone, updateSetField, findLastSession,
     findLastConditioningNote, toggleRecoveryDone, toggleConditioningDone, updateUI,
-    addSet, deleteSet, updateConditioningNote, markWorkoutComplete,
+    addSet, deleteSet, updateConditioningNote, markWorkoutComplete, renameExercise,
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
   import type { DayOfWeek } from '../types/workout';
@@ -170,6 +170,27 @@
       }))
     : [];
 
+  // ---- Inline exercise rename ----
+  let editingNameId: string | null = null;
+  let editingNameValue = '';
+
+  function startRename(exId: string, currentName: string) {
+    editingNameId = exId;
+    editingNameValue = currentName;
+  }
+
+  function commitRename(week: number, day: DayOfWeek, exId: string) {
+    if (editingNameValue.trim()) renameExercise(week, day, exId, editingNameValue);
+    editingNameId = null;
+  }
+
+  // Svelte action: auto-focus + select-all when input mounts
+  function focusOnMount(node: HTMLElement) {
+    node.focus();
+    (node as HTMLInputElement).select();
+    return {};
+  }
+
   // ---- Local editable inputs (sets) ----
   let localKg: Record<string, string> = {};
   let localReps: Record<string, string> = {};
@@ -201,6 +222,7 @@
     localKg = {};
     localReps = {};
     localCondNote = {};
+    editingNameId = null; // cancel any in-progress rename on block change
   }
 
   function commitKg(week: number, day: DayOfWeek, exId: string, i: number) {
@@ -304,7 +326,28 @@
               {#if block.isSuperset}
                 <span class="ex-code">{ex.code}</span>
               {/if}
-              <span class="ex-name">{ex.name}</span>
+              {#if editingNameId === ex.id}
+                <input
+                  class="ex-name-edit"
+                  type="text"
+                  bind:value={editingNameValue}
+                  use:focusOnMount
+                  on:blur={() => commitRename(week, day, ex.id)}
+                  on:keydown={e => {
+                    if (e.key === 'Enter') (e.target as HTMLElement).blur();
+                    if (e.key === 'Escape') { editingNameId = null; }
+                  }}
+                  autocomplete="off"
+                />
+              {:else}
+                <span class="ex-name">{ex.name}</span>
+                <button
+                  class="ex-rename-btn"
+                  on:click={() => startRename(ex.id, ex.name)}
+                  aria-label="Rename exercise"
+                  title="Rename exercise"
+                >✎</button>
+              {/if}
               {#if ex.rest && !ex.conditioning}
                 <span class="ex-rest">Rest {ex.rest}</span>
               {/if}
@@ -685,6 +728,40 @@
     letter-spacing: -0.02em;
     flex: 1;
   }
+
+  .ex-name-edit {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(196,148,46,0.50);
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 18px;
+    font-weight: 900;
+    color: #ffffff;
+    letter-spacing: -0.02em;
+    outline: none;
+    font-family: inherit;
+    min-width: 0;
+    transition: border-color 0.12s;
+  }
+
+  .ex-name-edit:focus { border-color: rgba(196,148,46,0.80); }
+
+  .ex-rename-btn {
+    background: transparent;
+    border: none;
+    color: rgba(255,255,255,0.20);
+    font-size: 15px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 8px;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    transition: color 0.12s, background 0.12s;
+    line-height: 1;
+  }
+
+  .ex-rename-btn:active { color: rgba(255,255,255,0.65); background: rgba(255,255,255,0.08); }
 
   .ex-rest {
     font-size: 12px;
