@@ -16,6 +16,7 @@
   }
 
   $: isLast = step === TOTAL - 1;
+  $: nextLabel = isLast ? 'Alusta →' : 'Edasi →';
 </script>
 
 <div class="ob-backdrop">
@@ -106,9 +107,7 @@
       {:else}
         <div></div>
       {/if}
-      <button class="btn-next" on:click={next}>
-        {isLast ? 'Alusta ✓' : 'Edasi →'}
-      </button>
+      <button class="btn-next" on:click={next}>{nextLabel}</button>
     </div>
 
   </div>
