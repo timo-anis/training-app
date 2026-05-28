@@ -134,9 +134,28 @@
     animation: sheet-up 0.24s cubic-bezier(0.32, 0.72, 0, 1) both;
   }
 
+  @media (min-width: 640px) {
+    .account-sheet {
+      left: 50%;
+      right: auto;
+      bottom: 24px;
+      width: 440px;
+      transform: translateX(-50%);
+      border-radius: 20px;
+      border: 1px solid rgba(196, 148, 46, 0.25);
+    }
+  }
+
   @keyframes sheet-up {
     from { transform: translateY(30px); opacity: 0; }
     to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  @media (min-width: 640px) {
+    @keyframes sheet-up {
+      from { transform: translateX(-50%) translateY(30px); opacity: 0; }
+      to   { transform: translateX(-50%) translateY(0);    opacity: 1; }
+    }
   }
 
   .sheet-handle {

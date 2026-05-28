@@ -1,8 +1,9 @@
 <script lang="ts">
   import { appState, uiState } from '../stores/app';
+  import { PS_UTC } from '../lib/program';
   import type { WorkoutDay } from '../types/workout';
 
-  // ---- Muscle keyword map (from MVP1) ----
+  // ---- Muscle keyword map ----
   const MUSCLE_HINTS: Record<string, string[]> = {
     chest:       ['bench', 'incline', 'push-up', 'dip', 'pike', 'pushup', 'fly', 'pec'],
     back:        ['row', 'pull-up', 'chin', 'seal row', 'shrug', 'pull-aparts', 'pulldown', 'pullup', 'lat'],
@@ -42,14 +43,7 @@
   type RadarMode = 'day' | 'week' | 'month' | 'alltime';
   let mode: RadarMode = 'week';
 
-  const PROGRAM_START = new Date('2026-02-16T00:00:00');
-
-  function dateToWeekDay(date: Date): { week: number; dayIdx: number } | null {
-    const msPerDay = 24 * 60 * 60 * 1000;
-    const diff = Math.floor((date.getTime() - PROGRAM_START.getTime()) / msPerDay);
-    if (diff < 0) return null;
-    return { week: Math.floor(diff / 7) + 1, dayIdx: diff % 7 };
-  }
+  const DAY_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
   // ---- Score computation ----
   function scoreExercise(name: string, note: string, setCount: number): Partial<Record<MuscleKey, number>> {
@@ -81,7 +75,7 @@
     for (const wd of days) {
       for (const ex of wd.exercises) {
         if (ex.recovery) continue;
-        addTotals(totals, scoreExercise(ex.name, ex.note, ex.sets.length));
+        addTotals(totals, scoreExercise(ex.name, ex.note ?? '', ex.sets.length));
       }
     }
     return totals;
@@ -89,13 +83,10 @@
 
   function computeForMonth(weeks: WorkoutDay[], year: number, month: number): Record<MuscleKey, number> {
     const filtered = weeks.filter(wd => {
-      const wd2 = dateToWeekDay(new Date(PROGRAM_START.getTime()));
-      // Recompute the date for this workout day
-      const { DAY_ORDER } = { DAY_ORDER: ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] };
       const dayIdx = DAY_ORDER.indexOf(wd.day);
-      const ms = PROGRAM_START.getTime() + ((wd.week - 1) * 7 + dayIdx) * 86400000;
+      const ms = PS_UTC + ((wd.week - 1) * 7 + dayIdx) * 86400000;
       const d = new Date(ms);
-      return d.getFullYear() === year && d.getMonth() === month;
+      return d.getUTCFullYear() === year && d.getUTCMonth() === month;
     });
     return computeForDays(filtered);
   }
@@ -103,22 +94,17 @@
   $: totals = (() => {
     const weeks = $appState.weeks;
     if (mode === 'day') {
-      const dayDays = weeks.filter(w => w.week === $uiState.week && w.day === $uiState.day);
-      return computeForDays(dayDays);
+      return computeForDays(weeks.filter(w => w.week === $uiState.week && w.day === $uiState.day));
     }
     if (mode === 'week') {
-      const weekDays = weeks.filter(w => w.week === $uiState.week);
-      return computeForDays(weekDays);
+      return computeForDays(weeks.filter(w => w.week === $uiState.week));
     }
     if (mode === 'month') {
-      // Find date of selected week/day
-      const DAY_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
       const dayIdx = DAY_ORDER.indexOf($uiState.day);
-      const ms = PROGRAM_START.getTime() + (($uiState.week - 1) * 7 + dayIdx) * 86400000;
+      const ms = PS_UTC + (($uiState.week - 1) * 7 + dayIdx) * 86400000;
       const ref = new Date(ms);
-      return computeForMonth(weeks, ref.getFullYear(), ref.getMonth());
+      return computeForMonth(weeks, ref.getUTCFullYear(), ref.getUTCMonth());
     }
-    // alltime
     return computeForDays(weeks);
   })();
 
@@ -134,15 +120,6 @@
     return 3;
   }
 
-  function zoneColor(key: MuscleKey): string {
-    const i = intensity(key);
-    if (i === 0) return 'rgba(255,255,255,0.04)';
-    const base = MUSCLE_COLORS[key];
-    const alpha = i === 1 ? '0.20' : i === 2 ? '0.45' : '0.75';
-    // Parse hex and apply alpha inline via opacity
-    return base;
-  }
-
   function zoneOpacity(key: MuscleKey): number {
     const i = intensity(key);
     if (i === 0) return 0.06;
@@ -151,33 +128,33 @@
     return 0.90;
   }
 
+  // ---- Hide/show muscle groups ----
+  let hidden = new Set<MuscleKey>();
+
+  function toggleHidden(key: MuscleKey) {
+    if (hidden.has(key)) hidden.delete(key);
+    else hidden.add(key);
+    hidden = hidden; // trigger reactivity
+  }
+
+  // Effective opacity: hidden = 0.03, visible = normal zoneOpacity
+  function effectiveOpacity(key: MuscleKey): number {
+    if (hidden.has(key)) return 0.03;
+    return zoneOpacity(key);
+  }
+
+  // Glow for intensity-3 non-hidden zones
+  function shouldGlow(key: MuscleKey): boolean {
+    return intensity(key) === 3 && !hidden.has(key);
+  }
+
   // Legend — only muscles with any sets
   $: legendItems = (Object.keys(MUSCLE_HINTS) as MuscleKey[])
     .filter(k => (totals[k] ?? 0) > 0)
     .sort((a, b) => (totals[b] ?? 0) - (totals[a] ?? 0));
 
-  // Strongest / weakest (of trained muscles)
   $: strongest = legendItems[0] ?? null;
   $: weakest = legendItems[legendItems.length - 1] ?? null;
-
-  // ---- Manual selection (click to highlight individual muscles) ----
-  let selected = new Set<MuscleKey>();
-
-  function toggleMuscle(key: MuscleKey) {
-    if (selected.has(key)) selected.delete(key);
-    else selected.add(key);
-    selected = selected; // trigger Svelte reactivity
-  }
-
-  function clearSelection() { selected = new Set(); }
-
-  // When selection active: highlight selected, dim others
-  function effectiveOpacity(key: MuscleKey): number {
-    const base = zoneOpacity(key);
-    if (selected.size === 0) return base;
-    if (selected.has(key)) return Math.max(base, 0.88);
-    return Math.min(base, 0.07);
-  }
 
   const MODES: { key: RadarMode; label: string }[] = [
     { key: 'day',     label: 'Day' },
@@ -202,6 +179,23 @@
   <!-- Body SVG -->
   <div class="body-wrap">
     <svg viewBox="0 0 220 320" class="body-svg" role="img" aria-label="Muscle balance body">
+      <defs>
+        <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+        <filter id="glow-soft" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+
       <!-- Body shell -->
       <ellipse cx="110" cy="34" rx="24" ry="25" class="body-shell"/>
       <path class="body-shell" d="M70 78 C78 60,94 52,110 52 C126 52,142 60,150 78 C156 92,159 106,158 124 C156 151,148 177,142 198 C139 208,138 220,139 234 C140 250,144 275,147 304 L128 304 C124 278,121 257,118 238 C116 223,114 208,110 196 C106 208,104 223,102 238 C99 257,96 278,92 304 L73 304 C76 275,80 250,81 234 C82 220,81 208,78 198 C72 177,64 151,62 124 C61 106,64 92,70 78 Z"/>
@@ -209,90 +203,81 @@
 
       <!-- Shoulders -->
       <path
-        class="zone" class:zone-sel={selected.has('shoulders')}
+        class="zone"
         fill={MUSCLE_COLORS.shoulders}
         opacity={effectiveOpacity('shoulders')}
-        stroke={selected.has('shoulders') ? MUSCLE_COLORS.shoulders : 'none'}
-        stroke-width="1.5"
-        on:click={() => toggleMuscle('shoulders')}
+        filter={shouldGlow('shoulders') ? 'url(#glow)' : undefined}
+        on:click={() => toggleHidden('shoulders')}
         d="M62 82 C73 63,89 54,110 54 C131 54,147 63,158 82 C151 89,144 95,136 99 C128 88,120 83,110 83 C100 83,92 88,84 99 C76 95,69 89,62 82 Z"
       />
       <!-- Chest -->
       <path
-        class="zone" class:zone-sel={selected.has('chest')}
+        class="zone"
         fill={MUSCLE_COLORS.chest}
         opacity={effectiveOpacity('chest')}
-        stroke={selected.has('chest') ? MUSCLE_COLORS.chest : 'none'}
-        stroke-width="1.5"
-        on:click={() => toggleMuscle('chest')}
+        filter={shouldGlow('chest') ? 'url(#glow)' : undefined}
+        on:click={() => toggleHidden('chest')}
         d="M85 98 C92 90,100 86,110 86 C120 86,128 90,135 98 C132 112,124 123,110 128 C96 123,88 112,85 98 Z"
       />
       <!-- Back -->
       <path
-        class="zone zone-back" class:zone-sel={selected.has('back')}
+        class="zone zone-back"
         fill={MUSCLE_COLORS.back}
-        opacity={selected.size === 0 ? zoneOpacity('back') * 0.7 : effectiveOpacity('back')}
-        stroke={selected.has('back') ? MUSCLE_COLORS.back : 'none'}
-        stroke-width="1.5"
-        on:click={() => toggleMuscle('back')}
+        opacity={hidden.has('back') ? 0.03 : zoneOpacity('back') * 0.7}
+        filter={shouldGlow('back') ? 'url(#glow-soft)' : undefined}
+        on:click={() => toggleHidden('back')}
         d="M85 92 C93 83,101 80,110 80 C119 80,127 83,135 92 C135 116,127 139,110 151 C93 139,85 116,85 92 Z"
       />
       <!-- Arms (both) -->
       <path
-        class="zone" class:zone-sel={selected.has('arms')}
+        class="zone"
         fill={MUSCLE_COLORS.arms}
         opacity={effectiveOpacity('arms')}
-        stroke={selected.has('arms') ? MUSCLE_COLORS.arms : 'none'}
-        stroke-width="1.5"
-        on:click={() => toggleMuscle('arms')}
+        filter={shouldGlow('arms') ? 'url(#glow)' : undefined}
+        on:click={() => toggleHidden('arms')}
         d="M61 90 C54 102,51 117,52 135 C53 152,57 168,61 183 C64 194,69 204,76 212 C79 198,80 185,79 172 C76 148,74 125,75 105 C75 100,72 94,67 90 Z"
       />
       <path
-        class="zone" class:zone-sel={selected.has('arms')}
+        class="zone"
         fill={MUSCLE_COLORS.arms}
         opacity={effectiveOpacity('arms')}
-        stroke={selected.has('arms') ? MUSCLE_COLORS.arms : 'none'}
-        stroke-width="1.5"
-        on:click={() => toggleMuscle('arms')}
+        filter={shouldGlow('arms') ? 'url(#glow)' : undefined}
+        on:click={() => toggleHidden('arms')}
         d="M159 90 C166 102,169 117,168 135 C167 152,163 168,159 183 C156 194,151 204,144 212 C141 198,140 185,141 172 C144 148,146 125,145 105 C145 100,148 94,153 90 Z"
       />
       <!-- Core -->
       <path
-        class="zone" class:zone-sel={selected.has('core')}
+        class="zone"
         fill={MUSCLE_COLORS.core}
         opacity={effectiveOpacity('core')}
-        stroke={selected.has('core') ? MUSCLE_COLORS.core : 'none'}
-        stroke-width="1.5"
-        on:click={() => toggleMuscle('core')}
+        filter={shouldGlow('core') ? 'url(#glow)' : undefined}
+        on:click={() => toggleHidden('core')}
         d="M92 128 C98 122,103 120,110 120 C117 120,122 122,128 128 C126 148,122 165,110 179 C98 165,94 148,92 128 Z"
       />
       <!-- Posterior -->
       <path
-        class="zone" class:zone-sel={selected.has('posterior')}
+        class="zone"
         fill={MUSCLE_COLORS.posterior}
         opacity={effectiveOpacity('posterior')}
-        stroke={selected.has('posterior') ? MUSCLE_COLORS.posterior : 'none'}
-        stroke-width="1.5"
-        on:click={() => toggleMuscle('posterior')}
+        filter={shouldGlow('posterior') ? 'url(#glow)' : undefined}
+        on:click={() => toggleHidden('posterior')}
         d="M91 182 C97 176,103 173,110 173 C117 173,123 176,129 182 C127 193,122 204,110 210 C98 204,93 193,91 182 Z"
       />
       <!-- Quads (both legs) -->
       <path
-        class="zone" class:zone-sel={selected.has('quads')}
+        class="zone"
         fill={MUSCLE_COLORS.quads}
         opacity={effectiveOpacity('quads')}
-        stroke={selected.has('quads') ? MUSCLE_COLORS.quads : 'none'}
-        stroke-width="1.5"
-        on:click={() => toggleMuscle('quads')}
+        filter={shouldGlow('quads') ? 'url(#glow)' : undefined}
+        on:click={() => toggleHidden('quads')}
         d="M83 212 C91 213,97 217,101 224 C102 240,99 269,95 304 L76 304 C79 270,80 241,83 212 Z"
       />
       <path
-        class="zone" class:zone-sel={selected.has('quads')}
+        class="zone"
         fill={MUSCLE_COLORS.quads}
         opacity={effectiveOpacity('quads')}
-        stroke={selected.has('quads') ? MUSCLE_COLORS.quads : 'none'}
-        stroke-width="1.5"
-        on:click={() => toggleMuscle('quads')}
+        filter={shouldGlow('quads') ? 'url(#glow)' : undefined}
+        on:click={() => toggleHidden('quads')}
         d="M137 212 C129 213,123 217,119 224 C118 240,121 269,125 304 L144 304 C141 270,140 241,137 212 Z"
       />
     </svg>
@@ -303,22 +288,28 @@
     {/if}
   </div>
 
-  <!-- Clear selection button -->
-  {#if selected.size > 0}
-    <button class="clear-sel-btn" on:click={clearSelection}>
-      Clear selection ×
-    </button>
-  {/if}
-
-  <!-- Legend chips -->
+  <!-- Legend chips (clickable toggles) -->
   {#if legendItems.length > 0}
     <div class="legend-grid">
       {#each legendItems as key}
-        <div class="legend-chip" style="--c: {MUSCLE_COLORS[key]}; --op: {zoneOpacity(key)}">
+        <button
+          class="legend-chip"
+          class:chip-hidden={hidden.has(key)}
+          style="--c: {MUSCLE_COLORS[key]}; --op: {zoneOpacity(key)}"
+          on:click={() => toggleHidden(key)}
+          title={hidden.has(key) ? `Show ${MUSCLE_LABELS[key]}` : `Hide ${MUSCLE_LABELS[key]}`}
+        >
           <span class="chip-dot"></span>
           <span class="chip-name">{MUSCLE_LABELS[key]}</span>
           <span class="chip-sets">{totals[key]}×</span>
-        </div>
+          {#if hidden.has(key)}
+            <span class="chip-eye-off" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19M1 1l22 22"/>
+              </svg>
+            </span>
+          {/if}
+        </button>
       {/each}
     </div>
 
@@ -326,7 +317,7 @@
     <div class="insights">
       {#if strongest}
         <div class="insight-row">
-          <span class="insight-lbl">Strongest</span>
+          <span class="insight-lbl">Most trained</span>
           <span class="insight-val" style="color: {MUSCLE_COLORS[strongest]}">{MUSCLE_LABELS[strongest]}</span>
         </div>
       {/if}
@@ -363,7 +354,7 @@
     border-radius: 10px;
     border: none;
     background: transparent;
-    color: #2a4880;
+    color: rgba(255,255,255,0.25);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
@@ -376,63 +367,43 @@
     color: #c49230;
   }
 
-  /* Body SVG */
+  /* Body SVG — premium dark card */
   .body-wrap {
     position: relative;
     display: flex;
     justify-content: center;
+    background: linear-gradient(180deg, rgba(8,12,28,0.80) 0%, rgba(5,7,18,0.90) 100%);
+    border: 1px solid rgba(65,100,175,0.18);
+    border-top: 1px solid rgba(196,148,46,0.15);
+    border-radius: 20px;
+    padding: 20px 16px;
   }
 
   .body-svg {
     width: 160px;
     height: auto;
+    overflow: visible; /* needed so glow filter isn't clipped */
   }
 
   .body-shell {
-    fill: rgba(255,255,255,0.05);
-    stroke: rgba(255,255,255,0.08);
+    fill: rgba(255,255,255,0.04);
+    stroke: rgba(255,255,255,0.10);
     stroke-width: 1;
   }
 
   .body-core-shell {
-    fill: rgba(255,255,255,0.03);
-    stroke: rgba(255,255,255,0.05);
+    fill: rgba(255,255,255,0.02);
+    stroke: rgba(255,255,255,0.06);
     stroke-width: 0.5;
   }
 
   .zone {
-    transition: opacity 0.3s, fill 0.3s;
-    stroke: none;
+    transition: opacity 0.25s;
     cursor: pointer;
   }
 
   .zone:active {
-    opacity: 0.5 !important;
-  }
-
-  /* Clear selection button */
-  .clear-sel-btn {
-    width: 100%;
-    padding: 9px;
-    border-radius: 10px;
-    border: 1px solid rgba(65,100,175,0.20);
-    background: transparent;
-    color: rgba(255,255,255,0.40);
-    font-size: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 0.03em;
-    transition: background 0.12s, color 0.12s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .clear-sel-btn:active {
-    background: rgba(14,25,55,0.65);
-    color: rgba(255,255,255,0.65);
-  }
-
-  .zone-back {
-    /* Back overlaps chest — show as hatching by reducing opacity further */
+    opacity: 0.4 !important;
   }
 
   .no-data-overlay {
@@ -442,13 +413,13 @@
     align-items: center;
     justify-content: center;
     font-size: 13px;
-    color: #1e3870;
+    color: rgba(255,255,255,0.18);
     text-align: center;
     line-height: 1.6;
     pointer-events: none;
   }
 
-  /* Legend grid */
+  /* Legend chips — clickable toggle buttons */
   .legend-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -461,8 +432,23 @@
     gap: 8px;
     padding: 9px 12px;
     border-radius: 12px;
-    border: 1px solid rgba(60,90,160,0.13);
-    background: rgba(12,20,44,0.50);
+    border: 1px solid rgba(60,90,160,0.18);
+    background: rgba(12,20,44,0.55);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.18s, background 0.12s, border-color 0.18s;
+    text-align: left;
+    width: 100%;
+  }
+
+  .legend-chip:active {
+    background: rgba(12,20,44,0.80);
+  }
+
+  .legend-chip.chip-hidden {
+    opacity: 0.38;
+    border-color: rgba(60,90,160,0.10);
+    background: rgba(8,12,24,0.40);
   }
 
   .chip-dot {
@@ -472,19 +458,38 @@
     background: var(--c);
     opacity: var(--op);
     flex-shrink: 0;
+    transition: opacity 0.18s;
+  }
+
+  .chip-hidden .chip-dot {
+    opacity: 0.20;
   }
 
   .chip-name {
     flex: 1 1 0;
     font-size: 12px;
     font-weight: 700;
-    color: #c8ddf4;
+    color: rgba(200,221,244,0.85);
+    transition: color 0.18s;
+  }
+
+  .chip-hidden .chip-name {
+    color: rgba(200,221,244,0.35);
+    text-decoration: line-through;
+    text-decoration-color: rgba(255,255,255,0.20);
   }
 
   .chip-sets {
     font-size: 11px;
     font-weight: 800;
-    color: #3a5888;
+    color: rgba(58,88,136,0.90);
+  }
+
+  .chip-eye-off {
+    color: rgba(255,255,255,0.20);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
   }
 
   /* Insights */
@@ -506,7 +511,7 @@
   .insight-lbl {
     font-size: 11px;
     font-weight: 700;
-    color: #1e3870;
+    color: rgba(255,255,255,0.22);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -514,6 +519,6 @@
   .insight-val {
     font-size: 13px;
     font-weight: 800;
-    color: #c8ddf4;
+    color: rgba(200,221,244,0.90);
   }
 </style>
