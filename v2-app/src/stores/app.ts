@@ -5,6 +5,18 @@ import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud, detectMvp1Data, importFromMvp1 } from '../services/storage';
 import { PS_UTC } from '../lib/program';
 import { getDateForWeekDay, DAY_OFFSET } from '../lib/dates';
+import {
+  mapExercise,
+  toggleSetDoneInState,
+  deleteSetFromState,
+  insertSetInState,
+  addSetToState,
+  updateSetFieldInState,
+  deleteExerciseFromState,
+  renameExerciseInState,
+  moveExerciseInState,
+  buildWorkoutBlocks as _buildWorkoutBlocks,
+} from '../lib/state-helpers';
 
 // ---- Auth store ----
 export const currentUser = writable<User | null>(null);
@@ -89,24 +101,9 @@ export interface WorkoutBlock {
   code: string;         // superset code e.g. 'A', or '' for single
 }
 
-export const workoutBlocks = derived(currentDayExercises, ($exercises) => {
-  const blocks: WorkoutBlock[] = [];
-  const seenCodes = new Set<string>();
-
-  for (const ex of $exercises) {
-    if (ex.type === 'single' || !ex.code) {
-      blocks.push({ id: ex.id, exercises: [ex], isSuperset: false, code: '' });
-    } else {
-      // Superset — group by code
-      if (!seenCodes.has(ex.code)) {
-        seenCodes.add(ex.code);
-        const group = $exercises.filter(e => e.type === 'superset' && e.code === ex.code);
-        blocks.push({ id: `superset_${ex.code}`, exercises: group, isSuperset: true, code: ex.code });
-      }
-    }
-  }
-  return blocks;
-});
+export const workoutBlocks = derived(currentDayExercises, ($exercises) =>
+  _buildWorkoutBlocks($exercises)
+);
 
 // ---- Progression: find last session for an exercise by name ----
 export interface LastSession {
@@ -475,25 +472,7 @@ export function updateUI(updater: (s: UIState) => UIState) {
   uiState.update(updater);
 }
 
-// ---- Shared exercise updater ----
-function mapExercise(
-  state: AppState,
-  week: number,
-  day: DayOfWeek,
-  exId: string,
-  updater: (ex: Exercise) => Exercise
-): AppState {
-  return {
-    ...state,
-    weeks: state.weeks.map(w => {
-      if (w.week !== week || w.day !== day) return w;
-      return {
-        ...w,
-        exercises: w.exercises.map(ex => ex.id === exId ? updater(ex) : ex),
-      };
-    }),
-  };
-}
+// mapExercise is imported from lib/state-helpers
 
 // ---- Update exercise metadata ----
 export function updateExerciseMeta(
@@ -516,28 +495,13 @@ export function updateConditioningNote(week: number, day: DayOfWeek, exId: strin
 
 // ---- Move exercise up or down ----
 export function moveExercise(week: number, day: DayOfWeek, exId: string, direction: 'up' | 'down') {
-  updateState(state => ({
-    ...state,
-    weeks: state.weeks.map(w => {
-      if (w.week !== week || w.day !== day) return w;
-      const exs = [...w.exercises];
-      const idx = exs.findIndex(e => e.id === exId);
-      if (idx === -1) return w;
-      const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
-      if (swapIdx < 0 || swapIdx >= exs.length) return w;
-      [exs[idx], exs[swapIdx]] = [exs[swapIdx], exs[idx]];
-      return { ...w, exercises: exs };
-    }),
-  }));
+  updateState(state => moveExerciseInState(state, week, day, exId, direction));
 }
 
 // ---- Toggle set done ----
 export function toggleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number) {
-  updateState(state =>
-    mapExercise(state, week, day, exId, ex => ({
-      ...ex,
-      sets: ex.sets.map((s, i) => i === setIndex ? { ...s, done: !s.done } : s),
-    })),
+  updateState(
+    state => toggleSetDoneInState(state, week, day, exId, setIndex),
     true  // immediate cloud save — prevents losing done state if app reloads within 3s
   );
 }
@@ -551,25 +515,12 @@ export function updateSetField(
   field: 'kg' | 'reps',
   value: string
 ) {
-  updateState(state =>
-    mapExercise(state, week, day, exId, ex => ({
-      ...ex,
-      sets: ex.sets.map((s, i) => i === setIndex ? { ...s, [field]: value } : s),
-    }))
-  );
+  updateState(state => updateSetFieldInState(state, week, day, exId, setIndex, field, value));
 }
 
 // ---- Add set (copy last set's values, clear done) ----
 export function addSet(week: number, day: DayOfWeek, exId: string) {
-  updateState(state =>
-    mapExercise(state, week, day, exId, ex => {
-      const last = ex.sets[ex.sets.length - 1];
-      return {
-        ...ex,
-        sets: [...ex.sets, { kg: last?.kg ?? '', reps: last?.reps ?? '', done: false }],
-      };
-    })
-  );
+  updateState(state => addSetToState(state, week, day, exId));
 }
 
 // ---- Add exercise ----
@@ -595,26 +546,12 @@ export function addExercise(week: number, day: DayOfWeek, name: string) {
 
 // ---- Delete set ----
 export function deleteSet(week: number, day: DayOfWeek, exId: string, setIndex: number) {
-  updateState(state =>
-    mapExercise(state, week, day, exId, ex => ({
-      ...ex,
-      sets: ex.sets.filter((_, i) => i !== setIndex),
-    }))
-  );
+  updateState(state => deleteSetFromState(state, week, day, exId, setIndex));
 }
 
 // ---- Insert set at index (used for undo after delete) ----
 export function insertSet(week: number, day: DayOfWeek, exId: string, index: number, set: WorkoutSet) {
-  updateState(state =>
-    mapExercise(state, week, day, exId, ex => ({
-      ...ex,
-      sets: [
-        ...ex.sets.slice(0, index),
-        { kg: set.kg, reps: set.reps, done: set.done },
-        ...ex.sets.slice(index),
-      ],
-    }))
-  );
+  updateState(state => insertSetInState(state, week, day, exId, index, set));
 }
 
 // ---- Update day-level session note ----
@@ -630,10 +567,9 @@ export function updateDayNote(week: number, day: DayOfWeek, note: string) {
 
 // ---- Rename exercise (usable during workout mode) ----
 export function renameExercise(week: number, day: DayOfWeek, exId: string, newName: string) {
-  const trimmed = newName.trim();
-  if (!trimmed) return;
+  const next = renameExerciseInState; // guard: returns unchanged state on empty string
   updateState(
-    state => mapExercise(state, week, day, exId, ex => ({ ...ex, name: trimmed })),
+    state => next(state, week, day, exId, newName),
     true // immediate cloud save — name change should persist even if app closes quickly
   );
 }
@@ -655,13 +591,7 @@ export function toggleConditioningDone(week: number, day: DayOfWeek, exId: strin
 
 // ---- Delete exercise ----
 export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
-  updateState(state => ({
-    ...state,
-    weeks: state.weeks.map(w => {
-      if (w.week !== week || w.day !== day) return w;
-      return { ...w, exercises: w.exercises.filter(ex => ex.id !== exId) };
-    }),
-  }));
+  updateState(state => deleteExerciseFromState(state, week, day, exId));
 }
 
 // ---- MVP1 migration ----
