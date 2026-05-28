@@ -137,16 +137,26 @@
     hidden = hidden; // trigger reactivity
   }
 
-  // Effective opacity: hidden = 0.03, visible = normal zoneOpacity
-  function effectiveOpacity(key: MuscleKey): number {
-    if (hidden.has(key)) return 0.03;
-    return zoneOpacity(key);
-  }
+  // Reactive zone opacities — computed as a record so Svelte sees `hidden` dependency
+  $: zoneOpacities = (() => {
+    const r: Record<string, number> = {};
+    for (const key of Object.keys(MUSCLE_HINTS) as MuscleKey[]) {
+      r[key] = hidden.has(key) ? 0 : zoneOpacity(key);
+    }
+    return r;
+  })();
 
-  // Glow for intensity-3 non-hidden zones
-  function shouldGlow(key: MuscleKey): boolean {
-    return intensity(key) === 3 && !hidden.has(key);
-  }
+  // Back zone uses a 0.7 multiplier (overlaps chest)
+  $: backOpacity = hidden.has('back') ? 0 : zoneOpacity('back') * 0.7;
+
+  // Reactive glow flags
+  $: zoneGlows = (() => {
+    const r: Record<string, boolean> = {};
+    for (const key of Object.keys(MUSCLE_HINTS) as MuscleKey[]) {
+      r[key] = intensity(key) === 3 && !hidden.has(key);
+    }
+    return r;
+  })();
 
   // Legend — only muscles with any sets
   $: legendItems = (Object.keys(MUSCLE_HINTS) as MuscleKey[])
@@ -205,8 +215,8 @@
       <path
         class="zone"
         fill={MUSCLE_COLORS.shoulders}
-        opacity={effectiveOpacity('shoulders')}
-        filter={shouldGlow('shoulders') ? 'url(#glow)' : undefined}
+        opacity={zoneOpacities.shoulders}
+        filter={zoneGlows.shoulders ? 'url(#glow)' : undefined}
         on:click={() => toggleHidden('shoulders')}
         d="M62 82 C73 63,89 54,110 54 C131 54,147 63,158 82 C151 89,144 95,136 99 C128 88,120 83,110 83 C100 83,92 88,84 99 C76 95,69 89,62 82 Z"
       />
@@ -214,8 +224,8 @@
       <path
         class="zone"
         fill={MUSCLE_COLORS.chest}
-        opacity={effectiveOpacity('chest')}
-        filter={shouldGlow('chest') ? 'url(#glow)' : undefined}
+        opacity={zoneOpacities.chest}
+        filter={zoneGlows.chest ? 'url(#glow)' : undefined}
         on:click={() => toggleHidden('chest')}
         d="M85 98 C92 90,100 86,110 86 C120 86,128 90,135 98 C132 112,124 123,110 128 C96 123,88 112,85 98 Z"
       />
@@ -223,8 +233,8 @@
       <path
         class="zone zone-back"
         fill={MUSCLE_COLORS.back}
-        opacity={hidden.has('back') ? 0.03 : zoneOpacity('back') * 0.7}
-        filter={shouldGlow('back') ? 'url(#glow-soft)' : undefined}
+        opacity={backOpacity}
+        filter={zoneGlows.back ? 'url(#glow-soft)' : undefined}
         on:click={() => toggleHidden('back')}
         d="M85 92 C93 83,101 80,110 80 C119 80,127 83,135 92 C135 116,127 139,110 151 C93 139,85 116,85 92 Z"
       />
@@ -232,16 +242,16 @@
       <path
         class="zone"
         fill={MUSCLE_COLORS.arms}
-        opacity={effectiveOpacity('arms')}
-        filter={shouldGlow('arms') ? 'url(#glow)' : undefined}
+        opacity={zoneOpacities.arms}
+        filter={zoneGlows.arms ? 'url(#glow)' : undefined}
         on:click={() => toggleHidden('arms')}
         d="M61 90 C54 102,51 117,52 135 C53 152,57 168,61 183 C64 194,69 204,76 212 C79 198,80 185,79 172 C76 148,74 125,75 105 C75 100,72 94,67 90 Z"
       />
       <path
         class="zone"
         fill={MUSCLE_COLORS.arms}
-        opacity={effectiveOpacity('arms')}
-        filter={shouldGlow('arms') ? 'url(#glow)' : undefined}
+        opacity={zoneOpacities.arms}
+        filter={zoneGlows.arms ? 'url(#glow)' : undefined}
         on:click={() => toggleHidden('arms')}
         d="M159 90 C166 102,169 117,168 135 C167 152,163 168,159 183 C156 194,151 204,144 212 C141 198,140 185,141 172 C144 148,146 125,145 105 C145 100,148 94,153 90 Z"
       />
@@ -249,8 +259,8 @@
       <path
         class="zone"
         fill={MUSCLE_COLORS.core}
-        opacity={effectiveOpacity('core')}
-        filter={shouldGlow('core') ? 'url(#glow)' : undefined}
+        opacity={zoneOpacities.core}
+        filter={zoneGlows.core ? 'url(#glow)' : undefined}
         on:click={() => toggleHidden('core')}
         d="M92 128 C98 122,103 120,110 120 C117 120,122 122,128 128 C126 148,122 165,110 179 C98 165,94 148,92 128 Z"
       />
@@ -258,8 +268,8 @@
       <path
         class="zone"
         fill={MUSCLE_COLORS.posterior}
-        opacity={effectiveOpacity('posterior')}
-        filter={shouldGlow('posterior') ? 'url(#glow)' : undefined}
+        opacity={zoneOpacities.posterior}
+        filter={zoneGlows.posterior ? 'url(#glow)' : undefined}
         on:click={() => toggleHidden('posterior')}
         d="M91 182 C97 176,103 173,110 173 C117 173,123 176,129 182 C127 193,122 204,110 210 C98 204,93 193,91 182 Z"
       />
@@ -267,16 +277,16 @@
       <path
         class="zone"
         fill={MUSCLE_COLORS.quads}
-        opacity={effectiveOpacity('quads')}
-        filter={shouldGlow('quads') ? 'url(#glow)' : undefined}
+        opacity={zoneOpacities.quads}
+        filter={zoneGlows.quads ? 'url(#glow)' : undefined}
         on:click={() => toggleHidden('quads')}
         d="M83 212 C91 213,97 217,101 224 C102 240,99 269,95 304 L76 304 C79 270,80 241,83 212 Z"
       />
       <path
         class="zone"
         fill={MUSCLE_COLORS.quads}
-        opacity={effectiveOpacity('quads')}
-        filter={shouldGlow('quads') ? 'url(#glow)' : undefined}
+        opacity={zoneOpacities.quads}
+        filter={zoneGlows.quads ? 'url(#glow)' : undefined}
         on:click={() => toggleHidden('quads')}
         d="M137 212 C129 213,123 217,119 224 C118 240,121 269,125 304 L144 304 C141 270,140 241,137 212 Z"
       />
