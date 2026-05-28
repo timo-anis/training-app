@@ -3,7 +3,12 @@
 -- Run this in: Supabase Dashboard → SQL Editor → New query
 -- ============================================================
 
--- 1. Enable Row Level Security
+-- 1. Grant table access to authenticated users
+-- Required: Supabase is removing implicit public schema grants (enforced Oct 30, 2026).
+-- Without this, PostgREST / supabase-js cannot access the table after that date.
+GRANT SELECT, INSERT, UPDATE, DELETE ON app_state TO authenticated;
+
+-- 2. Enable Row Level Security
 ALTER TABLE app_state ENABLE ROW LEVEL SECURITY;
 
 -- 2. SELECT — user can only read their own row
