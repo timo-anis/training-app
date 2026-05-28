@@ -109,7 +109,7 @@
   {/if}
 
   {#if $searchOpen}
-    <SearchOverlay onClose={() => $searchOpen = false} />
+    <SearchOverlay />
   {/if}
 
   {#if showOnboarding}

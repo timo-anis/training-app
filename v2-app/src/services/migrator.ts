@@ -189,10 +189,11 @@ export function parseAndMigrateState(raw: unknown): AppState | null {
       weeks: v2.weeks.map(wd => ({
         ...wd,
         exercises: wd.exercises.map(ex => ({
-          conditioning: false,
-          conditioningNote: '',
-          conditioningDone: false,
-          ...ex, // existing fields win — only fills in what's missing
+          ...ex,
+          // Backfill fields added after initial schema — existing value wins via ??
+          conditioning: ex.conditioning ?? false,
+          conditioningNote: ex.conditioningNote ?? '',
+          conditioningDone: ex.conditioningDone ?? false,
         })),
       })),
     };
