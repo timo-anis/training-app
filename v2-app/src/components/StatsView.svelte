@@ -87,6 +87,39 @@
   $: exHidden = Math.max(0, exFreq.length - PREVIEW);
   $: displayedWeeks = weekExpanded ? weekStats : weekStats.slice(0, PREVIEW);
   $: displayedEx = exExpanded ? exFreq : exFreq.slice(0, PREVIEW);
+
+  // ---- #7 Per-exercise progression chart ----
+  let selectedExForChart: string | null = null;
+
+  interface ExSession { week: number; label: string; maxKg: number; }
+
+  function getExerciseHistory(name: string, allWeeks: WorkoutDay[]): ExSession[] {
+    const weekMap = new Map<number, ExSession>();
+    for (const wd of allWeeks) {
+      for (const ex of wd.exercises) {
+        if (ex.name.toLowerCase() !== name.toLowerCase()) continue;
+        if (ex.recovery || ex.conditioning) continue;
+        const doneSets = ex.sets.filter(s => s.done && parseFloat(s.kg) > 0);
+        if (doneSets.length === 0) continue;
+        const maxKg = Math.max(...doneSets.map(s => parseFloat(s.kg)));
+        const existing = weekMap.get(wd.week);
+        if (!existing || maxKg > existing.maxKg) weekMap.set(wd.week, { week: wd.week, label: `W${wd.week}`, maxKg });
+      }
+    }
+    return Array.from(weekMap.values()).sort((a, b) => a.week - b.week);
+  }
+
+  // ---- #4 Plateau detection ----
+  function hasPlateau(name: string, allWeeks: WorkoutDay[]): boolean {
+    const hist = getExerciseHistory(name, allWeeks);
+    if (hist.length < 3) return false;
+    const last3 = hist.slice(-3).map(s => s.maxKg);
+    return last3.every(kg => kg === last3[0]);
+  }
+
+  $: plateauSet = new Set(
+    exFreq.filter(e => hasPlateau(e.name, $appState.weeks)).map(e => e.name.toLowerCase())
+  );
 </script>
 
 <div class="stats-view">
@@ -177,12 +210,43 @@
   {:else}
     <div class="freq-list">
       {#each displayedEx as ex, i}
-        <div class="freq-row">
+        {@const isSelected = selectedExForChart === ex.name}
+        {@const isPlateau = plateauSet.has(ex.name.toLowerCase())}
+        <div class="freq-row" class:freq-row-selected={isSelected}>
           <span class="freq-rank">{i + 1}</span>
-          <span class="freq-name">{ex.name}</span>
+          <button
+            class="freq-name-btn"
+            on:click={() => selectedExForChart = isSelected ? null : ex.name}
+          >
+            {ex.name}
+            {#if isPlateau}<span class="plateau-badge" title="No weight increase in last 3 sessions">→</span>{/if}
+          </button>
           <span class="freq-count">{ex.count}×</span>
           <span class="freq-sets">{ex.totalSets} sets</span>
         </div>
+        {#if isSelected}
+          {@const hist = getExerciseHistory(ex.name, $appState.weeks).slice(-8)}
+          {@const histMax = Math.max(...hist.map(h => h.maxKg), 1)}
+          {#if hist.length > 0}
+            <div class="ex-chart">
+              <div class="ex-chart-bars">
+                {#each hist as h}
+                  {@const barH = Math.max(4, Math.round((h.maxKg / histMax) * 52))}
+                  <div class="ex-chart-col">
+                    <span class="ex-chart-val">{h.maxKg}kg</span>
+                    <div class="ex-chart-bar-wrap">
+                      <div class="ex-chart-bar" style="height: {barH}px"></div>
+                    </div>
+                    <span class="ex-chart-lbl">{h.label}</span>
+                  </div>
+                {/each}
+              </div>
+              <div class="ex-chart-foot">Max weight per session (last {hist.length})</div>
+            </div>
+          {:else}
+            <div class="ex-chart-empty">No logged sets with weight yet.</div>
+          {/if}
+        {/if}
       {/each}
     </div>
     {#if exHidden > 0 || exExpanded}
@@ -454,5 +518,117 @@
     flex-shrink: 0;
     min-width: 44px;
     text-align: right;
+  }
+
+  /* #4 Plateau badge */
+  .plateau-badge {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 12px;
+    font-weight: 900;
+    color: #c49230;
+    vertical-align: middle;
+    opacity: 0.85;
+  }
+
+  /* #7 Exercise chart */
+  .freq-row-selected {
+    border-color: rgba(196,148,46,0.28);
+    background: linear-gradient(160deg, rgba(196,148,46,0.06), #080e1c);
+  }
+
+  .freq-name-btn {
+    flex: 1 1 0;
+    background: none;
+    border: none;
+    padding: 0;
+    text-align: left;
+    font-size: 14px;
+    font-weight: 700;
+    color: #c8ddf4;
+    letter-spacing: -0.01em;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .ex-chart {
+    background: linear-gradient(160deg, #0b1628, #060c18);
+    border: 1px solid rgba(196,148,46,0.18);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    padding: 12px 14px 10px;
+    margin-top: -1px;
+    margin-bottom: 2px;
+  }
+
+  .ex-chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 5px;
+  }
+
+  .ex-chart-col {
+    flex: 1 1 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .ex-chart-val {
+    font-size: 9px;
+    font-weight: 800;
+    color: #c49230;
+    letter-spacing: -0.01em;
+    min-height: 11px;
+    white-space: nowrap;
+  }
+
+  .ex-chart-bar-wrap {
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    height: 52px;
+  }
+
+  .ex-chart-bar {
+    width: 100%;
+    max-width: 28px;
+    border-radius: 3px 3px 2px 2px;
+    background: linear-gradient(180deg, rgba(196,148,46,0.85) 0%, rgba(196,148,46,0.40) 100%);
+    transition: height 0.3s ease;
+  }
+
+  .ex-chart-lbl {
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.28);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .ex-chart-foot {
+    margin-top: 8px;
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.22);
+    text-align: center;
+    letter-spacing: 0.02em;
+  }
+
+  .ex-chart-empty {
+    padding: 14px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.28);
+    text-align: center;
+    background: linear-gradient(160deg, #0b1628, #060c18);
+    border: 1px solid rgba(196,148,46,0.15);
+    border-top: none;
+    border-radius: 0 0 12px 12px;
+    margin-top: -1px;
   }
 </style>

@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import type { User } from '@supabase/supabase-js';
-import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise } from '../types/workout';
+import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud, detectMvp1Data, importFromMvp1 } from '../services/storage';
 import { PS_UTC } from '../lib/program';
@@ -615,6 +615,31 @@ export function deleteSet(week: number, day: DayOfWeek, exId: string, setIndex: 
       sets: ex.sets.filter((_, i) => i !== setIndex),
     }))
   );
+}
+
+// ---- Insert set at index (used for undo after delete) ----
+export function insertSet(week: number, day: DayOfWeek, exId: string, index: number, set: WorkoutSet) {
+  updateState(state =>
+    mapExercise(state, week, day, exId, ex => ({
+      ...ex,
+      sets: [
+        ...ex.sets.slice(0, index),
+        { kg: set.kg, reps: set.reps, done: set.done },
+        ...ex.sets.slice(index),
+      ],
+    }))
+  );
+}
+
+// ---- Update day-level session note ----
+export function updateDayNote(week: number, day: DayOfWeek, note: string) {
+  updateState(s => ({
+    ...s,
+    weeks: s.weeks.map(w => {
+      if (w.week !== week || w.day !== day) return w;
+      return { ...w, note: note.trim() || undefined };
+    }),
+  }), true);
 }
 
 // ---- Rename exercise (usable during workout mode) ----

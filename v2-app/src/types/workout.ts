@@ -44,6 +44,8 @@ export interface WorkoutDay {
   exercises: Exercise[];
   /** Set to true when user taps "Finish Training" — drives green calendar dot */
   completed?: boolean;
+  /** Free-text session note — logged during or after workout */
+  note?: string;
 }
 
 export interface AppState {

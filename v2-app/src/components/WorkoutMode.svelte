@@ -4,10 +4,11 @@
     uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode,
     setActiveBlock, toggleSetDone, updateSetField, findLastSession,
     findLastConditioningNote, toggleRecoveryDone, toggleConditioningDone, updateUI,
-    addSet, deleteSet, updateConditioningNote, markWorkoutComplete, renameExercise,
+    addSet, deleteSet, insertSet, updateConditioningNote, markWorkoutComplete,
+    renameExercise, updateDayNote, addExercise,
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
-  import type { DayOfWeek } from '../types/workout';
+  import type { DayOfWeek, WorkoutSet } from '../types/workout';
   import RestTimer from './RestTimer.svelte';
 
   const DAY_SHORT: Record<string, string> = {
@@ -40,6 +41,7 @@
     releaseWakeLock();
     document.removeEventListener('visibilitychange', onVisibilityChange);
     clearInterval(clockInterval);
+    if (undoTimer) clearTimeout(undoTimer);
   });
 
   // ---- Elapsed timer ----
@@ -191,6 +193,62 @@
     return {};
   }
 
+  // ---- #1 kg +/- adjustment ----
+  function adjustKg(week: number, day: DayOfWeek, exId: string, i: number, delta: number) {
+    const k = `${exId}-${i}`;
+    const raw = (localKg[k] ?? '').replace(',', '.').trim();
+    const current = parseFloat(raw) || 0;
+    const next = Math.max(0, parseFloat((current + delta).toFixed(2)));
+    localKg[k] = next > 0 ? String(next) : '';
+    localKg = localKg; // trigger reactivity
+    updateSetField(week, day, exId, i, 'kg', localKg[k]);
+  }
+
+  // ---- #2 manual rest timer presets ----
+  function startRestSecs(secs: number) {
+    if (secs > 0) updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: secs }));
+  }
+
+  // ---- #3 day-level session note ----
+  let localDayNote: string = $appState.weeks.find(
+    w => w.week === $uiState.week && w.day === $uiState.day
+  )?.note ?? '';
+  let showDayNote = !!localDayNote;
+
+  function commitDayNote() {
+    updateDayNote($uiState.week, $uiState.day, localDayNote);
+  }
+
+  // ---- #5 add exercise within workout mode ----
+  let showAddEx = false;
+  let addExName = '';
+
+  function handleAddExInWorkout() {
+    const name = addExName.trim();
+    if (!name) return;
+    addExercise($uiState.week, $uiState.day, name);
+    addExName = '';
+    showAddEx = false;
+  }
+
+  // ---- #8 undo last destructive action ----
+  interface UndoAction { label: string; fn: () => void; }
+  let undoPending: UndoAction | null = null;
+  let undoTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function pushUndo(action: UndoAction) {
+    if (undoTimer) clearTimeout(undoTimer);
+    undoPending = action;
+    undoTimer = setTimeout(() => { undoPending = null; }, 5000);
+  }
+
+  function execUndo() {
+    if (!undoPending) return;
+    if (undoTimer) clearTimeout(undoTimer);
+    undoPending.fn();
+    undoPending = null;
+  }
+
   // ---- Local editable inputs (sets) ----
   let localKg: Record<string, string> = {};
   let localReps: Record<string, string> = {};
@@ -250,9 +308,26 @@
   }
 
   function handleDeleteSet(week: number, day: DayOfWeek, exId: string, i: number) {
+    // Capture state for undo before deleting
+    const wd = $appState.weeks.find(w => w.week === week && w.day === day);
+    const targetEx = wd?.exercises.find(e => e.id === exId);
+    const capturedSet: WorkoutSet | null = targetEx ? { ...targetEx.sets[i] } : null;
+    const capturedIdx = i;
+
     deleteSet(week, day, exId, i);
     localKg = {};
     localReps = {};
+
+    if (capturedSet) {
+      pushUndo({
+        label: `Set ${capturedIdx + 1} deleted`,
+        fn: () => {
+          insertSet(week, day, exId, capturedIdx, capturedSet!);
+          localKg = {};
+          localReps = {};
+        },
+      });
+    }
   }
 
   // ---- Swipe navigation ----
@@ -354,6 +429,11 @@
             </div>
 
             {#if lastSession}
+              {@const firstK = `${ex.id}-0`}
+              {@const curKg = localKg[firstK] ?? ex.sets[0]?.kg ?? ''}
+              {@const lastKg = lastSession.sets[0]?.kg ?? ''}
+              {@const sameWeight = !!(lastKg && curKg && !isNaN(parseFloat(curKg)) && parseFloat(curKg) === parseFloat(lastKg))}
+              {@const hasDone = ex.sets.some(s => s.done)}
               <div class="last-session">
                 <span class="last-label">W{lastSession.week} {DAY_SHORT[lastSession.day]}</span>
                 <span class="last-sets">
@@ -361,6 +441,9 @@
                     <span class="last-set">{s.kg || '—'} × {s.reps || '—'}{i < lastSession.sets.length - 1 ? ' ·' : ''}</span>
                   {/each}
                 </span>
+                {#if sameWeight && hasDone}
+                  <span class="overload-hint">→ Try {parseFloat(lastKg) + 2.5}kg?</span>
+                {/if}
               </div>
             {/if}
 
@@ -422,6 +505,10 @@
                         placeholder="—"
                         autocomplete="off"
                       />
+                      <div class="kg-adj">
+                        <button class="kg-adj-btn" on:click|stopPropagation={() => adjustKg(week, day, ex.id, i, -2.5)}>−</button>
+                        <button class="kg-adj-btn" on:click|stopPropagation={() => adjustKg(week, day, ex.id, i, +2.5)}>+</button>
+                      </div>
                     </div>
 
                     <div class="set-col">
@@ -466,6 +553,53 @@
         {/each}
       </div>
 
+      <!-- #2 Rest timer presets — shown when no timer is running and block has strength exercises -->
+      {#if !restActive && block.exercises.some(e => !e.recovery && !e.conditioning)}
+        <div class="rest-presets">
+          <span class="rest-presets-lbl">REST</span>
+          {#each [[60,"1'"],[90,'1:30'],[120,"2'"],[150,'2:30'],[180,"3'"]] as [secs, label]}
+            <button class="rest-preset-btn" on:click={() => startRestSecs(secs as number)}>{label}</button>
+          {/each}
+        </div>
+      {/if}
+
+      <!-- #5 Add exercise within workout mode -->
+      {#if showAddEx}
+        <div class="wm-addex-row">
+          <input
+            class="wm-addex-input"
+            type="text"
+            bind:value={addExName}
+            use:focusOnMount
+            placeholder="Exercise name"
+            autocomplete="off"
+            on:keydown={e => { if (e.key === 'Enter') handleAddExInWorkout(); if (e.key === 'Escape') { showAddEx = false; addExName = ''; } }}
+          />
+          <button class="wm-addex-confirm" on:click={handleAddExInWorkout}>Add</button>
+          <button class="wm-addex-cancel" on:click={() => { showAddEx = false; addExName = ''; }}>✕</button>
+        </div>
+      {:else}
+        <button class="wm-addex-trigger" on:click={() => showAddEx = true}>+ Add exercise</button>
+      {/if}
+
+      <!-- #3 Day session note -->
+      <div class="day-note-section">
+        {#if showDayNote}
+          <textarea
+            class="day-note-area"
+            bind:value={localDayNote}
+            on:blur={commitDayNote}
+            placeholder="Session notes — how it felt, new PRs, observations…"
+            rows="3"
+          ></textarea>
+          <button class="day-note-close" on:click={() => { commitDayNote(); showDayNote = false; }}>✓ Done</button>
+        {:else}
+          <button class="day-note-toggle" on:click={() => showDayNote = true}>
+            {localDayNote ? '📝 ' + localDayNote.slice(0, 48) + (localDayNote.length > 48 ? '…' : '') : '+ Session note'}
+          </button>
+        {/if}
+      </div>
+
       <!-- Rest timer -->
       {#if restActive && $uiState.restStartTime !== null && $uiState.restTotal !== null}
         <RestTimer
@@ -476,6 +610,14 @@
           on:reset={resetRest}
         />
       {/if}
+    </div>
+  {/if}
+
+  <!-- #8 Undo toast -->
+  {#if undoPending}
+    <div class="undo-toast">
+      <span class="undo-label">{undoPending.label}</span>
+      <button class="undo-btn" on:click={execUndo}>Undo</button>
     </div>
   {/if}
 
@@ -728,6 +870,273 @@
     letter-spacing: -0.02em;
     flex: 1;
   }
+
+  /* ---- #1 kg adjust buttons ---- */
+  .kg-adj {
+    display: flex;
+    gap: 4px;
+    margin-top: 5px;
+  }
+
+  .kg-adj-btn {
+    flex: 1;
+    height: 22px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.45);
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, color 0.1s;
+    line-height: 1;
+  }
+
+  .kg-adj-btn:active { background: rgba(196,148,46,0.18); color: #c49230; }
+
+  /* ---- #2 rest presets ---- */
+  .rest-presets {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 0;
+  }
+
+  .rest-presets-lbl {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.28);
+    flex-shrink: 0;
+  }
+
+  .rest-preset-btn {
+    flex: 1;
+    padding: 8px 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.45);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+    text-align: center;
+  }
+
+  .rest-preset-btn:active {
+    background: rgba(196,148,46,0.14);
+    border-color: rgba(196,148,46,0.30);
+    color: #c49230;
+  }
+
+  /* ---- #5 add exercise in workout ---- */
+  .wm-addex-trigger {
+    width: 100%;
+    padding: 11px;
+    border-radius: 12px;
+    border: 1px dashed rgba(75,115,195,0.20);
+    background: transparent;
+    color: rgba(255,255,255,0.28);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+
+  .wm-addex-trigger:active {
+    background: rgba(14,25,55,0.65);
+    color: rgba(255,255,255,0.55);
+    border-color: rgba(255,255,255,0.18);
+  }
+
+  .wm-addex-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .wm-addex-input {
+    flex: 1;
+    background: rgba(13,24,52,0.85);
+    border: 1px solid rgba(196,148,46,0.40);
+    border-radius: 12px;
+    padding: 12px 14px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ffffff;
+    font-family: inherit;
+    outline: none;
+    min-width: 0;
+  }
+
+  .wm-addex-input::placeholder { color: rgba(255,255,255,0.22); }
+  .wm-addex-input:focus { border-color: rgba(196,148,46,0.70); }
+
+  .wm-addex-confirm {
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: none;
+    background: rgba(196,148,46,0.18);
+    border: 1px solid rgba(196,148,46,0.35);
+    color: #c49230;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+
+  .wm-addex-confirm:active { background: rgba(196,148,46,0.30); }
+
+  .wm-addex-cancel {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: transparent;
+    color: rgba(255,255,255,0.35);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+
+  .wm-addex-cancel:active { background: rgba(255,80,80,0.12); color: #ff6060; }
+
+  /* ---- #3 day session note ---- */
+  .day-note-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .day-note-toggle {
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px dashed rgba(70,110,185,0.16);
+    background: transparent;
+    color: rgba(255,255,255,0.28);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, color 0.12s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .day-note-toggle:active { background: rgba(14,25,55,0.65); color: rgba(255,255,255,0.55); }
+
+  .day-note-area {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(14,26,55,0.70);
+    border: 1px solid rgba(70,110,185,0.24);
+    border-radius: 14px;
+    padding: 14px 16px;
+    font-size: 15px;
+    font-weight: 500;
+    color: #ffffff;
+    font-family: inherit;
+    line-height: 1.55;
+    resize: none;
+    outline: none;
+    transition: border-color 0.12s;
+    min-height: 90px;
+  }
+
+  .day-note-area:focus { border-color: rgba(70,110,185,0.45); }
+  .day-note-area::placeholder { color: rgba(255,255,255,0.20); }
+
+  .day-note-close {
+    align-self: flex-end;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .day-note-close:active { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.85); }
+
+  /* ---- #6 overload hint ---- */
+  .overload-hint {
+    font-size: 12px;
+    font-weight: 800;
+    color: #c49230;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    animation: hint-pop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  }
+
+  @keyframes hint-pop {
+    from { opacity: 0; transform: scale(0.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+
+  /* ---- #8 undo toast ---- */
+  .undo-toast {
+    position: absolute;
+    bottom: 0;
+    left: 14px;
+    right: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(18,30,60,0.96);
+    border: 1px solid rgba(70,110,185,0.30);
+    border-radius: 14px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    animation: toast-in 0.2s ease;
+    z-index: 10;
+  }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .undo-label {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+  }
+
+  .undo-btn {
+    padding: 7px 14px;
+    border-radius: 9px;
+    border: 1px solid rgba(196,148,46,0.35);
+    background: rgba(196,148,46,0.12);
+    color: #c49230;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+
+  .undo-btn:active { background: rgba(196,148,46,0.25); }
 
   .ex-name-edit {
     flex: 1;
