@@ -4,6 +4,7 @@ import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet } f
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud, detectMvp1Data, importFromMvp1 } from '../services/storage';
 import { PS_UTC } from '../lib/program';
+import { getDateForWeekDay, DAY_OFFSET } from '../lib/dates';
 
 // ---- Auth store ----
 export const currentUser = writable<User | null>(null);
@@ -569,21 +570,6 @@ export function addSet(week: number, day: DayOfWeek, exId: string) {
       };
     })
   );
-}
-
-// ---- Date helper ----
-const DAY_OFFSET: Record<DayOfWeek, number> = {
-  Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3,
-  Friday: 4, Saturday: 5, Sunday: 6,
-};
-
-function getDateForWeekDay(week: number, day: DayOfWeek): string {
-  const utc = PS_UTC + ((week - 1) * 7 + DAY_OFFSET[day]) * 86400000;
-  const d = new Date(utc);
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const dd = String(d.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${dd}`;
 }
 
 // ---- Add exercise ----

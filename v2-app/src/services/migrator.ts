@@ -16,7 +16,7 @@
 
 import type { AppState, WorkoutDay, Exercise, WorkoutSet, DayOfWeek } from '../types/workout';
 import { emptyAppState } from '../types/workout';
-import { PS_UTC } from '../lib/program';
+import { getDateForWeekDay } from '../lib/dates';
 
 const MVP1_DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 type MVP1Day = typeof MVP1_DAY_ORDER[number];
@@ -32,13 +32,7 @@ const DAY_MAP: Record<MVP1Day, DayOfWeek> = {
 };
 
 function dayDate(week: number, mvp1Day: MVP1Day): string {
-  const dayIndex = MVP1_DAY_ORDER.indexOf(mvp1Day);
-  const utc = PS_UTC + ((week - 1) * 7 + dayIndex) * 86400000;
-  const d = new Date(utc);
-  const y = d.getUTCFullYear();
-  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(d.getUTCDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+  return getDateForWeekDay(week, DAY_MAP[mvp1Day]);
 }
 
 // ---- Detect MVP1 format ----
