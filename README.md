@@ -1,139 +1,136 @@
-# 🧠 Timo Training
+# Timo Training
 
-A focused, mobile-first training app for real workout use.
+A mobile-first training app built for real daily use — fast logging during workouts, reliable state handling, and Supabase-backed cloud sync.
 
-Built as a lightweight PWA with a calm, practical UX: fast logging during training, reliable local handling on-device, and optional Supabase-backed cloud sync for signed-in users.
-
----
-
-## Repository Tracks
-
-This repo currently contains **two separate product tracks** plus a
-stabilization documentation track.
-
-### 1. MVP1 / current working app
-
-This is the current production-like working solution.
-
-- Source of truth is the current working [`index.html`](./index.html)
-- This is the active app behavior baseline
-- Bug fixes and narrow UX patches should assume MVP1 unless explicitly
-  told otherwise
-- MVP1 must not be migrated or refactored into V2 implicitly
-
-### 2. V2 architecture scaffold
-
-This is a separate architecture base for future development.
-
-- It is **not** the active app
-- It is **not** the current production baseline
-- It must not be treated as the implementation source of truth
-- It exists to guide future clean architecture work beside MVP1
-
-See:
-
-- [Repo Tracks Overview](./docs:/REPO_TRACKS.md)
-- [V2 Architecture Blueprint](./docs:/V2_ARCHITECTURE.md)
-
-### 3. Pre-v2 stabilization documents
-
-These docs define what MVP1 must stabilize before V2 becomes practical.
-
-See:
-
-- [Pre-V2 Stabilization Plan](./docs:/PRE_V2_STABILIZATION.md)
-- [Pre-V2 Stabilization Checklist](./docs:/PRE_V2_STABILIZATION_CHECKLIST.md)
-- [Current Baseline](./CURRENT_BASELINE.md)
-
-Until an explicit switch is made, **MVP1 remains the source of truth**.
+**V2 is the active app.** MVP1 (`index.html`) is retired.
 
 ---
 
-## 🚀 Live
+## Live
 
-https://mullemeeldibtrenniteha2026.github.io/training-app/
-
----
-
-## ✨ Current App Features
-
-- Auth-first sign-in flow for cloud users
-- User-scoped 4-digit PIN on each device after sign-in
-- Signed-in scoped workout state and UI selection
-- Supabase cloud sync for signed-in users
-- Local fallback and local-only mode when signed out or offline
-- Empty cloud overwrite protection for safer persistence
-- Automatic local snapshot backups before risky writes
-- Restore flow for local snapshots on the same device
-- Clean new-user calendar state without inherited default markers
-- First-workout CTA for signed-in users with an empty training state
-- Mobile-first workout execution with sets, reps, weights, and timer
-- Muscle balance radar (Day / Week / Lifetime)
-- Installable as a mobile app (PWA)
+**https://timo-anis.github.io/training-app/v2/**
 
 ---
 
-## 🎯 Design Principles
+## Tech Stack
 
-- Clarity over complexity  
-- Speed over features  
-- Focus over noise  
-- Safe state handling over clever shortcuts
-
-Designed to reduce friction during workouts while keeping user data predictable and isolated.
-
----
-
-## 🧩 Tech Stack
-
-- HTML / CSS / JavaScript  
-- Supabase  
-- GitHub Pages  
-- PWA (manifest + icons)
+| Layer | Technology |
+|-------|-----------|
+| Framework | Svelte 4 + TypeScript |
+| Build | Vite |
+| Auth + Cloud | Supabase (auth + `app_state` table) |
+| Hosting | GitHub Pages (gh-pages branch, CI/CD via GitHub Actions) |
+| PWA | Web App Manifest + service worker |
 
 ---
 
-## 🧠 Current Product Story
+## Features
 
-Most training apps are overloaded, slow, or unclear when you actually try to use them in the middle of a workout.
-
-This app is being shaped around a narrower goal:
-
-**Open fast, understand your state immediately, and train without losing data or flow.**
-
-The current baseline prioritizes:
-- reliable auth-first access for signed-in users
-- calm cloud/local state handling
-- mobile-friendly workout execution
-- safe recovery paths through local snapshots and guarded cloud writes
-
----
-
-## 🔄 Next Focus
-
-- Smoother new-user onboarding after first sign-in
-- Continued cloud/local safety hardening
-- Small usability improvements around workout execution
-- Cleanup only after the current baseline remains stable
+- Auth-first sign-in — Supabase email/password
+- Cloud sync with local fallback — cloud wins on boot, 3-second debounced save on every change
+- Month calendar with day status markers (done / workout / recovery / rest / weekend / future)
+- Week strip + day picker with Today button
+- Exercise logging — weighted sets (kg × reps), supersets, conditioning blocks, recovery blocks
+- Workout Mode — focused full-screen overlay, block-by-block navigation, swipe gestures
+- Inline rest timer — compact pill with progress bar, auto-starts on set done
+- Workout timer — elapsed time chip in bottom bar, persists across overlay open/close
+- Day progress indicator — X/Y exercises completed in current day heading
+- Copy previous day / week — prefills kg/reps, resets done states
+- Exercise search overlay
+- Stats view — weekly volume sparkline, weekly breakdown, exercise frequency, body map
+- Body map — muscle group visualization (day / week / lifetime radar)
+- MVP1 data import banner — detects and migrates legacy localStorage data
+- PWA installable — works offline, home screen icon
 
 ---
 
-## 👤 Author
+## Repository Structure
 
-**Timo Anis**  
-Product Lead
+```
+training-app/
+├── index.html              # MVP1 — retired, kept for reference
+├── v2-app/                 # V2 source (Svelte 4 + TS + Vite)
+│   └── src/
+│       ├── App.svelte          # Root — auth shell, scroll layout, workout bar
+│       ├── app.css             # Global reset + font
+│       ├── main.ts             # Vite entry
+│       ├── types/
+│       │   └── workout.ts      # Domain types (single source of truth)
+│       ├── stores/
+│       │   └── app.ts          # All state + actions + derived stores
+│       ├── services/
+│       │   ├── auth.ts         # Supabase auth wrapper
+│       │   ├── storage.ts      # Local + cloud load/save + bootstrap
+│       │   ├── supabase.ts     # Supabase client init
+│       │   └── migrator.ts     # Schema migration (MVP1 → V2, schema upgrades)
+│       └── components/
+│           ├── AuthView.svelte
+│           ├── BootOverlay.svelte
+│           ├── MainView.svelte
+│           ├── MonthCalendar.svelte
+│           ├── Calendar.svelte
+│           ├── ExerciseCard.svelte
+│           ├── SetRow.svelte
+│           ├── AddExercise.svelte
+│           ├── WorkoutMode.svelte
+│           ├── RestTimer.svelte
+│           ├── StatsView.svelte
+│           ├── BodyMap.svelte
+│           └── SearchOverlay.svelte
+├── v2-dist/                # Built output (gitignored, built by CI)
+├── docs:/                  # Architecture + planning docs
+│   └── V2_ARCHITECTURE.md
+└── .github/workflows/      # GitHub Actions — build + deploy on main push
+```
 
 ---
 
-## V2 Architecture
+## Local Development
 
-This project is evolving into a V2 version with a clean, long-term architecture.
+```bash
+cd v2-app
+npm install
+npm run dev
+```
 
-The goal is to build a reliable, scalable training system with:
-- clear domain model (workouts, exercises, sets)
-- strict data integrity
-- separated layers (domain, state, UI, services)
-- predictable behavior in real workout usage
+Requires a `.env.local` with:
 
-👉 Full architecture blueprint:
-[docs:/V2_ARCHITECTURE.md](./docs:/V2_ARCHITECTURE.md)
+```
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+```
+
+Build for production:
+
+```bash
+npm run build   # outputs to ../v2-dist/
+```
+
+---
+
+## Deployment
+
+Push to `main` → GitHub Actions builds `v2-app` → deploys built output to `gh-pages` branch under `/v2/`.
+
+GitHub Pages source: `gh-pages` branch, root `/`.
+
+---
+
+## Design Principles
+
+- Clarity over complexity
+- Speed during workouts — minimal taps, zero confusion
+- Data integrity — no broken states, no misaligned dates
+- Reliability over cleverness — predictable behavior across sessions
+
+---
+
+## Architecture
+
+Full architecture reference: [docs:/V2_ARCHITECTURE.md](./docs:/V2_ARCHITECTURE.md)
+
+---
+
+## Author
+
+**Timo Anis** — Product Lead
