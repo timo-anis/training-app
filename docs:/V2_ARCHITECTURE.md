@@ -23,7 +23,7 @@ Defined in `src/types/workout.ts` — single source of truth.
 ```
 AppState
 └── weeks: WorkoutDay[]
-    └── WorkoutDay { week, day, date, exercises[], completed? }
+    └── WorkoutDay { week, day, date, exercises[], completed?, note? }
         └── Exercise { id, name, type, code, sets[], rest, note,
                        recovery, recoveryDone,
                        conditioning, conditioningNote, conditioningDone }
@@ -109,9 +109,9 @@ All state mutations go through `updateState(updater, immediate?)`, which calls `
 
 `immediate = true` bypasses the 3s cloud debounce and fires a cloud save immediately (fire-and-forget). Only use for state changes where data loss on sudden app close would be unacceptable.
 
-Core actions: `addExercise`, `deleteExercise`, `moveExercise`, `updateExerciseMeta`, `renameExercise`, `addSet`, `deleteSet`, `toggleSetDone`, `updateSetField`, `toggleRecoveryDone`, `toggleConditioningDone`, `updateConditioningNote`, `copyPreviousDay`, `addNewWeek`, `markWorkoutComplete`, `startWorkout`, `openWorkoutMode`, `closeWorkoutMode`, `exitWorkout`
+Core actions: `addExercise`, `deleteExercise`, `moveExercise`, `updateExerciseMeta`, `renameExercise`, `addSet`, `deleteSet`, `insertSet`, `toggleSetDone`, `updateSetField`, `toggleRecoveryDone`, `toggleConditioningDone`, `updateConditioningNote`, `updateDayNote`, `copyPreviousDay`, `addNewWeek`, `markWorkoutComplete`, `startWorkout`, `openWorkoutMode`, `closeWorkoutMode`, `exitWorkout`
 
-Actions using `immediate = true`: `toggleSetDone`, `toggleRecoveryDone`, `toggleConditioningDone`, `markWorkoutComplete`, `renameExercise`
+Actions using `immediate = true`: `toggleSetDone`, `toggleRecoveryDone`, `toggleConditioningDone`, `markWorkoutComplete`, `renameExercise`, `updateDayNote`
 
 ---
 
@@ -221,7 +221,19 @@ Single set row — kg input, reps input, done button. Commits values on blur.
 ### WorkoutMode.svelte
 Full-screen focused overlay (`z-index: 100`). Renders exercise blocks one at a time with swipe navigation. Shows last session values. Prefills kg/reps from last session. Rest timer inline per block. Summary screen after last block.
 
-Inline exercise rename: small ✎ button next to exercise name. Tapping opens an inline input (gold border, auto-focus, select-all). Enter or blur commits via `renameExercise`. Escape cancels. Rename resets on block navigation.
+**Inline exercise rename**: small ✎ button next to exercise name. Tapping opens an inline input (gold border, auto-focus, select-all). Enter or blur commits via `renameExercise`. Escape cancels. Resets on block navigation.
+
+**kg ±2.5 buttons**: `−` and `+` buttons inside each kg set-col. `adjustKg()` reads `localKg`, applies delta, rounds to 2dp, writes back via `updateSetField`.
+
+**Rest timer presets**: when `!restActive` and block has strength exercises, shows `REST 1' · 1:30 · 2' · 2:30 · 3'` row. Calls `startRestSecs(secs)` directly — bypasses the string parser.
+
+**Progressive overload hint**: reactive `{@const}` in the `last-session` row — shows `→ Try X+2.5kg?` when `localKg` for set 0 matches `lastSession.sets[0].kg` and at least one set is done. Animates in with a pop.
+
+**Add exercise**: `+ Add exercise` trigger button shows inline input row. Calls existing `addExercise` store action. Workout blocks re-derive automatically.
+
+**Session note**: `WorkoutDay.note` field. Initialized once on component mount from `appState`. Collapsible textarea. On blur or close, calls `updateDayNote` (immediate cloud save).
+
+**Undo set delete**: `handleDeleteSet` captures the set and index before calling `deleteSet`. `pushUndo()` stores the reverse action with a 5-second timeout. `execUndo()` calls `insertSet` to re-insert at the original index. Undo toast is an `position: absolute` overlay inside `wm-content`.
 
 ### RestTimer.svelte
 Compact inline pill. Progress bar fill, countdown display, GO! on completion. Reset and Skip buttons. Timer state lives in `uiState` (survives overlay close).
@@ -234,6 +246,10 @@ On completion: always vibrates `[220, 80, 220]`; plays ascending three-tone beep
 
 ### StatsView.svelte
 Collapsible panel below week strip. Summary chips (weeks / sets / volume). Volume sparkline (last 8 weeks). Weekly breakdown table. Exercise frequency list. Body map.
+
+**Plateau detection**: `hasPlateau(name, weeks)` uses `getExerciseHistory()` — collects max kg per week (done sets only, deduped to one entry per week), checks if last 3 values are identical. Result memoized into `plateauSet` reactive Set. Exercises with plateau show a `→` gold badge.
+
+**Per-exercise progression chart**: `selectedExForChart` string. Clicking exercise name toggles it. When selected, `getExerciseHistory()` returns up to 8 sessions shown as a gold bar chart (same visual style as volume sparkline). Bars scale to `histMax`. Chart attaches below the freq-row with connected border styling.
 
 ### BodyMap.svelte
 SVG muscle group visualization. Three modes: day / week / lifetime. Clickable muscle groups.

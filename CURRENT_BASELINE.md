@@ -8,7 +8,7 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 
 - Source: `v2-app/`
 - Deployed: GitHub Pages from `v2-dist/`
-- Latest commit: `2837839` — Workout mode: inline exercise rename without leaving workout
+- Latest commit: `4192fde` — 8 new features: workout UX + stats improvements
 
 ---
 
@@ -46,8 +46,14 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 - Rest timer: sound toggle (default OFF — no music interruption on iOS)
 - Rest timer: 5-second vibration countdown (one buzz/second on Android)
 - Rest timer: pulse animation on number during last 5 seconds
+- Rest timer presets — 1' / 1:30 / 2' / 2:30 / 3' quick-start buttons when no timer is running
+- kg ±2.5 buttons — one tap to adjust weight up or down on every set row
 - Progress from previous session shown inline (last session kg × reps)
+- Progressive overload hint — "→ Try X+2.5kg?" appears when same weight used as last session
 - Inline exercise rename — ✎ button next to name, edits without leaving workout mode
+- Add exercise within workout mode — inline input, no need to exit
+- Session note — per-day free-text note, collapsible textarea, persisted to WorkoutDay
+- Undo set delete — 5-second toast with Undo button after accidental deletion
 - Workout summary overlay on finish (duration, sets done, total volume)
 - Conditioning block: free-text note field
 - Recovery block: single done toggle
@@ -64,7 +70,8 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 - Summary chips: total weeks, sets done, volume
 - Volume sparkline (last 8 weeks)
 - Weekly breakdown table
-- Most trained exercises
+- Most trained exercises — with plateau detection (→ badge when no weight increase in 3+ sessions)
+- Per-exercise progression chart — tap any exercise to expand inline kg-over-time bar chart
 
 ### Design
 - Dark Glass theme — navy radial gradient bg
@@ -78,7 +85,7 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 ## Data Model: Schema 4.0
 
 ```
-WorkoutDay { week, day, date, exercises[], completed? }
+WorkoutDay { week, day, date, exercises[], completed?, note? }
 Exercise   { id, name, type, code, sets[], rest, note,
              recovery, recoveryDone,
              conditioning, conditioningNote, conditioningDone }
@@ -87,17 +94,17 @@ WorkoutSet { kg, reps, done }
 
 Superset uses `type: 'superset'` + matching `code` ('A', 'B', ...) across exercises.
 
+`WorkoutDay.note` is optional — written only when user adds a session note.
+
 ---
 
 ## Known Limitations / Not Yet Implemented
 
-- No per-exercise progression charts (only raw last-session data visible)
 - No workout scheduling / planned vs actual
 - No notifications or reminders
 - No export / backup UI (cloud sync is implicit)
 - PWA install available but no push notifications
-- No progressive overload suggestions
-- No plateau detection
+- Undo only covers set deletion (not set done toggle or exercise deletion)
 
 ---
 
