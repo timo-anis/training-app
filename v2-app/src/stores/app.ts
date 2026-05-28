@@ -396,9 +396,15 @@ export async function bootForUser(user: User) {
       saveCloud(user.id, state);
     }
 
-    // Auto-select latest week after boot
+    // Auto-select latest week after boot.
+    // New users with no data land on today's week (not Week 1 / Feb 16).
     const weeks = new Set(state.weeks.map(w => w.week));
-    const latest = weeks.size ? Math.max(...weeks) : 1;
+    const todayUTC2 = (() => {
+      const t = new Date();
+      return Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+    })();
+    const todayWeek = Math.max(1, Math.floor((todayUTC2 - MIGRATION_PS_UTC) / 86400000 / 7) + 1);
+    const latest = weeks.size ? Math.max(...weeks) : todayWeek;
     uiState.update(ui => ({ ...ui, week: latest }));
     bootStatus.set('ready');
   } catch {

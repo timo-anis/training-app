@@ -12,6 +12,20 @@ export async function signInWithEmail(email: string, password: string) {
   return data.user;
 }
 
+export async function signUpWithEmail(email: string, password: string) {
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) throw error;
+  // data.session is null if email confirmation is required
+  return { user: data.user, needsConfirmation: !data.session };
+}
+
+export async function sendPasswordReset(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href,
+  });
+  if (error) throw error;
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
