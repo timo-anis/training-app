@@ -56,25 +56,54 @@ AppState
 
 ---
 
+## Shared Library Modules (`src/lib/`)
+
+### `lib/program.ts`
+Single source of truth for `PS_UTC = Date.UTC(2026, 1, 16)` (PROGRAM_START).
+
+### `lib/dates.ts`
+Exported date arithmetic utilities — shared by `stores/app.ts`, `services/migrator.ts`, and tests.
+
+```typescript
+getDateForWeekDay(week, day): string   // { week, day } → 'YYYY-MM-DD'
+getWeekDayForDate(date): { week, day } | null  // 'YYYY-MM-DD' → { week, day }
+DAY_OFFSET: Record<DayOfWeek, number>  // Monday=0 … Sunday=6
+```
+
+### `lib/state-helpers.ts`
+Pure state transformation functions — no side effects, no store access, no Supabase.
+Used by store actions in `stores/app.ts` and directly tested in `src/tests/state-helpers.test.ts`.
+
+```typescript
+mapExercise(state, week, day, exId, updater)
+toggleSetDoneInState / deleteSetFromState / insertSetInState / addSetToState / updateSetFieldInState
+deleteExerciseFromState / renameExerciseInState / moveExerciseInState
+buildWorkoutBlocks(exercises): WorkoutBlock[]
+```
+
+Store actions in `app.ts` delegate to these helpers: `updateState(state => helperFn(state, ...))`.
+
+---
+
 ## Week / Date Arithmetic
 
 **PROGRAM_START = 2026-02-16 (Monday)**
 
-All week numbers and day assignments derive from this epoch using UTC arithmetic to avoid DST issues (e.g. the March 28 spring-forward).
+All week numbers and day assignments derive from this epoch using UTC arithmetic to avoid DST issues. The DST spring-forward (Europe, 2026-03-29) falls inside Week 6 — UTC arithmetic means the date is unaffected by the timezone offset change.
 
 ```typescript
-const PS_UTC = Date.UTC(2026, 1, 16);
+const PS_UTC = Date.UTC(2026, 1, 16);  // from lib/program.ts
 
-// Date → { week, day }
-const diff = Math.round((Date.UTC(y, m, d) - PS_UTC) / 86400000);
+// { week, day } → 'YYYY-MM-DD'  (lib/dates.ts: getDateForWeekDay)
+const utc = PS_UTC + ((week - 1) * 7 + DAY_OFFSET[day]) * 86400000;
+
+// 'YYYY-MM-DD' → { week, day }  (lib/dates.ts: getWeekDayForDate)
+const diff = Math.round((Date.UTC(y, m - 1, d) - PS_UTC) / 86400000);
 week = Math.floor(diff / 7) + 1;
-day  = DAY_ORDER[diff % 7];  // DAY_ORDER = Mon…Sun
-
-// { week, day } → Date
-const utc = PS_UTC + ((week - 1) * 7 + dayIdx) * 86400000;
+day  = DAY_ORDER[diff % 7];
 ```
 
-This pattern is used in both `MonthCalendar.svelte` and `stores/app.ts`.
+Used by `MonthCalendar.svelte`, `Calendar.svelte`, `stores/app.ts`, and `services/migrator.ts` — all import from `lib/dates.ts`.
 
 ---
 
@@ -108,6 +137,8 @@ Single store in `src/stores/app.ts`. No external state library.
 All state mutations go through `updateState(updater, immediate?)`, which calls `scheduleSave` on every change.
 
 `immediate = true` bypasses the 3s cloud debounce and fires a cloud save immediately (fire-and-forget). Only use for state changes where data loss on sudden app close would be unacceptable.
+
+Store actions delegate pure state logic to `lib/state-helpers.ts` — the action only handles the `updateState` wrapper and the `immediate` flag.
 
 Core actions: `addExercise`, `deleteExercise`, `moveExercise`, `updateExerciseMeta`, `renameExercise`, `addSet`, `deleteSet`, `insertSet`, `toggleSetDone`, `updateSetField`, `toggleRecoveryDone`, `toggleConditioningDone`, `updateConditioningNote`, `updateDayNote`, `copyPreviousDay`, `addNewWeek`, `markWorkoutComplete`, `startWorkout`, `openWorkoutMode`, `closeWorkoutMode`, `exitWorkout`
 
@@ -289,13 +320,33 @@ if (date > todayMid) {
 
 ---
 
-## Deployment
+## Test Suite
 
-- **CI**: `.github/workflows/deploy.yml` — triggers on push to `main`
-- **Build**: `cd v2-app && npm ci && npm run build` — outputs to `v2-dist/`
-- **Deploy**: GitHub Actions copies `v2-dist/` → `gh-pages` branch under `/v2/`
-- **GitHub Pages**: serves from `gh-pages` branch root
-- **Env secrets**: `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set in repo secrets
+Framework: **Vitest 4** — run with `npm test` in `v2-app/`. 88 tests, all pure TypeScript (no Svelte runtime needed).
+
+| File | Tests | What it covers |
+|------|-------|----------------|
+| `src/tests/dates.test.ts` | 20 | `lib/dates.ts` — week/day arithmetic, DST boundary (2026-03-29 in Week 6), round-trips, pre-start guard |
+| `src/tests/migrator.test.ts` | 26 | `services/migrator.ts` — MVP1 detection, conversion (dates, sets, supersets, recovery, hidden exercises, multi-week), V2 normalisation |
+| `src/tests/state-helpers.test.ts` | 42 | `lib/state-helpers.ts` — toggle, delete, insert, add set; undo round-trip (delete→insert); rename guards; move boundary; workout block grouping |
+
+Tests cover the highest-risk logic: date arithmetic (DST), data migration, and state mutations. UI components are not tested — effort/value ratio is too low for a single-user app.
+
+---
+
+## CI Pipeline
+
+`.github/workflows/deploy.yml` — triggers on push to `main`. Every step must pass or the pipeline stops.
+
+```
+1. npm ci                 (install deps)
+2. npm test               (88 Vitest tests — logic + migration)
+3. npm run check          (svelte-check + tsc — TypeScript correctness)
+4. vite build             (produces v2-dist/)
+5. deploy to gh-pages     (peaceiris/actions-gh-pages)
+```
+
+Env secrets required for build: `VITE_SUPABASE_URL`, `VITE_SUPABASE_KEY`.
 
 ---
 

@@ -1,6 +1,6 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-05-28
+**Last updated:** 2026-05-29
 
 ## Active App: V2
 
@@ -8,7 +8,7 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 
 - Source: `v2-app/`
 - Deployed: GitHub Pages from `v2-dist/`
-- Latest commit: `4192fde` — 8 new features: workout UX + stats improvements
+- Latest commit: `6db847f` — test suite (88 tests), CI pipeline, refactor
 
 ---
 
@@ -98,6 +98,30 @@ Superset uses `type: 'superset'` + matching `code` ('A', 'B', ...) across exerci
 
 ---
 
+## Test Suite
+
+88 automated tests across 3 modules — run with `npm test` in `v2-app/`.
+
+| File | Tests | Coverage |
+|------|-------|---------|
+| `src/tests/dates.test.ts` | 20 | `lib/dates.ts` — week/day arithmetic, DST boundary, round-trips |
+| `src/tests/migrator.test.ts` | 26 | `services/migrator.ts` — MVP1 detection, migration, V2 normalisation |
+| `src/tests/state-helpers.test.ts` | 42 | `lib/state-helpers.ts` — all set/exercise state transformations, undo round-trip, workout block grouping |
+
+---
+
+## CI Pipeline
+
+Every push to `main` runs in sequence — any failure blocks the next step:
+
+1. **Install deps** — `npm ci`
+2. **Run tests** — `npm test` (88 Vitest tests)
+3. **TypeScript check** — `npm run check` (svelte-check + tsc)
+4. **Build** — `vite build`
+5. **Deploy** — GitHub Pages
+
+---
+
 ## Known Limitations / Not Yet Implemented
 
 - No workout scheduling / planned vs actual
@@ -117,3 +141,4 @@ Superset uses `type: 'superset'` + matching `code` ('A', 'B', ...) across exerci
 - Date/weekday alignment logic in Calendar and MonthCalendar
 - Superset code pairing logic
 - `immediate=true` flag on `updateState` — only for critical state (set done, workout complete, rename)
+- `lib/state-helpers.ts` — pure functions used by both store actions and tests; changes here affect both
