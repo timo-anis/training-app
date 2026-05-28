@@ -8,6 +8,7 @@
   import WorkoutMode from './components/WorkoutMode.svelte';
   import SearchOverlay from './components/SearchOverlay.svelte';
   import OnboardingOverlay from './components/OnboardingOverlay.svelte';
+  import ToastNotification from './components/ToastNotification.svelte';
 
   let unsubscribeAuth: (() => void) | null = null;
 
@@ -73,6 +74,8 @@
 
   $: showWorkoutBar = $currentDayExercises.length > 0 && !$uiState.workoutMode && !showOnboarding;
 </script>
+
+<ToastNotification />
 
 {#if $bootStatus === 'loading'}
   <BootOverlay />

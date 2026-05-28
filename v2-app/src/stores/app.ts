@@ -3,6 +3,7 @@ import type { User } from '@supabase/supabase-js';
 import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud, detectMvp1Data, importFromMvp1 } from '../services/storage';
+import { PS_UTC } from '../lib/program';
 
 // ---- Auth store ----
 export const currentUser = writable<User | null>(null);
@@ -34,6 +35,17 @@ export const uiState = writable<UIState>({
 // ---- Boot status ----
 export type BootStatus = 'idle' | 'loading' | 'ready' | 'error';
 export const bootStatus = writable<BootStatus>('idle');
+
+// ---- Toast notifications ----
+export interface Toast { msg: string; type: 'error' | 'success' | 'info'; }
+export const toast = writable<Toast | null>(null);
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function showToast(msg: string, type: Toast['type'] = 'info') {
+  if (toastTimer) clearTimeout(toastTimer);
+  toast.set({ msg, type });
+  toastTimer = setTimeout(() => toast.set(null), 4000);
+}
 
 // ---- Search overlay (global, rendered at App level) ----
 export const searchOpen = writable<boolean>(false);
@@ -272,15 +284,16 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleSave(userId: string, state: AppState) {
   saveLocal(userId, state);
   if (saveTimer) clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    saveCloud(userId, state);
+  saveTimer = setTimeout(async () => {
+    const ok = await saveCloud(userId, state);
+    if (!ok) showToast('Cloud sync failed — data saved locally', 'error');
   }, 3000);
 }
 
 // ---- One-time migration: mark all past training days complete ----
 // Runs on boot. Marks completed=true + all sets done=true for every
 // WorkoutDay that has exercises and is strictly before today.
-const MIGRATION_PS_UTC = Date.UTC(2026, 1, 16);
+const MIGRATION_PS_UTC = PS_UTC;
 
 function applyPastDaysCompleted(state: AppState): { state: AppState; changed: boolean } {
   const todayUTC = (() => {
@@ -374,24 +387,54 @@ function clearWednesdayRecoveryDays(state: AppState): { state: AppState; changed
   return { state: changed ? { ...state, weeks } : state, changed };
 }
 
+// ---- One-time migration flags ----
+// Tracks which one-time patches have already run per user.
+// Stored in localStorage to avoid re-running on every boot.
+const MIGRATIONS_KEY = (uid: string) => `timo_training_v4_migrations__${uid}`;
+
+function getAppliedMigrations(uid: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(MIGRATIONS_KEY(uid));
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch { return new Set(); }
+}
+
+function markMigrationApplied(uid: string, id: string) {
+  const applied = getAppliedMigrations(uid);
+  applied.add(id);
+  try { localStorage.setItem(MIGRATIONS_KEY(uid), JSON.stringify([...applied])); } catch { /* ignore */ }
+}
+
 export async function bootForUser(user: User) {
   bootStatus.set('loading');
   try {
     const raw = await bootstrapState(user.id);
+    const applied = getAppliedMigrations(user.id);
 
-    // Patch 1: clear incorrect exercise data from W2–W7 Wednesdays
-    const { state: patched, changed: p1 } = clearWednesdayRecoveryDays(raw);
+    let state = raw;
+    let changed = false;
 
-    // Patch 2: remove any auto-added Active Recovery exercises from backfill migration
-    const { state: patched2, changed: p2 } = cleanupBackfilledRecovery(patched);
+    // Patch 1 (one-time): clear incorrect exercise data from W2–W7 Wednesdays
+    if (!applied.has('clear_wednesday_w2_w7')) {
+      const { state: s, changed: c } = clearWednesdayRecoveryDays(state);
+      state = s; changed = changed || c;
+      markMigrationApplied(user.id, 'clear_wednesday_w2_w7');
+    }
 
-    // Apply migration: mark all past days complete
-    const { state, changed: p3 } = applyPastDaysCompleted(patched2);
-    const changed = p1 || p2 || p3;
+    // Patch 2 (one-time): remove auto-generated Active Recovery exercises from backfill
+    if (!applied.has('cleanup_backfilled_recovery')) {
+      const { state: s, changed: c } = cleanupBackfilledRecovery(state);
+      state = s; changed = changed || c;
+      markMigrationApplied(user.id, 'cleanup_backfilled_recovery');
+    }
+
+    // Ongoing: mark all past training days complete (runs every boot — new past days accumulate)
+    const { state: final, changed: c3 } = applyPastDaysCompleted(state);
+    state = final; changed = changed || c3;
+
     appState.set(state);
 
     if (changed) {
-      // Save migrated state immediately to both local + cloud
       saveLocal(user.id, state);
       saveCloud(user.id, state);
     }
@@ -522,16 +565,18 @@ export function addSet(week: number, day: DayOfWeek, exId: string) {
 }
 
 // ---- Date helper ----
-const PROGRAM_START = new Date('2026-02-16T00:00:00');
 const DAY_OFFSET: Record<DayOfWeek, number> = {
   Monday: 0, Tuesday: 1, Wednesday: 2, Thursday: 3,
   Friday: 4, Saturday: 5, Sunday: 6,
 };
 
 function getDateForWeekDay(week: number, day: DayOfWeek): string {
-  const d = new Date(PROGRAM_START);
-  d.setDate(d.getDate() + (week - 1) * 7 + DAY_OFFSET[day]);
-  return d.toISOString().slice(0, 10);
+  const utc = PS_UTC + ((week - 1) * 7 + DAY_OFFSET[day]) * 86400000;
+  const d = new Date(utc);
+  const y = d.getUTCFullYear();
+  const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+  const dd = String(d.getUTCDate()).padStart(2, '0');
+  return `${y}-${m}-${dd}`;
 }
 
 // ---- Add exercise ----

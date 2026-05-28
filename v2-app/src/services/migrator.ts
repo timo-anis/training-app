@@ -16,9 +16,7 @@
 
 import type { AppState, WorkoutDay, Exercise, WorkoutSet, DayOfWeek } from '../types/workout';
 import { emptyAppState } from '../types/workout';
-
-// MVP1 program start date — matches index.html PROGRAM_START
-const PROGRAM_START = new Date('2026-02-16T00:00:00');
+import { PS_UTC } from '../lib/program';
 
 const MVP1_DAY_ORDER = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'] as const;
 type MVP1Day = typeof MVP1_DAY_ORDER[number];
@@ -32,13 +30,6 @@ const DAY_MAP: Record<MVP1Day, DayOfWeek> = {
   sat: 'Saturday',
   sun: 'Sunday',
 };
-
-// Use UTC arithmetic — avoids DST shifts and toISOString() timezone issues
-const PS_UTC = Date.UTC(
-  PROGRAM_START.getFullYear(),
-  PROGRAM_START.getMonth(),
-  PROGRAM_START.getDate()
-);
 
 function dayDate(week: number, mvp1Day: MVP1Day): string {
   const dayIndex = MVP1_DAY_ORDER.indexOf(mvp1Day);

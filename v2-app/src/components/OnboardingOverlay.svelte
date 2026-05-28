@@ -49,10 +49,10 @@
           </svg>
         </div>
         <h2>Nädalapõhine logi</h2>
-        <p>Trennid on jagatud nädalatesse ja päevadesse. Sa oled praegu jooksval nädalal — vali üles päev, millega alustada.</p>
+        <p>Trennid on jagatud nädalatesse ja päevadesse. Iga nädal on eraldi — esimene nädal algas 16. veebruaril 2026. Sa oled praegu jooksval nädalal.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>Nädala vahetamiseks kasuta nooli, uue nädala lisamiseks vajuta <strong>+ Week</strong>.</span>
+          <span>Eelmise nädala treeningu saad kopeerida uude nädala — <strong>Copy from Week X</strong> ilmub tühja päeva all. Uue nädala lisamiseks vajuta <strong>+ Week</strong>.</span>
         </div>
       </div>
 
@@ -77,7 +77,7 @@
         <p>Vajuta <strong>+ Add exercise</strong> päeva allosas, sisesta nimi ja harjutus ilmub kaardina. Lisa setid, kg ja kordused.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>Iga seti järel vajuta ringi — see märgib seti tehtuks. Kalender uuendub automaatselt.</span>
+          <span>Iga seti järel vajuta ringi — see märgib seti tehtuks. <strong>Kolmapäev</strong> on aktiivseks taastumiseks (liikuvus, rull) — see ei ole treeningpäev ja on kalendris kullakollasena märgitud.</span>
         </div>
       </div>
 
@@ -92,10 +92,10 @@
           </svg>
         </div>
         <h2>Workout mode</h2>
-        <p>Vajuta <strong>▶ Start Workout</strong> ekraani allosas — avaneb fokusseeritud vaade, kus näed ühte harjutust korraga koos puhkeuseaajaga.</p>
+        <p>Vajuta <strong>▶ Start Workout</strong> ekraani allosas — avaneb fokusseeritud vaade, kus näed ühte harjutust korraga. Eelmise nädala kg/kordused on eeltäidetud.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>Harjutuste vahel saab libistada. Lõpetades vajuta <strong>Finish Training</strong> — päev märgitakse kalendris roheliseks.</span>
+          <span>Harjutuste vahel libista. Puhketaimer käivitub automaatselt pärast setti. Lõpetades vajuta <strong>Finish Training</strong> — päev märgitakse kalendris roheliseks.</span>
         </div>
       </div>
     {/if}

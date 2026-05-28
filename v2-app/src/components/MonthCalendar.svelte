@@ -1,14 +1,7 @@
 <script lang="ts">
   import { DAY_ORDER, type DayOfWeek } from '../types/workout';
   import { appState, uiState, updateUI } from '../stores/app';
-
-  const PROGRAM_START = new Date('2026-02-16T00:00:00');
-  // Pre-compute UTC midnight of PROGRAM_START to avoid DST issues
-  const PS_UTC = Date.UTC(
-    PROGRAM_START.getFullYear(),
-    PROGRAM_START.getMonth(),
-    PROGRAM_START.getDate()
-  );
+  import { PS_UTC } from '../lib/program';
 
   // Use UTC arithmetic — avoids DST shifts (e.g. 28 Mar 2026 spring-forward)
   function dateToWeekDay(date: Date): { week: number; day: DayOfWeek } | null {

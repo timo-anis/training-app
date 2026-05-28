@@ -1,11 +1,13 @@
 <script lang="ts">
   import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen } from '../stores/app';
-  import { signOut } from '../services/auth';
   import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import AddExercise from './AddExercise.svelte';
   import StatsView from './StatsView.svelte';
+  import AccountSheet from './AccountSheet.svelte';
+
+  let accountOpen = false;
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -61,11 +63,10 @@
           <line x1="14.2" y1="14.2" x2="18" y2="18"/>
         </svg>
       </button>
-      <button class="icon-btn" on:click={signOut} title="Sign out" aria-label="Sign out">
+      <button class="icon-btn" on:click={() => accountOpen = true} title="Account" aria-label="Account">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
         </svg>
       </button>
     </div>
@@ -156,6 +157,9 @@
   </section>
 </div>
 
+{#if accountOpen}
+  <AccountSheet on:close={() => accountOpen = false} />
+{/if}
 
 <style>
   .main {

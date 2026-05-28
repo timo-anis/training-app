@@ -1,14 +1,12 @@
 <script lang="ts">
   import { DAY_ORDER, type DayOfWeek } from '../types/workout';
   import { uiState, appState, availableWeeks, currentWeekDays, updateUI, addNewWeek } from '../stores/app';
-
-  // Compute today's week number using the same epoch as the rest of the app
-  const PROGRAM_START_UTC = Date.UTC(2026, 1, 16); // Feb 16 2026
+  import { PS_UTC } from '../lib/program';
 
   function getTodayWeek(): number {
     const now = new Date();
     const todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
-    const days = Math.floor((todayUTC - PROGRAM_START_UTC) / 86400000);
+    const days = Math.floor((todayUTC - PS_UTC) / 86400000);
     if (days < 0) return 1;
     return Math.floor(days / 7) + 1;
   }
