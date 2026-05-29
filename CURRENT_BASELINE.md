@@ -8,7 +8,7 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 
 - Source: `v2-app/`
 - Deployed: GitHub Pages from `v2-dist/`
-- Latest commit: `6db847f` — test suite (88 tests), CI pipeline, refactor
+- Latest commit: `5a6d7b4` — Statistics button, ascending countdown beep, + prior session fixes
 
 ---
 
@@ -122,6 +122,17 @@ Every push to `main` runs in sequence — any failure blocks the next step:
 
 ---
 
+## Recent additions (session 2026-05-29)
+
+- Workout mode: reps +/- nupud (±1), identne kg ±2.5 loogikale
+- Workout mode: session note bug fixed — lukustab week/day avamishetkel, mitte blur-hetkel
+- Rest timer: 56px suur number, ascending countdown beep (800Hz→1200Hz, vol 0.35→0.70)
+- Rest timer: AudioContext singleton (iOS-i suspend-probleem lahendatud)
+- Main view: Statistics nupp (asendas segase stats-kaarti)
+- Main view: harjutused kokkupandud vaikimisi, avanevad puudutusega
+- Main view: hints lipuke ekraani serval (prominentne kui 0 trenni, diskreetne muidu)
+- Supabase: GRANT SELECT/INSERT/UPDATE/DELETE ON app_state TO authenticated — lisatud enne Oct 30 tähtaega
+
 ## Known Limitations / Not Yet Implemented
 
 - No workout scheduling / planned vs actual
@@ -129,6 +140,8 @@ Every push to `main` runs in sequence — any failure blocks the next step:
 - No export / backup UI (cloud sync is implicit)
 - PWA install available but no push notifications
 - Undo only covers set deletion (not set done toggle or exercise deletion)
+- SearchOverlay uses local PS_UTC computation instead of lib/program.ts (cosmetic duplication, not a bug)
+- Onboarding text is Estonian-only
 
 ---
 
