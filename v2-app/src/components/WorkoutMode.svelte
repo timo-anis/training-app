@@ -204,19 +204,44 @@
     updateSetField(week, day, exId, i, 'kg', localKg[k]);
   }
 
+  // ---- reps +/- adjustment ----
+  function adjustReps(week: number, day: DayOfWeek, exId: string, i: number, delta: number) {
+    const k = `${exId}-${i}`;
+    const raw = (localReps[k] ?? '').trim();
+    const current = parseInt(raw, 10) || 0;
+    const next = Math.max(1, current + delta);
+    localReps[k] = String(next);
+    localReps = localReps;
+    updateSetField(week, day, exId, i, 'reps', localReps[k]);
+  }
+
   // ---- #2 manual rest timer presets ----
   function startRestSecs(secs: number) {
     if (secs > 0) updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: secs }));
   }
 
   // ---- #3 day-level session note ----
+  // Lock week/day at the moment the note is opened — prevents saving to wrong
+  // day if $uiState changes between open and blur.
+  let noteWeek = $uiState.week;
+  let noteDay  = $uiState.day;
   let localDayNote: string = $appState.weeks.find(
-    w => w.week === $uiState.week && w.day === $uiState.day
+    w => w.week === noteWeek && w.day === noteDay
   )?.note ?? '';
   let showDayNote = !!localDayNote;
 
+  function openDayNote() {
+    // Re-read week/day and fresh note content every time the note is opened
+    noteWeek     = $uiState.week;
+    noteDay      = $uiState.day;
+    localDayNote = $appState.weeks.find(
+      w => w.week === noteWeek && w.day === noteDay
+    )?.note ?? '';
+    showDayNote  = true;
+  }
+
   function commitDayNote() {
-    updateDayNote($uiState.week, $uiState.day, localDayNote);
+    updateDayNote(noteWeek, noteDay, localDayNote);
   }
 
   // ---- #5 add exercise within workout mode ----
@@ -524,6 +549,10 @@
                         placeholder="—"
                         autocomplete="off"
                       />
+                      <div class="kg-adj">
+                        <button class="kg-adj-btn" on:click|stopPropagation={() => adjustReps(week, day, ex.id, i, -1)}>−</button>
+                        <button class="kg-adj-btn" on:click|stopPropagation={() => adjustReps(week, day, ex.id, i, +1)}>+</button>
+                      </div>
                     </div>
 
                     <button
@@ -594,7 +623,7 @@
           ></textarea>
           <button class="day-note-close" on:click={() => { commitDayNote(); showDayNote = false; }}>✓ Done</button>
         {:else}
-          <button class="day-note-toggle" on:click={() => showDayNote = true}>
+          <button class="day-note-toggle" on:click={openDayNote}>
             {localDayNote ? '📝 ' + localDayNote.slice(0, 48) + (localDayNote.length > 48 ? '…' : '') : '+ Session note'}
           </button>
         {/if}

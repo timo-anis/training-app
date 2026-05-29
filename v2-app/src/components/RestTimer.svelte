@@ -17,12 +17,25 @@
     try { localStorage.setItem(SOUND_KEY, soundEnabled ? '1' : '0'); } catch { /* ignore */ }
   }
 
-  // ── Audio — only if sound is enabled ──────────────────────
+  // ── AudioContext singleton — reuse instead of creating new each time ──
+  // Creating new AudioContext() on every beep causes iOS to suspend it.
+  let _audioCtx: AudioContext | null = null;
+
+  function getAudioCtx(): AudioContext | null {
+    try {
+      if (!_audioCtx) _audioCtx = new AudioContext();
+      // Resume if suspended (iOS suspends after inactivity)
+      if (_audioCtx.state === 'suspended') _audioCtx.resume();
+      return _audioCtx;
+    } catch { return null; }
+  }
+
   function playBeep(freq = 880, duration = 0.18, volume = 0.45) {
     if (!soundEnabled) return;
+    const ctx = getAudioCtx();
+    if (!ctx) return;
     try {
-      const ctx = new AudioContext();
-      const osc = ctx.createOscillator();
+      const osc  = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
@@ -32,7 +45,7 @@
       gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + duration);
-    } catch { /* AudioContext not available */ }
+    } catch { /* ignore */ }
   }
 
   function playDoneSound() {
@@ -44,19 +57,25 @@
     try { navigator.vibrate?.([220, 80, 220]); } catch { /* ignore */ }
   }
 
+  function playCountdownTick() {
+    // Short quiet tick each second during last 5 seconds (when sound on)
+    playBeep(660, 0.07, 0.20);
+  }
+
   // ── Timer logic ───────────────────────────────────────────
   let remaining = Math.max(0, totalSeconds - Math.floor((Date.now() - startTime) / 1000));
   let didPlayDone = false;
-  let lastCountdownAt = -1;   // track which second we last vibrated at
+  let lastCountdownAt = -1;
   let interval: ReturnType<typeof setInterval> | null = null;
 
   function tick() {
     remaining = Math.max(0, totalSeconds - Math.floor((Date.now() - startTime) / 1000));
 
-    // 5-second countdown: one short vibration per second (≤5, >0)
+    // 5-second countdown: vibration + beep (when sound on) once per second
     if (remaining <= 5 && remaining > 0 && remaining !== lastCountdownAt) {
       lastCountdownAt = remaining;
       try { navigator.vibrate?.(60); } catch { /* ignore */ }
+      playCountdownTick();
     }
 
     if (remaining <= 0) {
@@ -73,7 +92,6 @@
   if (remaining > 0) {
     interval = setInterval(tick, 500);
   } else {
-    // Already elapsed while away — fire immediately
     if (!didPlayDone) {
       didPlayDone = true;
       playDoneSound();
@@ -81,7 +99,9 @@
     }
   }
 
-  onDestroy(() => { if (interval) clearInterval(interval); });
+  onDestroy(() => {
+    if (interval) clearInterval(interval);
+  });
 
   function skip() {
     if (interval) clearInterval(interval);
@@ -95,17 +115,17 @@
     dispatch('reset');
   }
 
-  $: pct      = totalSeconds > 0 ? (remaining / totalSeconds) : 0;
-  $: mins     = Math.floor(remaining / 60);
-  $: secs     = remaining % 60;
-  $: display  = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${remaining}`;
-  $: warning  = remaining <= 5 && remaining > 0;
-  $: done     = remaining === 0;
+  $: pct     = totalSeconds > 0 ? (remaining / totalSeconds) : 0;
+  $: mins    = Math.floor(remaining / 60);
+  $: secs    = remaining % 60;
+  $: display = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${remaining}`;
+  $: warning = remaining <= 5 && remaining > 0;
+  $: done    = remaining === 0;
 </script>
 
 {#if totalSeconds > 0}
   <div class="rest-pill" class:done class:warning>
-    <!-- Thin progress bar -->
+    <!-- Progress bar -->
     <div class="pill-bar">
       <div class="pill-fill" style="width: {pct * 100}%" class:warning class:done></div>
     </div>
@@ -121,7 +141,6 @@
       </div>
 
       <div class="pill-actions">
-        <!-- Sound toggle -->
         <button
           class="pill-btn pill-sound"
           class:sound-on={soundEnabled}
@@ -140,9 +159,9 @@
 
 <style>
   .rest-pill {
-    border-radius: 16px;
-    border: 1px solid rgba(70,110,185,0.28);
-    background: rgba(13,24,52,0.85);
+    border-radius: 18px;
+    border: 1.5px solid rgba(70,110,185,0.35);
+    background: rgba(13,24,52,0.92);
     overflow: hidden;
     animation: pill-in 0.18s ease;
     flex-shrink: 0;
@@ -154,7 +173,8 @@
   }
 
   .rest-pill.warning {
-    border-color: rgba(196,148,46,0.40);
+    border-color: rgba(196,148,46,0.50);
+    background: rgba(13,24,52,0.95);
   }
 
   @keyframes pill-in {
@@ -163,7 +183,7 @@
   }
 
   /* Progress bar */
-  .pill-bar { height: 3px; background: rgba(255,255,255,0.06); }
+  .pill-bar { height: 4px; background: rgba(255,255,255,0.06); }
 
   .pill-fill {
     height: 100%;
@@ -179,19 +199,19 @@
   .pill-body {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
+    gap: 16px;
+    padding: 18px 20px;
   }
 
   .pill-info {
     flex: 1 1 0;
     display: flex;
     align-items: baseline;
-    gap: 8px;
+    gap: 10px;
   }
 
   .pill-label {
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -200,10 +220,10 @@
   }
 
   .pill-label.done-lbl {
-    font-size: 20px;
+    font-size: 36px;
     font-weight: 900;
     letter-spacing: -0.02em;
-    color: rgba(255,255,255,0.90);
+    color: rgba(255,255,255,0.92);
     text-transform: none;
     animation: pop 0.35s cubic-bezier(0.34,1.56,0.64,1);
   }
@@ -214,11 +234,12 @@
     100% { transform: scale(1);   opacity: 1; }
   }
 
+  /* Big timer number */
   .pill-time {
-    font-size: 32px;
+    font-size: 56px;
     font-weight: 900;
-    color: rgba(255,255,255,0.92);
-    letter-spacing: -0.03em;
+    color: rgba(255,255,255,0.95);
+    letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
     line-height: 1;
     transition: color 0.3s;
@@ -240,18 +261,18 @@
   .pill-actions {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
   }
 
   .pill-btn {
-    height: 36px;
-    padding: 0 12px;
-    border-radius: 10px;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.12);
     background: rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.55);
-    font-size: 14px;
+    color: rgba(255,255,255,0.60);
+    font-size: 15px;
     font-weight: 700;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -261,27 +282,25 @@
     justify-content: center;
   }
 
-  .pill-btn:active { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.90); }
+  .pill-btn:active { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.92); }
 
-  /* Sound toggle */
   .pill-sound {
-    padding: 0 10px;
-    font-size: 16px;
-    opacity: 0.50;
+    padding: 0 12px;
+    font-size: 17px;
+    opacity: 0.55;
   }
 
   .pill-sound.sound-on {
     opacity: 1;
-    border-color: rgba(196,148,46,0.35);
-    background: rgba(196,148,46,0.08);
+    border-color: rgba(196,148,46,0.40);
+    background: rgba(196,148,46,0.10);
   }
 
   .pill-sound:active { background: rgba(255,255,255,0.10); }
 
-  /* Skip button */
   .pill-btn.pill-skip {
     background: rgba(196,148,46,0.10);
-    border-color: rgba(196,148,46,0.28);
+    border-color: rgba(196,148,46,0.30);
     color: #c49230;
   }
 
