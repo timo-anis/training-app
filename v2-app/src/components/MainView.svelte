@@ -41,35 +41,6 @@
   // Auto-expand exercise list when there's already progress today
   $: if (dayExDone > 0) exercisesExpanded = true;
 
-  // ── Inline stats computation ──────────────────────────────
-  $: weekStats = (() => {
-    const thisWeek = $appState.weeks.filter(w => w.week === $uiState.week);
-    let sets = 0, volume = 0;
-    for (const wd of thisWeek) {
-      for (const ex of wd.exercises) {
-        if (ex.recovery || ex.conditioning) continue;
-        for (const s of ex.sets) {
-          if (!s.done) continue;
-          sets++;
-          volume += (parseFloat(s.kg) || 0) * (parseInt(s.reps, 10) || 0);
-        }
-      }
-    }
-    return { sets, volume: Math.round(volume) };
-  })();
-
-  $: allTimeSets = $appState.weeks.reduce((acc: number, wd) => {
-    for (const ex of wd.exercises) {
-      if (ex.recovery || ex.conditioning) continue;
-      acc += ex.sets.filter(s => s.done).length;
-    }
-    return acc;
-  }, 0);
-
-  function fmtVolume(v: number): string {
-    return v >= 1000 ? `${(v / 1000).toFixed(1)}t` : `${v} kg`;
-  }
-
   const REST_DAYS = new Set(['Saturday', 'Sunday']);
   const RECOVERY_DAYS = new Set(['Wednesday']);
 
@@ -136,33 +107,17 @@
     <Calendar />
   </section>
 
-  <!-- Stats card — always visible, expandable to full StatsView -->
+  <!-- Statistics button -->
   <section class="section section-tight">
-    <div class="stats-card">
-      <div class="stats-card-main">
-        <div class="stats-row">
-          <span class="stats-week-label">Week {$uiState.week}</span>
-          <span class="stats-divider">·</span>
-          <span class="stats-val">{weekStats.sets} sets</span>
-          {#if weekStats.volume > 0}
-            <span class="stats-divider">·</span>
-            <span class="stats-val">{fmtVolume(weekStats.volume)}</span>
-          {/if}
-        </div>
-        <div class="stats-row stats-row-sub">
-          <span class="stats-sub-val">{totalWeeks} week{totalWeeks !== 1 ? 's' : ''} trained</span>
-          {#if allTimeSets > 0}
-            <span class="stats-divider">·</span>
-            <span class="stats-sub-val">{allTimeSets} sets total</span>
-          {/if}
-        </div>
-      </div>
-      <button class="stats-expand-btn" on:click={() => statsOpen = !statsOpen}
-        title={statsOpen ? 'Hide stats' : 'Full stats'}
-        aria-label={statsOpen ? 'Hide stats' : 'Full stats'}>
-        <span class="stats-chevron" class:open={statsOpen}>›</span>
-      </button>
-    </div>
+    <button class="stats-btn" on:click={() => statsOpen = !statsOpen} aria-expanded={statsOpen}>
+      <svg class="stats-btn-icon" width="17" height="17" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
+        <rect x="17" y="3" width="4" height="18"/>
+      </svg>
+      <span class="stats-btn-label">Statistics</span>
+      <span class="stats-chevron" class:open={statsOpen}>›</span>
+    </button>
   </section>
   {#if statsOpen}
     <StatsView />
@@ -329,87 +284,54 @@
     padding-top: 8px;
   }
 
-  /* ---- Stats card ---- */
-  .stats-card {
+  /* ---- Statistics button ---- */
+  .stats-btn {
+    width: 100%;
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 16px;
+    padding: 13px 16px;
     border-radius: 14px;
     border: 1px solid rgba(196,148,46,0.22);
     background: rgba(13,24,52,0.70);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
     position: relative;
     overflow: hidden;
   }
 
-  .stats-card::before {
+  .stats-btn::before {
     content: '';
     position: absolute;
     left: 0; top: 0; bottom: 0;
     width: 3px;
     background: #c49230;
-    border-radius: 3px 0 0 3px;
   }
 
-  .stats-card-main { flex: 1 1 0; display: flex; flex-direction: column; gap: 4px; }
+  .stats-btn:active { background: rgba(13,24,52,0.90); }
 
-  .stats-row {
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-    flex-wrap: wrap;
+  .stats-btn-icon {
+    color: rgba(196,148,46,0.70);
+    flex-shrink: 0;
   }
 
-  .stats-row-sub { margin-top: 1px; }
-
-  .stats-week-label {
-    font-size: 14px;
-    font-weight: 800;
-    color: #c49230;
-    letter-spacing: -0.01em;
-  }
-
-  .stats-val {
-    font-size: 14px;
+  .stats-btn-label {
+    flex: 1 1 0;
+    font-size: 15px;
     font-weight: 700;
     color: rgba(255,255,255,0.85);
+    text-align: left;
   }
-
-  .stats-divider {
-    font-size: 12px;
-    color: rgba(255,255,255,0.25);
-  }
-
-  .stats-sub-val {
-    font-size: 11.5px;
-    font-weight: 600;
-    color: rgba(255,255,255,0.38);
-  }
-
-  .stats-expand-btn {
-    width: 36px;
-    height: 36px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 10px;
-    border: 1px solid rgba(196,148,46,0.20);
-    background: transparent;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    flex-shrink: 0;
-    transition: background 0.12s;
-  }
-
-  .stats-expand-btn:active { background: rgba(196,148,46,0.12); }
 
   .stats-chevron {
     display: inline-block;
     transform: rotate(90deg);
     transition: transform 0.2s;
     font-size: 18px;
-    color: #c49230;
+    color: rgba(196,148,46,0.60);
     line-height: 1;
+    flex-shrink: 0;
   }
 
   .stats-chevron.open { transform: rotate(-90deg); }

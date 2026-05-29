@@ -57,9 +57,13 @@
     try { navigator.vibrate?.([220, 80, 220]); } catch { /* ignore */ }
   }
 
-  function playCountdownTick() {
-    // Short quiet tick each second during last 5 seconds (when sound on)
-    playBeep(660, 0.07, 0.20);
+  function playCountdownTick(secondsLeft: number) {
+    // Ascending intensity: louder and higher pitch as countdown reaches 0
+    // secondsLeft: 5→1. At 1 it's the loudest/highest.
+    const t = (6 - secondsLeft) / 5; // 0.2 at 5s, 1.0 at 1s
+    const freq   = 800 + t * 400;    // 800Hz → 1200Hz
+    const volume = 0.35 + t * 0.35;  // 0.35 → 0.70
+    playBeep(freq, 0.12, volume);
   }
 
   // ── Timer logic ───────────────────────────────────────────
@@ -75,7 +79,7 @@
     if (remaining <= 5 && remaining > 0 && remaining !== lastCountdownAt) {
       lastCountdownAt = remaining;
       try { navigator.vibrate?.(60); } catch { /* ignore */ }
-      playCountdownTick();
+      playCountdownTick(remaining);
     }
 
     if (remaining <= 0) {
