@@ -62,6 +62,13 @@
   <header class="topbar">
     <span class="title-text">Timo Training</span>
     <div class="topbar-actions">
+      <button class="icon-btn" on:click={() => hintsOpen = true} title="Quick guide" aria-label="Quick guide">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+          <circle cx="12" cy="17" r=".5" fill="currentColor"/>
+        </svg>
+      </button>
       <button class="icon-btn" on:click={() => $searchOpen = true} title="Search exercises" aria-label="Search exercises">
         <svg width="17" height="17" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="9" cy="9" r="6"/>
@@ -172,15 +179,6 @@
   </section>
 </div>
 
-<!-- Floating hints button -->
-<button
-  class="hints-fab"
-  class:hints-fab-new={totalWeeks === 0}
-  on:click={() => hintsOpen = true}
-  aria-label="Show quick guide"
-  title="Quick guide"
->?</button>
-
 <!-- Hints overlay -->
 {#if hintsOpen}
   <!-- svelte-ignore a11y-click-events-have-key-events -->
@@ -192,12 +190,12 @@
         <button class="hints-close" on:click={() => hintsOpen = false}>✕</button>
       </div>
       <ol class="hints-list">
-        <li><strong>Päeva valimine</strong> — Puuduta päeva kalendris et näha või lisada harjutusi</li>
-        <li><strong>Trenn</strong> — Puuduta päeva nime avamiseks → lisa harjutusi → vajuta <em>▶ Start Workout</em></li>
-        <li><strong>Workout mode</strong> — Swipe vasakule/paremale harjutuste vahel. Puuduta ○ seti märkimiseks tehtuks</li>
-        <li><strong>Puhketaimer</strong> — Pärast seti tegemist käivitub automaatselt. Preset-nupud: 1′ / 1:30 / 2′ jne</li>
-        <li><strong>Märkmed</strong> — Workout mode'i lõpus saad lisada päeva märkme (+ Session note)</li>
-        <li><strong>Stats</strong> — Nädala kokkuvõte on alati nähtav üleval. Puuduta <em>›</em> täielikuks statistikaks</li>
+        <li><strong>Calendar</strong> — Tap any day to view or add exercises for that day</li>
+        <li><strong>Training</strong> — Tap the day heading to expand → add exercises → tap <em>▶ Start Workout</em></li>
+        <li><strong>Workout mode</strong> — Swipe left/right between exercises. Tap ○ to mark a set done</li>
+        <li><strong>Rest timer</strong> — Starts automatically after each set. Quick presets: 1′ / 1:30 / 2′ / 2:30 / 3′</li>
+        <li><strong>Session note</strong> — Tap <em>+ Session note</em> during workout to log how it felt</li>
+        <li><strong>Statistics</strong> — Tap the Statistics button to see volume, weekly breakdown, and progress charts</li>
       </ol>
     </div>
   </div>

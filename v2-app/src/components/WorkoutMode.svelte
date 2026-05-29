@@ -1077,7 +1077,7 @@
     border: 1px solid rgba(70,110,185,0.24);
     border-radius: 14px;
     padding: 14px 16px;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 500;
     color: #ffffff;
     font-family: inherit;

@@ -620,7 +620,7 @@
     border: 1px solid rgba(65,100,175,0.18);
     border-radius: 10px;
     padding: 10px 12px;
-    font-size: 14px;
+    font-size: 16px;
     font-weight: 600;
     color: #e8f2ff;
     outline: none;
