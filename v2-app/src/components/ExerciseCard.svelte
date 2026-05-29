@@ -630,7 +630,7 @@
   }
 
   .edit-input:focus { border-color: rgba(255,255,255,0.25); }
-  .edit-input::placeholder { color: #1e3870; }
+  .edit-input::placeholder { color: rgba(255,255,255,0.20); }
 
   .edit-textarea {
     resize: none;

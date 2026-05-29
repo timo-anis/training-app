@@ -16,7 +16,7 @@
   }
 
   $: isLast = step === TOTAL - 1;
-  $: nextLabel = isLast ? 'Alusta →' : 'Edasi →';
+  $: nextLabel = isLast ? 'Get started →' : 'Next →';
 </script>
 
 <div class="ob-backdrop">
@@ -48,11 +48,11 @@
             <rect x="34" y="39" width="8" height="7" rx="2" fill="rgba(255,255,255,0.06)"/>
           </svg>
         </div>
-        <h2>Nädalapõhine logi</h2>
-        <p>Trennid on jagatud nädalatesse ja päevadesse. Iga nädal on eraldi — esimene nädal algas 16. veebruaril 2026. Sa oled praegu jooksval nädalal.</p>
+        <h2>Weekly training log</h2>
+        <p>Workouts are organised by week and day. You start on the current week — tap any day in the calendar to view or add exercises.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>Eelmise nädala treeningu saad kopeerida uude nädala — <strong>Copy from Week X</strong> ilmub tühja päeva all. Uue nädala lisamiseks vajuta <strong>+ Week</strong>.</span>
+          <span>You can copy last week's workout to the current week — <strong>Copy from Week X</strong> appears under an empty day. Add a new week with <strong>+ Week</strong> in the week strip.</span>
         </div>
       </div>
 
@@ -73,11 +73,11 @@
             <line x1="37" y1="49" x2="43" y2="49" stroke="#7fb2ff" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
         </div>
-        <h2>Lisa harjutused</h2>
-        <p>Vajuta <strong>+ Add exercise</strong> päeva allosas, sisesta nimi ja harjutus ilmub kaardina. Lisa setid, kg ja kordused.</p>
+        <h2>Add exercises</h2>
+        <p>Tap <strong>+ Add exercise</strong> at the bottom of a day, type a name, and the exercise appears as a card. Add sets with kg and reps.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>Iga seti järel vajuta ringi — see märgib seti tehtuks. <strong>Kolmapäev</strong> on aktiivseks taastumiseks (liikuvus, rull) — see ei ole treeningpäev ja on kalendris kullakollasena märgitud.</span>
+          <span>After each set, tap the circle to mark it done. <strong>Wednesday</strong> is active recovery (mobility, foam rolling) — shown in amber in the calendar.</span>
         </div>
       </div>
 
@@ -92,10 +92,10 @@
           </svg>
         </div>
         <h2>Workout mode</h2>
-        <p>Vajuta <strong>▶ Start Workout</strong> ekraani allosas — avaneb fokusseeritud vaade, kus näed ühte harjutust korraga. Eelmise nädala kg/kordused on eeltäidetud.</p>
+        <p>Tap <strong>▶ Start Workout</strong> at the bottom — a focused view opens showing one exercise at a time. Last week's kg and reps are pre-filled.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>Harjutuste vahel libista. Puhketaimer käivitub automaatselt pärast setti. Lõpetades vajuta <strong>Finish Training</strong> — päev märgitakse kalendris roheliseks.</span>
+          <span>Swipe between exercises. The rest timer starts automatically after each set. When done, tap <strong>Finish Training</strong> — the day turns green in the calendar.</span>
         </div>
       </div>
     {/if}
@@ -103,7 +103,7 @@
     <!-- Navigation -->
     <div class="ob-nav">
       {#if step > 0}
-        <button class="btn-back" on:click={prev}>← Tagasi</button>
+        <button class="btn-back" on:click={prev}>← Back</button>
       {:else}
         <div></div>
       {/if}

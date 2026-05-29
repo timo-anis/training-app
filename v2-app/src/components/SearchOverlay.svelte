@@ -1,15 +1,9 @@
 <script lang="ts">
   import { appState, updateUI, searchOpen } from '../stores/app';
   import { DAY_ORDER } from '../types/workout';
+  import { PS_UTC } from '../lib/program';
 
   function close() { $searchOpen = false; }
-
-  const PROGRAM_START = new Date('2026-02-16T00:00:00');
-  const PS_UTC = Date.UTC(
-    PROGRAM_START.getFullYear(),
-    PROGRAM_START.getMonth(),
-    PROGRAM_START.getDate()
-  );
 
   function weekDayToDate(week: number, day: string): Date {
     const dayIdx = DAY_ORDER.indexOf(day as any);

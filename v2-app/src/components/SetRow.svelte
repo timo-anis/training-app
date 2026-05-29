@@ -168,7 +168,7 @@
 
   .setrow.is-done .setinput { color: rgba(255,255,255,0.90); }
 
-  .setinput::placeholder { color: #1e3870; }
+  .setinput::placeholder { color: rgba(255,255,255,0.20); }
 
   .setinput:focus { color: #ffffff; }
 

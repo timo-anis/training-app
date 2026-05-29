@@ -189,7 +189,7 @@
     transition: border-color 0.12s;
   }
 
-  .add-ex-input::placeholder { color: #1e3870; }
+  .add-ex-input::placeholder { color: rgba(255,255,255,0.20); }
   .add-ex-input:focus { border-color: rgba(255,255,255,0.25); }
 
   /* ── Suggestions ── */
