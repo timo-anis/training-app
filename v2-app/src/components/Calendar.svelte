@@ -1,6 +1,6 @@
 <script lang="ts">
   import { DAY_ORDER, type DayOfWeek } from '../types/workout';
-  import { uiState, appState, availableWeeks, currentWeekDays, updateUI, addNewWeek } from '../stores/app';
+  import { uiState, appState, availableWeeks, currentWeekDays, updateUI, addNewWeek, weekOffset } from '../stores/app';
   import { PS_UTC } from '../lib/program';
 
   function getTodayWeek(): number {
@@ -45,7 +45,7 @@
   $: canPrev = $availableWeeks.indexOf($uiState.week) > 0;
   $: canNext = $availableWeeks.indexOf($uiState.week) < $availableWeeks.length - 1;
   $: isLastWeek = !canNext;
-  $: weekLabel = `Week ${$uiState.week}`;
+  $: weekLabel = `Week ${$uiState.week - $weekOffset}`;
   $: showTodayBtn = $uiState.week !== todayWeek && $availableWeeks.includes(todayWeek);
 </script>
 

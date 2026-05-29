@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appState, updateUI, searchOpen } from '../stores/app';
+  import { appState, updateUI, searchOpen, weekOffset } from '../stores/app';
   import { DAY_ORDER } from '../types/workout';
   import { PS_UTC } from '../lib/program';
 
@@ -134,7 +134,7 @@
               {/if}
             </div>
             <div class="result-meta">
-              <span class="result-date">{r.dateLabel} · W{r.week}</span>
+              <span class="result-date">{r.dateLabel} · W{$weekOffset ? r.week - $weekOffset : r.week}</span>
               {#if r.setCount > 0}
                 <span class="result-sets">
                   {r.setCount} set{r.setCount !== 1 ? 's' : ''}

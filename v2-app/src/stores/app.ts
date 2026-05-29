@@ -63,6 +63,12 @@ export function showToast(msg: string, type: Toast['type'] = 'info') {
 // ---- Search overlay (global, rendered at App level) ----
 export const searchOpen = writable<boolean>(false);
 
+// ---- Week display offset ----
+// displayWeek = absoluteWeek - weekOffset
+// Timo (userStartWeek=1): offset=0, no change.
+// New user joining at week 16: offset=15, their Week 1 = absolute week 16.
+export const weekOffset = derived(appState, $s => ($s.userStartWeek ?? 1) - 1);
+
 // ---- Derived: all weeks that have data + current selected week ----
 export const availableWeeks = derived([appState, uiState], ([$state, $ui]) => {
   const weeks = new Set($state.weeks.map(w => w.week));
@@ -436,6 +442,23 @@ export async function bootForUser(user: User) {
     const { state: final, changed: c3 } = applyPastDaysCompleted(state);
     state = final; changed = changed || c3;
 
+    // ── userStartWeek (one-time, set on first boot) ──────────────────────────
+    // Determines the week offset for display (displayWeek = absoluteWeek - offset).
+    // Existing users with data → week 1 (no change to their history).
+    // New users with no data → current absolute week (their training starts "Week 1").
+    const todayUTC2 = (() => {
+      const t = new Date();
+      return Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+    })();
+    const todayWeek = Math.max(1, Math.floor((todayUTC2 - MIGRATION_PS_UTC) / 86400000 / 7) + 1);
+
+    if (!state.userStartWeek) {
+      const hasExistingData = state.weeks.some(w => w.exercises.length > 0);
+      const startWeek = hasExistingData ? 1 : todayWeek;
+      state = { ...state, userStartWeek: startWeek };
+      changed = true;
+    }
+
     appState.set(state);
 
     if (changed) {
@@ -444,13 +467,7 @@ export async function bootForUser(user: User) {
     }
 
     // Auto-select latest week after boot.
-    // New users with no data land on today's week (not Week 1 / Feb 16).
     const weeks = new Set(state.weeks.map(w => w.week));
-    const todayUTC2 = (() => {
-      const t = new Date();
-      return Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
-    })();
-    const todayWeek = Math.max(1, Math.floor((todayUTC2 - MIGRATION_PS_UTC) / 86400000 / 7) + 1);
     const latest = weeks.size ? Math.max(...weeks) : todayWeek;
     uiState.update(ui => ({ ...ui, week: latest }));
     bootStatus.set('ready');

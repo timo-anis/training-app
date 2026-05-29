@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appState } from '../stores/app';
+  import { appState, weekOffset } from '../stores/app';
   import type { WorkoutDay } from '../types/workout';
   import BodyMap from './BodyMap.svelte';
 
@@ -103,7 +103,7 @@
         if (doneSets.length === 0) continue;
         const maxKg = Math.max(...doneSets.map(s => parseFloat(s.kg)));
         const existing = weekMap.get(wd.week);
-        if (!existing || maxKg > existing.maxKg) weekMap.set(wd.week, { week: wd.week, label: `W${wd.week}`, maxKg });
+        if (!existing || maxKg > existing.maxKg) weekMap.set(wd.week, { week: wd.week, label: `W${wd.week - $weekOffset}`, maxKg });
       }
     }
     return Array.from(weekMap.values()).sort((a, b) => a.week - b.week);
@@ -162,7 +162,7 @@
                 style="height: {barH}px"
               ></div>
             </div>
-            <span class="spark-lbl">W{w.week}</span>
+            <span class="spark-lbl">W{w.week - $weekOffset}</span>
           </div>
         {/each}
       </div>
@@ -177,7 +177,7 @@
     <div class="week-list">
       {#each displayedWeeks as w}
         <div class="week-row">
-          <span class="week-num">W{w.week}</span>
+          <span class="week-num">W{w.week - $weekOffset}</span>
           <div class="week-bars">
             <span class="week-stat">
               <span class="wlbl">Days</span>

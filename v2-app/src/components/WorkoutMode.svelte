@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import {
-    uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode,
+    uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode, weekOffset,
     setActiveBlock, toggleSetDone, updateSetField, findLastSession,
     findLastConditioningNote, toggleRecoveryDone, toggleConditioningDone, updateUI,
     addSet, deleteSet, insertSet, updateConditioningNote, markWorkoutComplete,
@@ -460,7 +460,7 @@
               {@const sameWeight = !!(lastKg && curKg && !isNaN(parseFloat(curKg)) && parseFloat(curKg) === parseFloat(lastKg))}
               {@const hasDone = ex.sets.some(s => s.done)}
               <div class="last-session">
-                <span class="last-label">W{lastSession.week} {DAY_SHORT[lastSession.day]}</span>
+                <span class="last-label">W{lastSession.week - $weekOffset} {DAY_SHORT[lastSession.day]}</span>
                 <span class="last-sets">
                   {#each lastSession.sets as s, i}
                     <span class="last-set">{s.kg || '—'} × {s.reps || '—'}{i < lastSession.sets.length - 1 ? ' ·' : ''}</span>

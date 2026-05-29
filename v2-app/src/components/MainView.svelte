@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset } from '../stores/app';
   import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -128,7 +128,7 @@
     <button class="day-heading-btn" on:click={() => exercisesExpanded = !exercisesExpanded}>
       <div class="day-heading">
         <span class="day-label">{$uiState.day}</span>
-        <span class="day-sub">Week {$uiState.week}</span>
+        <span class="day-sub">Week {$uiState.week - $weekOffset}</span>
         {#if dayExTotal > 0}
           <span class="day-progress" class:all-done={dayAllDone}>
             {dayExDone}/{dayExTotal}
@@ -147,7 +147,7 @@
           {/if}
           {#if canCopyDay}
             <button class="copy-day-btn" on:click|stopPropagation={() => copyPreviousDay($uiState.week, $uiState.day)}>
-              Copy from Week {$uiState.week - 1}
+              Copy from Week {$uiState.week - 1 - $weekOffset}
             </button>
           {/if}
         </div>

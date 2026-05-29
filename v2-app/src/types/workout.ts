@@ -51,6 +51,13 @@ export interface WorkoutDay {
 export interface AppState {
   weeks: WorkoutDay[];
   schema: '4.0';
+  /**
+   * Absolute week number when this user started training.
+   * Display week = absoluteWeek - (userStartWeek - 1).
+   * Existing users: 1 (no change). New users: current week at signup.
+   * Set once on first boot, never changes.
+   */
+  userStartWeek?: number;
 }
 
 export interface UIState {
