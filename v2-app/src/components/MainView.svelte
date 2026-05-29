@@ -35,6 +35,40 @@
 
   let migrateStatus: 'idle' | 'done' | 'error' = 'idle';
   let statsOpen = false;
+  let exercisesExpanded = false;
+  let hintsOpen = false;
+
+  // Auto-expand exercise list when there's already progress today
+  $: if (dayExDone > 0) exercisesExpanded = true;
+
+  // ── Inline stats computation ──────────────────────────────
+  $: weekStats = (() => {
+    const thisWeek = $appState.weeks.filter(w => w.week === $uiState.week);
+    let sets = 0, volume = 0;
+    for (const wd of thisWeek) {
+      for (const ex of wd.exercises) {
+        if (ex.recovery || ex.conditioning) continue;
+        for (const s of ex.sets) {
+          if (!s.done) continue;
+          sets++;
+          volume += (parseFloat(s.kg) || 0) * (parseInt(s.reps, 10) || 0);
+        }
+      }
+    }
+    return { sets, volume: Math.round(volume) };
+  })();
+
+  $: allTimeSets = $appState.weeks.reduce((acc: number, wd) => {
+    for (const ex of wd.exercises) {
+      if (ex.recovery || ex.conditioning) continue;
+      acc += ex.sets.filter(s => s.done).length;
+    }
+    return acc;
+  }, 0);
+
+  function fmtVolume(v: number): string {
+    return v >= 1000 ? `${(v / 1000).toFixed(1)}t` : `${v} kg`;
+  }
 
   const REST_DAYS = new Set(['Saturday', 'Sunday']);
   const RECOVERY_DAYS = new Set(['Wednesday']);
@@ -102,60 +136,117 @@
     <Calendar />
   </section>
 
-  <!-- Stats toggle -->
+  <!-- Stats card — always visible, expandable to full StatsView -->
   <section class="section section-tight">
-    <button class="stats-toggle" on:click={() => statsOpen = !statsOpen}>
-      <span class="stats-toggle-label">Stats</span>
-      <span class="stats-chevron" class:open={statsOpen}>›</span>
-    </button>
+    <div class="stats-card">
+      <div class="stats-card-main">
+        <div class="stats-row">
+          <span class="stats-week-label">Week {$uiState.week}</span>
+          <span class="stats-divider">·</span>
+          <span class="stats-val">{weekStats.sets} sets</span>
+          {#if weekStats.volume > 0}
+            <span class="stats-divider">·</span>
+            <span class="stats-val">{fmtVolume(weekStats.volume)}</span>
+          {/if}
+        </div>
+        <div class="stats-row stats-row-sub">
+          <span class="stats-sub-val">{totalWeeks} week{totalWeeks !== 1 ? 's' : ''} trained</span>
+          {#if allTimeSets > 0}
+            <span class="stats-divider">·</span>
+            <span class="stats-sub-val">{allTimeSets} sets total</span>
+          {/if}
+        </div>
+      </div>
+      <button class="stats-expand-btn" on:click={() => statsOpen = !statsOpen}
+        title={statsOpen ? 'Hide stats' : 'Full stats'}
+        aria-label={statsOpen ? 'Hide stats' : 'Full stats'}>
+        <span class="stats-chevron" class:open={statsOpen}>›</span>
+      </button>
+    </div>
   </section>
   {#if statsOpen}
     <StatsView />
   {/if}
 
-  <!-- Exercise list -->
+  <!-- Day heading + exercise list (collapsed by default) -->
   <section class="section">
-    <div class="day-heading">
-      <span class="day-label">{$uiState.day}</span>
-      <span class="day-sub">Week {$uiState.week}</span>
-      {#if dayExTotal > 0}
-        <span class="day-progress" class:all-done={dayAllDone}>
-          {dayExDone}/{dayExTotal}
-        </span>
-      {/if}
-    </div>
-
-    {#if $currentDayExercises.length === 0}
-      <div class="empty-state">
-        <span class="empty-title">{emptyLabel.title}</span>
-        {#if emptyLabel.sub}
-          <span class="empty-sub">{emptyLabel.sub}</span>
-        {/if}
-        {#if canCopyDay}
-          <button class="copy-day-btn" on:click={() => copyPreviousDay($uiState.week, $uiState.day)}>
-            Copy from Week {$uiState.week - 1}
-          </button>
+    <button class="day-heading-btn" on:click={() => exercisesExpanded = !exercisesExpanded}>
+      <div class="day-heading">
+        <span class="day-label">{$uiState.day}</span>
+        <span class="day-sub">Week {$uiState.week}</span>
+        {#if dayExTotal > 0}
+          <span class="day-progress" class:all-done={dayAllDone}>
+            {dayExDone}/{dayExTotal}
+          </span>
         {/if}
       </div>
-    {:else}
-      <div class="exercise-list">
-        {#each $currentDayExercises as exercise, i (exercise.id)}
-          <ExerciseCard
-            {exercise}
-            week={$uiState.week}
-            day={$uiState.day}
-            index={i}
-            total={$currentDayExercises.length}
-          />
-        {/each}
+      <span class="ex-chevron" class:open={exercisesExpanded}>›</span>
+    </button>
+
+    {#if exercisesExpanded}
+      {#if $currentDayExercises.length === 0}
+        <div class="empty-state">
+          <span class="empty-title">{emptyLabel.title}</span>
+          {#if emptyLabel.sub}
+            <span class="empty-sub">{emptyLabel.sub}</span>
+          {/if}
+          {#if canCopyDay}
+            <button class="copy-day-btn" on:click|stopPropagation={() => copyPreviousDay($uiState.week, $uiState.day)}>
+              Copy from Week {$uiState.week - 1}
+            </button>
+          {/if}
+        </div>
+      {:else}
+        <div class="exercise-list">
+          {#each $currentDayExercises as exercise, i (exercise.id)}
+            <ExerciseCard
+              {exercise}
+              week={$uiState.week}
+              day={$uiState.day}
+              index={i}
+              total={$currentDayExercises.length}
+            />
+          {/each}
+        </div>
+      {/if}
+
+      <div class="add-ex-wrap">
+        <AddExercise week={$uiState.week} day={$uiState.day} />
       </div>
     {/if}
-
-    <div class="add-ex-wrap">
-      <AddExercise week={$uiState.week} day={$uiState.day} />
-    </div>
   </section>
 </div>
+
+<!-- Floating hints button -->
+<button
+  class="hints-fab"
+  class:hints-fab-new={totalWeeks === 0}
+  on:click={() => hintsOpen = true}
+  aria-label="Show quick guide"
+  title="Quick guide"
+>?</button>
+
+<!-- Hints overlay -->
+{#if hintsOpen}
+  <!-- svelte-ignore a11y-click-events-have-key-events -->
+  <!-- svelte-ignore a11y-no-static-element-interactions -->
+  <div class="hints-backdrop" on:click={() => hintsOpen = false}>
+    <div class="hints-sheet" on:click|stopPropagation>
+      <div class="hints-header">
+        <span class="hints-title">Quick guide</span>
+        <button class="hints-close" on:click={() => hintsOpen = false}>✕</button>
+      </div>
+      <ol class="hints-list">
+        <li><strong>Päeva valimine</strong> — Puuduta päeva kalendris et näha või lisada harjutusi</li>
+        <li><strong>Trenn</strong> — Puuduta päeva nime avamiseks → lisa harjutusi → vajuta <em>▶ Start Workout</em></li>
+        <li><strong>Workout mode</strong> — Swipe vasakule/paremale harjutuste vahel. Puuduta ○ seti märkimiseks tehtuks</li>
+        <li><strong>Puhketaimer</strong> — Pärast seti tegemist käivitub automaatselt. Preset-nupud: 1′ / 1:30 / 2′ jne</li>
+        <li><strong>Märkmed</strong> — Workout mode'i lõpus saad lisada päeva märkme (+ Session note)</li>
+        <li><strong>Stats</strong> — Nädala kokkuvõte on alati nähtav üleval. Puuduta <em>›</em> täielikuks statistikaks</li>
+      </ol>
+    </div>
+  </div>
+{/if}
 
 {#if accountOpen}
   <AccountSheet on:close={() => accountOpen = false} />
@@ -238,24 +329,20 @@
     padding-top: 8px;
   }
 
-  /* ---- Stats toggle ---- */
-  .stats-toggle {
-    width: 100%;
+  /* ---- Stats card ---- */
+  .stats-card {
     display: flex;
     align-items: center;
-    justify-content: center;
-    padding: 12px 14px 12px 16px;
+    gap: 10px;
+    padding: 14px 16px;
     border-radius: 14px;
-    border: 1px solid rgba(196,148,46,0.28);
+    border: 1px solid rgba(196,148,46,0.22);
     background: rgba(13,24,52,0.70);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
     position: relative;
     overflow: hidden;
   }
 
-  .stats-toggle::before {
+  .stats-card::before {
     content: '';
     position: absolute;
     left: 0; top: 0; bottom: 0;
@@ -264,35 +351,108 @@
     border-radius: 3px 0 0 3px;
   }
 
-  .stats-toggle:active { background: rgba(13,24,52,0.90); }
+  .stats-card-main { flex: 1 1 0; display: flex; flex-direction: column; gap: 4px; }
 
-  .stats-toggle-label {
-    font-size: 13px;
-    font-weight: 800;
-    color: rgba(255,255,255,0.80);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+  .stats-row {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    flex-wrap: wrap;
   }
 
+  .stats-row-sub { margin-top: 1px; }
+
+  .stats-week-label {
+    font-size: 14px;
+    font-weight: 800;
+    color: #c49230;
+    letter-spacing: -0.01em;
+  }
+
+  .stats-val {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.85);
+  }
+
+  .stats-divider {
+    font-size: 12px;
+    color: rgba(255,255,255,0.25);
+  }
+
+  .stats-sub-val {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.38);
+  }
+
+  .stats-expand-btn {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid rgba(196,148,46,0.20);
+    background: transparent;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+    transition: background 0.12s;
+  }
+
+  .stats-expand-btn:active { background: rgba(196,148,46,0.12); }
+
   .stats-chevron {
-    position: absolute;
-    right: 14px;
     display: inline-block;
     transform: rotate(90deg);
     transition: transform 0.2s;
-    font-size: 16px;
+    font-size: 18px;
     color: #c49230;
     line-height: 1;
   }
 
   .stats-chevron.open { transform: rotate(-90deg); }
 
+  /* ---- Day heading toggle button ---- */
+  .day-heading-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(13,24,52,0.50);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+    margin-bottom: 0;
+  }
+
+  .day-heading-btn:active { background: rgba(13,24,52,0.80); }
+
+  .ex-chevron {
+    display: inline-block;
+    transform: rotate(90deg);
+    transition: transform 0.2s;
+    font-size: 18px;
+    color: rgba(255,255,255,0.30);
+    line-height: 1;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .ex-chevron.open { transform: rotate(-90deg); color: rgba(255,255,255,0.55); }
+
+  .exercise-list { margin-top: 10px; }
+
   /* ---- Day heading ---- */
   .day-heading {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-bottom: 12px;
+    flex: 1 1 0;
   }
 
   .day-label {
@@ -442,5 +602,158 @@
     font-weight: 700;
     color: #ff6060;
     flex-shrink: 0;
+  }
+
+  /* ---- Exercise list spacing when expanded ---- */
+  .exercise-list { margin-top: 10px; }
+  .add-ex-wrap { margin-top: 10px; }
+  .empty-state { margin-top: 10px; }
+
+  /* ---- Floating hints button ---- */
+  :global(.hints-fab) {
+    position: fixed;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 28px;
+    height: 44px;
+    border-radius: 10px 0 0 10px;
+    border: 1px solid rgba(255,255,255,0.10);
+    border-right: none;
+    background: rgba(13,24,52,0.80);
+    color: rgba(255,255,255,0.30);
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(8px);
+    transition: background 0.15s, color 0.15s;
+  }
+
+  :global(.hints-fab:active) {
+    background: rgba(30,50,100,0.90);
+    color: rgba(255,255,255,0.75);
+  }
+
+  /* Prominent when no workouts done yet */
+  :global(.hints-fab-new) {
+    background: rgba(196,148,46,0.18);
+    border-color: rgba(196,148,46,0.35);
+    color: #c49230;
+    width: 32px;
+    animation: hints-pulse 2.5s ease-in-out infinite;
+  }
+
+  @keyframes -global-hints-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.60; }
+  }
+
+  /* ---- Hints overlay ---- */
+  :global(.hints-backdrop) {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 80;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    animation: fade-in 0.15s ease;
+  }
+
+  @keyframes -global-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  :global(.hints-sheet) {
+    background: rgba(10,18,42,0.98);
+    border: 1px solid rgba(60,90,165,0.25);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 20px 36px;
+    width: 100%;
+    max-width: 640px;
+    animation: slide-up 0.20s ease;
+  }
+
+  @keyframes -global-slide-up {
+    from { transform: translateY(40px); opacity: 0.5; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  :global(.hints-header) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  :global(.hints-title) {
+    font-size: 16px;
+    font-weight: 900;
+    color: #c49230;
+    letter-spacing: -0.02em;
+  }
+
+  :global(.hints-close) {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: transparent;
+    color: rgba(255,255,255,0.40);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :global(.hints-list) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    counter-reset: hints;
+  }
+
+  :global(.hints-list li) {
+    counter-increment: hints;
+    display: flex;
+    gap: 12px;
+    font-size: 13.5px;
+    color: rgba(255,255,255,0.75);
+    line-height: 1.45;
+  }
+
+  :global(.hints-list li::before) {
+    content: counter(hints);
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(196,148,46,0.15);
+    border: 1px solid rgba(196,148,46,0.30);
+    color: #c49230;
+    font-size: 11px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+
+  :global(.hints-list strong) { color: rgba(255,255,255,0.92); }
+  :global(.hints-list em) {
+    color: #c49230;
+    font-style: normal;
+    font-weight: 700;
   }
 </style>
