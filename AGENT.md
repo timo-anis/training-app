@@ -45,7 +45,7 @@ App.svelte
     │       └── AddExercise.svelte
     ├── workout-bar             — bottom CTA (when exercises exist)
     └── WorkoutMode.svelte      — full-screen overlay (when active)
-        └── RestTimer.svelte
+        └── RestTimer.svelte    — focus mode (fullscreen) or compact (minimized)
 ```
 
 ### State layer (v2-app/src/stores/app.ts)
@@ -53,17 +53,18 @@ App.svelte
 | Store | Type | Purpose |
 |-------|------|---------|
 | appState | AppState | All workout data — { weeks: WorkoutDay[], schema: '4.0' } |
-| uiState | UIState | Selected week/day/month, workout flags, timer timestamps |
+| uiState | UIState | Selected week/day, workout flags, timer timestamps (month field removed) |
 | currentUser | User or null | Supabase auth user |
 | bootStatus | 'idle' or 'loading' or 'ready' or 'error' | App boot phase |
 
 Key derived stores: currentDayExercises, workoutBlocks, availableWeeks, hasMvp1Data.
+Additional stores: syncStatus ('idle'|'saving'|'saved'|'error'), sheetOpen (boolean — hides workout bar when account sheet open).
 
 ### Services (v2-app/src/services/)
 
 | File | Purpose |
 |------|---------|
-| auth.ts | Supabase auth (sign in, sign out, onAuthChange) |
+| auth.ts | Supabase auth (sign in, sign out, onAuthChange — fires only on INITIAL_SESSION and SIGNED_IN) |
 | storage.ts | bootstrapState, saveLocal, saveCloud — localStorage + Supabase sync |
 | supabase.ts | Supabase client singleton |
 | migrator.ts | MVP1 to V2 data migration (one-time import) |

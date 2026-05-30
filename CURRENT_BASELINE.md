@@ -1,6 +1,6 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-05-29
+**Last updated:** 2026-05-30
 
 ## Active App: V2
 
@@ -8,7 +8,7 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 
 - Source: `v2-app/`
 - Deployed: GitHub Pages from `v2-dist/`
-- Latest commit: `5a6d7b4` — Statistics button, ascending countdown beep, + prior session fixes
+- Live: https://timo-anis.github.io/training-app/v2/
 
 ---
 
@@ -17,68 +17,85 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 ### Auth
 - Email/password sign in via Supabase
 - Auth-first boot — no content shown before sign in
-- Sign out via icon button in topbar
+- Sign out via Account sheet
+- `onAuthChange` fires only on INITIAL_SESSION and SIGNED_IN — TOKEN_REFRESHED ignored (no spurious re-boots)
 
 ### Boot flow
 - BootOverlay shown during Supabase session check + data load
 - Cloud state loaded first; local state used as fallback
-- Empty local state never overwrites populated cloud state
+- Always lands on today's week + today's day on boot
+- `goToToday()` works even when today's week has no workout data
 
 ### Calendar
-- Month calendar with dot markers for days with data
-- Week strip with day picker — defaults to today on boot
-- Tapping a day shows that day's exercises
+- Month calendar — initialises to today's month on every boot
+- Month calendar has Today button when user has navigated away from current month
+- Month calendar follows week-strip navigation but does NOT auto-jump when uiState.week changes
+- Week strip with day picker — `goToToday()` sets both week AND day (not just week)
+- Future days are clickable (intentional — allows planning ahead)
+- Sync dot in topbar (saving pulsing amber → saved green 2.5s → idle)
 
 ### Exercise management
 - Add exercise (search + select or free-text)
 - Delete exercise
 - Edit exercise name, type (single/superset/conditioning/recovery)
 - Reorder exercises (up/down arrows)
-- Add set / delete set
+- Add set / delete set with 5-second undo toast
 
 ### Workout mode
 - Full-screen overlay, block-by-block navigation
-- Swipe left/right to navigate blocks
-- Set done toggle per set — immediate cloud save (no done state loss)
+- Swipe left/right — swipe indicator dots below progress bar
+- Progress header shows "X/Y sets" (not block count)
+- Finish ✓ button always visible in header — can finish from any block
+- Set done toggle — immediate cloud save
+- Visual flash on set done button (iOS haptic substitute)
+- Haptic vibrate(10ms) on set done (Android)
+- PR detection — gold badge + celebratory vibration when beating previous max weight
 - Wake Lock — screen stays on during workout
-- Timer with elapsed display in header
-- Rest timer — auto-starts after set done, persists through overlay close/reopen
-- Rest timer: sound toggle (default OFF — no music interruption on iOS)
-- Rest timer: 5-second vibration countdown (one buzz/second on Android)
-- Rest timer: pulse animation on number during last 5 seconds
-- Rest timer presets — 1' / 1:30 / 2' / 2:30 / 3' quick-start buttons when no timer is running
-- kg ±2.5 buttons — one tap to adjust weight up or down on every set row
-- Progress from previous session shown inline (last session kg × reps)
-- Progressive overload hint — "→ Try X+2.5kg?" appears when same weight used as last session
-- Inline exercise rename — ✎ button next to name, edits without leaving workout mode
-- Add exercise within workout mode — inline input, no need to exit
-- Session note — per-day free-text note, collapsible textarea, persisted to WorkoutDay
-- Undo set delete — 5-second toast with Undo button after accidental deletion
-- Workout summary overlay on finish (duration, sets done, total volume)
-- Conditioning block: free-text note field
+- kg ±2.5 and reps ±1 adjustment buttons
+- Progress from previous session shown inline
+- Progressive overload hint — "→ Try X+2.5kg?" when same weight as last session
+- kg/reps committed to store before block navigation (no data loss on swipe)
+- Inline exercise rename
+- Add exercise within workout mode
+- Session note — per-day free-text note
+- Workout summary overlay on finish (duration, sets done, volume)
+- Conditioning block: free-text note + previous session shown
 - Recovery block: single done toggle
 
+### Rest timer
+- Default: opens fullscreen (focus mode) — dark overlay, 240px SVG ring, 72px countdown
+- Minimize button collapses to compact inline view (ring 60px + Skip/Reset)
+- Expand button restores fullscreen from compact
+- Sound ON by default (opt-out, not opt-in)
+- Ascending countdown beep last 5 seconds (800Hz→1200Hz)
+- AudioContext singleton (iOS suspend-safe)
+- Vibration countdown last 5 seconds (Android only — iOS does not support vibration API)
+- Pulse animation on number during last 5 seconds
+- Warning state: amber ring + amber number
+- Rest presets: 1' / 1:30 / 2' / 2:30 / 3' shown when no timer running
+- Persists through overlay close/reopen
+
+### Account sheet
+- z-index 200 — renders above workout bar
+- Workout bar hidden when account sheet is open
+- Change password (email reset)
+- Clear all training data (confirmation tap)
+- Sign out
+
 ### Data persistence
-- localStorage (schema 4.0) — primary local storage, always written first
-- Supabase cloud sync — 3s debounced on normal changes
-- Critical state changes (set done, workout complete) bypass debounce → immediate cloud save
-- MVP1 → V2 import migration (one-time banner if old data detected)
+- localStorage (schema 4.0) — always written first
+- Supabase cloud sync — 3s debounced, immediate for critical state
+- Sync status store exposed to topbar dot indicator
 
 ### Stats (inline, collapsible)
-- Positioned after week strip, before exercise list
-- Body map (muscle group visualization by zone, clickable toggle per muscle group)
-- Summary chips: total weeks, sets done, volume
-- Volume sparkline (last 8 weeks)
-- Weekly breakdown table
-- Most trained exercises — with plateau detection (→ badge when no weight increase in 3+ sessions)
-- Per-exercise progression chart — tap any exercise to expand inline kg-over-time bar chart
+- Body map (muscle group visualization)
+- Summary chips, volume sparkline, weekly breakdown, plateau detection
+- Per-exercise progression chart
 
 ### Design
-- Dark Glass theme — navy radial gradient bg
-- Premium gold: #c49230 (primary), #d4a038 (title)
+- Dark Glass theme
+- Gold: #c49230 primary, #d4a038 title
 - Minimal Crown header with gold accent line
-- Blue-tinted glass cards and borders
-- Sticky topbar + backdrop blur
 
 ---
 
@@ -92,56 +109,36 @@ Exercise   { id, name, type, code, sets[], rest, note,
 WorkoutSet { kg, reps, done }
 ```
 
-Superset uses `type: 'superset'` + matching `code` ('A', 'B', ...) across exercises.
-
-`WorkoutDay.note` is optional — written only when user adds a session note.
+UIState no longer has a `month` field (removed — was dead code, MonthCalendar derives its own view state).
 
 ---
 
 ## Test Suite
 
-88 automated tests across 3 modules — run with `npm test` in `v2-app/`.
+88 automated tests — run with `npm test` in `v2-app/`.
 
 | File | Tests | Coverage |
 |------|-------|---------|
-| `src/tests/dates.test.ts` | 20 | `lib/dates.ts` — week/day arithmetic, DST boundary, round-trips |
-| `src/tests/migrator.test.ts` | 26 | `services/migrator.ts` — MVP1 detection, migration, V2 normalisation |
-| `src/tests/state-helpers.test.ts` | 42 | `lib/state-helpers.ts` — all set/exercise state transformations, undo round-trip, workout block grouping |
+| `src/tests/dates.test.ts` | 20 | `lib/dates.ts` |
+| `src/tests/migrator.test.ts` | 26 | `services/migrator.ts` |
+| `src/tests/state-helpers.test.ts` | 42 | `lib/state-helpers.ts` |
 
 ---
 
 ## CI Pipeline
 
-Every push to `main` runs in sequence — any failure blocks the next step:
-
-1. **Install deps** — `npm ci`
-2. **Run tests** — `npm test` (88 Vitest tests)
-3. **TypeScript check** — `npm run check` (svelte-check + tsc)
-4. **Build** — `vite build`
-5. **Deploy** — GitHub Pages
+Every push to `main`: install → test (88) → TypeScript check → build → deploy to GitHub Pages.
 
 ---
 
-## Recent additions (session 2026-05-29)
-
-- Workout mode: reps +/- nupud (±1), identne kg ±2.5 loogikale
-- Workout mode: session note bug fixed — lukustab week/day avamishetkel, mitte blur-hetkel
-- Rest timer: 56px suur number, ascending countdown beep (800Hz→1200Hz, vol 0.35→0.70)
-- Rest timer: AudioContext singleton (iOS-i suspend-probleem lahendatud)
-- Main view: Statistics nupp (asendas segase stats-kaarti)
-- Main view: harjutused kokkupandud vaikimisi, avanevad puudutusega
-- Main view: hints lipuke ekraani serval (prominentne kui 0 trenni, diskreetne muidu)
-- Supabase: GRANT SELECT/INSERT/UPDATE/DELETE ON app_state TO authenticated — lisatud enne Oct 30 tähtaega
-
 ## Known Limitations / Not Yet Implemented
 
-- No workout scheduling / planned vs actual
-- No notifications or reminders
+- No workout scheduling or planning ahead (future weeks work but no structured plan view)
+- No push notifications or reminders
 - No export / backup UI (cloud sync is implicit)
-- PWA install available but no push notifications
-- Undo only covers set deletion (not set done toggle or exercise deletion)
-- SearchOverlay uses local PS_UTC computation instead of lib/program.ts (cosmetic duplication, not a bug)
-- Onboarding text is Estonian-only
+- iOS vibration not available — Web Vibration API unsupported on Safari/iOS
+- Undo covers only set deletion (not set done toggle or exercise deletion)
+- SearchOverlay uses local PS_UTC computation (cosmetic duplication, not a bug)
 
 ---
 
@@ -151,7 +148,7 @@ Every push to `main` runs in sequence — any failure blocks the next step:
 - Boot flow and bootstrapState
 - Cloud sync logic (saveCloud / scheduleSave)
 - Storage schema key names and version
-- Date/weekday alignment logic in Calendar and MonthCalendar
+- Date/weekday alignment logic
 - Superset code pairing logic
-- `immediate=true` flag on `updateState` — only for critical state (set done, workout complete, rename)
-- `lib/state-helpers.ts` — pure functions used by both store actions and tests; changes here affect both
+- `immediate=true` flag on `updateState` — only for critical state
+- `lib/state-helpers.ts` — pure functions used by both store actions and tests
