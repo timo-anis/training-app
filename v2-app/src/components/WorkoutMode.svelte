@@ -148,19 +148,28 @@
   let prFlashExId: string | null = null;
   let prFlashTimer: ReturnType<typeof setTimeout> | null = null;
 
+  // Visual flash for set-done (iOS vibration substitute)
+  let setDoneFlashKey: string | null = null;
+  let setDoneFlashTimer: ReturnType<typeof setTimeout> | null = null;
+
   function handleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string, exName: string, kgVal: string) {
     commitKg(week, day, exId, setIndex);
     commitReps(week, day, exId, setIndex);
     toggleSetDone(week, day, exId, setIndex);
     if (!currentDone) {
       vibrate(10);
+      // Visual flash for iOS (no vibration API)
+      const flashKey = `${exId}-${setIndex}`;
+      setDoneFlashKey = flashKey;
+      if (setDoneFlashTimer) clearTimeout(setDoneFlashTimer);
+      setDoneFlashTimer = setTimeout(() => { setDoneFlashKey = null; }, 280);
       if (exRestString) startRest(exRestString);
       // Check PR after toggling done
       if (isPR(exName, kgVal)) {
         prFlashExId = exId;
         if (prFlashTimer) clearTimeout(prFlashTimer);
         prFlashTimer = setTimeout(() => { prFlashExId = null; }, 3000);
-        vibrate([10, 80, 20, 80, 30]); // celebratory pattern
+        vibrate([10, 80, 20, 80, 30]);
       }
     }
   }
@@ -635,6 +644,7 @@
                     <button
                       class="done-btn"
                       class:on={set.done}
+                      class:flash={setDoneFlashKey === `${ex.id}-${i}`}
                       on:click={() => handleSetDone(week, day, ex.id, i, set.done, ex.rest, ex.name, localKg[`${ex.id}-${i}`] ?? set.kg)}
                       aria-pressed={set.done}
                       aria-label={set.done ? 'Undo set' : 'Mark set done'}
@@ -1528,6 +1538,13 @@
   }
 
   .done-btn:active { transform: scale(0.94); }
+
+  .done-btn.flash {
+    background: rgba(255,255,255,0.22) !important;
+    border-color: rgba(255,255,255,0.55) !important;
+    transform: scale(0.93);
+    transition: background 0.05s, transform 0.05s;
+  }
 
   .del-btn {
     height: 32px;

@@ -9,7 +9,10 @@
   // ── Sound toggle — persisted to localStorage ──────────────
   const SOUND_KEY = 'timo_training_v4_sound_enabled';
   let soundEnabled: boolean = (() => {
-    try { return localStorage.getItem(SOUND_KEY) === '1'; } catch { return false; }
+    try {
+      const v = localStorage.getItem(SOUND_KEY);
+      return v === null ? true : v === '1'; // default ON
+    } catch { return true; }
   })();
 
   function toggleSound() {
