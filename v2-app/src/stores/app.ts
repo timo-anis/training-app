@@ -466,10 +466,14 @@ export async function bootForUser(user: User) {
       saveCloud(user.id, state);
     }
 
-    // Auto-select latest week after boot.
-    const weeks = new Set(state.weeks.map(w => w.week));
-    const latest = weeks.size ? Math.max(...weeks) : todayWeek;
-    uiState.update(ui => ({ ...ui, week: latest }));
+    // Always land on today's week + today's day on boot.
+    // User can navigate to past weeks via calendar if needed.
+    const todayDayIdx = (() => {
+      const d = new Date().getDay();
+      return d === 0 ? 6 : d - 1; // 0=Mon … 6=Sun
+    })();
+    const todayDay = DAY_ORDER[todayDayIdx];
+    uiState.update(ui => ({ ...ui, week: todayWeek, day: todayDay }));
     bootStatus.set('ready');
   } catch {
     bootStatus.set('error');
