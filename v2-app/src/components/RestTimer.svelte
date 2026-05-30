@@ -126,6 +126,9 @@
   const RING_C = 2 * Math.PI * RING_R;
 
   $: pct     = totalSeconds > 0 ? (remaining / totalSeconds) : 0;
+
+  // Large focus mode — starts expanded, user can minimize
+  let minimized = false;
   $: mins    = Math.floor(remaining / 60);
   $: secs    = remaining % 60;
   $: display = mins > 0 ? `${mins}:${String(secs).padStart(2, '0')}` : `${remaining}`;
@@ -134,93 +137,151 @@
 </script>
 
 {#if totalSeconds > 0}
-  <div class="rest-card" class:done class:warning>
-    <div class="rest-layout">
-      <!-- SVG ring -->
-      <div class="ring-wrap">
-        <svg class="ring-svg" viewBox="0 0 120 120" width="120" height="120" aria-hidden="true">
-          <circle cx="60" cy="60" r={RING_R} class="ring-track" />
+  {#if !minimized}
+    <!-- LARGE FOCUS MODE -->
+    <div class="timer-overlay" class:done class:warning>
+      <button class="minimize-btn" on:click={() => minimized = true} aria-label="Minimize timer">
+        <span class="minimize-icon">⌃</span> Minimize
+      </button>
+
+      <div class="large-ring-wrap">
+        <svg class="large-ring-svg" viewBox="0 0 240 240" aria-hidden="true">
+          <circle cx="120" cy="120" r="108" class="ring-track" />
           <circle
-            cx="60" cy="60" r={RING_R}
+            cx="120" cy="120" r="108"
             class="ring-fill"
             class:warning
             class:done
-            stroke-dasharray="{RING_C}"
-            stroke-dashoffset="{RING_C * (1 - pct)}"
+            stroke-dasharray="{RING_C * 108 / RING_R}"
+            stroke-dashoffset="{(RING_C * 108 / RING_R) * (1 - pct)}"
           />
         </svg>
-        <div class="ring-center">
+        <div class="large-ring-center">
           {#if done}
-            <span class="ring-go">GO!</span>
+            <span class="large-go">GO!</span>
           {:else}
-            <span class="ring-time" class:warning>{display}</span>
-            <span class="ring-label">REST</span>
+            <span class="large-time" class:warning class:pulse={warning}>{display}</span>
+            <span class="large-label">REST</span>
           {/if}
         </div>
       </div>
 
-      <!-- Actions -->
-      <div class="rest-actions">
+      <div class="large-actions">
         <button
-          class="pill-btn pill-sound"
+          class="large-btn sound-btn"
           class:sound-on={soundEnabled}
           on:click={toggleSound}
-          aria-label={soundEnabled ? 'Mute timer sound' : 'Enable timer sound'}
+          aria-label={soundEnabled ? 'Mute' : 'Unmute'}
         >{soundEnabled ? '🔔' : '🔇'}</button>
-        <button class="pill-btn" on:click={reset} aria-label="Reset timer">↺</button>
-        <button class="pill-btn pill-skip" on:click={skip} aria-label="Skip rest">Skip</button>
+        <button class="large-btn reset-btn" on:click={reset} aria-label="Reset">↺</button>
+        <button class="large-btn skip-btn" on:click={skip} aria-label="Skip">Skip</button>
       </div>
     </div>
-  </div>
+  {:else}
+    <!-- MINIMIZED COMPACT VIEW -->
+    <div class="rest-card compact" class:done class:warning>
+      <button class="expand-btn" on:click={() => minimized = false} aria-label="Expand timer" title="Expand">⌄</button>
+      <div class="compact-layout">
+        <div class="compact-ring-wrap">
+          <svg viewBox="0 0 60 60" width="60" height="60" aria-hidden="true">
+            <circle cx="30" cy="30" r="26" class="ring-track" stroke-width="4" />
+            <circle
+              cx="30" cy="30" r="26"
+              class="ring-fill"
+              class:warning
+              class:done
+              stroke-width="4"
+              stroke-dasharray="{RING_C * 26 / RING_R}"
+              stroke-dashoffset="{(RING_C * 26 / RING_R) * (1 - pct)}"
+            />
+          </svg>
+          <div class="compact-center">
+            {#if done}
+              <span class="compact-go">GO</span>
+            {:else}
+              <span class="compact-time" class:warning>{display}</span>
+            {/if}
+          </div>
+        </div>
+        <div class="compact-actions">
+          <button class="pill-btn" on:click={reset} aria-label="Reset">↺</button>
+          <button class="pill-btn pill-skip" on:click={skip} aria-label="Skip">Skip</button>
+        </div>
+      </div>
+    </div>
+  {/if}
 {/if}
 
 <style>
-  .rest-card {
-    border-radius: 18px;
-    border: 1.5px solid rgba(70,110,185,0.35);
-    background: rgba(13,24,52,0.92);
-    padding: 16px 18px;
-    animation: pill-in 0.18s ease;
-    flex-shrink: 0;
+  /* ===== LARGE FOCUS MODE ===== */
+  .timer-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: radial-gradient(ellipse at 50% 40%, #0d1a2e 0%, #06080f 60%, #030406 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 32px;
+    padding: env(safe-area-inset-top) 24px env(safe-area-inset-bottom);
+    animation: fade-in 0.2s ease;
   }
 
-  .rest-card.done  { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.07); }
-  .rest-card.warning { border-color: rgba(196,148,46,0.50); }
-
-  @keyframes pill-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
   }
 
-  .rest-layout {
+  .timer-overlay.warning { background: radial-gradient(ellipse at 50% 40%, #1a1200 0%, #06080f 60%, #030406 100%); }
+  .timer-overlay.done    { background: radial-gradient(ellipse at 50% 40%, #0a1a0a 0%, #06080f 60%, #030406 100%); }
+
+  .minimize-btn {
+    position: absolute;
+    top: calc(16px + env(safe-area-inset-top));
+    right: 20px;
     display: flex;
     align-items: center;
-    gap: 20px;
+    gap: 5px;
+    padding: 8px 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.45);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    letter-spacing: 0.02em;
   }
 
-  /* SVG ring */
-  .ring-wrap {
+  .minimize-btn:active { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75); }
+  .minimize-icon { font-size: 16px; line-height: 1; }
+
+  .large-ring-wrap {
     position: relative;
+    width: 240px;
+    height: 240px;
     flex-shrink: 0;
-    width: 120px;
-    height: 120px;
   }
 
-  .ring-svg {
+  .large-ring-svg {
     transform: rotate(-90deg);
     display: block;
+    width: 100%;
+    height: 100%;
   }
 
   .ring-track {
     fill: none;
     stroke: rgba(255,255,255,0.07);
-    stroke-width: 8;
+    stroke-width: 10;
   }
 
   .ring-fill {
     fill: none;
     stroke: rgba(255,255,255,0.70);
-    stroke-width: 8;
+    stroke-width: 10;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.5s linear, stroke 0.3s;
   }
@@ -228,38 +289,47 @@
   .ring-fill.warning { stroke: #c49230; }
   .ring-fill.done    { stroke: rgba(255,255,255,0.85); }
 
-  .ring-center {
+  .large-ring-center {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 4px;
   }
 
-  .ring-time {
-    font-size: 30px;
+  .large-time {
+    font-size: 72px;
     font-weight: 900;
     color: rgba(255,255,255,0.95);
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
     line-height: 1;
     transition: color 0.3s;
   }
 
-  .ring-time.warning { color: #c49230; }
+  .large-time.warning { color: #c49230; }
 
-  .ring-label {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
+  .large-time.pulse {
+    animation: countdown-pulse 1s ease-in-out infinite;
   }
 
-  .ring-go {
-    font-size: 26px;
+  @keyframes countdown-pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.65; transform: scale(0.96); }
+  }
+
+  .large-label {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.30);
+  }
+
+  .large-go {
+    font-size: 56px;
     font-weight: 900;
     color: rgba(255,255,255,0.92);
     letter-spacing: -0.02em;
@@ -272,18 +342,140 @@
     100% { transform: scale(1);   opacity: 1; }
   }
 
-  /* Actions */
-  .rest-actions {
+  .large-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .large-btn {
+    height: 52px;
+    padding: 0 22px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.60);
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, color 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 60px;
+  }
+
+  .large-btn:active { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.92); }
+
+  .large-btn.sound-btn { font-size: 20px; opacity: 0.55; }
+  .large-btn.sound-btn.sound-on { opacity: 1; border-color: rgba(196,148,46,0.40); background: rgba(196,148,46,0.10); }
+
+  .large-btn.skip-btn {
+    background: rgba(196,148,46,0.10);
+    border-color: rgba(196,148,46,0.30);
+    color: #c49230;
+    font-size: 15px;
+    letter-spacing: 0.04em;
+    font-weight: 800;
+  }
+
+  .large-btn.skip-btn:active { background: rgba(196,148,46,0.22); }
+
+  /* ===== COMPACT MODE ===== */
+  .rest-card {
+    border-radius: 18px;
+    border: 1.5px solid rgba(70,110,185,0.35);
+    background: rgba(13,24,52,0.92);
+    padding: 12px 14px;
+    animation: pill-in 0.18s ease;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .rest-card.done    { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.07); }
+  .rest-card.warning { border-color: rgba(196,148,46,0.50); }
+
+  @keyframes pill-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .expand-btn {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    border: 1px solid rgba(255,255,255,0.10);
+    background: transparent;
+    color: rgba(255,255,255,0.30);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1;
+  }
+
+  .expand-btn:active { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.65); }
+
+  .compact-layout {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .compact-ring-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 60px;
+    height: 60px;
+  }
+
+  .compact-ring-wrap svg {
+    transform: rotate(-90deg);
+    display: block;
+  }
+
+  .compact-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .compact-time {
+    font-size: 16px;
+    font-weight: 900;
+    color: rgba(255,255,255,0.90);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .compact-time.warning { color: #c49230; }
+
+  .compact-go {
+    font-size: 13px;
+    font-weight: 900;
+    color: rgba(255,255,255,0.90);
+    letter-spacing: 0.04em;
+  }
+
+  .compact-actions {
     flex: 1;
     display: flex;
-    flex-direction: column;
     gap: 8px;
   }
 
   .pill-btn {
-    width: 100%;
-    height: 42px;
-    padding: 0 14px;
+    flex: 1;
+    height: 40px;
+    padding: 0 10px;
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.12);
     background: rgba(255,255,255,0.06);
@@ -299,19 +491,6 @@
   }
 
   .pill-btn:active { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.92); }
-
-  .pill-sound {
-    font-size: 17px;
-    opacity: 0.55;
-  }
-
-  .pill-sound.sound-on {
-    opacity: 1;
-    border-color: rgba(196,148,46,0.40);
-    background: rgba(196,148,46,0.10);
-  }
-
-  .pill-sound:active { background: rgba(255,255,255,0.10); }
 
   .pill-btn.pill-skip {
     background: rgba(196,148,46,0.10);
