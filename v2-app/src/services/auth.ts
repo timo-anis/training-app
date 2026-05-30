@@ -38,21 +38,21 @@ export async function getSession() {
 
 /** Subscribe to auth state changes. Returns unsubscribe fn. */
 export function onAuthChange(callback: (state: AuthState) => void): () => void {
-  // Immediately resolve current session
-  getSession().then(session => {
-    if (session?.user) {
-      callback({ status: 'signed_in', user: session.user });
-    } else {
+  // Supabase v2 fires INITIAL_SESSION immediately on subscription with the current session.
+  // We only handle INITIAL_SESSION and SIGNED_IN — not TOKEN_REFRESHED, USER_UPDATED, etc.
+  // This prevents bootForUser from being re-triggered on every token refresh (~60 min),
+  // which would reset the user's navigation back to today mid-session.
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
+      if (session?.user) {
+        callback({ status: 'signed_in', user: session.user });
+      } else {
+        callback({ status: 'signed_out' });
+      }
+    } else if (event === 'SIGNED_OUT') {
       callback({ status: 'signed_out' });
     }
-  });
-
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-    if (session?.user) {
-      callback({ status: 'signed_in', user: session.user });
-    } else {
-      callback({ status: 'signed_out' });
-    }
+    // TOKEN_REFRESHED, USER_UPDATED, PASSWORD_RECOVERY — ignored intentionally
   });
 
   return () => subscription.unsubscribe();
