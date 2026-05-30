@@ -46,6 +46,17 @@ export const uiState = writable<UIState>({
 export type BootStatus = 'idle' | 'loading' | 'ready' | 'error';
 export const bootStatus = writable<BootStatus>('idle');
 
+// ---- Cloud sync status ----
+export type SyncStatus = 'idle' | 'saving' | 'saved' | 'error';
+export const syncStatus = writable<SyncStatus>('idle');
+let syncStatusTimer: ReturnType<typeof setTimeout> | null = null;
+
+function setSyncStatus(s: SyncStatus) {
+  syncStatus.set(s);
+  if (syncStatusTimer) clearTimeout(syncStatusTimer);
+  if (s === 'saved') syncStatusTimer = setTimeout(() => syncStatus.set('idle'), 2500);
+}
+
 // ---- Toast notifications ----
 export interface Toast { msg: string; type: 'error' | 'success' | 'info'; }
 export const toast = writable<Toast | null>(null);
@@ -285,14 +296,18 @@ let saveTimer: ReturnType<typeof setTimeout> | null = null;
 function scheduleSave(userId: string, state: AppState, immediate = false) {
   saveLocal(userId, state);
   if (saveTimer) clearTimeout(saveTimer);
+  setSyncStatus('saving');
   if (immediate) {
-    // Fire-and-forget — don't await, don't block the UI
     saveTimer = null;
-    saveCloud(userId, state);
+    saveCloud(userId, state).then(ok => {
+      if (ok) setSyncStatus('saved');
+      else { setSyncStatus('error'); showToast('Cloud sync failed — data saved locally', 'error'); }
+    });
   } else {
     saveTimer = setTimeout(async () => {
       const ok = await saveCloud(userId, state);
-      if (!ok) showToast('Cloud sync failed — data saved locally', 'error');
+      if (ok) setSyncStatus('saved');
+      else { setSyncStatus('error'); showToast('Cloud sync failed — data saved locally', 'error'); }
     }, 3000);
   }
 }

@@ -103,16 +103,66 @@
 
   $: allDone = blocks.every(b => b.exercises.every(exDone));
 
+  $: totalSetsAll = blocks.reduce((sum, b) => {
+    return sum + b.exercises.reduce((s, ex) => {
+      if (ex.recovery || ex.conditioning) return s + 1;
+      return s + ex.sets.length;
+    }, 0);
+  }, 0);
+
+  $: totalSetsDone = blocks.reduce((sum, b) => {
+    return sum + b.exercises.reduce((s, ex) => {
+      if (ex.recovery) return s + (ex.recoveryDone ? 1 : 0);
+      if (ex.conditioning) return s + (ex.conditioningDone ? 1 : 0);
+      return s + ex.sets.filter(set => set.done).length;
+    }, 0);
+  }, 0);
+
   function blockDone(b: WorkoutBlock): boolean {
     return b.exercises.every(exDone);
   }
 
-  function handleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string) {
-    // Commit current local values (including any prefill) before toggling done
+  // Haptic feedback helper
+  function vibrate(pattern: number | number[]) {
+    try { if ('vibrate' in navigator) navigator.vibrate(pattern); } catch { /* ignore */ }
+  }
+
+  // PR detection: returns true if current kg > all previous sets for this exercise
+  function isPR(exName: string, currentKg: string): boolean {
+    const kg = parseFloat(currentKg.replace(',', '.'));
+    if (isNaN(kg) || kg <= 0) return false;
+    let max = 0;
+    for (const wd of $appState.weeks) {
+      if (wd.week === $uiState.week && wd.day === $uiState.day) continue;
+      for (const ex of wd.exercises) {
+        if (ex.name.toLowerCase() !== exName.toLowerCase()) continue;
+        for (const s of ex.sets) {
+          const v = parseFloat(s.kg);
+          if (!isNaN(v) && v > max) max = v;
+        }
+      }
+    }
+    return max > 0 && kg > max;
+  }
+
+  let prFlashExId: string | null = null;
+  let prFlashTimer: ReturnType<typeof setTimeout> | null = null;
+
+  function handleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string, exName: string, kgVal: string) {
     commitKg(week, day, exId, setIndex);
     commitReps(week, day, exId, setIndex);
     toggleSetDone(week, day, exId, setIndex);
-    if (!currentDone && exRestString) startRest(exRestString);
+    if (!currentDone) {
+      vibrate(10);
+      if (exRestString) startRest(exRestString);
+      // Check PR after toggling done
+      if (isPR(exName, kgVal)) {
+        prFlashExId = exId;
+        if (prFlashTimer) clearTimeout(prFlashTimer);
+        prFlashTimer = setTimeout(() => { prFlashExId = null; }, 3000);
+        vibrate([10, 80, 20, 80, 30]); // celebratory pattern
+      }
+    }
   }
 
   function prev() { if (!isFirst) setActiveBlock(activeIndex - 1); }
@@ -407,14 +457,22 @@
     <div class="wm-header-row">
       <button class="wm-exit" on:click={backToNormal} title="Back to normal view">‹</button>
       <div class="wm-mid">
-        <span class="wm-blk-label">Block</span>
+        <span class="wm-blk-label">{totalSetsDone}/{totalSetsAll} sets</span>
         <span class="wm-progress">{activeIndex + 1} / {blocks.length}</span>
       </div>
       <span class="wm-clock">{formatElapsed(elapsed)}</span>
+      <button class="wm-finish-early" on:click={openSummary} title="Finish workout">✓</button>
     </div>
     <div class="wm-progress-bar">
       <div class="wm-progress-fill" style="width: {((activeIndex + 1) / blocks.length) * 100}%"></div>
     </div>
+    {#if blocks.length > 1}
+      <div class="swipe-dots" aria-hidden="true">
+        {#each blocks as _, i}
+          <span class="swipe-dot" class:active={i === activeIndex}></span>
+        {/each}
+      </div>
+    {/if}
   </header>
 
   <!-- Block content -->
@@ -457,6 +515,9 @@
                 />
               {:else}
                 <span class="ex-name">{ex.name}</span>
+                {#if prFlashExId === ex.id}
+                  <span class="pr-badge">PR 🏆</span>
+                {/if}
                 <button
                   class="ex-rename-btn"
                   on:click={() => startRename(ex.id, ex.name)}
@@ -574,7 +635,7 @@
                     <button
                       class="done-btn"
                       class:on={set.done}
-                      on:click={() => handleSetDone(week, day, ex.id, i, set.done, ex.rest)}
+                      on:click={() => handleSetDone(week, day, ex.id, i, set.done, ex.rest, ex.name, localKg[`${ex.id}-${i}`] ?? set.kg)}
                       aria-pressed={set.done}
                       aria-label={set.done ? 'Undo set' : 'Mark set done'}
                     >
@@ -821,6 +882,27 @@
     transition: width 0.3s ease;
   }
 
+  .swipe-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 0 16px 10px;
+  }
+
+  .swipe-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.18);
+    transition: background 0.2s, transform 0.2s;
+    flex-shrink: 0;
+  }
+
+  .swipe-dot.active {
+    background: #c49230;
+    transform: scale(1.3);
+  }
+
   .wm-clock {
     font-size: 15px;
     font-weight: 800;
@@ -829,6 +911,26 @@
     letter-spacing: 0.02em;
     flex-shrink: 0;
   }
+
+  .wm-finish-early {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(196,148,46,0.35);
+    background: rgba(196,148,46,0.10);
+    color: #c49230;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .wm-finish-early:active { background: rgba(196,148,46,0.22); }
 
   /* Content */
   .wm-content {
@@ -1216,6 +1318,24 @@
   }
 
   .ex-rename-btn:active { color: rgba(255,255,255,0.65); background: rgba(255,255,255,0.08); }
+
+  .pr-badge {
+    font-size: 12px;
+    font-weight: 900;
+    color: #c49230;
+    background: rgba(196,148,46,0.18);
+    border: 1px solid rgba(196,148,46,0.40);
+    border-radius: 8px;
+    padding: 3px 8px;
+    letter-spacing: 0.04em;
+    animation: pr-pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    flex-shrink: 0;
+  }
+
+  @keyframes pr-pop {
+    from { opacity: 0; transform: scale(0.6); }
+    to   { opacity: 1; transform: scale(1); }
+  }
 
   .ex-rest {
     font-size: 12px;

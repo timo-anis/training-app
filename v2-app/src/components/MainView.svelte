@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus } from '../stores/app';
   import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -62,6 +62,13 @@
   <header class="topbar">
     <span class="title-text">Timo Training</span>
     <div class="topbar-actions">
+      {#if $syncStatus === 'saving'}
+        <span class="sync-dot saving" title="Saving…" aria-label="Saving"></span>
+      {:else if $syncStatus === 'saved'}
+        <span class="sync-dot saved" title="Saved" aria-label="Saved"></span>
+      {:else if $syncStatus === 'error'}
+        <span class="sync-dot error" title="Sync failed" aria-label="Sync failed"></span>
+      {/if}
       <button class="icon-btn" on:click={() => hintsOpen = true} title="Quick guide" aria-label="Quick guide">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <circle cx="12" cy="12" r="10"/>
@@ -271,6 +278,27 @@
   .icon-btn:active {
     background: rgba(14,26,55,0.70);
     color: rgba(255,255,255,0.65);
+  }
+
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    align-self: center;
+  }
+
+  .sync-dot.saving {
+    background: rgba(196,148,46,0.80);
+    animation: sync-pulse 0.8s ease-in-out infinite;
+  }
+
+  .sync-dot.saved { background: #4fc08d; }
+  .sync-dot.error { background: #ff6060; }
+
+  @keyframes sync-pulse {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.35; }
   }
 
   /* ---- Sections ---- */

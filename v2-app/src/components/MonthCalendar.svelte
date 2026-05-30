@@ -119,6 +119,9 @@
 
   $: collapsed = $uiState.calendarCollapsed;
 
+  const _todayForBtn = new Date();
+  $: isViewingToday = viewYear === _todayForBtn.getFullYear() && viewMonth === _todayForBtn.getMonth();
+
   const MONTH_NAMES = [
     'January','February','March','April','May','June',
     'July','August','September','October','November','December'
@@ -157,7 +160,11 @@
     </button>
 
     {#if !collapsed}
-      <button class="nav-btn" on:click={nextMonth} aria-label="Next month">›</button>
+      {#if !isViewingToday}
+        <button class="today-month-btn" on:click={() => { const t = new Date(); viewYear = t.getFullYear(); viewMonth = t.getMonth(); manualMonth = false; }} aria-label="Go to today's month">Today</button>
+      {:else}
+        <button class="nav-btn" on:click={nextMonth} aria-label="Next month">›</button>
+      {/if}
     {:else}
       <div class="nav-placeholder"></div>
     {/if}
@@ -257,6 +264,23 @@
   .nav-btn:active { background: rgba(255,255,255,0.10); }
 
   .nav-placeholder { width: 32px; flex-shrink: 0; }
+
+  .today-month-btn {
+    padding: 5px 10px;
+    border-radius: 9px;
+    border: 1px solid rgba(255,255,255,0.18);
+    background: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.65);
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .today-month-btn:active { background: rgba(255,255,255,0.14); color: #ffffff; }
 
   .month-label-btn {
     flex: 1;

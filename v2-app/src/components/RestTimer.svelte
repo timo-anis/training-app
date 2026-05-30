@@ -119,6 +119,9 @@
     dispatch('reset');
   }
 
+  const RING_R = 52;
+  const RING_C = 2 * Math.PI * RING_R;
+
   $: pct     = totalSeconds > 0 ? (remaining / totalSeconds) : 0;
   $: mins    = Math.floor(remaining / 60);
   $: secs    = remaining % 60;
@@ -128,32 +131,39 @@
 </script>
 
 {#if totalSeconds > 0}
-  <div class="rest-pill" class:done class:warning>
-    <!-- Progress bar -->
-    <div class="pill-bar">
-      <div class="pill-fill" style="width: {pct * 100}%" class:warning class:done></div>
-    </div>
-
-    <div class="pill-body">
-      <div class="pill-info">
-        {#if done}
-          <span class="pill-label done-lbl">GO!</span>
-        {:else}
-          <span class="pill-label">REST</span>
-          <span class="pill-time" class:warning class:pulse={warning}>{display}</span>
-        {/if}
+  <div class="rest-card" class:done class:warning>
+    <div class="rest-layout">
+      <!-- SVG ring -->
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 120 120" width="120" height="120" aria-hidden="true">
+          <circle cx="60" cy="60" r={RING_R} class="ring-track" />
+          <circle
+            cx="60" cy="60" r={RING_R}
+            class="ring-fill"
+            class:warning
+            class:done
+            stroke-dasharray="{RING_C}"
+            stroke-dashoffset="{RING_C * (1 - pct)}"
+          />
+        </svg>
+        <div class="ring-center">
+          {#if done}
+            <span class="ring-go">GO!</span>
+          {:else}
+            <span class="ring-time" class:warning>{display}</span>
+            <span class="ring-label">REST</span>
+          {/if}
+        </div>
       </div>
 
-      <div class="pill-actions">
+      <!-- Actions -->
+      <div class="rest-actions">
         <button
           class="pill-btn pill-sound"
           class:sound-on={soundEnabled}
           on:click={toggleSound}
-          title={soundEnabled ? 'Sound on — tap to mute' : 'Sound off — tap to enable'}
           aria-label={soundEnabled ? 'Mute timer sound' : 'Enable timer sound'}
-        >
-          {soundEnabled ? '🔔' : '🔇'}
-        </button>
+        >{soundEnabled ? '🔔' : '🔇'}</button>
         <button class="pill-btn" on:click={reset} aria-label="Reset timer">↺</button>
         <button class="pill-btn pill-skip" on:click={skip} aria-label="Skip rest">Skip</button>
       </div>
@@ -162,73 +172,94 @@
 {/if}
 
 <style>
-  .rest-pill {
+  .rest-card {
     border-radius: 18px;
     border: 1.5px solid rgba(70,110,185,0.35);
     background: rgba(13,24,52,0.92);
-    overflow: hidden;
+    padding: 16px 18px;
     animation: pill-in 0.18s ease;
     flex-shrink: 0;
   }
 
-  .rest-pill.done {
-    border-color: rgba(255,255,255,0.28);
-    background: rgba(255,255,255,0.07);
-  }
-
-  .rest-pill.warning {
-    border-color: rgba(196,148,46,0.50);
-    background: rgba(13,24,52,0.95);
-  }
+  .rest-card.done  { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.07); }
+  .rest-card.warning { border-color: rgba(196,148,46,0.50); }
 
   @keyframes pill-in {
     from { opacity: 0; transform: translateY(8px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  /* Progress bar */
-  .pill-bar { height: 4px; background: rgba(255,255,255,0.06); }
-
-  .pill-fill {
-    height: 100%;
-    background: rgba(255,255,255,0.70);
-    border-radius: 0 2px 2px 0;
-    transition: width 0.5s linear, background 0.3s;
-  }
-
-  .pill-fill.warning { background: #c49230; }
-  .pill-fill.done    { background: rgba(255,255,255,0.80); width: 100% !important; }
-
-  /* Body row */
-  .pill-body {
+  .rest-layout {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 18px 20px;
+    gap: 20px;
   }
 
-  .pill-info {
-    flex: 1 1 0;
+  /* SVG ring */
+  .ring-wrap {
+    position: relative;
+    flex-shrink: 0;
+    width: 120px;
+    height: 120px;
+  }
+
+  .ring-svg {
+    transform: rotate(-90deg);
+    display: block;
+  }
+
+  .ring-track {
+    fill: none;
+    stroke: rgba(255,255,255,0.07);
+    stroke-width: 8;
+  }
+
+  .ring-fill {
+    fill: none;
+    stroke: rgba(255,255,255,0.70);
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.5s linear, stroke 0.3s;
+  }
+
+  .ring-fill.warning { stroke: #c49230; }
+  .ring-fill.done    { stroke: rgba(255,255,255,0.85); }
+
+  .ring-center {
+    position: absolute;
+    inset: 0;
     display: flex;
-    align-items: baseline;
-    gap: 10px;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
   }
 
-  .pill-label {
-    font-size: 12px;
+  .ring-time {
+    font-size: 30px;
+    font-weight: 900;
+    color: rgba(255,255,255,0.95);
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    transition: color 0.3s;
+  }
+
+  .ring-time.warning { color: #c49230; }
+
+  .ring-label {
+    font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.40);
-    flex-shrink: 0;
+    color: rgba(255,255,255,0.35);
   }
 
-  .pill-label.done-lbl {
-    font-size: 36px;
+  .ring-go {
+    font-size: 26px;
     font-weight: 900;
-    letter-spacing: -0.02em;
     color: rgba(255,255,255,0.92);
-    text-transform: none;
+    letter-spacing: -0.02em;
     animation: pop 0.35s cubic-bezier(0.34,1.56,0.64,1);
   }
 
@@ -238,39 +269,17 @@
     100% { transform: scale(1);   opacity: 1; }
   }
 
-  /* Big timer number */
-  .pill-time {
-    font-size: 56px;
-    font-weight: 900;
-    color: rgba(255,255,255,0.95);
-    letter-spacing: -0.04em;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
-    transition: color 0.3s;
-  }
-
-  .pill-time.warning { color: #c49230; }
-
-  /* Pulse animation for last 5 seconds */
-  .pill-time.pulse {
-    animation: countdown-pulse 1s ease-in-out infinite;
-  }
-
-  @keyframes countdown-pulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50%       { opacity: 0.65; transform: scale(0.96); }
-  }
-
-  /* Action buttons */
-  .pill-actions {
+  /* Actions */
+  .rest-actions {
+    flex: 1;
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
-    flex-shrink: 0;
   }
 
   .pill-btn {
-    height: 40px;
+    width: 100%;
+    height: 42px;
     padding: 0 14px;
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.12);
@@ -289,7 +298,6 @@
   .pill-btn:active { background: rgba(255,255,255,0.14); color: rgba(255,255,255,0.92); }
 
   .pill-sound {
-    padding: 0 12px;
     font-size: 17px;
     opacity: 0.55;
   }
