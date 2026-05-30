@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, appState } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, appState, sheetOpen } from './stores/app';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
@@ -72,7 +72,7 @@
     clearInterval(clockInterval);
   });
 
-  $: showWorkoutBar = $currentDayExercises.length > 0 && !$uiState.workoutMode && !showOnboarding;
+  $: showWorkoutBar = $currentDayExercises.length > 0 && !$uiState.workoutMode && !showOnboarding && !$sheetOpen;
 </script>
 
 <ToastNotification />

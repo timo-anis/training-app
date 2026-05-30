@@ -116,7 +116,7 @@
   .account-backdrop {
     position: fixed;
     inset: 0;
-    z-index: 94;
+    z-index: 199;
     background: rgba(0, 0, 0, 0.55);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
@@ -125,7 +125,7 @@
   .account-sheet {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    z-index: 95;
+    z-index: 200;
     background: linear-gradient(180deg, #0d1a2e 0%, #080c18 100%);
     border: 1px solid rgba(65, 100, 175, 0.22);
     border-top: 1px solid rgba(196, 148, 46, 0.22);

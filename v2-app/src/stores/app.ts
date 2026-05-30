@@ -71,6 +71,9 @@ export function showToast(msg: string, type: Toast['type'] = 'info') {
 // ---- Search overlay (global, rendered at App level) ----
 export const searchOpen = writable<boolean>(false);
 
+// ---- Sheet open (account, etc.) — hides workout bar ----
+export const sheetOpen = writable<boolean>(false);
+
 // ---- Week display offset ----
 // displayWeek = absoluteWeek - weekOffset
 // Timo (userStartWeek=1): offset=0, no change.

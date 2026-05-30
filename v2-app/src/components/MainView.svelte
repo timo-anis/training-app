@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen } from '../stores/app';
   import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -8,6 +8,7 @@
   import AccountSheet from './AccountSheet.svelte';
 
   let accountOpen = false;
+  $: sheetOpen.set(accountOpen);
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
