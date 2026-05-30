@@ -63,7 +63,6 @@ export interface AppState {
 export interface UIState {
   week: number;
   day: DayOfWeek;
-  month: string; // 'YYYY-MM'
   search: string;
   /** Timer is running — workout has started */
   workoutActive: boolean;

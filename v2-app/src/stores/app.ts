@@ -27,12 +27,9 @@ export const appState = writable<AppState>(emptyAppState());
 // ---- UI state store ----
 const today = new Date();
 const defaultDay = DAY_ORDER[today.getDay() === 0 ? 6 : today.getDay() - 1];
-const defaultMonth = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}`;
-
 export const uiState = writable<UIState>({
   week: 1,
   day: defaultDay,
-  month: defaultMonth,
   search: '',
   workoutActive: false,
   workoutMode: false,

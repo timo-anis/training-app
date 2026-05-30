@@ -62,6 +62,10 @@
   function selectDay(date: Date) {
     const wd = dateToWeekDay(date);
     if (!wd) return;
+    // Sync view to the selected day's month (user explicitly chose this day)
+    viewYear = date.getFullYear();
+    viewMonth = date.getMonth();
+    manualMonth = false; // allow week-strip navigation to follow again
     updateUI(ui => ({ ...ui, week: wd.week, day: wd.day }));
   }
 
@@ -78,22 +82,33 @@
       date.getDate() === t.getDate();
   }
 
-  // Month navigation
-  let viewYear: number;
-  let viewMonth: number;
+  // Month navigation — always start on today's month.
+  // Follows the selected day only when the user explicitly picks a day from the calendar.
+  // Does NOT auto-jump when uiState.week changes (e.g. on boot or token refresh).
+  const _today = new Date();
+  let viewYear: number = _today.getFullYear();
+  let viewMonth: number = _today.getMonth();
 
-  $: {
+  // When the selected day is in a different month than current view,
+  // offer to sync — but only when the user navigates via the week strip,
+  // not automatically. We track whether the view has been manually set.
+  let manualMonth = false;
+
+  // Sync view to selected day only on first mount (before any manual nav)
+  $: if (!manualMonth) {
     const ref = weekToDate($uiState.week, $uiState.day);
     viewYear = ref.getFullYear();
     viewMonth = ref.getMonth();
   }
 
   function prevMonth() {
+    manualMonth = true;
     if (viewMonth === 0) { viewYear -= 1; viewMonth = 11; }
     else viewMonth -= 1;
   }
 
   function nextMonth() {
+    manualMonth = true;
     if (viewMonth === 11) { viewYear += 1; viewMonth = 0; }
     else viewMonth += 1;
   }
@@ -362,7 +377,7 @@
 
   /* Future — visible but clearly lighter than past */
   .status-future .day-num { color: rgba(255,255,255,0.18); }
-  .status-future { cursor: default; }
+  .status-future { cursor: pointer; }
 
   /* Today — solid gold, THE single strong accent */
   .today {

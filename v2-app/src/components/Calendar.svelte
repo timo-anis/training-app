@@ -13,10 +13,14 @@
 
   const todayWeek = getTodayWeek();
 
+  function getTodayDay(): import('../types/workout').DayOfWeek {
+    const d = new Date().getDay();
+    return DAY_ORDER[d === 0 ? 6 : d - 1];
+  }
+
   function goToToday() {
-    if ($availableWeeks.includes(todayWeek)) {
-      updateUI(ui => ({ ...ui, week: todayWeek }));
-    }
+    // Always navigate to today — even if today's week has no data yet
+    updateUI(ui => ({ ...ui, week: todayWeek, day: getTodayDay() }));
   }
 
   const DAY_SHORT: Record<DayOfWeek, string> = {
@@ -46,7 +50,7 @@
   $: canNext = $availableWeeks.indexOf($uiState.week) < $availableWeeks.length - 1;
   $: isLastWeek = !canNext;
   $: weekLabel = `Week ${$uiState.week - $weekOffset}`;
-  $: showTodayBtn = $uiState.week !== todayWeek && $availableWeeks.includes(todayWeek);
+  $: showTodayBtn = $uiState.week !== todayWeek;
 </script>
 
 <div class="calendar-card">

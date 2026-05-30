@@ -298,14 +298,30 @@
     }
   }
 
-  // Reset locals on block navigation
+  // Commit + reset locals on block navigation
   let prevActiveIndex = -1;
   $: if (activeIndex !== prevActiveIndex) {
+    // Commit any uncommitted inputs from the previous block before navigating
+    if (prevActiveIndex >= 0 && blocks[prevActiveIndex]) {
+      const prevBlock = blocks[prevActiveIndex];
+      const week = $uiState.week;
+      const day = $uiState.day;
+      for (const ex of prevBlock.exercises) {
+        ex.sets.forEach((_s, i) => {
+          const k = `${ex.id}-${i}`;
+          if (localKg[k] !== undefined) commitKg(week, day, ex.id, i);
+          if (localReps[k] !== undefined) commitReps(week, day, ex.id, i);
+        });
+        if (ex.conditioning && localCondNote[ex.id] !== undefined) {
+          commitCondNote(week, day, ex.id);
+        }
+      }
+    }
     prevActiveIndex = activeIndex;
     localKg = {};
     localReps = {};
     localCondNote = {};
-    editingNameId = null; // cancel any in-progress rename on block change
+    editingNameId = null;
   }
 
   function commitKg(week: number, day: DayOfWeek, exId: string, i: number) {
