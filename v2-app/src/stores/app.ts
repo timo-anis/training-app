@@ -13,6 +13,7 @@ import {
   addSetToState,
   updateSetFieldInState,
   deleteExerciseFromState,
+  insertExerciseAtState,
   renameExerciseInState,
   moveExerciseInState,
   buildWorkoutBlocks as _buildWorkoutBlocks,
@@ -73,6 +74,30 @@ export const searchOpen = writable<boolean>(false);
 
 // ---- Sheet open (account, etc.) — hides workout bar ----
 export const sheetOpen = writable<boolean>(false);
+
+// ---- Global undo ----
+export interface UndoAction { label: string; fn: () => void; }
+export const undoAction = writable<UndoAction | null>(null);
+let _undoTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function pushUndo(action: UndoAction) {
+  if (_undoTimer) clearTimeout(_undoTimer);
+  undoAction.set(action);
+  _undoTimer = setTimeout(() => undoAction.set(null), 5000);
+}
+
+export function execUndo() {
+  const a = get(undoAction);
+  if (!a) return;
+  if (_undoTimer) clearTimeout(_undoTimer);
+  undoAction.set(null);
+  a.fn();
+}
+
+export function clearUndo() {
+  if (_undoTimer) clearTimeout(_undoTimer);
+  undoAction.set(null);
+}
 
 // ---- Week display offset ----
 // displayWeek = absoluteWeek - weekOffset
@@ -625,9 +650,25 @@ export function toggleConditioningDone(week: number, day: DayOfWeek, exId: strin
   );
 }
 
-// ---- Delete exercise ----
+// ---- Insert exercise at index (undo for delete) ----
+export function insertExerciseAt(week: number, day: DayOfWeek, index: number, exercise: Exercise) {
+  updateState(state => insertExerciseAtState(state, week, day, index, exercise));
+}
+
+// ---- Delete exercise (with undo support) ----
 export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
-  updateState(state => deleteExerciseFromState(state, week, day, exId));
+  const state = get(appState);
+  const wd = state.weeks.find(w => w.week === week && w.day === day);
+  const exIndex = wd?.exercises.findIndex(e => e.id === exId) ?? -1;
+  const captured = wd?.exercises[exIndex];
+  updateState(s => deleteExerciseFromState(s, week, day, exId));
+  if (captured && exIndex >= 0) {
+    const ex = { ...captured };
+    pushUndo({
+      label: `"${ex.name}" deleted`,
+      fn: () => updateState(s => insertExerciseAtState(s, week, day, exIndex, ex)),
+    });
+  }
 }
 
 // ---- MVP1 migration ----

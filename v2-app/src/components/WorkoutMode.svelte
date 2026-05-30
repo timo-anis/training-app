@@ -5,7 +5,8 @@
     setActiveBlock, toggleSetDone, updateSetField, findLastSession,
     findLastConditioningNote, toggleRecoveryDone, toggleConditioningDone, updateUI,
     addSet, deleteSet, insertSet, updateConditioningNote, markWorkoutComplete,
-    renameExercise, updateDayNote, addExercise,
+    renameExercise, updateDayNote, addExercise, deleteExercise,
+    pushUndo, execUndo, undoAction,
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
   import type { DayOfWeek, WorkoutSet } from '../types/workout';
@@ -41,7 +42,7 @@
     releaseWakeLock();
     document.removeEventListener('visibilitychange', onVisibilityChange);
     clearInterval(clockInterval);
-    if (undoTimer) clearTimeout(undoTimer);
+
   });
 
   // ---- Elapsed timer ----
@@ -158,13 +159,16 @@
     toggleSetDone(week, day, exId, setIndex);
     if (!currentDone) {
       vibrate(10);
-      // Visual flash for iOS (no vibration API)
       const flashKey = `${exId}-${setIndex}`;
       setDoneFlashKey = flashKey;
       if (setDoneFlashTimer) clearTimeout(setDoneFlashTimer);
       setDoneFlashTimer = setTimeout(() => { setDoneFlashKey = null; }, 280);
       if (exRestString) startRest(exRestString);
-      // Check PR after toggling done
+      // Undo toast — lets user quickly un-mark if tapped wrong set
+      pushUndo({
+        label: `Set ${setIndex + 1} marked done`,
+        fn: () => toggleSetDone(week, day, exId, setIndex),
+      });
       if (isPR(exName, kgVal)) {
         prFlashExId = exId;
         if (prFlashTimer) clearTimeout(prFlashTimer);
@@ -315,23 +319,7 @@
     showAddEx = false;
   }
 
-  // ---- #8 undo last destructive action ----
-  interface UndoAction { label: string; fn: () => void; }
-  let undoPending: UndoAction | null = null;
-  let undoTimer: ReturnType<typeof setTimeout> | null = null;
-
-  function pushUndo(action: UndoAction) {
-    if (undoTimer) clearTimeout(undoTimer);
-    undoPending = action;
-    undoTimer = setTimeout(() => { undoPending = null; }, 5000);
-  }
-
-  function execUndo() {
-    if (!undoPending) return;
-    if (undoTimer) clearTimeout(undoTimer);
-    undoPending.fn();
-    undoPending = null;
-  }
+  // ---- #8 undo — uses global undoAction store ----
 
   // ---- Local editable inputs (sets) ----
   let localKg: Record<string, string> = {};
@@ -730,9 +718,9 @@
   {/if}
 
   <!-- #8 Undo toast -->
-  {#if undoPending}
+  {#if $undoAction}
     <div class="undo-toast">
-      <span class="undo-label">{undoPending.label}</span>
+      <span class="undo-label">{$undoAction.label}</span>
       <button class="undo-btn" on:click={execUndo}>Undo</button>
     </div>
   {/if}

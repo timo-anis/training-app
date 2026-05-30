@@ -129,6 +129,25 @@ export function deleteExerciseFromState(
   };
 }
 
+/** Insert an exercise at a specific index (used for undo after delete). */
+export function insertExerciseAtState(
+  state: AppState,
+  week: number,
+  day: DayOfWeek,
+  index: number,
+  exercise: import('../types/workout').Exercise
+): AppState {
+  return {
+    ...state,
+    weeks: state.weeks.map(w => {
+      if (w.week !== week || w.day !== day) return w;
+      const exs = [...w.exercises];
+      exs.splice(index, 0, exercise);
+      return { ...w, exercises: exs };
+    }),
+  };
+}
+
 /** Rename an exercise. */
 export function renameExerciseInState(
   state: AppState,

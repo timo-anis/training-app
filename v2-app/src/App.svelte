@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, appState, sheetOpen } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, appState, sheetOpen, undoAction, execUndo } from './stores/app';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
@@ -110,6 +110,13 @@
 
   {#if $searchOpen}
     <SearchOverlay />
+  {/if}
+
+  {#if $undoAction && !$uiState.workoutMode}
+    <div class="global-undo-toast">
+      <span class="undo-label">{$undoAction.label}</span>
+      <button class="undo-btn" on:click={execUndo}>Undo</button>
+    </div>
   {/if}
 
   {#if showOnboarding}
@@ -296,4 +303,51 @@
       box-shadow: 0 2px 14px rgba(196,148,46,0.18);
     }
   }
+
+  .global-undo-toast {
+    position: fixed;
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    left: 14px;
+    right: 14px;
+    max-width: 612px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: rgba(18,30,60,0.96);
+    border: 1px solid rgba(70,110,185,0.30);
+    border-radius: 14px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 90;
+    animation: toast-in 0.2s ease;
+  }
+
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .undo-label {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+  }
+
+  .undo-btn {
+    padding: 7px 14px;
+    border-radius: 9px;
+    border: 1px solid rgba(196,148,46,0.35);
+    background: rgba(196,148,46,0.12);
+    color: #c49230;
+    font-size: 13px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    flex-shrink: 0;
+  }
+
+  .undo-btn:active { background: rgba(196,148,46,0.25); }
 </style>
