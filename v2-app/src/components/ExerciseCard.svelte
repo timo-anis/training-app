@@ -314,12 +314,6 @@
     flex-wrap: wrap;
   }
 
-  .superset-badge.cond-letter {
-    background: rgba(196,148,46,0.12);
-    border-color: rgba(196,148,46,0.30);
-    color: #c49230;
-  }
-
   .superset-badge {
     flex: 0 0 auto;
     width: 32px;
