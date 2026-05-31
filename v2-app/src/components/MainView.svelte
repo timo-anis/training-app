@@ -213,11 +213,11 @@
       </div>
       <ol class="hints-list">
         <li><strong>Calendar</strong> — Tap any day to view or add exercises for that day</li>
-        <li><strong>Training</strong> — Tap the day heading to expand → add exercises → tap <em>▶ Start Workout</em></li>
-        <li><strong>Workout mode</strong> — Swipe left/right between exercises. Tap ○ to mark a set done</li>
-        <li><strong>Rest timer</strong> — Starts automatically after each set. Quick presets: 1′ / 1:30 / 2′ / 2:30 / 3′</li>
+        <li><strong>Rest timer</strong> — Starts automatically after each set. Tap to expand fullscreen. Quick presets: 1′ / 1:30 / 2′ / 2:30 / 3′</li>
         <li><strong>Session note</strong> — Tap <em>+ Session note</em> during workout to log how it felt</li>
         <li><strong>Statistics</strong> — Tap the Statistics button to see volume, weekly breakdown, and progress charts</li>
+        <li><strong>Training</strong> — Tap the day heading to expand → add exercises → tap <em>▶ Start Workout</em></li>
+        <li><strong>Workout mode</strong> — Swipe left/right between exercises. Tap ○ to mark a set done</li>
       </ol>
     </div>
   </div>
