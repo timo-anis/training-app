@@ -436,6 +436,7 @@
   .day-heading {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
     flex: 1 1 0;
   }
@@ -443,7 +444,7 @@
   .day-heading-main {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 2px;
   }
 
