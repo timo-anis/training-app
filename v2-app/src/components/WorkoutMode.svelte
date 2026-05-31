@@ -772,13 +772,15 @@
 
       <!-- Rest timer -->
       {#if restActive && $uiState.restStartTime !== null && $uiState.restTotal !== null}
-        <RestTimer
-          startTime={$uiState.restStartTime}
-          totalSeconds={$uiState.restTotal}
-          on:done={clearRest}
-          on:skip={clearRest}
-          on:reset={resetRest}
-        />
+        {#key $uiState.restStartTime}
+          <RestTimer
+            startTime={$uiState.restStartTime}
+            totalSeconds={$uiState.restTotal}
+            on:done={clearRest}
+            on:skip={clearRest}
+            on:reset={resetRest}
+          />
+        {/key}
       {/if}
     </div>
   {/if}
