@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, tick } from 'svelte';
   import {
     uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode, weekOffset,
     setActiveBlock, toggleSetDone, updateSetField, findLastSession,
@@ -311,12 +311,15 @@
   let showAddEx = false;
   let addExName = '';
 
-  function handleAddExInWorkout() {
+  async function handleAddExInWorkout() {
     const name = addExName.trim();
     if (!name) return;
     addExercise($uiState.week, $uiState.day, name);
     addExName = '';
     showAddEx = false;
+    // Wait for blocks to update reactively, then jump to the new (last) block
+    await tick();
+    setActiveBlock(blocks.length - 1);
   }
 
   // ---- #8 undo — uses global undoAction store ----
