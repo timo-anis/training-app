@@ -196,11 +196,11 @@
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 0.04em;
-    color: #5a7a9a;
+    color: rgba(255,255,255,0.40);
     text-transform: uppercase;
   }
 
-  .pill.has-data .pill-label { color: #97b8d8; }
+  .pill.has-data .pill-label { color: rgba(255,255,255,0.70); }
   .pill.active .pill-label  { color: #c49230; }
 
   .pill-dot {

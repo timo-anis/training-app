@@ -334,13 +334,13 @@
     text-align: center;
     font-size: 11px;
     font-weight: 800;
-    color: #3a5890;
+    color: rgba(255,255,255,0.45);
     letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 2px 0;
   }
 
-  .day-hdr.hdr-weekend { color: #5a4878; }
+  .day-hdr.hdr-weekend { color: rgba(255,255,255,0.25); }
 
   /* ---- Week row ---- */
   .week-row {
@@ -468,7 +468,7 @@
     align-items: center;
     gap: 4px;
     font-size: 10px;
-    color: #3a5890;
+    color: rgba(255,255,255,0.45);
     font-weight: 600;
   }
 
