@@ -640,6 +640,8 @@
     padding: 20px 20px 36px;
     width: 100%;
     max-width: 640px;
+    max-height: 80dvh;
+    overflow-y: auto;
     animation: slide-up 0.20s ease;
   }
 
@@ -653,6 +655,12 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+    position: sticky;
+    top: 0;
+    background: rgba(10,18,42,0.98);
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(60,90,165,0.18);
+    z-index: 1;
   }
 
   :global(.hints-title) {
