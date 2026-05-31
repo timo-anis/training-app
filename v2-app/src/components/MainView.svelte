@@ -15,6 +15,19 @@
     Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
   };
 
+  // Block index map — groups supersets as one block (A, B, C...)
+  $: blockIndices = (() => {
+    const result: Record<string, number> = {};
+    let blockIdx = -1;
+    let lastGroupKey = '';
+    for (const ex of $currentDayExercises) {
+      const groupKey = (ex.type === 'superset' && ex.code) ? ex.code : ex.id;
+      if (groupKey !== lastGroupKey) { blockIdx++; lastGroupKey = groupKey; }
+      result[ex.id] = blockIdx;
+    }
+    return result;
+  })();
+
   // Day progress — X/Y exercises done
   $: dayExDone = $currentDayExercises.filter(ex => {
     if (ex.recovery)     return ex.recoveryDone;
@@ -174,6 +187,7 @@
               week={$uiState.week}
               day={$uiState.day}
               index={i}
+              blockIndex={blockIndices[exercise.id] ?? i}
               total={$currentDayExercises.length}
             />
           {/each}

@@ -8,6 +8,7 @@
   export let week: number;
   export let day: DayOfWeek;
   export let index: number = 0;
+  export let blockIndex: number = 0;
   export let total: number = 1;
 
   // Scroll into view + brief highlight when navigated to from search
@@ -32,7 +33,7 @@
   $: allDone = exercise.conditioning ? exercise.conditioningDone === true : (doneCount === totalCount && totalCount > 0);
   $: supersetLabel = exercise.code || '';
   // Position letter for conditioning (A, B, C…) — based on index in exercise list
-  $: positionLetter = String.fromCharCode(65 + index);
+  $: positionLetter = String.fromCharCode(65 + blockIndex);
 
   // 2-tap delete confirm
   let confirmDelete = false;
