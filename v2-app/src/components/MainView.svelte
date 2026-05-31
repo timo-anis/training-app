@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding } from '../stores/app';
   import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -239,6 +239,9 @@
           <p class="hint-desc">Swipe left/right between exercises. Tap ○ to mark a set done</p>
         </div>
       </div>
+      <button class="hints-walkthrough" on:click={() => { hintsOpen = false; requestOnboarding.set(true); }}>
+        ▶ Ava tutvustus uuesti
+      </button>
     </div>
   </div>
 {/if}
@@ -715,6 +718,24 @@
     justify-content: center;
     -webkit-tap-highlight-color: transparent;
   }
+
+  :global(.hints-walkthrough) {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(196,148,46,0.45);
+    background: rgba(196,148,46,0.12);
+    color: #d4a038;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, transform 0.1s;
+  }
+
+  :global(.hints-walkthrough:active) { background: rgba(196,148,46,0.22); transform: scale(0.98); }
 
   :global(.hints-grid) {
     display: grid;

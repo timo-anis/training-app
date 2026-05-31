@@ -75,6 +75,9 @@ export const searchOpen = writable<boolean>(false);
 // ---- Sheet open (account, etc.) — hides workout bar ----
 export const sheetOpen = writable<boolean>(false);
 
+// Set true from anywhere to (re)open the onboarding walkthrough
+export const requestOnboarding = writable<boolean>(false);
+
 // ---- Global undo ----
 export interface UndoAction { label: string; fn: () => void; }
 export const undoAction = writable<UndoAction | null>(null);

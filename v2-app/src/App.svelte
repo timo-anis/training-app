@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, appState, sheetOpen, undoAction, execUndo } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
@@ -14,7 +14,6 @@
 
   // Onboarding — show once on first login, then as a floating chip until first workout done
   let showOnboarding = false;
-  let onboardingDone = false; // true once user has clicked through the overlay at least once
 
   function onboardingKey(userId: string) {
     return `timo_training_v4_onboarded__${userId}`;
@@ -28,15 +27,14 @@
 
   function dismissOnboarding() {
     showOnboarding = false;
-    onboardingDone = true;
     const user = $currentUser;
     if (user) {
       try { localStorage.setItem(onboardingKey(user.id), '1'); } catch { /* ignore */ }
     }
   }
 
-  // Help chip always visible after first dismissal
-  $: showHelpChip = onboardingDone && !showOnboarding;
+  // Re-open the walkthrough when requested from elsewhere (e.g. Quick guide)
+  $: if ($requestOnboarding) { showOnboarding = true; requestOnboarding.set(false); }
 
   // Elapsed timer for the bottom workout bar
   let elapsed = 0;
@@ -123,17 +121,6 @@
     <OnboardingOverlay on:done={dismissOnboarding} />
   {/if}
 
-  {#if showHelpChip}
-    <button
-      class="help-chip"
-      class:above-bar={showWorkoutBar}
-      on:click={() => showOnboarding = true}
-      aria-label="Open help"
-    >
-      <span class="help-icon">?</span>
-      <span class="help-label">Juhised</span>
-    </button>
-  {/if}
 {:else}
   <AuthView />
 {/if}
@@ -236,52 +223,7 @@
   .wm-btn.full:active { background: #b07e22; transform: scale(0.98); box-shadow: none; }
 
   /* ── Help chip ── */
-  .help-chip {
-    position: fixed;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-    right: 16px;
-    z-index: 50;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 10px 14px;
-    border-radius: 999px;
-    border: 1px solid rgba(196, 148, 46, 0.45);
-    background: rgba(10, 14, 28, 0.92);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    color: #c49230;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s, transform 0.1s;
-    box-shadow: 0 2px 16px rgba(0,0,0,0.40);
-  }
 
-  .help-chip.above-bar {
-    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .help-chip:active { background: rgba(196,148,46,0.14); transform: scale(0.96); }
-
-  .help-icon {
-    width: 18px;
-    height: 18px;
-    border-radius: 50%;
-    border: 1.5px solid rgba(196,148,46,0.70);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
-    font-weight: 900;
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  .help-label {
-    font-size: 13px;
-    font-weight: 800;
-    letter-spacing: 0.01em;
-  }
 
   /* Desktop — constrain the bar and shrink the button */
   @media (min-width: 640px) {
