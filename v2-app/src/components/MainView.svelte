@@ -220,7 +220,7 @@
         </div>
         <div class="hint-card">
           <div class="hint-header"><span class="hint-num">2</span><span class="hint-title">Rest timer</span></div>
-          <p class="hint-desc">Starts after each set. Tap card to expand fullscreen. Presets: 1′ / 1:30 / 2′ / 2:30 / 3′</p>
+          <p class="hint-desc">Auto-starts after each set, or set it manually: ＋/－ adjusts in 15s steps, then tap Start. Presets: 1′ / 1:30 / 2′ / 3′</p>
         </div>
         <div class="hint-card">
           <div class="hint-header"><span class="hint-num">3</span><span class="hint-title">Session note</span></div>

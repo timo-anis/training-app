@@ -44,8 +44,9 @@ App.svelte
     │       │   └── SetRow.svelte (xN)
     │       └── AddExercise.svelte
     ├── workout-bar             — bottom CTA (when exercises exist)
-    └── WorkoutMode.svelte      — full-screen overlay (when active)
-        └── RestTimer.svelte    — focus mode (fullscreen) or compact (minimized)
+    ├── WorkoutMode.svelte      — full-screen overlay (when active)
+    │   └── RestTimer.svelte    — focus mode (fullscreen) or compact (minimized)
+    └── OnboardingOverlay.svelte — first-run walkthrough; re-openable via topbar Quick guide
 ```
 
 ### State layer (v2-app/src/stores/app.ts)
@@ -58,7 +59,7 @@ App.svelte
 | bootStatus | 'idle' or 'loading' or 'ready' or 'error' | App boot phase |
 
 Key derived stores: currentDayExercises, workoutBlocks, availableWeeks, hasMvp1Data.
-Additional stores: syncStatus ('idle'|'saving'|'saved'|'error'), sheetOpen (boolean — hides workout bar when account sheet open).
+Additional stores: syncStatus ('idle'|'saving'|'saved'|'error'), sheetOpen (boolean — hides workout bar when account sheet open), requestOnboarding (boolean — set true to re-open the onboarding walkthrough from anywhere).
 
 ### Services (v2-app/src/services/)
 

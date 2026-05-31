@@ -60,6 +60,14 @@
 - Ascending countdown beep last 5 seconds
 - Reset button: works correctly (force remount via {#key})
 - Warning: amber ring + pulse last 5s
+- Auto-start: timer begins on set done using the exercise's configured rest
+
+### Rest timer — manual controls (WorkoutMode)
+- `＋` / `－` stepper adjusts duration in 15s steps
+- Tapping `＋15s rest` when idle ARMS a duration but does NOT start the countdown — build up 15s → 30s → 45s … first
+- Pending (armed) state shows a gold `Start · M:SS` button; countdown begins only on Start
+- `－` while pending drops 15s; reaching 0 clears back to idle. `－` while running floors at 15s
+- Presets row (1′ / 1:30 / 2′ / 3′) starts the countdown immediately; shown only in idle state
 
 ### Sync + topbar
 - Cloud sync dot: pulsing amber (saving) → green 2.5s (saved) → idle
@@ -68,6 +76,12 @@
 ### Account sheet
 - z-index 200 — above workout bar
 - Workout bar hidden when sheet open
+
+### Help / onboarding
+- Single help entry: topbar `?` icon opens the "Quick guide" sheet
+- Quick guide has an `▶ Ava tutvustus uuesti` button that re-opens the full onboarding walkthrough (`OnboardingOverlay`) via the `requestOnboarding` store
+- The old floating "Juhised" chip (position: fixed, bottom-right) was REMOVED — it overlapped page content (e.g. the day card)
+- Onboarding still auto-shows once on first login per user (localStorage key `timo_training_v4_onboarded__<userId>`)
 
 ---
 

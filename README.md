@@ -32,7 +32,7 @@ A mobile-first training app built for real daily use — fast logging during wor
 - Week strip + day picker with Today button
 - Exercise logging — weighted sets (kg × reps), supersets, conditioning blocks, recovery blocks
 - Workout Mode — focused full-screen overlay, block-by-block navigation, swipe gestures
-- Inline rest timer — compact pill with progress bar, auto-starts on set done
+- Inline rest timer — compact pill with progress bar; auto-starts on set done, or build a duration manually with ＋/－ (15s steps) and tap Start; presets 1′ / 1:30 / 2′ / 3′
 - Workout timer — elapsed time chip in bottom bar, persists across overlay open/close
 - Day progress indicator — X/Y exercises completed in current day heading
 - Copy previous day / week — prefills kg/reps, resets done states
