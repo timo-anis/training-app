@@ -22,6 +22,9 @@
 <div class="ob-backdrop">
   <div class="ob-card">
 
+    <!-- Close button -->
+    <button class="ob-close" on:click={() => dispatch('done')} aria-label="Skip">✕</button>
+
     <!-- Step indicators -->
     <div class="ob-dots">
       {#each Array(TOTAL) as _, i}
@@ -127,7 +130,29 @@
     padding: 0 0 env(safe-area-inset-bottom, 0px);
   }
 
+  .ob-close {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    border-radius: 9px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.40);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .ob-close:active { background: rgba(255,255,255,0.12); color: rgba(255,255,255,0.75); }
+
   .ob-card {
+    position: relative;
     width: 100%;
     max-width: 480px;
     background: linear-gradient(180deg, #0d1a2e 0%, #080c18 100%);
