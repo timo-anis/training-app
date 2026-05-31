@@ -306,6 +306,16 @@
     }
   }
 
+  // -15s: only when a timer is running; floor at 15s, never below
+  function subRestTime() {
+    const STEP = 15;
+    if (!restActive) return;
+    updateUI(ui => {
+      const next = (ui.restTotal ?? STEP) - STEP;
+      return { ...ui, restTotal: next < STEP ? STEP : next };
+    });
+  }
+
   // ---- #3 day-level session note ----
   // Lock week/day at the moment the note is opened — prevents saving to wrong
   // day if $uiState changes between open and blur.
@@ -711,13 +721,16 @@
       <!-- Rest timer controls — always visible for strength blocks -->
       {#if block.exercises.some(e => !e.recovery && !e.conditioning)}
         <div class="rest-controls">
-          <button class="add-rest-btn" on:click={addRestTime}>
-            <span class="add-rest-icon">＋</span>
-            <span class="add-rest-label">15s rest</span>
-            {#if restActive && $uiState.restTotal !== null}
-              <span class="add-rest-current">{Math.floor($uiState.restTotal / 60)}:{String(($uiState.restTotal ?? 0) % 60).padStart(2,'0')}</span>
-            {/if}
-          </button>
+          <div class="rest-adjust-row">
+            <button class="rest-step-btn" on:click={subRestTime} disabled={!restActive} aria-label="Remove 15 seconds">－</button>
+            <button class="add-rest-btn" on:click={addRestTime}>
+              <span class="add-rest-icon">＋</span>
+              <span class="add-rest-label">15s rest</span>
+              {#if restActive && $uiState.restTotal !== null}
+                <span class="add-rest-current">{Math.floor($uiState.restTotal / 60)}:{String(($uiState.restTotal ?? 0) % 60).padStart(2,'0')}</span>
+              {/if}
+            </button>
+          </div>
           {#if !restActive}
             <div class="rest-presets-row">
               {#each [[60,"1′"],[90,"1:30"],[120,"2′"],[180,"3′"]] as [secs, label]}
@@ -1172,6 +1185,39 @@
   .add-rest-btn:active {
     background: rgba(255,255,255,0.12);
     transform: scale(0.97);
+  }
+
+  .rest-adjust-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .rest-adjust-row .add-rest-btn { flex: 1; }
+
+  .rest-step-btn {
+    flex: 0 0 auto;
+    width: 56px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.80);
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, transform 0.08s;
+  }
+
+  .rest-step-btn:active:not(:disabled) {
+    background: rgba(255,255,255,0.12);
+    transform: scale(0.97);
+  }
+
+  .rest-step-btn:disabled {
+    opacity: 0.35;
+    cursor: default;
   }
 
   .add-rest-icon {
