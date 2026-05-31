@@ -18,7 +18,7 @@
     return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
   }
 
-  type DayStatus = 'done' | 'active-recovery' | 'has-data' | 'rest' | 'weekend' | 'future';
+  type DayStatus = 'done' | 'partial' | 'active-recovery' | 'has-data' | 'rest' | 'weekend' | 'future';
 
   function getDayStatus(date: Date): DayStatus {
     const todayMid = new Date();
@@ -42,13 +42,16 @@
     const hasData = workoutDay && workoutDay.exercises.length > 0;
 
     if (hasData) {
-      // Explicit finish → always green
+      // Explicit finish → always fully done (green)
       if (workoutDay!.completed === true) return 'done';
       const nonRecovery = workoutDay!.exercises.filter(e => !e.recovery);
       const hasRecovery = workoutDay!.exercises.some(e => e.recovery && e.recoveryDone);
       if (nonRecovery.length === 0) return hasRecovery ? 'active-recovery' : 'has-data';
       const allDone = nonRecovery.every(ex => ex.sets.length > 0 && ex.sets.every(s => s.done));
       if (allDone) return 'done';
+      // Partially done — some sets completed but not all
+      const anyDone = nonRecovery.some(ex => ex.sets.some(s => s.done));
+      if (anyDone) return 'partial';
       if (hasRecovery) return 'active-recovery';
       return 'has-data';
     }
@@ -195,6 +198,8 @@
               <span class="day-num">{date.getDate()}</span>
               {#if status === 'done'}
                 <span class="status-mark">✓</span>
+              {:else if status === 'partial'}
+                <span class="status-mark partial-mark">◑</span>
               {:else if status === 'has-data'}
                 <span class="status-dot"></span>
               {:else if status === 'active-recovery'}
@@ -372,12 +377,19 @@
 
   /* ---- Status styles — Monochrome + single gold (palette B) ---- */
 
-  /* Done: subtle white box — "done, nothing special" */
+  /* Done: green — fully completed */
   .status-done {
-    background: rgba(255,255,255,0.07);
-    border-color: rgba(255,255,255,0.18);
+    background: rgba(60,160,100,0.15);
+    border-color: rgba(60,180,110,0.40);
   }
-  .status-done .day-num { color: rgba(255,255,255,0.85); }
+  .status-done .day-num { color: #4fc08d; }
+
+  /* Partial: amber/yellow — started but not finished */
+  .status-partial {
+    background: rgba(196,148,46,0.10);
+    border-color: rgba(196,148,46,0.30);
+  }
+  .status-partial .day-num { color: #c49230; }
 
   /* Has-data: workout logged, not fully done — slightly lighter white */
   .status-has-data {
@@ -427,6 +439,9 @@
     color: rgba(255,255,255,0.60);
   }
 
+  .status-done .status-mark { color: #4fc08d; }
+  .partial-mark { color: #c49230 !important; font-size: 12px; }
+
   .status-mark.rec  { color: #c49230; font-weight: 400; font-size: 12px; }
   .status-mark.wknd { color: #182438; font-weight: 600; font-size: 11px; }
 
@@ -468,7 +483,8 @@
     font-weight: 900;
   }
 
-  .done-sw  { background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.18); color: rgba(255,255,255,0.60); }
+  .done-sw    { background: rgba(60,160,100,0.15); border: 1px solid rgba(60,180,110,0.40); color: #4fc08d; }
+  .partial-sw { background: rgba(196,148,46,0.10); border: 1px solid rgba(196,148,46,0.30); color: #c49230; font-size: 10px; }
   .data-sw  { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); }
   .data-sw::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: rgba(100,155,255,0.60); }
   .rec-sw   { background: rgba(196,148,46,0.10); border: 1px solid rgba(196,148,46,0.28); color: #c49230; font-size: 10px; }
