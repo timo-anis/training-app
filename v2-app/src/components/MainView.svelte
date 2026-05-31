@@ -155,8 +155,10 @@
   <section class="section">
     <button class="day-heading-btn" on:click={() => exercisesExpanded = !exercisesExpanded}>
       <div class="day-heading">
-        <span class="day-label">{$uiState.day}</span>
-        <span class="day-sub">Week {$uiState.week - $weekOffset}</span>
+        <div class="day-heading-main">
+          <span class="day-label">{$uiState.day}</span>
+          <span class="day-week-num">Week {$uiState.week - $weekOffset}</span>
+        </div>
         {#if dayExTotal > 0}
           <span class="day-progress" class:all-done={dayAllDone}>
             {dayExDone}/{dayExTotal}
@@ -330,7 +332,7 @@
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
     gap: 10px;
     padding: 16px 20px;
     border-radius: 16px;
@@ -416,8 +418,15 @@
   .day-heading {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex: 1 1 0;
+  }
+
+  .day-heading-main {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
   }
 
   .day-label {
@@ -425,13 +434,14 @@
     font-weight: 900;
     color: #e8f0ff;
     letter-spacing: -0.03em;
+    line-height: 1;
   }
 
-  .day-sub {
-    font-size: 13px;
-    color: rgba(255,255,255,0.40);
+  .day-week-num {
+    font-size: 11px;
     font-weight: 600;
-    flex: 1;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.02em;
   }
 
   .day-progress {
@@ -662,7 +672,7 @@
     background: rgba(10,18,42,0.98);
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(60,90,165,0.18);
-    z-index: 1;
+    z-index: 10;
   }
 
   :global(.hints-title) {
@@ -693,22 +703,23 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
     counter-reset: hints;
   }
 
   :global(.hints-list li) {
     counter-increment: hints;
-    display: flex;
-    gap: 12px;
+    display: grid;
+    grid-template-columns: 22px 130px 1fr;
+    align-items: baseline;
+    gap: 10px;
     font-size: 13.5px;
     color: rgba(255,255,255,0.75);
-    line-height: 1.45;
+    line-height: 1.5;
   }
 
   :global(.hints-list li::before) {
     content: counter(hints);
-    flex-shrink: 0;
     width: 22px;
     height: 22px;
     border-radius: 50%;
@@ -720,10 +731,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-top: 1px;
+    flex-shrink: 0;
   }
 
-  :global(.hints-list strong) { color: rgba(255,255,255,0.92); }
+  :global(.hints-list strong) {
+    color: rgba(255,255,255,0.92);
+    white-space: nowrap;
+  }
+
   :global(.hints-list em) {
     color: #c49230;
     font-style: normal;
@@ -735,7 +750,7 @@
     .section { padding: 18px 20px 0; }
     .section-tight { padding-top: 10px; }
     .day-label { font-size: 26px; }
-    .day-sub { font-size: 15px; }
+    .day-week-num { font-size: 13px; }
     .day-progress { font-size: 13px; padding: 5px 12px; }
     .stats-btn { padding: 18px 24px; }
     .stats-btn-label { font-size: 18px; }
