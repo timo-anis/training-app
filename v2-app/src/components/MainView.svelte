@@ -213,14 +213,32 @@
         <span class="hints-title">Quick guide</span>
         <button class="hints-close" on:click={() => hintsOpen = false}>✕</button>
       </div>
-      <ol class="hints-list">
-        <li><strong>Calendar</strong> — Tap any day to view or add exercises for that day</li>
-        <li><strong>Rest timer</strong> — Starts automatically after each set. Tap to expand fullscreen. Quick presets: 1′ / 1:30 / 2′ / 2:30 / 3′</li>
-        <li><strong>Session note</strong> — Tap <em>+ Session note</em> during workout to log how it felt</li>
-        <li><strong>Statistics</strong> — Tap the Statistics button to see volume, weekly breakdown, and progress charts</li>
-        <li><strong>Training</strong> — Tap the day heading to expand → add exercises → tap <em>▶ Start Workout</em></li>
-        <li><strong>Workout mode</strong> — Swipe left/right between exercises. Tap ○ to mark a set done</li>
-      </ol>
+      <div class="hints-grid">
+        <div class="hint-card">
+          <div class="hint-header"><span class="hint-num">1</span><span class="hint-title">Calendar</span></div>
+          <p class="hint-desc">Tap any day to view or add exercises for that day</p>
+        </div>
+        <div class="hint-card">
+          <div class="hint-header"><span class="hint-num">2</span><span class="hint-title">Rest timer</span></div>
+          <p class="hint-desc">Starts after each set. Tap card to expand fullscreen. Presets: 1′ / 1:30 / 2′ / 2:30 / 3′</p>
+        </div>
+        <div class="hint-card">
+          <div class="hint-header"><span class="hint-num">3</span><span class="hint-title">Session note</span></div>
+          <p class="hint-desc">Tap <em>+ Session note</em> during workout to log how it felt</p>
+        </div>
+        <div class="hint-card">
+          <div class="hint-header"><span class="hint-num">4</span><span class="hint-title">Statistics</span></div>
+          <p class="hint-desc">Tap Statistics to see volume, weekly breakdown and progress charts</p>
+        </div>
+        <div class="hint-card">
+          <div class="hint-header"><span class="hint-num">5</span><span class="hint-title">Training</span></div>
+          <p class="hint-desc">Expand day → add exercises → tap <em>▶ Start Workout</em></p>
+        </div>
+        <div class="hint-card">
+          <div class="hint-header"><span class="hint-num">6</span><span class="hint-title">Workout mode</span></div>
+          <p class="hint-desc">Swipe left/right between exercises. Tap ○ to mark a set done</p>
+        </div>
+      </div>
     </div>
   </div>
 {/if}
@@ -697,31 +715,31 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  :global(.hints-list) {
-    list-style: none;
-    padding: 0;
-    margin: 0;
+  :global(.hints-grid) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  :global(.hint-card) {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    counter-reset: hints;
+    gap: 6px;
   }
 
-  :global(.hints-list li) {
-    counter-increment: hints;
-    display: grid;
-    grid-template-columns: 22px 130px 1fr;
-    align-items: baseline;
-    gap: 10px;
-    font-size: 13.5px;
-    color: rgba(255,255,255,0.75);
-    line-height: 1.5;
+  :global(.hint-header) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
-  :global(.hints-list li::before) {
-    content: counter(hints);
-    width: 22px;
-    height: 22px;
+  :global(.hint-num) {
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
     background: rgba(196,148,46,0.15);
     border: 1px solid rgba(196,148,46,0.30);
@@ -734,12 +752,20 @@
     flex-shrink: 0;
   }
 
-  :global(.hints-list strong) {
+  :global(.hint-title) {
+    font-size: 14px;
+    font-weight: 800;
     color: rgba(255,255,255,0.92);
-    white-space: nowrap;
   }
 
-  :global(.hints-list em) {
+  :global(.hint-desc) {
+    font-size: 12.5px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+    margin: 0;
+  }
+
+  :global(.hint-desc em) {
     color: #c49230;
     font-style: normal;
     font-weight: 700;
