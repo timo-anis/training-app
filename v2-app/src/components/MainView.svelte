@@ -719,4 +719,16 @@
     font-style: normal;
     font-weight: 700;
   }
+  @media (min-width: 640px) {
+    .title-text { font-size: 22px; }
+    .icon-btn { width: 44px; height: 44px; }
+    .section { padding: 18px 20px 0; }
+    .section-tight { padding-top: 10px; }
+    .day-label { font-size: 26px; }
+    .day-sub { font-size: 15px; }
+    .day-progress { font-size: 13px; padding: 5px 12px; }
+    .stats-btn { padding: 16px 20px; }
+    .stats-btn-label { font-size: 17px; }
+    .empty-title { font-size: 20px; }
+  }
 </style>

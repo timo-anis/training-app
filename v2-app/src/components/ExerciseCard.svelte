@@ -753,4 +753,13 @@
     background: rgba(13,24,52,0.85);
     border-color: rgba(255,255,255,0.18);
   }
+  @media (min-width: 640px) {
+    .ex-name { font-size: 22px; }
+    .ex-sub { font-size: 14px; }
+    .superset-badge { font-size: 14px; padding: 5px 12px; border-radius: 10px; }
+    .progress-badge { font-size: 14px; width: 56px; height: 56px; }
+    .card-body { padding: 18px 20px; gap: 14px; }
+    .card-actions { gap: 14px; }
+    .icon-btn { width: 42px; height: 42px; font-size: 18px; }
+  }
 </style>

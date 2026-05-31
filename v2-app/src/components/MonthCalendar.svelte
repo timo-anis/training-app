@@ -490,4 +490,13 @@
   .rec-sw   { background: rgba(196,148,46,0.10); border: 1px solid rgba(196,148,46,0.28); color: #c49230; font-size: 10px; }
   .wknd-sw  { background: transparent; border: 1px solid rgba(255,255,255,0.10); color: #2e4060; font-size: 10px; }
   .rest-sw  { background: transparent; border: 1px solid rgba(255,255,255,0.08); }
+  @media (min-width: 640px) {
+    .month-label { font-size: 17px; }
+    .day-num { font-size: 17px; }
+    .day-hdr { font-size: 13px; }
+    .day-cell { border-radius: 11px; }
+    .status-mark { font-size: 13px; }
+    .leg-item { font-size: 12px; }
+    .nav-btn { width: 38px; height: 38px; font-size: 20px; }
+  }
 </style>

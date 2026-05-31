@@ -211,4 +211,13 @@
   }
 
   .pill.active .pill-dot { background: #c49230; }
+  @media (min-width: 640px) {
+    .calendar-card { padding: 20px 18px 18px; gap: 18px; }
+    .week-label { font-size: 18px; }
+    .nav-btn { width: 44px; height: 44px; font-size: 22px; }
+    .new-week-btn, .today-btn { font-size: 14px; padding: 8px 16px; }
+    .pill { padding: 12px 2px; border-radius: 14px; }
+    .pill-label { font-size: 14px; }
+    .pill-dot { width: 5px; height: 5px; }
+  }
 </style>
