@@ -31,6 +31,8 @@
   $: totalCount = exercise.conditioning ? 1 : exercise.sets.length;
   $: allDone = exercise.conditioning ? exercise.conditioningDone === true : (doneCount === totalCount && totalCount > 0);
   $: supersetLabel = exercise.code || '';
+  // Position letter for conditioning (A, B, C…) — based on index in exercise list
+  $: positionLetter = String.fromCharCode(65 + index);
 
   // 2-tap delete confirm
   let confirmDelete = false;
@@ -96,6 +98,8 @@
   <div class="exercise-header">
     {#if supersetLabel}
       <span class="superset-badge">{supersetLabel}</span>
+    {:else if exercise.conditioning}
+      <span class="superset-badge cond-letter">{positionLetter}</span>
     {/if}
     <div class="exercise-meta">
       <span class="exercise-name">{exercise.name}</span>
@@ -308,6 +312,12 @@
     align-items: center;
     gap: 10px;
     flex-wrap: wrap;
+  }
+
+  .superset-badge.cond-letter {
+    background: rgba(196,148,46,0.12);
+    border-color: rgba(196,148,46,0.30);
+    color: #c49230;
   }
 
   .superset-badge {

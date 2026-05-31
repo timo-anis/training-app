@@ -510,7 +510,8 @@
           {#if block.isSuperset}
             <span class="block-badge superset">Superset {block.code}</span>
           {:else}
-            <span class="block-badge cond">No weights</span>
+            {@const condLetter = String.fromCharCode(65 + activeIndex)}
+            <span class="block-badge cond">{condLetter} · No weights</span>
           {/if}
         </div>
       {/if}
