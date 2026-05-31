@@ -330,7 +330,7 @@
     width: 100%;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 10px;
     padding: 16px 20px;
     border-radius: 16px;

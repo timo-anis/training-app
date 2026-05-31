@@ -109,7 +109,8 @@
     color: #c8ddf4;
     letter-spacing: -0.01em;
     flex: 1;
-    text-align: center;
+    text-align: left;
+    padding-left: 4px;
   }
 
   .nav-btn {

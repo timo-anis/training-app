@@ -291,8 +291,9 @@
     flex: 1;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 6px;
+    padding-left: 4px;
     background: transparent;
     border: none;
     cursor: pointer;
@@ -309,6 +310,7 @@
     color: #c8ddf4;
     letter-spacing: -0.01em;
     user-select: none;
+    text-align: left;
   }
 
   .chevron {
