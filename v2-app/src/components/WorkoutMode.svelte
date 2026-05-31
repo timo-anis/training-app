@@ -296,6 +296,16 @@
     if (secs > 0) updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: secs }));
   }
 
+  // +15s: start timer if not running, or add 15s to existing
+  function addRestTime() {
+    const ADD = 15;
+    if (!restActive) {
+      updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: ADD }));
+    } else {
+      updateUI(ui => ({ ...ui, restTotal: (ui.restTotal ?? ADD) + ADD }));
+    }
+  }
+
   // ---- #3 day-level session note ----
   // Lock week/day at the moment the note is opened — prevents saving to wrong
   // day if $uiState changes between open and blur.
@@ -698,13 +708,23 @@
         {/each}
       </div>
 
-      <!-- #2 Rest timer presets — shown when no timer is running and block has strength exercises -->
-      {#if !restActive && block.exercises.some(e => !e.recovery && !e.conditioning)}
-        <div class="rest-presets">
-          <span class="rest-presets-lbl">REST</span>
-          {#each [[60,"1'"],[90,'1:30'],[120,"2'"],[150,'2:30'],[180,"3'"]] as [secs, label]}
-            <button class="rest-preset-btn" on:click={() => startRestSecs(secs as number)}>{label}</button>
-          {/each}
+      <!-- Rest timer controls — always visible for strength blocks -->
+      {#if block.exercises.some(e => !e.recovery && !e.conditioning)}
+        <div class="rest-controls">
+          <button class="add-rest-btn" on:click={addRestTime}>
+            <span class="add-rest-icon">＋</span>
+            <span class="add-rest-label">15s rest</span>
+            {#if restActive && $uiState.restTotal !== null}
+              <span class="add-rest-current">{Math.floor($uiState.restTotal / 60)}:{String(($uiState.restTotal ?? 0) % 60).padStart(2,'0')}</span>
+            {/if}
+          </button>
+          {#if !restActive}
+            <div class="rest-presets-row">
+              {#each [[60,"1′"],[90,"1:30"],[120,"2′"],[180,"3′"]] as [secs, label]}
+                <button class="rest-preset-sm" on:click={() => startRestSecs(secs as number)}>{label}</button>
+              {/each}
+            </div>
+          {/if}
         </div>
       {/if}
 
@@ -1123,42 +1143,82 @@
 
   .kg-adj-btn:active { background: rgba(196,148,46,0.18); color: #c49230; }
 
-  /* ---- #2 rest presets ---- */
-  .rest-presets {
+  /* ---- rest controls ---- */
+  .rest-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .add-rest-btn {
+    width: 100%;
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 2px 0;
-  }
-
-  .rest-presets-lbl {
-    font-size: 10px;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.80);
+    font-size: 16px;
     font-weight: 800;
-    letter-spacing: 0.10em;
-    text-transform: uppercase;
-    color: rgba(255,255,255,0.28);
-    flex-shrink: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, transform 0.08s;
+    letter-spacing: 0.02em;
   }
 
-  .rest-preset-btn {
+  .add-rest-btn:active {
+    background: rgba(255,255,255,0.12);
+    transform: scale(0.97);
+  }
+
+  .add-rest-icon {
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+    color: rgba(255,255,255,0.55);
+  }
+
+  .add-rest-label { font-size: 16px; font-weight: 800; }
+
+  .add-rest-current {
+    font-size: 13px;
+    font-weight: 700;
+    color: #c49230;
+    font-variant-numeric: tabular-nums;
+    background: rgba(196,148,46,0.12);
+    border: 1px solid rgba(196,148,46,0.28);
+    border-radius: 8px;
+    padding: 2px 8px;
+    margin-left: 4px;
+  }
+
+  .rest-presets-row {
+    display: flex;
+    gap: 6px;
+  }
+
+  .rest-preset-sm {
     flex: 1;
     padding: 8px 4px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.09);
-    background: rgba(255,255,255,0.04);
-    color: rgba(255,255,255,0.45);
-    font-size: 13px;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.03);
+    color: rgba(255,255,255,0.38);
+    font-size: 12px;
     font-weight: 700;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.1s, color 0.1s, border-color 0.1s;
+    transition: background 0.1s, color 0.1s;
     text-align: center;
   }
 
-  .rest-preset-btn:active {
-    background: rgba(196,148,46,0.14);
-    border-color: rgba(196,148,46,0.30);
+  .rest-preset-sm:active {
+    background: rgba(196,148,46,0.12);
     color: #c49230;
+    border-color: rgba(196,148,46,0.25);
   }
 
   /* ---- #5 add exercise in workout ---- */
