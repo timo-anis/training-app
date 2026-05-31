@@ -81,6 +81,8 @@
   }
 
   $: restActive = $uiState.restStartTime !== null && $uiState.restTotal !== null && $uiState.restTotal > 0;
+  // armed but not yet counting down: a duration is set but no start time
+  $: restPending = $uiState.restStartTime === null && $uiState.restTotal !== null && $uiState.restTotal > 0;
 
   function startRest(restString: string) {
     const secs = parseRestToSeconds(restString);
@@ -296,24 +298,35 @@
     if (secs > 0) updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: secs }));
   }
 
-  // +15s: start timer if not running, or add 15s to existing
+  // +15s: build up the rest duration in 15s steps. Does NOT start the
+  // countdown on its own — when not running it only arms the duration.
   function addRestTime() {
-    const ADD = 15;
-    if (!restActive) {
-      updateUI(ui => ({ ...ui, restStartTime: Date.now(), restTotal: ADD }));
+    const STEP = 15;
+    if (restActive) {
+      updateUI(ui => ({ ...ui, restTotal: (ui.restTotal ?? STEP) + STEP }));
     } else {
-      updateUI(ui => ({ ...ui, restTotal: (ui.restTotal ?? ADD) + ADD }));
+      updateUI(ui => ({ ...ui, restStartTime: null, restTotal: (ui.restTotal ?? 0) + STEP }));
     }
   }
 
-  // -15s: only when a timer is running; floor at 15s, never below
+  // -15s: works while armed (pending) or running.
+  // Running: floor at 15s. Pending: drop to 0 clears back to idle.
   function subRestTime() {
     const STEP = 15;
-    if (!restActive) return;
     updateUI(ui => {
-      const next = (ui.restTotal ?? STEP) - STEP;
-      return { ...ui, restTotal: next < STEP ? STEP : next };
+      if (ui.restTotal === null) return ui;
+      const next = ui.restTotal - STEP;
+      if (ui.restStartTime !== null) {
+        return { ...ui, restTotal: next < STEP ? STEP : next };
+      }
+      if (next <= 0) return { ...ui, restStartTime: null, restTotal: null };
+      return { ...ui, restTotal: next };
     });
+  }
+
+  // Begin the countdown for an armed (pending) duration.
+  function startPendingRest() {
+    if (restPending) updateUI(ui => ({ ...ui, restStartTime: Date.now() }));
   }
 
   // ---- #3 day-level session note ----
@@ -722,16 +735,21 @@
       {#if block.exercises.some(e => !e.recovery && !e.conditioning)}
         <div class="rest-controls">
           <div class="rest-adjust-row">
-            <button class="rest-step-btn" on:click={subRestTime} disabled={!restActive} aria-label="Remove 15 seconds">－</button>
+            <button class="rest-step-btn" on:click={subRestTime} disabled={$uiState.restTotal === null} aria-label="Remove 15 seconds">－</button>
             <button class="add-rest-btn" on:click={addRestTime}>
               <span class="add-rest-icon">＋</span>
               <span class="add-rest-label">15s rest</span>
-              {#if restActive && $uiState.restTotal !== null}
-                <span class="add-rest-current">{Math.floor($uiState.restTotal / 60)}:{String(($uiState.restTotal ?? 0) % 60).padStart(2,'0')}</span>
+              {#if $uiState.restTotal !== null && $uiState.restTotal > 0}
+                <span class="add-rest-current" class:pending={restPending}>{Math.floor($uiState.restTotal / 60)}:{String(($uiState.restTotal ?? 0) % 60).padStart(2,'0')}</span>
               {/if}
             </button>
           </div>
-          {#if !restActive}
+          {#if restPending && $uiState.restTotal !== null}
+            <button class="rest-start-btn" on:click={startPendingRest}>
+              Start · {Math.floor($uiState.restTotal / 60)}:{String($uiState.restTotal % 60).padStart(2,'0')}
+            </button>
+          {/if}
+          {#if !restActive && !restPending}
             <div class="rest-presets-row">
               {#each [[60,"1′"],[90,"1:30"],[120,"2′"],[180,"3′"]] as [secs, label]}
                 <button class="rest-preset-sm" on:click={() => startRestSecs(secs as number)}>{label}</button>
@@ -1218,6 +1236,33 @@
   .rest-step-btn:disabled {
     opacity: 0.35;
     cursor: default;
+  }
+
+  .rest-start-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(196,148,46,0.55);
+    background: rgba(196,148,46,0.16);
+    color: #d4a038;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s, transform 0.08s;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rest-start-btn:active {
+    background: rgba(196,148,46,0.26);
+    transform: scale(0.98);
+  }
+
+  .add-rest-current.pending {
+    color: rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.16);
   }
 
   .add-rest-icon {
