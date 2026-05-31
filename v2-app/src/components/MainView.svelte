@@ -138,7 +138,7 @@
   <!-- Statistics button -->
   <section class="section section-tight">
     <button class="stats-btn" on:click={() => statsOpen = !statsOpen} aria-expanded={statsOpen}>
-      <svg class="stats-btn-icon" width="17" height="17" viewBox="0 0 24 24" fill="none"
+      <svg class="stats-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
         <rect x="17" y="3" width="4" height="18"/>
@@ -330,11 +330,12 @@
     width: 100%;
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 10px;
-    padding: 13px 16px;
-    border-radius: 14px;
-    border: 1px solid rgba(196,148,46,0.22);
-    background: rgba(13,24,52,0.70);
+    padding: 16px 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(196,148,46,0.35);
+    background: rgba(13,24,52,0.80);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.12s;
@@ -353,16 +354,17 @@
   .stats-btn:active { background: rgba(13,24,52,0.90); }
 
   .stats-btn-icon {
-    color: rgba(196,148,46,0.70);
+    color: rgba(196,148,46,0.85);
     flex-shrink: 0;
+    width: 20px;
+    height: 20px;
   }
 
   .stats-btn-label {
-    flex: 1 1 0;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
-    color: rgba(255,255,255,0.85);
-    text-align: left;
+    color: rgba(255,255,255,0.90);
+    text-align: center;
   }
 
   .stats-chevron {
@@ -735,8 +737,9 @@
     .day-label { font-size: 26px; }
     .day-sub { font-size: 15px; }
     .day-progress { font-size: 13px; padding: 5px 12px; }
-    .stats-btn { padding: 16px 20px; }
-    .stats-btn-label { font-size: 17px; }
+    .stats-btn { padding: 18px 24px; }
+    .stats-btn-label { font-size: 18px; }
+    .stats-btn-icon { width: 22px; height: 22px; }
     .empty-title { font-size: 20px; }
   }
 </style>
