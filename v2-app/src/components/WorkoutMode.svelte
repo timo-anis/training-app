@@ -10,6 +10,7 @@
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
   import type { DayOfWeek, WorkoutSet } from '../types/workout';
+  import { searchExercises } from '../data/exercises';
   import RestTimer from './RestTimer.svelte';
 
   const DAY_SHORT: Record<string, string> = {
@@ -310,6 +311,31 @@
   // ---- #5 add exercise within workout mode ----
   let showAddEx = false;
   let addExName = '';
+
+  const WM_PAGE_SIZE = 3;
+  let addExPage = 0;
+  $: addExTrimmed = addExName.trim();
+  $: addExMatches = addExTrimmed.length >= 1 ? searchExercises(addExTrimmed) : [];
+  $: addExPages = Math.ceil(addExMatches.length / WM_PAGE_SIZE);
+  $: addExSuggestions = addExMatches.slice(addExPage * WM_PAGE_SIZE, addExPage * WM_PAGE_SIZE + WM_PAGE_SIZE);
+  $: if (addExTrimmed) addExPage = 0;
+
+  $: addExHistory = addExTrimmed.length >= 2 ? (() => {
+    const lower = addExTrimmed.toLowerCase();
+    let found: { kg: string; reps: string; sets: number } | null = null;
+    for (const wd of $appState.weeks) {
+      for (const ex of wd.exercises) {
+        if (ex.name.toLowerCase().includes(lower) && ex.sets.length > 0) {
+          const ds = ex.sets.filter(s => s.done || s.kg || s.reps);
+          if (ds.length > 0) {
+            const last = ds[ds.length - 1];
+            found = { kg: last.kg, reps: last.reps, sets: ds.length };
+          }
+        }
+      }
+    }
+    return found;
+  })() : null;
 
   async function handleAddExInWorkout() {
     const name = addExName.trim();
@@ -672,21 +698,58 @@
 
       <!-- #5 Add exercise within workout mode -->
       {#if showAddEx}
-        <div class="wm-addex-row">
-          <input
-            class="wm-addex-input"
-            type="text"
-            bind:value={addExName}
-            use:focusOnMount
-            placeholder="Exercise name"
-            autocomplete="off"
-            on:keydown={e => { if (e.key === 'Enter') handleAddExInWorkout(); if (e.key === 'Escape') { showAddEx = false; addExName = ''; } }}
-          />
-          <button class="wm-addex-confirm" on:click={handleAddExInWorkout}>Add</button>
-          <button class="wm-addex-cancel" on:click={() => { showAddEx = false; addExName = ''; }}>✕</button>
+        <div class="wm-addex-panel">
+          <div class="wm-addex-row">
+            <input
+              class="wm-addex-input"
+              type="text"
+              bind:value={addExName}
+              use:focusOnMount
+              placeholder="Exercise name…"
+              autocomplete="off"
+              autocorrect="off"
+              spellcheck="false"
+              on:keydown={e => {
+                if (e.key === 'Enter') handleAddExInWorkout();
+                if (e.key === 'Escape') { showAddEx = false; addExName = ''; }
+              }}
+            />
+            <button class="wm-addex-cancel" on:click={() => { showAddEx = false; addExName = ''; }}>✕</button>
+          </div>
+
+          {#if addExSuggestions.length > 0}
+            <div class="wm-addex-suggestions">
+              {#if addExPages > 1}
+                <div class="wm-sugg-nav">
+                  <button class="wm-nav-arrow" on:click={() => addExPage > 0 && addExPage--} disabled={addExPage === 0}>‹</button>
+                  <span class="wm-nav-count">{addExPage + 1} / {addExPages}</span>
+                  <button class="wm-nav-arrow" on:click={() => addExPage < addExPages - 1 && addExPage++} disabled={addExPage >= addExPages - 1}>›</button>
+                </div>
+              {/if}
+              {#each addExSuggestions as entry}
+                <button class="wm-sugg-item" on:click={async () => {
+                  addExercise($uiState.week, $uiState.day, entry.name);
+                  showAddEx = false; addExName = '';
+                  await tick(); setActiveBlock(blocks.length - 1);
+                }}>
+                  {entry.name}
+                </button>
+              {/each}
+            </div>
+          {/if}
+
+          {#if addExHistory}
+            <div class="wm-addex-history">
+              <span class="wm-hist-lbl">Last time</span>
+              <span class="wm-hist-val">{addExHistory.kg ? `${addExHistory.kg} kg` : '—'} × {addExHistory.reps || '—'}</span>
+              <span class="wm-hist-sets">{addExHistory.sets} sets</span>
+            </div>
+          {/if}
+
+          <button class="wm-addex-confirm" on:click={handleAddExInWorkout} disabled={!addExTrimmed}>Add "{addExTrimmed}"</button>
         </div>
       {:else}
-        <button class="wm-addex-trigger" on:click={() => showAddEx = true}>+ Add exercise</button>
+        <button class="wm-addex-trigger" on:click={() => { showAddEx = true; addExPage = 0; }}>+ Add exercise</button>
       {/if}
 
       <!-- #3 Day session note -->
@@ -1105,6 +1168,16 @@
     border-color: rgba(255,255,255,0.18);
   }
 
+  .wm-addex-panel {
+    background: linear-gradient(180deg, #0f1c30, #0b1726);
+    border: 1px solid rgba(255,255,255,0.10);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
   .wm-addex-row {
     display: flex;
     gap: 8px;
@@ -1114,7 +1187,7 @@
   .wm-addex-input {
     flex: 1;
     background: rgba(13,24,52,0.85);
-    border: 1px solid rgba(196,148,46,0.40);
+    border: 1px solid rgba(65,100,175,0.22);
     border-radius: 12px;
     padding: 12px 14px;
     font-size: 16px;
@@ -1123,26 +1196,11 @@
     font-family: inherit;
     outline: none;
     min-width: 0;
+    transition: border-color 0.12s;
   }
 
   .wm-addex-input::placeholder { color: rgba(255,255,255,0.22); }
-  .wm-addex-input:focus { border-color: rgba(196,148,46,0.70); }
-
-  .wm-addex-confirm {
-    padding: 12px 16px;
-    border-radius: 12px;
-    border: none;
-    background: rgba(196,148,46,0.18);
-    border: 1px solid rgba(196,148,46,0.35);
-    color: #c49230;
-    font-size: 14px;
-    font-weight: 800;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    flex-shrink: 0;
-  }
-
-  .wm-addex-confirm:active { background: rgba(196,148,46,0.30); }
+  .wm-addex-input:focus { border-color: rgba(255,255,255,0.25); }
 
   .wm-addex-cancel {
     width: 38px;
@@ -1161,6 +1219,60 @@
   }
 
   .wm-addex-cancel:active { background: rgba(255,80,80,0.12); color: #ff6060; }
+
+  .wm-addex-suggestions { display: flex; flex-direction: column; gap: 5px; }
+
+  .wm-sugg-nav {
+    display: flex; align-items: center; justify-content: flex-end; gap: 6px; padding-bottom: 2px;
+  }
+
+  .wm-nav-count { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.30); min-width: 28px; text-align: center; }
+
+  .wm-nav-arrow {
+    width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;
+    border-radius: 7px; border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.50);
+    font-size: 16px; cursor: pointer; -webkit-tap-highlight-color: transparent; padding: 0;
+  }
+  .wm-nav-arrow:disabled { opacity: 0.25; cursor: default; }
+  .wm-nav-arrow:not(:disabled):active { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.85); }
+
+  .wm-sugg-item {
+    width: 100%; text-align: left; padding: 10px 13px;
+    border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.80);
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    -webkit-tap-highlight-color: transparent; transition: background 0.1s;
+  }
+  .wm-sugg-item:active { background: rgba(255,255,255,0.10); color: #ffffff; }
+
+  .wm-addex-history {
+    display: flex; align-items: center; gap: 8px; padding: 8px 12px;
+    border-radius: 10px; background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .wm-hist-lbl { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.35); flex-shrink: 0; }
+  .wm-hist-val { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.80); flex: 1; }
+  .wm-hist-sets { font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.35); flex-shrink: 0; }
+
+  .wm-addex-confirm {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(196,148,46,0.14);
+    border: 1px solid rgba(196,148,46,0.32);
+    color: #c49230;
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .wm-addex-confirm:not(:disabled):active { background: rgba(196,148,46,0.28); }
+  .wm-addex-confirm:disabled { opacity: 0.35; cursor: not-allowed; }
 
   /* ---- #3 day session note ---- */
   .day-note-section {
