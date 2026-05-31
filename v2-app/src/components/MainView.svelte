@@ -21,7 +21,7 @@
     let blockIdx = -1;
     let lastGroupKey = '';
     for (const ex of $currentDayExercises) {
-      const groupKey = (ex.type === 'superset' && ex.code) ? ex.code : ex.id;
+      const groupKey = (ex.type === 'superset' && ex.code) ? ex.code[0] : ex.id;
       if (groupKey !== lastGroupKey) { blockIdx++; lastGroupKey = groupKey; }
       result[ex.id] = blockIdx;
     }
