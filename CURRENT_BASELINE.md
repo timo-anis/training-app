@@ -1,14 +1,12 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-05-30
+**Last updated:** 2026-05-31
 
 ## Active App: V2
 
-V2 is the production app. MVP1 (index.html) is legacy — do not modify.
-
 - Source: `v2-app/`
-- Deployed: GitHub Pages from `v2-dist/`
-- Live: https://timo-anis.github.io/training-app/v2/
+- Deployed: GitHub Pages — https://timo-anis.github.io/training-app/v2/
+- MVP1 (`index.html`) is legacy — do not touch
 
 ---
 
@@ -16,86 +14,60 @@ V2 is the production app. MVP1 (index.html) is legacy — do not modify.
 
 ### Auth
 - Email/password sign in via Supabase
-- Auth-first boot — no content shown before sign in
-- Sign out via Account sheet
-- `onAuthChange` fires only on INITIAL_SESSION and SIGNED_IN — TOKEN_REFRESHED ignored (no spurious re-boots)
+- `onAuthChange` fires only on INITIAL_SESSION and SIGNED_IN — TOKEN_REFRESHED ignored
+- Sign out via Account sheet (z-index 200, workout bar hidden when open)
 
-### Boot flow
-- BootOverlay shown during Supabase session check + data load
-- Cloud state loaded first; local state used as fallback
-- Always lands on today's week + today's day on boot
+### Boot
+- Always lands on today's week + today's day
 - `goToToday()` works even when today's week has no workout data
+- `goToToday()` sets both week AND day (not just week)
 
-### Calendar
-- Month calendar — initialises to today's month on every boot
-- Month calendar has Today button when user has navigated away from current month
-- Month calendar follows week-strip navigation but does NOT auto-jump when uiState.week changes
-- Week strip with day picker — `goToToday()` sets both week AND day (not just week)
-- Future days are clickable (intentional — allows planning ahead)
-- Sync dot in topbar (saving pulsing amber → saved green 2.5s → idle)
+### Calendar — month view
+- Initialises to today's month on every boot
+- Does NOT auto-follow uiState.week (fixed — was root cause of wrong-month bug)
+- Today button appears when user has navigated away from current month
+- Day colors: green = fully done, amber ◑ = partial (some sets done), amber ring = recovery, white = has data
+- Future days: clickable (for planning), cursor pointer
+- Legend: Done / Partial / Workout / Recovery / Weekend
+
+### Calendar — week strip
+- Day pill labels: white/visible
+- goToToday: sets both week and day
 
 ### Exercise management
-- Add exercise (search + select or free-text)
-- Delete exercise
-- Edit exercise name, type (single/superset/conditioning/recovery)
-- Reorder exercises (up/down arrows)
-- Add set / delete set with 5-second undo toast
+- Add exercise: autocomplete + history hint in both normal view and workout mode
+- Delete exercise: undo toast (5s) in both views
+- Delete set: undo toast (5s)
+- Set done toggle: undo toast (5s, lets user recover accidental tap)
+- Exercise position badges: all exercises show letter badge (A, B, C…)
+  - Supersets grouped by FIRST LETTER of code (A1+A2+A3 = one A group → B comes next)
+  - Conditioning shows next available letter after all superset groups
+  - Both main view and workout mode use same grouping logic
 
 ### Workout mode
-- Full-screen overlay, block-by-block navigation
-- Swipe left/right — swipe indicator dots below progress bar
-- Progress header shows "X/Y sets" (not block count)
-- Finish ✓ button always visible in header — can finish from any block
-- Set done toggle — immediate cloud save
-- Visual flash on set done button (iOS haptic substitute)
-- Haptic vibrate(10ms) on set done (Android)
-- PR detection — gold badge + celebratory vibration when beating previous max weight
-- Wake Lock — screen stays on during workout
-- kg ±2.5 and reps ±1 adjustment buttons
-- Progress from previous session shown inline
-- Progressive overload hint — "→ Try X+2.5kg?" when same weight as last session
-- kg/reps committed to store before block navigation (no data loss on swipe)
-- Inline exercise rename
-- Add exercise within workout mode
-- Session note — per-day free-text note
-- Workout summary overlay on finish (duration, sets done, volume)
-- Conditioning block: free-text note + previous session shown
-- Recovery block: single done toggle
+- Swipe dots below progress bar
+- Progress header: "X/Y sets" (not block count)
+- Finish ✓ button always in header — can finish from any block
+- Set done: visual flash (iOS) + vibrate 10ms (Android)
+- PR detection: gold badge + celebratory vibration when beating previous max weight
+- kg/reps committed before block navigation (no data loss on swipe)
+- Add exercise: autocomplete + navigates to new block after adding
 
 ### Rest timer
-- Default: opens fullscreen (focus mode) — dark overlay, 240px SVG ring, 72px countdown
-- Minimize button collapses to compact inline view (ring 60px + Skip/Reset)
-- Expand button restores fullscreen from compact
-- Sound ON by default (opt-out, not opt-in)
-- Ascending countdown beep last 5 seconds (800Hz→1200Hz)
-- AudioContext singleton (iOS suspend-safe)
-- Vibration countdown last 5 seconds (Android only — iOS does not support vibration API)
-- Pulse animation on number during last 5 seconds
-- Warning state: amber ring + amber number
-- Rest presets: 1' / 1:30 / 2' / 2:30 / 3' shown when no timer running
-- Persists through overlay close/reopen
+- Opens fullscreen by default (focus mode) — dark overlay, 240px ring, 72px number
+- Compact mode: tap anywhere on card to expand (no small button)
+- Sound ON by default (opt-out)
+- Ascending countdown beep last 5 seconds
+- Reset button: works correctly (force remount via {#key})
+- Warning: amber ring + pulse last 5s
+
+### Sync + topbar
+- Cloud sync dot: pulsing amber (saving) → green 2.5s (saved) → idle
+- Sync status visible in topbar
 
 ### Account sheet
-- z-index 200 — renders above workout bar
-- Workout bar hidden when account sheet is open
-- Change password (email reset)
-- Clear all training data (confirmation tap)
-- Sign out
-
-### Data persistence
-- localStorage (schema 4.0) — always written first
-- Supabase cloud sync — 3s debounced, immediate for critical state
-- Sync status store exposed to topbar dot indicator
-
-### Stats (inline, collapsible)
-- Body map (muscle group visualization)
-- Summary chips, volume sparkline, weekly breakdown, plateau detection
-- Per-exercise progression chart
-
-### Design
-- Dark Glass theme
-- Gold: #c49230 primary, #d4a038 title
-- Minimal Crown header with gold accent line
+- z-index 200 — above workout bar
+- Workout bar hidden when sheet open
 
 ---
 
@@ -109,36 +81,38 @@ Exercise   { id, name, type, code, sets[], rest, note,
 WorkoutSet { kg, reps, done }
 ```
 
-UIState no longer has a `month` field (removed — was dead code, MonthCalendar derives its own view state).
+Superset codes: multi-character supported (A1, A2, B1, B2, B3…).
+Grouping logic uses `code[0]` — first letter only — for block letter assignment.
+UIState has no `month` field (removed — was dead code).
 
 ---
 
 ## Test Suite
 
-88 automated tests — run with `npm test` in `v2-app/`.
+99 automated tests — `npm test` in `v2-app/`.
 
-| File | Tests | Coverage |
-|------|-------|---------|
-| `src/tests/dates.test.ts` | 20 | `lib/dates.ts` |
-| `src/tests/migrator.test.ts` | 26 | `services/migrator.ts` |
-| `src/tests/state-helpers.test.ts` | 42 | `lib/state-helpers.ts` |
+| File | Tests |
+|------|-------|
+| `dates.test.ts` | 20 |
+| `migrator.test.ts` | 26 |
+| `state-helpers.test.ts` | 42 |
+| `store-actions.test.ts` | 11 |
 
 ---
 
 ## CI Pipeline
 
-Every push to `main`: install → test (88) → TypeScript check → build → deploy to GitHub Pages.
+Push to main: install → test (99) → TypeScript check → build → deploy to GitHub Pages.
 
 ---
 
-## Known Limitations / Not Yet Implemented
+## Known Limitations
 
-- No workout scheduling or planning ahead (future weeks work but no structured plan view)
-- No push notifications or reminders
-- No export / backup UI (cloud sync is implicit)
-- iOS vibration not available — Web Vibration API unsupported on Safari/iOS
-- Undo covers only set deletion (not set done toggle or exercise deletion)
-- SearchOverlay uses local PS_UTC computation (cosmetic duplication, not a bug)
+- iOS vibration: Web Vibration API unsupported on Safari/iOS — no haptic feedback
+- No push notifications / reminders
+- No export / backup UI
+- Undo covers: set delete, exercise delete, set done toggle (not exercise done or all-sets-done)
+- GitHub PAT expires 2026-06-25 — reminder set for 2026-06-18
 
 ---
 
@@ -149,6 +123,6 @@ Every push to `main`: install → test (88) → TypeScript check → build → d
 - Cloud sync logic (saveCloud / scheduleSave)
 - Storage schema key names and version
 - Date/weekday alignment logic
-- Superset code pairing logic
-- `immediate=true` flag on `updateState` — only for critical state
+- Superset code pairing and grouping logic
+- `immediate=true` flag on `updateState`
 - `lib/state-helpers.ts` — pure functions used by both store actions and tests

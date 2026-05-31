@@ -105,6 +105,18 @@
 
   $: allDone = blocks.every(b => b.exercises.every(exDone));
 
+  // Letter for conditioning block — groups by first letter of code (A1+A2+A3 = one A group)
+  $: condLetterIndex = (() => {
+    const seen = new Set<string>();
+    for (let i = 0; i < activeIndex; i++) {
+      const b = blocks[i];
+      if (!b) continue;
+      const key = b.isSuperset ? b.code[0] : `_${i}`;
+      seen.add(key);
+    }
+    return seen.size;
+  })();
+
   $: totalSetsAll = blocks.reduce((sum, b) => {
     return sum + b.exercises.reduce((s, ex) => {
       if (ex.recovery || ex.conditioning) return s + 1;
@@ -510,8 +522,7 @@
           {#if block.isSuperset}
             <span class="block-badge superset">Superset {block.code}</span>
           {:else}
-            {@const condLetter = String.fromCharCode(65 + activeIndex)}
-            <span class="block-badge superset">{condLetter} · No weights</span>
+            <span class="block-badge superset">{String.fromCharCode(65 + condLetterIndex)} · No weights</span>
           {/if}
         </div>
       {/if}
