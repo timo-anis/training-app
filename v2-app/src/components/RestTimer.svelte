@@ -178,9 +178,11 @@
       </div>
     </div>
   {:else}
-    <!-- MINIMIZED COMPACT VIEW -->
-    <div class="rest-card compact" class:done class:warning>
-      <button class="expand-btn" on:click={() => minimized = false} aria-label="Expand timer" title="Expand">⌄</button>
+    <!-- MINIMIZED COMPACT VIEW — tap anywhere to expand -->
+    <button class="rest-card compact" class:done class:warning
+      on:click={() => minimized = false}
+      aria-label="Expand timer to fullscreen"
+    >
       <div class="compact-layout">
         <div class="compact-ring-wrap">
           <svg viewBox="0 0 60 60" width="60" height="60" aria-hidden="true">
@@ -203,12 +205,11 @@
             {/if}
           </div>
         </div>
-        <div class="compact-actions">
-          <button class="pill-btn" on:click={reset} aria-label="Reset">↺</button>
-          <button class="pill-btn pill-skip" on:click={skip} aria-label="Skip">Skip</button>
+        <div class="compact-info">
+          <span class="compact-label">{done ? 'GO!' : 'REST · tap to expand'}</span>
         </div>
       </div>
-    </div>
+    </button>
   {/if}
 {/if}
 
@@ -390,8 +391,14 @@
     padding: 12px 14px;
     animation: pill-in 0.18s ease;
     flex-shrink: 0;
-    position: relative;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
   }
+
+  .rest-card:active { background: rgba(20,36,70,0.95); }
 
   .rest-card.done    { border-color: rgba(255,255,255,0.28); background: rgba(255,255,255,0.07); }
   .rest-card.warning { border-color: rgba(196,148,46,0.50); }
@@ -400,27 +407,6 @@
     from { opacity: 0; transform: translateY(6px); }
     to   { opacity: 1; transform: translateY(0); }
   }
-
-  .expand-btn {
-    position: absolute;
-    top: 8px;
-    right: 10px;
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: transparent;
-    color: rgba(255,255,255,0.30);
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-tap-highlight-color: transparent;
-    line-height: 1;
-  }
-
-  .expand-btn:active { background: rgba(255,255,255,0.10); color: rgba(255,255,255,0.65); }
 
   .compact-layout {
     display: flex;
@@ -466,10 +452,19 @@
     letter-spacing: 0.04em;
   }
 
-  .compact-actions {
+  .compact-info {
     flex: 1;
     display: flex;
-    gap: 8px;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .compact-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.35);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .pill-btn {
