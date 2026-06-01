@@ -168,18 +168,24 @@ Before writing any change, confirm:
 - Calendar/date logic untouched (unless explicitly requested)
 - No store field names renamed without explicit reason
 
-### 5. Build before commit
+### 5. Build (and test) before commit
 
-Always run npm run build in v2-app/ and confirm clean build before committing.
+Always run npm run build in v2-app/ and confirm a clean build before committing.
+Run npm test as well when logic/state/date code changed (99 tests must pass).
 
 ---
 
 ## Workflow
 
 1. Claude edits files in v2-app/src/
-2. Claude runs: cd v2-app && npm run build
-3. Claude commits and pushes: git add -A && git commit -m "..." && git push
-4. Changes are live on GitHub Pages after push
+2. Claude runs: cd v2-app && npm run build  (clean build required)
+3. Claude runs: npm test  (when logic/state changed — 99 tests must pass)
+4. Claude commits and pushes: git add -A && git commit -m "..." && git push
+5. CI runs test → typecheck → build → deploy. Live on GitHub Pages after push.
+
+**Workflow decision (2026-06-01):** stay on this build → push → live flow — reliable and
+low-friction. No preview branch for now; revisit only if test-before-deploy becomes a real need.
+Safety net: build + tests pass locally before every push.
 
 ---
 
