@@ -374,42 +374,42 @@
 
   /* Done: green — fully completed */
   .status-done {
-    background: rgba(60,160,100,0.15);
-    border-color: rgba(60,180,110,0.40);
+    background: #2e7d57;
+    border-color: #3fa06f;
   }
-  .status-done .day-num { color: #4fc08d; }
+  .status-done .day-num { color: #eafff5; }
 
   /* Partial: amber/yellow — started but not finished */
   .status-partial {
-    background: rgba(196,148,46,0.10);
-    border-color: rgba(196,148,46,0.30);
+    background: #2f5bd0;
+    border-color: #5b82e6;
   }
-  .status-partial .day-num { color: #c49230; }
+  .status-partial .day-num { color: #eaf1ff; }
 
   /* Has-data: workout logged, not fully done — slightly lighter white */
   .status-has-data {
-    background: rgba(100,155,255,0.16);
-    border-color: rgba(100,155,255,0.42);
+    background: #2f5bd0;
+    border-color: #5b82e6;
   }
-  .status-has-data .day-num { color: #9bc0ff; }
+  .status-has-data .day-num { color: #eaf1ff; }
 
   /* Active recovery — gentle amber tint, same family as gold */
   .status-active-recovery {
-    background: rgba(196,148,46,0.18);
-    border-color: rgba(196,148,46,0.45);
+    background: #a8741f;
+    border-color: #cf9433;
   }
-  .status-active-recovery .day-num { color: #d4a038; }
+  .status-active-recovery .day-num { color: #fff6e6; }
 
   /* Weekend — dim but readable */
   .status-weekend .day-num { color: rgba(255,255,255,0.22); }
 
   /* Rest: explicitly marked rest day — distinct violet */
   .status-rest {
-    background: rgba(150,140,212,0.20);
-    border-color: rgba(150,140,212,0.50);
+    background: #544aa0;
+    border-color: #7d72c4;
   }
-  .status-rest .day-num { color: #b8aee8; }
-  .rest-mark { color: #b8aee8; font-weight: 700; font-size: 12px; line-height: 1; }
+  .status-rest .day-num { color: #f1eeff; }
+  .rest-mark { color: #f1eeff; font-weight: 700; font-size: 12px; line-height: 1; }
 
   /* Future — visible but clearly lighter than past */
   .status-future .day-num { color: rgba(255,255,255,0.18); }
@@ -424,7 +424,7 @@
     box-shadow: inset 0 0 0 2px #c49230 !important;
     border-color: #c49230 !important;
   }
-  .today .day-num { color: #d4a038 !important; font-weight: 900 !important; }
+  .today .day-num { color: #ffffff !important; font-weight: 900 !important; }
 
   /* Selected — white ring, distinct from today (today's gold ring wins when both) */
   .selected {
@@ -438,20 +438,20 @@
     font-size: 11px;
     font-weight: 900;
     line-height: 1;
-    color: rgba(255,255,255,0.60);
+    color: rgba(255,255,255,0.85);
   }
 
-  .status-done .status-mark { color: #4fc08d; }
-  .partial-mark { color: #c49230 !important; font-size: 12px; }
+  .status-done .status-mark { color: #eafff5; }
+  .partial-mark { color: #c6f2db !important; font-size: 12px; }
 
-  .status-mark.rec  { color: #c49230; font-weight: 400; font-size: 12px; }
+  .status-mark.rec  { color: #fff6e6; font-weight: 400; font-size: 12px; }
   .status-mark.wknd { color: #182438; font-weight: 600; font-size: 11px; }
 
   .status-dot {
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: rgba(100,155,255,0.60);
+    background: #dbe6ff;
   }
 
   /* ---- Legend ---- */
@@ -485,13 +485,13 @@
     font-weight: 900;
   }
 
-  .done-sw    { background: rgba(60,160,100,0.15); border: 1px solid rgba(60,180,110,0.40); color: #4fc08d; }
+  .done-sw    { background: #2e7d57; border: 1px solid #3fa06f; color: #eafff5; }
   .partial-sw { background: rgba(196,148,46,0.10); border: 1px solid rgba(196,148,46,0.30); color: #c49230; font-size: 10px; }
-  .data-sw  { background: rgba(100,155,255,0.16); border: 1px solid rgba(100,155,255,0.42); }
-  .data-sw::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #9bc0ff; }
-  .rec-sw   { background: rgba(196,148,46,0.18); border: 1px solid rgba(196,148,46,0.45); color: #d4a038; font-size: 10px; }
+  .data-sw  { background: #2f5bd0; border: 1px solid #5b82e6; }
+  .data-sw::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #dbe6ff; }
+  .rec-sw   { background: #a8741f; border: 1px solid #cf9433; color: #fff6e6; font-size: 10px; }
   .wknd-sw  { background: transparent; border: 1px solid rgba(255,255,255,0.10); color: #2e4060; font-size: 10px; }
-  .rest-sw  { background: rgba(150,140,212,0.20); border: 1px solid rgba(150,140,212,0.50); }
+  .rest-sw  { background: #544aa0; border: 1px solid #7d72c4; }
   @media (min-width: 640px) {
     .month-label { font-size: 17px; }
     .day-num { font-size: 17px; }
