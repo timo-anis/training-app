@@ -27,8 +27,8 @@
       error = 'Passwords do not match';
       return;
     }
-    if (mode === 'signup' && password.length < 6) {
-      error = 'Password must be at least 6 characters';
+    if (mode === 'signup' && password.length < 8) {
+      error = 'Password must be at least 8 characters';
       return;
     }
 
