@@ -30,6 +30,7 @@
   - green ✓ = completed/all sets done; amber ◑ = partial; blue dot = workout (marked or logged, not done)
   - amber ○ = recovery (recovery exercises OR kind='recovery'); subdued = rest (kind='rest')
   - unmarked day with no data = neutral/empty (new users see an empty calendar)
+  - marked days get a clear coloured cell fill (workout=blue, recovery=amber, rest=grey + dash); today and selected are RINGS (gold / white) so the type colour shows through even on today
 - Future days: clickable (for planning), cursor pointer
 - Legend: Done / Partial / Workout / Recovery / Rest
 

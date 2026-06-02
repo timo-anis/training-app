@@ -198,6 +198,8 @@
                 <span class="status-dot"></span>
               {:else if status === 'active-recovery'}
                 <span class="status-mark rec">○</span>
+              {:else if status === 'rest'}
+                <span class="status-mark rest-mark">–</span>
               {:else if status === 'weekend'}
                 <span class="status-mark wknd">–</span>
               {/if}
@@ -386,23 +388,28 @@
 
   /* Has-data: workout logged, not fully done — slightly lighter white */
   .status-has-data {
-    background: rgba(255,255,255,0.04);
-    border-color: rgba(255,255,255,0.12);
+    background: rgba(100,155,255,0.16);
+    border-color: rgba(100,155,255,0.42);
   }
-  .status-has-data .day-num { color: rgba(255,255,255,0.65); }
+  .status-has-data .day-num { color: #9bc0ff; }
 
   /* Active recovery — gentle amber tint, same family as gold */
   .status-active-recovery {
-    background: rgba(196,148,46,0.10);
-    border-color: rgba(196,148,46,0.28);
+    background: rgba(196,148,46,0.18);
+    border-color: rgba(196,148,46,0.45);
   }
-  .status-active-recovery .day-num { color: #c49230; }
+  .status-active-recovery .day-num { color: #d4a038; }
 
   /* Weekend — dim but readable */
   .status-weekend .day-num { color: rgba(255,255,255,0.22); }
 
-  /* Rest: past weekday, no data — visible but subdued */
-  .status-rest .day-num { color: rgba(255,255,255,0.28); }
+  /* Rest: explicitly marked rest day — neutral grey fill */
+  .status-rest {
+    background: rgba(255,255,255,0.06);
+    border-color: rgba(255,255,255,0.16);
+  }
+  .status-rest .day-num { color: rgba(255,255,255,0.50); }
+  .rest-mark { color: rgba(255,255,255,0.45); font-weight: 700; font-size: 12px; line-height: 1; }
 
   /* Future — visible but clearly lighter than past */
   .status-future .day-num { color: rgba(255,255,255,0.18); }
@@ -414,19 +421,17 @@
 
   /* Today — solid gold, THE single strong accent */
   .today {
-    background: rgba(196,148,46,0.88) !important;
+    box-shadow: inset 0 0 0 2px #c49230 !important;
     border-color: #c49230 !important;
-    box-shadow: none !important;
   }
-  .today .day-num { color: #0a0800 !important; font-weight: 900 !important; }
-  .today .status-mark { color: rgba(0,0,0,0.55) !important; }
+  .today .day-num { color: #d4a038 !important; font-weight: 900 !important; }
 
-  /* Selected — white box, distinct from today */
+  /* Selected — white ring, distinct from today (today's gold ring wins when both) */
   .selected {
-    background: rgba(255,255,255,0.12) !important;
-    border-color: rgba(255,255,255,0.35) !important;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55);
+    border-color: rgba(255,255,255,0.45);
   }
-  .selected .day-num { color: #ffffff !important; }
+  .selected .day-num { color: #ffffff; }
 
   /* Status marks */
   .status-mark {
