@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { DAY_ORDER, type DayOfWeek } from '../types/workout';
+  import { DAY_ORDER, type DayOfWeek, type AppState, type UIState } from '../types/workout';
   import { appState, uiState, updateUI } from '../stores/app';
   import { PS_UTC } from '../lib/program';
 
@@ -20,12 +20,12 @@
 
   type DayStatus = 'done' | 'partial' | 'active-recovery' | 'has-data' | 'rest' | 'weekend' | 'future' | 'neutral';
 
-  function getDayStatus(date: Date): DayStatus {
+  function getDayStatus(date: Date, state: AppState): DayStatus {
     const wd = dateToWeekDay(date);
     // Outside the program range — nothing to show.
     if (!wd) return 'neutral';
 
-    const workoutDay = $appState.weeks.find(w => w.week === wd.week && w.day === wd.day);
+    const workoutDay = state.weeks.find(w => w.week === wd.week && w.day === wd.day);
     const hasData = workoutDay && workoutDay.exercises.length > 0;
 
     if (hasData) {
@@ -66,10 +66,10 @@
     updateUI(ui => ({ ...ui, week: wd.week, day: wd.day }));
   }
 
-  function isSelected(date: Date): boolean {
+  function isSelected(date: Date, ui: UIState): boolean {
     const wd = dateToWeekDay(date);
     if (!wd) return false;
-    return wd.week === $uiState.week && wd.day === $uiState.day;
+    return wd.week === ui.week && wd.day === ui.day;
   }
 
   function isToday(date: Date): boolean {
@@ -180,8 +180,8 @@
       <div class="week-row">
         {#each week as date}
           {#if date}
-            {@const status = getDayStatus(date)}
-            {@const selected = isSelected(date)}
+            {@const status = getDayStatus(date, $appState)}
+            {@const selected = isSelected(date, $uiState)}
             {@const today = isToday(date)}
             <button
               class="day-cell status-{status}"
