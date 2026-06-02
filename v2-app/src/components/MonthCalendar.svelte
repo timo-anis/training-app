@@ -224,8 +224,8 @@
 
 <style>
   .month-cal {
-    background: linear-gradient(160deg, #0d1a30, #080e1c);
-    border: 1px solid rgba(65,100,175,0.18);
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
+    border: 1px solid rgba(var(--c-blue-d), 0.18);
     border-radius: 18px;
     padding: 12px 12px 10px;
     display: grid;
@@ -250,9 +250,9 @@
     width: 32px;
     height: 32px;
     border-radius: 9px;
-    border: 1px solid rgba(70,110,185,0.24);
-    background: rgba(14,25,55,0.65);
-    color: rgba(255,255,255,0.70);
+    border: 1px solid rgba(var(--c-blue-e), 0.24);
+    background: rgba(var(--c-ink-c), 0.65);
+    color: rgba(var(--c-w), 0.70);
     font-size: 18px;
     cursor: pointer;
     display: flex;
@@ -262,7 +262,7 @@
     flex-shrink: 0;
   }
 
-  .nav-btn:active { background: rgba(255,255,255,0.10); }
+  .nav-btn:active { background: rgba(var(--c-w), 0.10); }
 
   .nav-placeholder { width: 32px; flex-shrink: 0; }
 
@@ -271,9 +271,9 @@
   .today-month-btn {
     padding: 5px 10px;
     border-radius: 9px;
-    border: 1px solid rgba(255,255,255,0.18);
-    background: rgba(255,255,255,0.07);
-    color: rgba(255,255,255,0.65);
+    border: 1px solid rgba(var(--c-w), 0.18);
+    background: rgba(var(--c-w), 0.07);
+    color: rgba(var(--c-w), 0.65);
     font-size: 11px;
     font-weight: 800;
     cursor: pointer;
@@ -283,7 +283,7 @@
     transition: background 0.12s;
   }
 
-  .today-month-btn:active { background: rgba(255,255,255,0.14); color: #ffffff; }
+  .today-month-btn:active { background: rgba(var(--c-w), 0.14); color: var(--h-ffffff); }
 
   .month-label-btn {
     flex: 1;
@@ -299,19 +299,19 @@
     border-radius: 8px;
   }
 
-  .month-label-btn:active { background: rgba(14,25,55,0.65); }
+  .month-label-btn:active { background: rgba(var(--c-ink-c), 0.65); }
 
   .month-label {
     font-size: 14px;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--h-ffffff);
     letter-spacing: -0.01em;
     user-select: none;
   }
 
   .chevron {
     font-size: 14px;
-    color: rgba(255,255,255,0.40);
+    color: rgba(var(--c-w), 0.40);
     display: inline-block;
     transform: rotate(90deg);
     transition: transform 0.2s ease;
@@ -332,13 +332,13 @@
     text-align: center;
     font-size: 11px;
     font-weight: 800;
-    color: rgba(255,255,255,0.45);
+    color: rgba(var(--c-w), 0.45);
     letter-spacing: 0.05em;
     text-transform: uppercase;
     padding: 2px 0;
   }
 
-  .day-hdr.hdr-weekend { color: rgba(255,255,255,0.25); }
+  .day-hdr.hdr-weekend { color: rgba(var(--c-w), 0.25); }
 
   /* ---- Week row ---- */
   .week-row {
@@ -377,84 +377,84 @@
 
   /* Done: green — fully completed */
   .status-done {
-    background: #2e7d57;
-    border-color: #3fa06f;
+    background: var(--h-2e7d57);
+    border-color: var(--h-3fa06f);
   }
-  .status-done .day-num { color: #eafff5; }
+  .status-done .day-num { color: var(--h-eafff5); }
 
   /* Partial: amber/yellow — started but not finished */
   .status-partial {
-    background: #2f5bd0;
-    border-color: #5b82e6;
+    background: var(--h-2f5bd0);
+    border-color: var(--h-5b82e6);
   }
-  .status-partial .day-num { color: #eaf1ff; }
+  .status-partial .day-num { color: var(--h-eaf1ff); }
 
   /* Has-data: workout logged, not fully done — slightly lighter white */
   .status-has-data {
-    background: #2f5bd0;
-    border-color: #5b82e6;
+    background: var(--h-2f5bd0);
+    border-color: var(--h-5b82e6);
   }
-  .status-has-data .day-num { color: #eaf1ff; }
+  .status-has-data .day-num { color: var(--h-eaf1ff); }
 
   /* Active recovery — gentle amber tint, same family as gold */
   .status-active-recovery {
-    background: #a8741f;
-    border-color: #cf9433;
+    background: var(--h-a8741f);
+    border-color: var(--h-cf9433);
   }
-  .status-active-recovery .day-num { color: #fff6e6; }
+  .status-active-recovery .day-num { color: var(--h-fff6e6); }
 
   /* Weekend — dim but readable */
-  .status-weekend .day-num { color: rgba(255,255,255,0.22); }
+  .status-weekend .day-num { color: rgba(var(--c-w), 0.22); }
 
   /* Rest: explicitly marked rest day — distinct violet */
   .status-rest {
-    background: #544aa0;
-    border-color: #7d72c4;
+    background: var(--h-544aa0);
+    border-color: var(--h-7d72c4);
   }
-  .status-rest .day-num { color: #f1eeff; }
-  .rest-mark { color: #f1eeff; font-weight: 700; font-size: 12px; line-height: 1; }
+  .status-rest .day-num { color: var(--h-f1eeff); }
+  .rest-mark { color: var(--h-f1eeff); font-weight: 700; font-size: 12px; line-height: 1; }
 
   /* Future — visible but clearly lighter than past */
-  .status-future .day-num { color: rgba(255,255,255,0.18); }
+  .status-future .day-num { color: rgba(var(--c-w), 0.18); }
   .status-future { cursor: pointer; }
 
   /* Unmarked day — neutral, empty look (no marker) */
-  .status-neutral .day-num { color: rgba(255,255,255,0.30); }
+  .status-neutral .day-num { color: rgba(var(--c-w), 0.30); }
   .status-neutral { cursor: pointer; }
 
   /* Today — solid gold, THE single strong accent */
   .today {
-    box-shadow: inset 0 0 0 2px #c49230 !important;
-    border-color: #c49230 !important;
+    box-shadow: inset 0 0 0 2px var(--h-c49230) !important;
+    border-color: var(--h-c49230) !important;
   }
-  .today .day-num { color: #ffffff !important; font-weight: 900 !important; }
+  .today .day-num { color: var(--h-ffffff) !important; font-weight: 900 !important; }
 
   /* Selected — white ring, distinct from today (today's gold ring wins when both) */
   .selected {
-    box-shadow: inset 0 0 0 2px rgba(255,255,255,0.55);
-    border-color: rgba(255,255,255,0.45);
+    box-shadow: inset 0 0 0 2px rgba(var(--c-w), 0.55);
+    border-color: rgba(var(--c-w), 0.45);
   }
-  .selected .day-num { color: #ffffff; }
+  .selected .day-num { color: var(--h-ffffff); }
 
   /* Status marks */
   .status-mark {
     font-size: 11px;
     font-weight: 900;
     line-height: 1;
-    color: rgba(255,255,255,0.85);
+    color: rgba(var(--c-w), 0.85);
   }
 
-  .status-done .status-mark { color: #eafff5; }
-  .partial-mark { color: #c6f2db !important; font-size: 12px; }
+  .status-done .status-mark { color: var(--h-eafff5); }
+  .partial-mark { color: var(--h-c6f2db) !important; font-size: 12px; }
 
-  .status-mark.rec  { color: #fff6e6; font-weight: 400; font-size: 12px; }
-  .status-mark.wknd { color: #182438; font-weight: 600; font-size: 11px; }
+  .status-mark.rec  { color: var(--h-fff6e6); font-weight: 400; font-size: 12px; }
+  .status-mark.wknd { color: var(--h-182438); font-weight: 600; font-size: 11px; }
 
   .status-dot {
     width: 5px;
     height: 5px;
     border-radius: 50%;
-    background: #dbe6ff;
+    background: var(--h-dbe6ff);
   }
 
   /* ---- Legend ---- */
@@ -464,7 +464,7 @@
     justify-content: center;
     flex-wrap: wrap;
     padding-top: 4px;
-    border-top: 1px solid rgba(60,90,160,0.13);
+    border-top: 1px solid rgba(var(--c-blue-a), 0.13);
     margin-top: 2px;
   }
 
@@ -473,7 +473,7 @@
     align-items: center;
     gap: 4px;
     font-size: 10px;
-    color: rgba(255,255,255,0.45);
+    color: rgba(var(--c-w), 0.45);
     font-weight: 600;
   }
 
@@ -488,13 +488,13 @@
     font-weight: 900;
   }
 
-  .done-sw    { background: #2e7d57; border: 1px solid #3fa06f; color: #eafff5; }
-  .partial-sw { background: rgba(196,148,46,0.10); border: 1px solid rgba(196,148,46,0.30); color: #c49230; font-size: 10px; }
-  .data-sw  { background: #2f5bd0; border: 1px solid #5b82e6; }
-  .data-sw::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #dbe6ff; }
-  .rec-sw   { background: #a8741f; border: 1px solid #cf9433; color: #fff6e6; font-size: 10px; }
-  .wknd-sw  { background: transparent; border: 1px solid rgba(255,255,255,0.10); color: #2e4060; font-size: 10px; }
-  .rest-sw  { background: #544aa0; border: 1px solid #7d72c4; }
+  .done-sw    { background: var(--h-2e7d57); border: 1px solid var(--h-3fa06f); color: var(--h-eafff5); }
+  .partial-sw { background: rgba(var(--c-gold), 0.10); border: 1px solid rgba(var(--c-gold), 0.30); color: var(--h-c49230); font-size: 10px; }
+  .data-sw  { background: var(--h-2f5bd0); border: 1px solid var(--h-5b82e6); }
+  .data-sw::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--h-dbe6ff); }
+  .rec-sw   { background: var(--h-a8741f); border: 1px solid var(--h-cf9433); color: var(--h-fff6e6); font-size: 10px; }
+  .wknd-sw  { background: transparent; border: 1px solid rgba(var(--c-w), 0.10); color: var(--h-2e4060); font-size: 10px; }
+  .rest-sw  { background: var(--h-544aa0); border: 1px solid var(--h-7d72c4); }
   @media (min-width: 640px) {
     .month-label { font-size: 17px; }
     .day-num { font-size: 17px; }

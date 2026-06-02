@@ -18,14 +18,14 @@
   type MuscleKey = keyof typeof MUSCLE_HINTS;
 
   const MUSCLE_COLORS: Record<MuscleKey, string> = {
-    chest:        '#ffb84d',
-    back:         '#ff7a45',
-    shoulders:    '#58a6ff',
-    arms:         '#48c6ff',
-    quads:        '#4dd4ac',
-    posterior:    '#6be675',
-    core:         '#9de05e',
-    conditioning: '#ffd24d',
+    chest:        'var(--h-ffb84d)',
+    back:         'var(--h-ff7a45)',
+    shoulders:    'var(--h-58a6ff)',
+    arms:         'var(--h-48c6ff)',
+    quads:        'var(--h-4dd4ac)',
+    posterior:    'var(--h-6be675)',
+    core:         'var(--h-9de05e)',
+    conditioning: 'var(--h-ffd24d)',
   };
 
   const MUSCLE_LABELS: Record<MuscleKey, string> = {
@@ -353,8 +353,8 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
-    background: rgba(12,20,44,0.50);
-    border: 1px solid rgba(60,90,165,0.14);
+    background: rgba(var(--c-ink-a), 0.50);
+    border: 1px solid rgba(var(--c-blue-b), 0.14);
     border-radius: 14px;
     padding: 4px;
   }
@@ -364,7 +364,7 @@
     border-radius: 10px;
     border: none;
     background: transparent;
-    color: rgba(255,255,255,0.25);
+    color: rgba(var(--c-w), 0.25);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
@@ -373,8 +373,8 @@
   }
 
   .mode-btn.active {
-    background: rgba(196,148,46,0.14);
-    color: #c49230;
+    background: rgba(var(--c-gold), 0.14);
+    color: var(--h-c49230);
   }
 
   /* Body SVG — premium dark card */
@@ -382,9 +382,9 @@
     position: relative;
     display: flex;
     justify-content: center;
-    background: linear-gradient(180deg, rgba(8,12,28,0.80) 0%, rgba(5,7,18,0.90) 100%);
-    border: 1px solid rgba(65,100,175,0.18);
-    border-top: 1px solid rgba(196,148,46,0.15);
+    background: linear-gradient(180deg, var(--c-8-12-28-0_80) 0%, var(--c-5-7-18-0_90) 100%);
+    border: 1px solid rgba(var(--c-blue-d), 0.18);
+    border-top: 1px solid rgba(var(--c-gold), 0.15);
     border-radius: 20px;
     padding: 20px 16px;
   }
@@ -396,14 +396,14 @@
   }
 
   .body-shell {
-    fill: rgba(255,255,255,0.04);
-    stroke: rgba(255,255,255,0.10);
+    fill: rgba(var(--c-w), 0.04);
+    stroke: rgba(var(--c-w), 0.10);
     stroke-width: 1;
   }
 
   .body-core-shell {
-    fill: rgba(255,255,255,0.02);
-    stroke: rgba(255,255,255,0.06);
+    fill: rgba(var(--c-w), 0.02);
+    stroke: rgba(var(--c-w), 0.06);
     stroke-width: 0.5;
   }
 
@@ -423,7 +423,7 @@
     align-items: center;
     justify-content: center;
     font-size: 13px;
-    color: rgba(255,255,255,0.18);
+    color: rgba(var(--c-w), 0.18);
     text-align: center;
     line-height: 1.6;
     pointer-events: none;
@@ -442,8 +442,8 @@
     gap: 8px;
     padding: 9px 12px;
     border-radius: 12px;
-    border: 1px solid rgba(60,90,160,0.18);
-    background: rgba(12,20,44,0.55);
+    border: 1px solid rgba(var(--c-blue-a), 0.18);
+    background: rgba(var(--c-ink-a), 0.55);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 0.18s, background 0.12s, border-color 0.18s;
@@ -452,13 +452,13 @@
   }
 
   .legend-chip:active {
-    background: rgba(12,20,44,0.80);
+    background: rgba(var(--c-ink-a), 0.80);
   }
 
   .legend-chip.chip-hidden {
     opacity: 0.38;
-    border-color: rgba(60,90,160,0.10);
-    background: rgba(8,12,24,0.40);
+    border-color: rgba(var(--c-blue-a), 0.10);
+    background: var(--c-8-12-24-0_40);
   }
 
   .chip-dot {
@@ -479,24 +479,24 @@
     flex: 1 1 0;
     font-size: 12px;
     font-weight: 700;
-    color: rgba(200,221,244,0.85);
+    color: var(--c-200-221-244-0_85);
     transition: color 0.18s;
   }
 
   .chip-hidden .chip-name {
-    color: rgba(200,221,244,0.35);
+    color: var(--c-200-221-244-0_35);
     text-decoration: line-through;
-    text-decoration-color: rgba(255,255,255,0.20);
+    text-decoration-color: rgba(var(--c-w), 0.20);
   }
 
   .chip-sets {
     font-size: 11px;
     font-weight: 800;
-    color: rgba(58,88,136,0.90);
+    color: var(--c-58-88-136-0_90);
   }
 
   .chip-eye-off {
-    color: rgba(255,255,255,0.20);
+    color: rgba(var(--c-w), 0.20);
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -514,14 +514,14 @@
     justify-content: space-between;
     padding: 8px 12px;
     border-radius: 10px;
-    background: rgba(12,20,44,0.50);
-    border: 1px solid rgba(60,90,160,0.13);
+    background: rgba(var(--c-ink-a), 0.50);
+    border: 1px solid rgba(var(--c-blue-a), 0.13);
   }
 
   .insight-lbl {
     font-size: 11px;
     font-weight: 700;
-    color: rgba(255,255,255,0.22);
+    color: rgba(var(--c-w), 0.22);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -529,6 +529,6 @@
   .insight-val {
     font-size: 13px;
     font-weight: 800;
-    color: rgba(200,221,244,0.90);
+    color: var(--c-200-221-244-0_90);
   }
 </style>

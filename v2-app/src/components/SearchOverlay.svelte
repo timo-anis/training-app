@@ -156,7 +156,7 @@
   .backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.65);
+    background: rgba(var(--c-black), 0.65);
     z-index: 90;
     backdrop-filter: blur(4px);
     -webkit-backdrop-filter: blur(4px);
@@ -168,8 +168,8 @@
     left: 0; right: 0; bottom: 0;
     height: 88dvh;
     max-height: 88dvh;
-    background: linear-gradient(180deg, #0d1a2e 0%, #080c18 100%);
-    border-top: 1px solid rgba(65,100,175,0.20);
+    background: linear-gradient(180deg, var(--h-0d1a2e) 0%, var(--h-080c18) 100%);
+    border-top: 1px solid rgba(var(--c-blue-d), 0.20);
     border-radius: 22px 22px 0 0;
     z-index: 91;
     display: flex;
@@ -188,7 +188,7 @@
     align-items: center;
     gap: 10px;
     padding: 16px 14px 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    border-bottom: 1px solid rgba(var(--c-w), 0.07);
     flex-shrink: 0;
   }
 
@@ -202,28 +202,28 @@
   .search-icon {
     position: absolute;
     left: 12px;
-    color: rgba(255,255,255,0.35);
+    color: rgba(var(--c-w), 0.35);
     display: flex;
     pointer-events: none;
   }
 
   .search-input {
     width: 100%;
-    background: rgba(14,25,55,0.70);
-    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(var(--c-ink-c), 0.70);
+    border: 1px solid rgba(var(--c-w), 0.10);
     border-radius: 12px;
     padding: 11px 36px 11px 38px;
     font-size: 16px;
     font-weight: 600;
-    color: #e8f2ff;
+    color: var(--h-e8f2ff);
     outline: none;
     box-sizing: border-box;
     transition: border-color 0.12s;
     -webkit-appearance: none;
   }
 
-  .search-input::placeholder { color: rgba(255,255,255,0.22); }
-  .search-input:focus { border-color: rgba(255,255,255,0.22); }
+  .search-input::placeholder { color: rgba(var(--c-w), 0.22); }
+  .search-input:focus { border-color: rgba(var(--c-w), 0.22); }
 
   .clear-btn {
     position: absolute;
@@ -234,9 +234,9 @@
     align-items: center;
     justify-content: center;
     border: none;
-    background: rgba(255,255,255,0.10);
+    background: rgba(var(--c-w), 0.10);
     border-radius: 50%;
-    color: rgba(255,255,255,0.55);
+    color: rgba(var(--c-w), 0.55);
     font-size: 10px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -247,7 +247,7 @@
     padding: 8px 4px;
     border: none;
     background: transparent;
-    color: rgba(255,255,255,0.45);
+    color: rgba(var(--c-w), 0.45);
     font-size: 15px;
     font-weight: 600;
     cursor: pointer;
@@ -255,7 +255,7 @@
     white-space: nowrap;
   }
 
-  .close-btn:active { color: rgba(255,255,255,0.80); }
+  .close-btn:active { color: rgba(var(--c-w), 0.80); }
 
   /* ── Results area ── */
   .results-area {
@@ -270,7 +270,7 @@
     text-align: center;
     padding: 32px 20px;
     font-size: 14px;
-    color: rgba(255,255,255,0.25);
+    color: rgba(var(--c-w), 0.25);
     font-weight: 500;
   }
 
@@ -278,16 +278,16 @@
     text-align: center;
     padding: 32px 20px;
     font-size: 14px;
-    color: rgba(255,255,255,0.30);
+    color: rgba(var(--c-w), 0.30);
     font-weight: 500;
   }
 
-  .empty strong { color: rgba(255,255,255,0.55); font-weight: 700; }
+  .empty strong { color: rgba(var(--c-w), 0.55); font-weight: 700; }
 
   .results-count {
     font-size: 11px;
     font-weight: 700;
-    color: rgba(255,255,255,0.25);
+    color: rgba(var(--c-w), 0.25);
     letter-spacing: 0.06em;
     text-transform: uppercase;
     margin-bottom: 10px;
@@ -304,8 +304,8 @@
     text-align: left;
     padding: 12px 14px;
     border-radius: 14px;
-    border: 1px solid rgba(255,255,255,0.07);
-    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(var(--c-w), 0.07);
+    background: rgba(var(--c-w), 0.03);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.1s, border-color 0.1s;
@@ -315,8 +315,8 @@
   }
 
   .result-item:active {
-    background: rgba(255,255,255,0.07);
-    border-color: rgba(255,255,255,0.15);
+    background: rgba(var(--c-w), 0.07);
+    border-color: rgba(var(--c-w), 0.15);
   }
 
   .result-main {
@@ -328,7 +328,7 @@
   .result-name {
     font-size: 15px;
     font-weight: 700;
-    color: rgba(255,255,255,0.88);
+    color: rgba(var(--c-w), 0.88);
     letter-spacing: -0.01em;
     flex: 1 1 0;
   }
@@ -336,7 +336,7 @@
   .result-done {
     font-size: 12px;
     font-weight: 800;
-    color: rgba(255,255,255,0.50);
+    color: rgba(var(--c-w), 0.50);
     flex-shrink: 0;
   }
 
@@ -349,13 +349,13 @@
 
   .result-date {
     font-size: 12px;
-    color: rgba(255,255,255,0.35);
+    color: rgba(var(--c-w), 0.35);
     font-weight: 600;
   }
 
   .result-sets {
     font-size: 12px;
-    color: rgba(255,255,255,0.30);
+    color: rgba(var(--c-w), 0.30);
     font-weight: 500;
   }
 

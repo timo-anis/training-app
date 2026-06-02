@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { currentUser, appState, updateState, showToast } from '../stores/app';
+  import { currentUser, appState, updateState, showToast, theme, toggleTheme } from '../stores/app';
   import { signOut, sendPasswordReset } from '../services/auth';
   import { saveLocal, saveCloud } from '../services/storage';
   import { emptyAppState } from '../types/workout';
@@ -80,6 +80,16 @@
       {#if !resetSent}<span class="action-arrow">›</span>{/if}
     </button>
 
+    <!-- Presentation mode -->
+    <button class="action-row" on:click={toggleTheme} aria-pressed={$theme === 'presentation'}>
+      <span class="action-icon">{$theme === 'presentation' ? '☀️' : '🌙'}</span>
+      <div class="action-text">
+        <span class="action-label">Presentation mode</span>
+        <span class="action-sub">{$theme === 'presentation' ? 'Light, high-contrast — for demos' : 'Dark theme (default)'}</span>
+      </div>
+      <span class="switch" class:on={$theme === 'presentation'}><span class="knob"></span></span>
+    </button>
+
     <!-- Clear data -->
     <button
       class="action-row"
@@ -117,7 +127,7 @@
     position: fixed;
     inset: 0;
     z-index: 199;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(var(--c-black), 0.55);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
   }
@@ -126,9 +136,9 @@
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 200;
-    background: linear-gradient(180deg, #0d1a2e 0%, #080c18 100%);
-    border: 1px solid rgba(65, 100, 175, 0.22);
-    border-top: 1px solid rgba(196, 148, 46, 0.22);
+    background: linear-gradient(180deg, var(--h-0d1a2e) 0%, var(--h-080c18) 100%);
+    border: 1px solid rgba(var(--c-blue-d), 0.22);
+    border-top: 1px solid rgba(var(--c-gold), 0.22);
     border-radius: 22px 22px 0 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     animation: sheet-up 0.24s cubic-bezier(0.32, 0.72, 0, 1) both;
@@ -142,7 +152,7 @@
       width: 440px;
       transform: translateX(-50%);
       border-radius: 20px;
-      border: 1px solid rgba(196, 148, 46, 0.25);
+      border: 1px solid rgba(var(--c-gold), 0.25);
     }
   }
 
@@ -160,7 +170,7 @@
 
   .sheet-handle {
     width: 36px; height: 4px;
-    background: rgba(255,255,255,0.15);
+    background: rgba(var(--c-w), 0.15);
     border-radius: 2px;
     margin: 10px auto 0;
   }
@@ -178,11 +188,11 @@
   .avatar {
     width: 40px; height: 40px;
     border-radius: 12px;
-    background: rgba(196, 148, 46, 0.15);
-    border: 1px solid rgba(196, 148, 46, 0.30);
+    background: rgba(var(--c-gold), 0.15);
+    border: 1px solid rgba(var(--c-gold), 0.30);
     display: flex; align-items: center; justify-content: center;
     font-size: 17px; font-weight: 900;
-    color: #c49230;
+    color: var(--h-c49230);
     flex-shrink: 0;
   }
 
@@ -190,13 +200,13 @@
 
   .user-email {
     font-size: 14px; font-weight: 700;
-    color: #e0ecff;
+    color: var(--h-e0ecff);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
-  .user-sub { font-size: 12px; color: rgba(255,255,255,0.30); font-weight: 500; }
+  .user-sub { font-size: 12px; color: rgba(var(--c-w), 0.30); font-weight: 500; }
 
-  .divider { height: 1px; background: rgba(255,255,255,0.07); margin: 4px 0; }
+  .divider { height: 1px; background: rgba(var(--c-w), 0.07); margin: 4px 0; }
 
   /* Action rows */
   .action-row {
@@ -213,21 +223,51 @@
     text-align: left;
   }
 
-  .action-row:active:not(:disabled) { background: rgba(255,255,255,0.05); }
+  .action-row:active:not(:disabled) { background: rgba(var(--c-w), 0.05); }
   .action-row:disabled { opacity: 0.5; }
 
   .action-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
 
   .action-text { flex: 1 1 0; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
-  .action-label { font-size: 15px; font-weight: 700; color: rgba(255,255,255,0.85); }
-  .action-label.danger-lbl { color: #ff6b6b; }
+  .action-label { font-size: 15px; font-weight: 700; color: rgba(var(--c-w), 0.85); }
+  .action-label.danger-lbl { color: var(--h-ff6b6b); }
 
-  .action-sub { font-size: 12px; color: rgba(255,255,255,0.35); }
+  .action-sub { font-size: 12px; color: rgba(var(--c-w), 0.35); }
 
-  .action-arrow { font-size: 18px; color: rgba(255,255,255,0.25); flex-shrink: 0; }
+  .action-arrow { font-size: 18px; color: rgba(var(--c-w), 0.25); flex-shrink: 0; }
 
-  .action-row.danger .action-arrow { color: rgba(255, 100, 100, 0.50); }
+  .action-row.danger .action-arrow { color: var(--c-255-100-100-0_50); }
 
-  .action-row.signout .action-label { color: rgba(255,255,255,0.55); }
+  .action-row.signout .action-label { color: rgba(var(--c-w), 0.55); }
+
+  /* Presentation-mode toggle switch */
+  .switch {
+    flex-shrink: 0;
+    width: 44px;
+    height: 26px;
+    border-radius: 13px;
+    background: rgba(var(--c-w), 0.12);
+    border: 1px solid rgba(var(--c-w), 0.14);
+    position: relative;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .switch.on {
+    background: rgba(var(--c-gold), 0.45);
+    border-color: rgba(var(--c-gold), 0.55);
+  }
+  .knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--h-e8f0ff);
+    transition: transform 0.15s;
+  }
+  .switch.on .knob {
+    transform: translateX(18px);
+    background: var(--h-c49230);
+  }
 </style>

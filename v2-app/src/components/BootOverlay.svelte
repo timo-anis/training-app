@@ -12,15 +12,15 @@
     align-items: center;
     justify-content: center;
     gap: 16px;
-    background: radial-gradient(ellipse at 50% 0%, #0d1a2e 0%, #08090f 55%, #050508 100%);
-    color: #7fa8d4;
+    background: radial-gradient(ellipse at 50% 0%, var(--h-0d1a2e) 0%, var(--h-08090f) 55%, var(--h-050508) 100%);
+    color: var(--h-7fa8d4);
     font-size: 14px;
   }
   .boot-spinner {
     width: 32px;
     height: 32px;
-    border: 3px solid rgba(127, 178, 255, 0.15);
-    border-top-color: #7fb2ff;
+    border: 3px solid var(--c-127-178-255-0_15);
+    border-top-color: var(--h-7fb2ff);
     border-radius: 50%;
     animation: spin 0.7s linear infinite;
   }

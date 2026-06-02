@@ -19,6 +19,34 @@ import {
   buildWorkoutBlocks as _buildWorkoutBlocks,
 } from '../lib/state-helpers';
 
+// ---- Theme (dark | presentation) ----
+export type Theme = 'dark' | 'presentation';
+const THEME_KEY = 'timo_training_theme';
+function readTheme(): Theme {
+  try {
+    return localStorage.getItem(THEME_KEY) === 'presentation' ? 'presentation' : 'dark';
+  } catch {
+    return 'dark';
+  }
+}
+export const theme = writable<Theme>(readTheme());
+function applyTheme(t: Theme) {
+  if (typeof document !== 'undefined') {
+    document.documentElement.dataset.theme = t;
+  }
+}
+theme.subscribe((t) => {
+  applyTheme(t);
+  try {
+    localStorage.setItem(THEME_KEY, t);
+  } catch {
+    /* ignore */
+  }
+});
+export function toggleTheme() {
+  theme.update((t) => (t === 'presentation' ? 'dark' : 'presentation'));
+}
+
 // ---- Auth store ----
 export const currentUser = writable<User | null>(null);
 

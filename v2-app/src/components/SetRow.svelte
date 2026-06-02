@@ -109,35 +109,35 @@
     transition: background 0.15s;
   }
 
-  .setrow.is-done { background: rgba(255,255,255,0.03); border-radius: 10px; }
+  .setrow.is-done { background: rgba(var(--c-w), 0.03); border-radius: 10px; }
 
   .setn {
     font-size: 14px;
     font-weight: 700;
-    color: rgba(255,255,255,0.35);
+    color: rgba(var(--c-w), 0.35);
     text-align: center;
     user-select: none;
   }
 
-  .setrow.is-done .setn { color: rgba(255,255,255,0.55); }
+  .setrow.is-done .setn { color: rgba(var(--c-w), 0.55); }
 
   .setcol {
     display: flex;
     flex-direction: column;
     gap: 3px;
-    background: rgba(14,26,55,0.70);
-    border: 1px solid rgba(65,100,175,0.20);
+    background: var(--c-14-26-55-0_70);
+    border: 1px solid rgba(var(--c-blue-d), 0.20);
     border-radius: 11px;
     padding: 8px 12px;
   }
 
   .setrow.is-done .setcol {
-    border-color: rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.05);
+    border-color: rgba(var(--c-w), 0.14);
+    background: rgba(var(--c-w), 0.05);
   }
 
   .setcol.flash {
-    border-color: rgba(255,255,255,0.45);
+    border-color: rgba(var(--c-w), 0.45);
     transition: border-color 0.05s ease;
   }
 
@@ -146,7 +146,7 @@
     font-weight: 800;
     letter-spacing: 0.07em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.35);
+    color: rgba(var(--c-w), 0.35);
     cursor: default;
     user-select: none;
   }
@@ -158,7 +158,7 @@
     padding: 0;
     font-size: 19px;
     font-weight: 700;
-    color: #d8eafc;
+    color: var(--h-d8eafc);
     letter-spacing: -0.02em;
     width: 100%;
     min-width: 0;
@@ -166,18 +166,18 @@
     line-height: 1;
   }
 
-  .setrow.is-done .setinput { color: rgba(255,255,255,0.90); }
+  .setrow.is-done .setinput { color: rgba(var(--c-w), 0.90); }
 
-  .setinput::placeholder { color: rgba(255,255,255,0.20); }
+  .setinput::placeholder { color: rgba(var(--c-w), 0.20); }
 
-  .setinput:focus { color: #ffffff; }
+  .setinput:focus { color: var(--h-ffffff); }
 
   .donebtn {
     height: 46px;
     border-radius: 11px;
-    border: 1px solid rgba(255,255,255,0.14);
-    background: rgba(12,22,48,0.55);
-    color: rgba(255,255,255,0.45);
+    border: 1px solid rgba(var(--c-w), 0.14);
+    background: var(--c-12-22-48-0_55);
+    color: rgba(var(--c-w), 0.45);
     font-size: 18px;
     cursor: pointer;
     display: flex;
@@ -188,9 +188,9 @@
   }
 
   .donebtn.on {
-    background: rgba(255,255,255,0.10);
-    border-color: rgba(255,255,255,0.30);
-    color: rgba(255,255,255,0.92);
+    background: rgba(var(--c-w), 0.10);
+    border-color: rgba(var(--c-w), 0.30);
+    color: rgba(var(--c-w), 0.92);
     font-weight: 700;
   }
 
@@ -202,7 +202,7 @@
     border-radius: 8px;
     border: none;
     background: transparent;
-    color: rgba(255,255,255,0.22);
+    color: rgba(var(--c-w), 0.22);
     font-size: 16px;
     line-height: 1;
     cursor: pointer;
@@ -214,7 +214,7 @@
   }
 
   .delbtn:active {
-    background: rgba(255,80,80,0.12);
-    color: #ff6060;
+    background: var(--c-255-80-80-0_12);
+    color: var(--h-ff6060);
   }
 </style>

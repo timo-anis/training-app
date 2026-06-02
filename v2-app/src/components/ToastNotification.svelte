@@ -35,7 +35,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     animation: toast-in 0.2s ease both;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.40);
+    box-shadow: 0 4px 24px rgba(var(--c-black), 0.40);
   }
 
   @keyframes toast-in {
@@ -44,21 +44,21 @@
   }
 
   .toast-error {
-    background: rgba(30, 8, 8, 0.92);
-    border: 1px solid rgba(255, 80, 80, 0.35);
-    color: #ff8080;
+    background: var(--c-30-8-8-0_92);
+    border: 1px solid var(--c-255-80-80-0_35);
+    color: var(--h-ff8080);
   }
 
   .toast-success {
-    background: rgba(8, 28, 16, 0.92);
-    border: 1px solid rgba(80, 200, 120, 0.35);
-    color: #4fc08d;
+    background: var(--c-8-28-16-0_92);
+    border: 1px solid var(--c-80-200-120-0_35);
+    color: var(--h-4fc08d);
   }
 
   .toast-info {
-    background: rgba(10, 18, 40, 0.92);
-    border: 1px solid rgba(196, 148, 46, 0.35);
-    color: #c49230;
+    background: var(--c-10-18-40-0_92);
+    border: 1px solid rgba(var(--c-gold), 0.35);
+    color: var(--h-c49230);
   }
 
   .toast-icon { font-size: 15px; flex-shrink: 0; }

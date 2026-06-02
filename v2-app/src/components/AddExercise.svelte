@@ -152,9 +152,9 @@
     width: 100%;
     padding: 14px;
     border-radius: 14px;
-    border: 1px dashed rgba(255,255,255,0.14);
+    border: 1px dashed rgba(var(--c-w), 0.14);
     background: transparent;
-    color: rgba(255,255,255,0.40);
+    color: rgba(var(--c-w), 0.40);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -164,14 +164,14 @@
   }
 
   .add-ex-trigger:active {
-    background: rgba(12,22,48,0.55);
-    border-color: rgba(255,255,255,0.25);
-    color: rgba(255,255,255,0.75);
+    background: var(--c-12-22-48-0_55);
+    border-color: rgba(var(--c-w), 0.25);
+    color: rgba(var(--c-w), 0.75);
   }
 
   .add-ex-panel {
-    background: linear-gradient(180deg, #0f1c30, #0b1726);
-    border: 1px solid rgba(255,255,255,0.10);
+    background: linear-gradient(180deg, var(--h-0f1c30), var(--h-0b1726));
+    border: 1px solid rgba(var(--c-w), 0.10);
     border-radius: 18px;
     padding: 14px;
     display: grid;
@@ -181,21 +181,21 @@
   /* ── Input ── */
   .add-ex-input {
     width: 100%;
-    background: rgba(14,25,55,0.65);
-    border: 1px solid rgba(65,100,175,0.20);
+    background: rgba(var(--c-ink-c), 0.65);
+    border: 1px solid rgba(var(--c-blue-d), 0.20);
     border-radius: 12px;
     padding: 12px 14px;
     font-size: 16px;
     font-weight: 700;
-    color: #e8f2ff;
+    color: var(--h-e8f2ff);
     outline: none;
     box-sizing: border-box;
     letter-spacing: -0.01em;
     transition: border-color 0.12s;
   }
 
-  .add-ex-input::placeholder { color: rgba(255,255,255,0.20); }
-  .add-ex-input:focus { border-color: rgba(255,255,255,0.25); }
+  .add-ex-input::placeholder { color: rgba(var(--c-w), 0.20); }
+  .add-ex-input:focus { border-color: rgba(var(--c-w), 0.25); }
 
   /* ── Suggestions ── */
   .suggestions {
@@ -215,7 +215,7 @@
   .nav-count {
     font-size: 11px;
     font-weight: 700;
-    color: rgba(255,255,255,0.30);
+    color: rgba(var(--c-w), 0.30);
     min-width: 28px;
     text-align: center;
     font-variant-numeric: tabular-nums;
@@ -228,9 +228,9 @@
     align-items: center;
     justify-content: center;
     border-radius: 7px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(255,255,255,0.04);
-    color: rgba(255,255,255,0.50);
+    border: 1px solid rgba(var(--c-w), 0.10);
+    background: rgba(var(--c-w), 0.04);
+    color: rgba(var(--c-w), 0.50);
     font-size: 16px;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
@@ -244,8 +244,8 @@
   }
 
   .nav-arrow:not(:disabled):active {
-    background: rgba(255,255,255,0.10);
-    color: rgba(255,255,255,0.85);
+    background: rgba(var(--c-w), 0.10);
+    color: rgba(var(--c-w), 0.85);
   }
 
   /* Suggestion item */
@@ -254,9 +254,9 @@
     text-align: left;
     padding: 10px 13px;
     border-radius: 10px;
-    border: 1px solid rgba(255,255,255,0.08);
-    background: rgba(255,255,255,0.04);
-    color: rgba(255,255,255,0.80);
+    border: 1px solid rgba(var(--c-w), 0.08);
+    background: rgba(var(--c-w), 0.04);
+    color: rgba(var(--c-w), 0.80);
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
@@ -266,9 +266,9 @@
   }
 
   .sugg-item:active {
-    background: rgba(255,255,255,0.10);
-    border-color: rgba(255,255,255,0.20);
-    color: #ffffff;
+    background: rgba(var(--c-w), 0.10);
+    border-color: rgba(var(--c-w), 0.20);
+    color: var(--h-ffffff);
   }
 
   /* ── History hint ── */
@@ -278,8 +278,8 @@
     gap: 8px;
     padding: 8px 12px;
     border-radius: 10px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.10);
+    background: rgba(var(--c-w), 0.04);
+    border: 1px solid rgba(var(--c-w), 0.10);
   }
 
   .history-label {
@@ -287,21 +287,21 @@
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.35);
+    color: rgba(var(--c-w), 0.35);
     flex: 0 0 auto;
   }
 
   .history-val {
     font-size: 13px;
     font-weight: 700;
-    color: rgba(255,255,255,0.80);
+    color: rgba(var(--c-w), 0.80);
     flex: 1 1 0;
   }
 
   .history-sets {
     font-size: 11px;
     font-weight: 700;
-    color: rgba(255,255,255,0.35);
+    color: rgba(var(--c-w), 0.35);
     flex: 0 0 auto;
   }
 
@@ -315,9 +315,9 @@
   .btn-cancel {
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.10);
-    background: rgba(12,20,44,0.50);
-    color: rgba(255,255,255,0.45);
+    border: 1px solid rgba(var(--c-w), 0.10);
+    background: rgba(var(--c-ink-a), 0.50);
+    color: rgba(var(--c-w), 0.45);
     font-size: 14px;
     font-weight: 700;
     cursor: pointer;
@@ -325,14 +325,14 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .btn-cancel:active { background: rgba(13,24,52,0.85); }
+  .btn-cancel:active { background: rgba(var(--c-ink-b), 0.85); }
 
   .btn-confirm {
     padding: 12px;
     border-radius: 12px;
-    border: 1px solid rgba(255,255,255,0.20);
-    background: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.90);
+    border: 1px solid rgba(var(--c-w), 0.20);
+    background: rgba(var(--c-w), 0.08);
+    color: rgba(var(--c-w), 0.90);
     font-size: 14px;
     font-weight: 800;
     cursor: pointer;
@@ -341,8 +341,8 @@
   }
 
   .btn-confirm:not(:disabled):active {
-    background: rgba(255,255,255,0.14);
-    border-color: rgba(255,255,255,0.35);
+    background: rgba(var(--c-w), 0.14);
+    border-color: rgba(var(--c-w), 0.35);
   }
 
   .btn-confirm:disabled {

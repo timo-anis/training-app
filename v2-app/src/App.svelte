@@ -130,7 +130,7 @@
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    background: radial-gradient(ellipse at 50% 0%, #0d1a2e 0%, #08090f 52%, #050508 100%);
+    background: radial-gradient(ellipse at 50% 0%, var(--h-0d1a2e) 0%, var(--h-08090f) 52%, var(--h-050508) 100%);
   }
 
   /* ── Scrollable content ── */
@@ -147,10 +147,10 @@
     gap: 8px;
     padding: 10px 14px;
     padding-bottom: max(10px, env(safe-area-inset-bottom, 0px));
-    background: rgba(7,9,18,0.94);
+    background: var(--c-7-9-18-0_94);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(60,90,165,0.16);
+    border-top: 1px solid rgba(var(--c-blue-b), 0.16);
   }
 
   /* Timer chip */
@@ -161,9 +161,9 @@
     gap: 7px;
     padding: 15px 16px;
     border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.16);
-    background: rgba(255,255,255,0.06);
-    color: rgba(255,255,255,0.80);
+    border: 1px solid rgba(var(--c-w), 0.16);
+    background: rgba(var(--c-w), 0.06);
+    color: rgba(var(--c-w), 0.80);
     font-size: 15px;
     font-weight: 800;
     cursor: pointer;
@@ -172,13 +172,13 @@
     white-space: nowrap;
   }
 
-  .timer-btn:active { background: rgba(255,255,255,0.12); }
+  .timer-btn:active { background: rgba(var(--c-w), 0.12); }
 
   .timer-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.70);
+    background: rgba(var(--c-w), 0.70);
     animation: blink 1.2s ease-in-out infinite;
     flex-shrink: 0;
   }
@@ -196,9 +196,9 @@
     flex: 1 1 0;
     padding: 16px;
     border-radius: 16px;
-    border: 1px solid rgba(196,148,46,0.45);
-    background: rgba(196,148,46,0.14);
-    color: #c49230;
+    border: 1px solid rgba(var(--c-gold), 0.45);
+    background: rgba(var(--c-gold), 0.14);
+    color: var(--h-c49230);
     font-size: 16px;
     font-weight: 900;
     cursor: pointer;
@@ -207,8 +207,8 @@
   }
 
   .wm-btn.full {
-    background: #c49230;
-    color: #0c0c0e;
+    background: var(--h-c49230);
+    color: var(--h-0c0c0e);
     border: none;
     font-size: 17px;
     font-weight: 900;
@@ -216,11 +216,11 @@
     text-transform: uppercase;
     padding: 18px;
     border-radius: 18px;
-    box-shadow: 0 4px 28px rgba(196,148,46,0.22);
+    box-shadow: 0 4px 28px rgba(var(--c-gold), 0.22);
   }
 
-  .wm-btn:active { background: rgba(196,148,46,0.22); transform: scale(0.98); }
-  .wm-btn.full:active { background: #b07e22; transform: scale(0.98); box-shadow: none; }
+  .wm-btn:active { background: rgba(var(--c-gold), 0.22); transform: scale(0.98); }
+  .wm-btn.full:active { background: var(--h-b07e22); transform: scale(0.98); box-shadow: none; }
 
   /* ── Help chip ── */
 
@@ -230,7 +230,7 @@
     .workout-bar {
       justify-content: center;
       padding: 10px 24px;
-      border-top-color: rgba(255,255,255,0.07);
+      border-top-color: rgba(var(--c-w), 0.07);
     }
 
     .wm-btn {
@@ -242,7 +242,7 @@
       padding: 12px 28px;
       font-size: 14px;
       border-radius: 14px;
-      box-shadow: 0 2px 14px rgba(196,148,46,0.18);
+      box-shadow: 0 2px 14px rgba(var(--c-gold), 0.18);
     }
   }
 
@@ -257,8 +257,8 @@
     align-items: center;
     gap: 10px;
     padding: 12px 14px;
-    background: rgba(18,30,60,0.96);
-    border: 1px solid rgba(70,110,185,0.30);
+    background: var(--c-18-30-60-0_96);
+    border: 1px solid rgba(var(--c-blue-e), 0.30);
     border-radius: 14px;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -275,15 +275,15 @@
     flex: 1;
     font-size: 14px;
     font-weight: 600;
-    color: rgba(255,255,255,0.55);
+    color: rgba(var(--c-w), 0.55);
   }
 
   .undo-btn {
     padding: 7px 14px;
     border-radius: 9px;
-    border: 1px solid rgba(196,148,46,0.35);
-    background: rgba(196,148,46,0.12);
-    color: #c49230;
+    border: 1px solid rgba(var(--c-gold), 0.35);
+    background: rgba(var(--c-gold), 0.12);
+    color: var(--h-c49230);
     font-size: 13px;
     font-weight: 800;
     cursor: pointer;
@@ -291,5 +291,5 @@
     flex-shrink: 0;
   }
 
-  .undo-btn:active { background: rgba(196,148,46,0.25); }
+  .undo-btn:active { background: rgba(var(--c-gold), 0.25); }
 </style>
