@@ -94,6 +94,7 @@
           Confirm password
           <input type="password" bind:value={passwordConfirm} required autocomplete="new-password" />
         </label>
+        <p class="pw-hint">At least 8 characters, with an uppercase &amp; lowercase letter, a number and a symbol.</p>
       {/if}
 
       {#if error}
@@ -177,6 +178,13 @@
   button[type="submit"]:active:not(:disabled) { opacity: 0.85; }
 
   .error { color: #ff6b6b; font-size: 13px; margin: 6px 0 8px; }
+
+  .pw-hint {
+    margin: -4px 0 4px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: rgba(232,240,255,0.5);
+  }
   .info  { color: #4fc08d; font-size: 13px; margin: 0 0 16px; line-height: 1.4; }
 
   .auth-links {
