@@ -223,6 +223,7 @@
         {#if isNewUser}
           <span class="empty-hint">Tip: tap any day in the calendar, then mark it Workout, Recovery or Rest.</span>
         {/if}
+        <button class="how-link" on:click|stopPropagation={() => requestOnboarding.set(true)}>How it works →</button>
       </div>
     {:else if exercisesExpanded}
       <div class="exercise-list">
@@ -239,7 +240,7 @@
       </div>
     {/if}
 
-    {#if $currentDayExercises.length === 0 || exercisesExpanded}
+    {#if exercisesExpanded}
       <div class="add-ex-wrap">
         <AddExercise bind:this={adder} week={$uiState.week} day={$uiState.day} />
       </div>
@@ -689,6 +690,20 @@
     color: rgba(255,255,255,0.40);
     max-width: 280px;
   }
+
+  .how-link {
+    margin-top: 16px;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.55);
+    font-size: 12.5px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 6px 4px;
+    -webkit-tap-highlight-color: transparent;
+    transition: color 0.12s;
+  }
+  .how-link:active { color: #ffffff; }
 
 
   .copy-day-btn {
