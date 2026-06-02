@@ -51,11 +51,11 @@
             <rect x="34" y="39" width="8" height="7" rx="2" fill="rgba(255,255,255,0.06)"/>
           </svg>
         </div>
-        <h2>Weekly training log</h2>
-        <p>Workouts are organised by week and day. You start on the current week — tap any day in the calendar to view or add exercises.</p>
+        <h2>Your training calendar</h2>
+        <p>Your training is organised by week and day. Tap any day in the calendar to open it, then mark it <strong>Workout</strong>, <strong>Recovery</strong> or <strong>Rest</strong>. Move day to day with the <strong>‹ ›</strong> arrows.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>You can copy last week's workout to the current week — <strong>Copy from Week X</strong> appears under an empty day. Add a new week with <strong>+ Week</strong> in the week strip.</span>
+          <span>Each day you mark fills with colour in the calendar — <strong>blue</strong> workout, <strong>amber</strong> recovery, <strong>violet</strong> rest. Tap <strong>Today</strong> to jump back to today.</span>
         </div>
       </div>
 
@@ -77,10 +77,10 @@
           </svg>
         </div>
         <h2>Add exercises</h2>
-        <p>Tap <strong>+ Add exercise</strong> at the bottom of a day, type a name, and the exercise appears as a card. Add sets with kg and reps.</p>
+        <p>Open a day and tap <strong>+ Add exercise</strong>. Log your sets with kg × reps, and tap the circle to mark each set done.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>After each set, tap the circle to mark it done. <strong>Wednesday</strong> is active recovery (mobility, foam rolling) — shown in amber in the calendar.</span>
+          <span>No exercises yet? An empty day shows a <strong>+ Add first exercise</strong> button to get you started.</span>
         </div>
       </div>
 
@@ -95,10 +95,10 @@
           </svg>
         </div>
         <h2>Workout mode</h2>
-        <p>Tap <strong>▶ Start Workout</strong> at the bottom — a focused view opens showing one exercise at a time. Last week's kg and reps are pre-filled.</p>
+        <p>Tap <strong>▶ Start Workout</strong> for a focused, one-exercise-at-a-time view. Last week's kg and reps are pre-filled.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>Swipe between exercises. The rest timer starts automatically after each set. When done, tap <strong>Finish Training</strong> — the day turns green in the calendar.</span>
+          <span>The rest timer runs between sets — tap the <strong>Rest</strong> chip to adjust it any time. When done, tap <strong>Finish Training</strong> — the day turns green.</span>
         </div>
       </div>
     {/if}

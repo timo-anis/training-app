@@ -45,6 +45,7 @@
 
   // Show MVP1 import banner when V2 has zero weeks and MVP1 data exists
   $: totalWeeks = $appState.weeks.filter(w => w.exercises.length > 0).length;
+  $: isNewUser = totalWeeks === 0;
   $: showMigrateBanner = totalWeeks === 0 && $hasMvp1Data;
 
   let migrateStatus: 'idle' | 'done' | 'error' = 'idle';
@@ -171,7 +172,7 @@
             </span>
           {/if}
         </div>
-        <span class="ex-chevron" class:open={exercisesExpanded}>›</span>
+        {#if $currentDayExercises.length > 0}<span class="ex-chevron" class:open={exercisesExpanded}>›</span>{/if}
       </button>
       <button class="day-nav-arrow" on:click={() => goToAdjacentDay(1)} aria-label="Next day">›</button>
     </div>
@@ -189,39 +190,56 @@
       {/each}
     </div>
 
-    {#if exercisesExpanded}
-      {#if $currentDayExercises.length === 0}
-        <div class="empty-state">
+    {#if $currentDayExercises.length === 0}
+      <div class="empty-state">
+        {#if isNewUser}
+          <div class="empty-icon" aria-hidden="true">
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+              <rect x="6" y="18" width="6" height="8" rx="2" fill="#c49230"/>
+              <rect x="12" y="15" width="5" height="14" rx="2" fill="#c49230"/>
+              <rect x="17" y="20" width="10" height="4" rx="2" fill="#c49230"/>
+              <rect x="27" y="15" width="5" height="14" rx="2" fill="#c49230"/>
+              <rect x="32" y="18" width="6" height="8" rx="2" fill="#c49230"/>
+            </svg>
+          </div>
+          <span class="empty-title">Welcome — let’s start training</span>
+          <span class="empty-sub">Add your first exercise to build today’s workout.</span>
+        {:else}
           <span class="empty-title">{emptyLabel.title}</span>
           {#if emptyLabel.sub}
             <span class="empty-sub">{emptyLabel.sub}</span>
           {/if}
-          {#if currentDayKind !== 'rest'}
-            <button class="add-first-btn" on:click|stopPropagation={startFirstExercise}>
-              + Add first exercise
-            </button>
-          {/if}
-          {#if canCopyDay}
-            <button class="copy-day-btn" on:click|stopPropagation={() => copyPreviousDay($uiState.week, $uiState.day)}>
-              Copy from Week {$uiState.week - 1 - $weekOffset}
-            </button>
-          {/if}
-        </div>
-      {:else}
-        <div class="exercise-list">
-          {#each $currentDayExercises as exercise, i (exercise.id)}
-            <ExerciseCard
-              {exercise}
-              week={$uiState.week}
-              day={$uiState.day}
-              index={i}
-              blockIndex={blockIndices[exercise.id] ?? i}
-              total={$currentDayExercises.length}
-            />
-          {/each}
-        </div>
-      {/if}
+        {/if}
+        {#if currentDayKind !== 'rest'}
+          <button class="add-first-btn" on:click|stopPropagation={startFirstExercise}>
+            + Add first exercise
+          </button>
+        {/if}
+        {#if canCopyDay}
+          <button class="copy-day-btn" on:click|stopPropagation={() => copyPreviousDay($uiState.week, $uiState.day)}>
+            Copy from Week {$uiState.week - 1 - $weekOffset}
+          </button>
+        {/if}
+        {#if isNewUser}
+          <span class="empty-hint">Tip: tap any day in the calendar, then mark it Workout, Recovery or Rest.</span>
+        {/if}
+      </div>
+    {:else if exercisesExpanded}
+      <div class="exercise-list">
+        {#each $currentDayExercises as exercise, i (exercise.id)}
+          <ExerciseCard
+            {exercise}
+            week={$uiState.week}
+            day={$uiState.day}
+            index={i}
+            blockIndex={blockIndices[exercise.id] ?? i}
+            total={$currentDayExercises.length}
+          />
+        {/each}
+      </div>
+    {/if}
 
+    {#if $currentDayExercises.length === 0 || exercisesExpanded}
       <div class="add-ex-wrap">
         <AddExercise bind:this={adder} week={$uiState.week} day={$uiState.day} />
       </div>
@@ -659,7 +677,17 @@
   .empty-sub {
     font-size: 13px;
     font-weight: 500;
-    color: rgba(255,255,255,0.16);
+    color: rgba(255,255,255,0.45);
+  }
+
+  .empty-icon { margin-bottom: 6px; }
+
+  .empty-hint {
+    margin-top: 14px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: rgba(255,255,255,0.40);
+    max-width: 280px;
   }
 
 

@@ -90,6 +90,10 @@
 - z-index 200 — above workout bar
 - Workout bar hidden when sheet open
 
+### New-user onboarding (improved 2026-06-01)
+- Empty-state hero now shows ALWAYS when the current day has no exercises (no longer hidden behind the collapsed day section). Brand-new users (no workouts anywhere) see a welcome hero with a barbell icon, "+ Add first exercise" CTA, and a tip to mark day types.
+- OnboardingOverlay walkthrough refreshed to the current model (calendar tap + day-type marking, add exercise, rest-chip editing); removed stale references to the week strip / "+ Week" / hardcoded Wednesday recovery.
+
 ### Help / onboarding
 - Single help entry: topbar `?` icon opens the "Quick guide" sheet
 - Quick guide has an `▶ Ava tutvustus uuesti` button that re-opens the full onboarding walkthrough (`OnboardingOverlay`) via the `requestOnboarding` store
