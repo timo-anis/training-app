@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind } from '../stores/app';
+  import type { DayKind } from '../types/workout';
   import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -55,14 +56,29 @@
   // Auto-expand exercise list when there's already progress today
   $: if (dayExDone > 0) exercisesExpanded = true;
 
-  const REST_DAYS = new Set(['Saturday', 'Sunday']);
-  const RECOVERY_DAYS = new Set(['Wednesday']);
+  // Current day's user-set type (workout / recovery / rest). Undefined = unmarked.
+  $: currentDay = $appState.weeks.find(w => w.week === $uiState.week && w.day === $uiState.day);
+  $: currentDayKind = currentDay?.kind ?? null;
 
+  // Empty-state copy is driven by the day's mark, not the weekday.
   $: emptyLabel = (() => {
-    if (REST_DAYS.has($uiState.day)) return { title: 'Rest day', sub: 'Recover and recharge.' };
-    if (RECOVERY_DAYS.has($uiState.day)) return { title: 'Active recovery', sub: 'Mobility, foam rolling, light movement.' };
-    return { title: 'No training logged', sub: null };
+    if (currentDayKind === 'rest') return { title: 'Rest day', sub: 'Recover and recharge.' };
+    if (currentDayKind === 'recovery') return { title: 'Active recovery', sub: 'Mobility, foam rolling, light movement.' };
+    return { title: 'No workout yet', sub: 'Add your first exercise to start building today.' };
   })();
+
+  let adder: AddExercise;
+  function startFirstExercise() {
+    exercisesExpanded = true;
+    // wait for the list/adder to render, then open the add panel
+    setTimeout(() => adder?.openNow?.(), 0);
+  }
+
+  const DAY_KINDS: { k: DayKind; label: string }[] = [
+    { k: 'workout', label: 'Workout' },
+    { k: 'recovery', label: 'Recovery' },
+    { k: 'rest', label: 'Rest' },
+  ];
 
   function handleMigrate() {
     const ok = runMvp1Import();
@@ -168,12 +184,27 @@
       <span class="ex-chevron" class:open={exercisesExpanded}>›</span>
     </button>
 
+    <div class="day-kind-seg" role="group" aria-label="Day type">
+      {#each DAY_KINDS as { k, label }}
+        <button
+          class="seg-btn"
+          class:active={currentDayKind === k}
+          on:click={() => setDayKind($uiState.week, $uiState.day, currentDayKind === k ? null : k)}
+        >{label}</button>
+      {/each}
+    </div>
+
     {#if exercisesExpanded}
       {#if $currentDayExercises.length === 0}
         <div class="empty-state">
           <span class="empty-title">{emptyLabel.title}</span>
           {#if emptyLabel.sub}
             <span class="empty-sub">{emptyLabel.sub}</span>
+          {/if}
+          {#if currentDayKind !== 'rest'}
+            <button class="add-first-btn" on:click|stopPropagation={startFirstExercise}>
+              + Add first exercise
+            </button>
           {/if}
           {#if canCopyDay}
             <button class="copy-day-btn" on:click|stopPropagation={() => copyPreviousDay($uiState.week, $uiState.day)}>
@@ -197,7 +228,7 @@
       {/if}
 
       <div class="add-ex-wrap">
-        <AddExercise week={$uiState.week} day={$uiState.day} />
+        <AddExercise bind:this={adder} week={$uiState.week} day={$uiState.day} />
       </div>
     {/if}
   </section>
@@ -495,6 +526,52 @@
   .add-ex-wrap {
     margin-top: 10px;
   }
+
+  /* ---- Day type segment ---- */
+  .day-kind-seg {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .seg-btn {
+    flex: 1;
+    padding: 9px 4px;
+    border-radius: 10px;
+    border: 1px solid rgba(60,90,165,0.16);
+    background: rgba(13,24,52,0.55);
+    color: rgba(232,240,255,0.55);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, color 0.12s, border-color 0.12s;
+  }
+
+  .seg-btn:active { transform: scale(0.98); }
+
+  .seg-btn.active {
+    background: rgba(196,148,46,0.14);
+    border-color: rgba(196,148,46,0.45);
+    color: #d4a038;
+  }
+
+  .add-first-btn {
+    margin-top: 14px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(196,148,46,0.45);
+    background: rgba(196,148,46,0.14);
+    color: #d4a038;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, transform 0.08s;
+  }
+
+  .add-first-btn:active { background: rgba(196,148,46,0.24); transform: scale(0.98); }
 
   /* ---- Empty state ---- */
   .empty-state {

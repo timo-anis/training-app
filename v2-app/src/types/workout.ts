@@ -36,6 +36,9 @@ export interface Exercise {
   conditioningDone: boolean;
 }
 
+/** User-set day intent. Undefined = unmarked (neutral). */
+export type DayKind = 'workout' | 'recovery' | 'rest';
+
 export interface WorkoutDay {
   week: number;
   day: DayOfWeek;
@@ -46,6 +49,8 @@ export interface WorkoutDay {
   completed?: boolean;
   /** Free-text session note — logged during or after workout */
   note?: string;
+  /** User-marked day type (workout / recovery / rest). Undefined = unmarked. */
+  kind?: DayKind;
 }
 
 export interface AppState {

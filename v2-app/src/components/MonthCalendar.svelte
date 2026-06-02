@@ -18,35 +18,25 @@
     return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
   }
 
-  type DayStatus = 'done' | 'partial' | 'active-recovery' | 'has-data' | 'rest' | 'weekend' | 'future';
+  type DayStatus = 'done' | 'partial' | 'active-recovery' | 'has-data' | 'rest' | 'weekend' | 'future' | 'neutral';
 
   function getDayStatus(date: Date): DayStatus {
-    const todayMid = new Date();
-    todayMid.setHours(0, 0, 0, 0);
-
     const wd = dateToWeekDay(date);
-
-    if (date > todayMid) {
-      // Future — but Wednesdays in the program year always show amber
-      if (wd && wd.day === 'Wednesday') return 'active-recovery';
-      return 'future';
-    }
-
-    // Before program start — past day, no data possible
-    if (!wd) {
-      const dow = (date.getDay() + 6) % 7; // 0=Mon … 6=Sun
-      return dow >= 5 ? 'weekend' : 'rest';
-    }
+    // Outside the program range — nothing to show.
+    if (!wd) return 'neutral';
 
     const workoutDay = $appState.weeks.find(w => w.week === wd.week && w.day === wd.day);
     const hasData = workoutDay && workoutDay.exercises.length > 0;
 
     if (hasData) {
-      // Explicit finish → always fully done (green)
+      // Logged work present — completion drives the colour.
       if (workoutDay!.completed === true) return 'done';
       const nonRecovery = workoutDay!.exercises.filter(e => !e.recovery);
       const hasRecovery = workoutDay!.exercises.some(e => e.recovery && e.recoveryDone);
-      if (nonRecovery.length === 0) return hasRecovery ? 'active-recovery' : 'has-data';
+      if (nonRecovery.length === 0) {
+        if (hasRecovery || workoutDay!.kind === 'recovery') return 'active-recovery';
+        return 'has-data';
+      }
       const allDone = nonRecovery.every(ex => ex.sets.length > 0 && ex.sets.every(s => s.done));
       if (allDone) return 'done';
       // Partially done — some sets completed but not all
@@ -56,10 +46,14 @@
       return 'has-data';
     }
 
-    // No data — day-of-week defaults
-    if (wd.day === 'Saturday' || wd.day === 'Sunday') return 'weekend';
-    if (wd.day === 'Wednesday') return 'active-recovery';
-    return 'rest';
+    // No logged exercises — the user's explicit day mark drives the look.
+    // Unmarked days stay neutral (empty calendar for new users).
+    switch (workoutDay?.kind) {
+      case 'workout':  return 'has-data';
+      case 'recovery': return 'active-recovery';
+      case 'rest':     return 'rest';
+      default:         return 'neutral';
+    }
   }
 
   function selectDay(date: Date) {
@@ -220,7 +214,6 @@
       <span class="leg-item"><span class="leg-swatch done-sw">✓</span>Done</span>
       <span class="leg-item"><span class="leg-swatch data-sw"></span>Workout</span>
       <span class="leg-item"><span class="leg-swatch rec-sw">○</span>Recovery</span>
-      <span class="leg-item"><span class="leg-swatch wknd-sw">–</span>Weekend</span>
       <span class="leg-item"><span class="leg-swatch rest-sw"></span>Rest</span>
     </div>
   {/if}
@@ -414,6 +407,10 @@
   /* Future — visible but clearly lighter than past */
   .status-future .day-num { color: rgba(255,255,255,0.18); }
   .status-future { cursor: pointer; }
+
+  /* Unmarked day — neutral, empty look (no marker) */
+  .status-neutral .day-num { color: rgba(255,255,255,0.30); }
+  .status-neutral { cursor: pointer; }
 
   /* Today — solid gold, THE single strong accent */
   .today {

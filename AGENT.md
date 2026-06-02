@@ -80,6 +80,9 @@ WorkoutDay {
   day: DayOfWeek          // 'Monday' | 'Tuesday' | ... | 'Sunday'
   date: string            // ISO: '2026-05-25'
   exercises: Exercise[]
+  completed?: boolean     // user tapped Finish → green calendar dot
+  note?: string           // free-text session note
+  kind?: 'workout' | 'recovery' | 'rest'  // user-marked day type; undefined = unmarked
 }
 
 Exercise {

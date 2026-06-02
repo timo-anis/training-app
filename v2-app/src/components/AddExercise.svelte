@@ -53,6 +53,11 @@
     setTimeout(() => inputEl?.focus(), 50);
   }
 
+  // Public: let a parent (e.g. the empty-state CTA) open the add panel.
+  export function openNow() {
+    openPanel();
+  }
+
   function cancel() {
     open = false;
     name = '';

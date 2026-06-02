@@ -26,9 +26,18 @@
 - Initialises to today's month on every boot
 - Does NOT auto-follow uiState.week (fixed — was root cause of wrong-month bug)
 - Today button appears when user has navigated away from current month
-- Day colors: green = fully done, amber ◑ = partial (some sets done), amber ring = recovery, white = has data
+- Day status is data- + day.kind-driven (NO hardcoded weekday rules — removed 2026-06-01):
+  - green ✓ = completed/all sets done; amber ◑ = partial; blue dot = workout (marked or logged, not done)
+  - amber ○ = recovery (recovery exercises OR kind='recovery'); subdued = rest (kind='rest')
+  - unmarked day with no data = neutral/empty (new users see an empty calendar)
 - Future days: clickable (for planning), cursor pointer
-- Legend: Done / Partial / Workout / Recovery / Weekend
+- Legend: Done / Partial / Workout / Recovery / Rest
+
+### Day-type marking (added 2026-06-01)
+- Each day can be marked workout / recovery / rest via a segment toggle under the day heading (setDayKind)
+- Stored as optional WorkoutDay.kind; unmarked = neutral. Adding the first exercise auto-sets kind='workout' (unless already marked)
+- One-time Wednesday cleanup never prunes a day that has kind set
+- Empty-state card shows kind-aware copy + a "＋ Add first exercise" CTA (opens AddExercise) on workout/unmarked days
 
 ### Calendar — week strip
 - Day pill labels: white/visible

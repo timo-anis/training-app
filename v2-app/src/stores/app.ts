@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import type { User } from '@supabase/supabase-js';
-import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet } from '../types/workout';
+import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud, detectMvp1Data, importFromMvp1 } from '../services/storage';
 import { PS_UTC } from '../lib/program';
@@ -305,6 +305,31 @@ export function markWorkoutComplete(week: number, day: DayOfWeek) {
   }), true);
 }
 
+/** Mark a day as workout / recovery / rest. Pass null to clear the mark.
+ *  Creates an empty WorkoutDay if none exists yet. */
+export function setDayKind(week: number, day: DayOfWeek, kind: DayKind | null) {
+  updateState(state => {
+    const exists = state.weeks.find(w => w.week === week && w.day === day);
+    if (exists) {
+      return {
+        ...state,
+        weeks: state.weeks.map(w => {
+          if (w.week !== week || w.day !== day) return w;
+          if (kind === null) {
+            const { kind: _k, ...rest } = w;
+            return rest as WorkoutDay;
+          }
+          return { ...w, kind };
+        }),
+      };
+    }
+    if (kind === null) return state; // nothing to unset on a non-existent day
+    const date = getDateForWeekDay(week, day);
+    const newDay: WorkoutDay = { week, day, date, exercises: [], kind };
+    return { ...state, weeks: [...state.weeks, newDay] };
+  });
+}
+
 /** Finish workout entirely — stop timer, close overlay */
 export function exitWorkout() {
   uiState.update(ui => ({
@@ -415,6 +440,7 @@ function cleanupBackfilledRecovery(state: AppState): { state: AppState; changed:
       if (wd.day !== 'Wednesday') return true;
       if (wd.exercises.length > 0) return true;
       if (wd.completed) return true; // keep if user explicitly marked done
+      if (wd.kind) return true; // keep if user explicitly marked the day type
       // If this was an auto-created empty Wednesday, remove it
       return false;
     });
@@ -597,13 +623,15 @@ export function addExercise(week: number, day: DayOfWeek, name: string) {
         ...state,
         weeks: state.weeks.map(w => {
           if (w.week !== week || w.day !== day) return w;
-          return { ...w, exercises: [...w.exercises, emptyExercise(id, name)] };
+          // Adding an exercise implies a training day, unless the user already
+          // marked the day (e.g. recovery with mobility work).
+          return { ...w, kind: w.kind ?? 'workout', exercises: [...w.exercises, emptyExercise(id, name)] };
         }),
       };
     }
     // Day doesn't exist yet — create it
     const date = getDateForWeekDay(week, day);
-    const newDay: WorkoutDay = { week, day, date, exercises: [emptyExercise(id, name)] };
+    const newDay: WorkoutDay = { week, day, date, exercises: [emptyExercise(id, name)], kind: 'workout' };
     return { ...state, weeks: [...state.weeks, newDay] };
   });
 }
