@@ -5,11 +5,11 @@
     setActiveBlock, toggleSetDone, updateSetField, findLastSession,
     findLastConditioningNote, toggleRecoveryDone, toggleConditioningDone, updateUI,
     addSet, deleteSet, insertSet, updateConditioningNote, markWorkoutComplete,
-    renameExercise, updateDayNote, addExercise, deleteExercise,
+    renameExercise, updateDayNote, addExercise, deleteExercise, updateExerciseMeta,
     pushUndo, execUndo, undoAction,
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
-  import type { DayOfWeek, WorkoutSet } from '../types/workout';
+  import type { DayOfWeek, WorkoutSet, Exercise } from '../types/workout';
   import { searchExercises } from '../data/exercises';
   import RestTimer from './RestTimer.svelte';
 
@@ -78,6 +78,19 @@
     const secMatch = s.match(/^(\d+(?:\.\d+)?)/);
     if (secMatch) return Math.round(parseFloat(secMatch[1]));
     return 0;
+  }
+
+  // Format seconds back to "M:SS" (empty when zero → "no rest").
+  function secsToRest(sec: number): string {
+    if (sec <= 0) return '';
+    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+  }
+
+  // Inline per-exercise rest editing inside workout mode (no need to exit).
+  let restEditId: string | null = null;
+  function adjustExRest(week: number, day: DayOfWeek, ex: Exercise, delta: number) {
+    const next = Math.max(0, parseRestToSeconds(ex.rest) + delta);
+    updateExerciseMeta(week, day, ex.id, { rest: secsToRest(next) });
   }
 
   $: restActive = $uiState.restStartTime !== null && $uiState.restTotal !== null && $uiState.restTotal > 0;
@@ -596,8 +609,19 @@
                   title="Rename exercise"
                 >✎</button>
               {/if}
-              {#if ex.rest && !ex.conditioning}
-                <span class="ex-rest">Rest {ex.rest}</span>
+              {#if !ex.conditioning}
+                {#if restEditId === ex.id}
+                  <span class="ex-rest-edit">
+                    <button class="ex-rest-step" on:click|stopPropagation={() => adjustExRest(week, day, ex, -15)} aria-label="Decrease rest 15 seconds">−</button>
+                    <span class="ex-rest-val">{ex.rest || 'none'}</span>
+                    <button class="ex-rest-step" on:click|stopPropagation={() => adjustExRest(week, day, ex, 15)} aria-label="Increase rest 15 seconds">＋</button>
+                    <button class="ex-rest-ok" on:click|stopPropagation={() => (restEditId = null)} aria-label="Done editing rest">✓</button>
+                  </span>
+                {:else}
+                  <button class="ex-rest ex-rest-btn" on:click|stopPropagation={() => (restEditId = ex.id)} aria-label="Edit rest time">
+                    {ex.rest ? `Rest ${ex.rest}` : '+ Rest'}<span class="ex-rest-pencil">✎</span>
+                  </button>
+                {/if}
               {/if}
             </div>
 
@@ -1618,12 +1642,66 @@
   .ex-rest {
     font-size: 12px;
     font-weight: 700;
-    color: rgba(255,255,255,0.40);
+    color: rgba(255,255,255,0.55);
     background: rgba(255,255,255,0.05);
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: 8px;
     padding: 3px 8px;
     flex-shrink: 0;
+    font-family: inherit;
+  }
+
+  .ex-rest-btn {
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .ex-rest-btn:active { background: rgba(255,255,255,0.10); }
+  .ex-rest-pencil { font-size: 10px; opacity: 0.55; }
+
+  .ex-rest-edit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    padding: 2px 4px;
+  }
+  .ex-rest-val {
+    font-size: 12px;
+    font-weight: 800;
+    color: #e8f0ff;
+    min-width: 36px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+  .ex-rest-step {
+    width: 26px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.14);
+    background: rgba(255,255,255,0.06);
+    color: #e8f0ff;
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ex-rest-step:active { background: rgba(255,255,255,0.16); }
+  .ex-rest-ok {
+    width: 26px;
+    height: 24px;
+    border-radius: 6px;
+    border: 1px solid rgba(79,192,141,0.45);
+    background: rgba(79,192,141,0.16);
+    color: #4fc08d;
+    font-size: 13px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
   }
 
   .ex-note {
