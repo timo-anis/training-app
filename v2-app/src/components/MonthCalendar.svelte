@@ -403,13 +403,13 @@
   /* Weekend — dim but readable */
   .status-weekend .day-num { color: rgba(255,255,255,0.22); }
 
-  /* Rest: explicitly marked rest day — neutral grey fill */
+  /* Rest: explicitly marked rest day — distinct violet */
   .status-rest {
-    background: rgba(255,255,255,0.06);
-    border-color: rgba(255,255,255,0.16);
+    background: rgba(150,140,212,0.20);
+    border-color: rgba(150,140,212,0.50);
   }
-  .status-rest .day-num { color: rgba(255,255,255,0.50); }
-  .rest-mark { color: rgba(255,255,255,0.45); font-weight: 700; font-size: 12px; line-height: 1; }
+  .status-rest .day-num { color: #b8aee8; }
+  .rest-mark { color: #b8aee8; font-weight: 700; font-size: 12px; line-height: 1; }
 
   /* Future — visible but clearly lighter than past */
   .status-future .day-num { color: rgba(255,255,255,0.18); }
@@ -487,11 +487,11 @@
 
   .done-sw    { background: rgba(60,160,100,0.15); border: 1px solid rgba(60,180,110,0.40); color: #4fc08d; }
   .partial-sw { background: rgba(196,148,46,0.10); border: 1px solid rgba(196,148,46,0.30); color: #c49230; font-size: 10px; }
-  .data-sw  { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.12); }
-  .data-sw::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: rgba(100,155,255,0.60); }
-  .rec-sw   { background: rgba(196,148,46,0.10); border: 1px solid rgba(196,148,46,0.28); color: #c49230; font-size: 10px; }
+  .data-sw  { background: rgba(100,155,255,0.16); border: 1px solid rgba(100,155,255,0.42); }
+  .data-sw::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #9bc0ff; }
+  .rec-sw   { background: rgba(196,148,46,0.18); border: 1px solid rgba(196,148,46,0.45); color: #d4a038; font-size: 10px; }
   .wknd-sw  { background: transparent; border: 1px solid rgba(255,255,255,0.10); color: #2e4060; font-size: 10px; }
-  .rest-sw  { background: transparent; border: 1px solid rgba(255,255,255,0.08); }
+  .rest-sw  { background: rgba(150,140,212,0.20); border: 1px solid rgba(150,140,212,0.50); }
   @media (min-width: 640px) {
     .month-label { font-size: 17px; }
     .day-num { font-size: 17px; }

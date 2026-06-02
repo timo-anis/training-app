@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -76,6 +76,12 @@
   // Today highlight for the day-header Today button
   $: _today = todayWeekDay();
   $: onToday = !!_today && _today.week === $uiState.week && _today.day === $uiState.day;
+
+  function markDay(k: DayKind, label: string) {
+    const turningOff = currentDayKind === k;
+    setDayKind($uiState.week, $uiState.day, turningOff ? null : k);
+    showToast(turningOff ? `${$uiState.day}: mark cleared` : `${$uiState.day} → ${label}`, 'success');
+  }
 
   const DAY_KINDS: { k: DayKind; label: string }[] = [
     { k: 'workout', label: 'Workout' },
@@ -176,9 +182,9 @@
     <div class="day-kind-seg" role="group" aria-label="Day type">
       {#each DAY_KINDS as { k, label }}
         <button
-          class="seg-btn"
+          class="seg-btn seg-{k}"
           class:active={currentDayKind === k}
-          on:click={() => setDayKind($uiState.week, $uiState.day, currentDayKind === k ? null : k)}
+          on:click={() => markDay(k, label)}
         >{label}</button>
       {/each}
     </div>
@@ -597,10 +603,21 @@
 
   .seg-btn:active { transform: scale(0.98); }
 
-  .seg-btn.active {
-    background: rgba(196,148,46,0.14);
+  /* Active state colour matches the calendar cell for that type */
+  .seg-workout.active {
+    background: rgba(100,155,255,0.16);
+    border-color: rgba(100,155,255,0.45);
+    color: #9bc0ff;
+  }
+  .seg-recovery.active {
+    background: rgba(196,148,46,0.16);
     border-color: rgba(196,148,46,0.45);
     color: #d4a038;
+  }
+  .seg-rest.active {
+    background: rgba(150,140,212,0.20);
+    border-color: rgba(150,140,212,0.50);
+    color: #b8aee8;
   }
 
   .add-first-btn {
