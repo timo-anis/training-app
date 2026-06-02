@@ -431,7 +431,7 @@
   .wval {
     font-size: 14px;
     font-weight: 800;
-    color: #c8ddf4;
+    color: #e8f0ff;
     letter-spacing: -0.02em;
   }
 
@@ -497,7 +497,7 @@
     flex: 1 1 0;
     font-size: 14px;
     font-weight: 700;
-    color: #c8ddf4;
+    color: #e8f0ff;
     letter-spacing: -0.01em;
     white-space: nowrap;
     overflow: hidden;
@@ -545,7 +545,7 @@
     text-align: left;
     font-size: 14px;
     font-weight: 700;
-    color: #c8ddf4;
+    color: #e8f0ff;
     letter-spacing: -0.01em;
     cursor: pointer;
     white-space: nowrap;

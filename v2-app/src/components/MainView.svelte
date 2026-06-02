@@ -670,7 +670,7 @@
     border-radius: 12px;
     border: 1px solid rgba(127,178,255,0.22);
     background: rgba(127,178,255,0.07);
-    color: #7fb2ff;
+    color: #e8f0ff;
     font-size: 13px;
     font-weight: 800;
     cursor: pointer;

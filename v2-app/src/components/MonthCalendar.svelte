@@ -157,11 +157,12 @@
     </button>
 
     {#if !collapsed}
-      {#if !isViewingToday}
-        <button class="today-month-btn" on:click={() => { const t = new Date(); viewYear = t.getFullYear(); viewMonth = t.getMonth(); manualMonth = false; }} aria-label="Go to today's month">Today</button>
-      {:else}
+      <div class="month-nav-right">
+        {#if !isViewingToday}
+          <button class="today-month-btn" on:click={() => { const t = new Date(); viewYear = t.getFullYear(); viewMonth = t.getMonth(); manualMonth = false; }} aria-label="Go to today's month">Today</button>
+        {/if}
         <button class="nav-btn" on:click={nextMonth} aria-label="Next month">›</button>
-      {/if}
+      </div>
     {:else}
       <div class="nav-placeholder"></div>
     {/if}
@@ -265,6 +266,8 @@
 
   .nav-placeholder { width: 32px; flex-shrink: 0; }
 
+  .month-nav-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
   .today-month-btn {
     padding: 5px 10px;
     border-radius: 9px;
@@ -301,7 +304,7 @@
   .month-label {
     font-size: 14px;
     font-weight: 800;
-    color: #c8ddf4;
+    color: #ffffff;
     letter-spacing: -0.01em;
     user-select: none;
   }

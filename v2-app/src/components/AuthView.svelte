@@ -198,7 +198,7 @@
   .link-btn {
     background: none;
     border: none;
-    color: #5a82c0;
+    color: #e8f0ff;
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -206,7 +206,7 @@
     -webkit-tap-highlight-color: transparent;
     transition: color 0.12s;
   }
-  .link-btn:hover { color: #7fa8d4; }
+  .link-btn:hover { color: #ffffff; }
 
   .sep { color: rgba(255,255,255,0.20); font-size: 12px; }
 </style>
