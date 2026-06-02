@@ -1,7 +1,6 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay } from '../stores/app';
   import type { DayKind } from '../types/workout';
-  import Calendar from './Calendar.svelte';
   import MonthCalendar from './MonthCalendar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import AddExercise from './AddExercise.svelte';
@@ -73,6 +72,10 @@
     // wait for the list/adder to render, then open the add panel
     setTimeout(() => adder?.openNow?.(), 0);
   }
+
+  // Today highlight for the day-header Today button
+  $: _today = todayWeekDay();
+  $: onToday = !!_today && _today.week === $uiState.week && _today.day === $uiState.day;
 
   const DAY_KINDS: { k: DayKind; label: string }[] = [
     { k: 'workout', label: 'Workout' },
@@ -146,43 +149,29 @@
     <MonthCalendar />
   </section>
 
-  <!-- Week strip + day picker -->
-  <section class="section section-tight">
-    <Calendar />
-  </section>
-
-  <!-- Statistics button -->
-  <section class="section section-tight">
-    <button class="stats-btn" on:click={() => statsOpen = !statsOpen} aria-expanded={statsOpen}>
-      <svg class="stats-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
-        <rect x="17" y="3" width="4" height="18"/>
-      </svg>
-      <span class="stats-btn-label">Statistics</span>
-      <span class="stats-chevron" class:open={statsOpen}>›</span>
-    </button>
-  </section>
-  {#if statsOpen}
-    <StatsView />
-  {/if}
-
   <!-- Day heading + exercise list (collapsed by default) -->
   <section class="section">
-    <button class="day-heading-btn" on:click={() => exercisesExpanded = !exercisesExpanded}>
-      <div class="day-heading">
-        <div class="day-heading-main">
-          <span class="day-label">{$uiState.day}</span>
-          <span class="day-week-num">Week {$uiState.week - $weekOffset}</span>
+    <div class="day-heading-row">
+      <button class="day-nav-arrow" on:click={() => goToAdjacentDay(-1)} aria-label="Previous day">‹</button>
+      <button class="day-heading-btn" on:click={() => exercisesExpanded = !exercisesExpanded}>
+        <div class="day-heading">
+          <div class="day-heading-main">
+            <span class="day-label">{$uiState.day}</span>
+            <span class="day-week-num">Week {$uiState.week - $weekOffset}</span>
+          </div>
+          {#if dayExTotal > 0}
+            <span class="day-progress" class:all-done={dayAllDone}>
+              {dayExDone}/{dayExTotal}
+            </span>
+          {/if}
         </div>
-        {#if dayExTotal > 0}
-          <span class="day-progress" class:all-done={dayAllDone}>
-            {dayExDone}/{dayExTotal}
-          </span>
-        {/if}
-      </div>
-      <span class="ex-chevron" class:open={exercisesExpanded}>›</span>
-    </button>
+        <span class="ex-chevron" class:open={exercisesExpanded}>›</span>
+      </button>
+      <button class="day-nav-arrow" on:click={() => goToAdjacentDay(1)} aria-label="Next day">›</button>
+    </div>
+    {#if !onToday}
+      <button class="today-day-btn" on:click={goToToday}>Today</button>
+    {/if}
 
     <div class="day-kind-seg" role="group" aria-label="Day type">
       {#each DAY_KINDS as { k, label }}
@@ -232,6 +221,22 @@
       </div>
     {/if}
   </section>
+
+  <!-- Statistics button -->
+  <section class="section section-tight">
+    <button class="stats-btn" on:click={() => statsOpen = !statsOpen} aria-expanded={statsOpen}>
+      <svg class="stats-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
+        <rect x="17" y="3" width="4" height="18"/>
+      </svg>
+      <span class="stats-btn-label">Statistics</span>
+      <span class="stats-chevron" class:open={statsOpen}>›</span>
+    </button>
+  </section>
+  {#if statsOpen}
+    <StatsView />
+  {/if}
 </div>
 
 <!-- Hints overlay -->
@@ -434,8 +439,50 @@
   .stats-chevron.open { transform: rotate(-90deg); }
 
   /* ---- Day heading toggle button ---- */
+  .day-heading-row {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .day-nav-arrow {
+    flex: 0 0 auto;
+    width: 44px;
+    border-radius: 14px;
+    border: 1px solid rgba(255,255,255,0.07);
+    background: rgba(13,24,52,0.50);
+    color: rgba(232,240,255,0.65);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .day-nav-arrow:active { background: rgba(13,24,52,0.85); }
+
+  .today-day-btn {
+    margin: 8px auto 0;
+    display: block;
+    padding: 6px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(196,148,46,0.45);
+    background: rgba(196,148,46,0.12);
+    color: #d4a038;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .today-day-btn:active { background: rgba(196,148,46,0.22); }
+
   .day-heading-btn {
     width: 100%;
+    flex: 1 1 auto;
+    min-width: 0;
     display: flex;
     align-items: center;
     gap: 8px;

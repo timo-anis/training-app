@@ -4,7 +4,7 @@ import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, Da
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud, detectMvp1Data, importFromMvp1 } from '../services/storage';
 import { PS_UTC } from '../lib/program';
-import { getDateForWeekDay, DAY_OFFSET } from '../lib/dates';
+import { getDateForWeekDay, getWeekDayForDate, DAY_OFFSET } from '../lib/dates';
 import {
   mapExercise,
   toggleSetDoneInState,
@@ -237,6 +237,34 @@ export function addNewWeek() {
   const weeks = state.weeks.map(w => w.week);
   const nextWeek = weeks.length > 0 ? Math.max(...weeks) + 1 : 1;
   uiState.update(ui => ({ ...ui, week: nextWeek }));
+}
+
+// ---- Day navigation (month calendar is the only picker; these drive the day header) ----
+
+/** Today's program week/day, or null if before program start. */
+export function todayWeekDay(): { week: number; day: DayOfWeek } | null {
+  const n = new Date();
+  const iso = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+  return getWeekDayForDate(iso);
+}
+
+/** Move the selected day by ±1 (or more), crossing week boundaries naturally.
+ *  Clamps at program start (won't go before Week 1 Monday). */
+export function goToAdjacentDay(delta: number) {
+  const ui = get(uiState);
+  const curISO = getDateForWeekDay(ui.week, ui.day);
+  const [y, mo, d] = curISO.split('-').map(Number);
+  const next = new Date(Date.UTC(y, mo - 1, d) + delta * 86400000);
+  const iso = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`;
+  const wd = getWeekDayForDate(iso);
+  if (!wd) return; // before program start — clamp
+  updateUI(u => ({ ...u, week: wd.week, day: wd.day }));
+}
+
+/** Jump straight to today's day. */
+export function goToToday() {
+  const wd = todayWeekDay();
+  if (wd) updateUI(u => ({ ...u, week: wd.week, day: wd.day }));
 }
 
 // ---- Copy previous week's same day to current day ----

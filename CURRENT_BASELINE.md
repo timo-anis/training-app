@@ -39,9 +39,12 @@
 - One-time Wednesday cleanup never prunes a day that has kind set
 - Empty-state card shows kind-aware copy + a "＋ Add first exercise" CTA (opens AddExercise) on workout/unmarked days
 
-### Calendar — week strip
-- Day pill labels: white/visible
-- goToToday: sets both week and day
+### Navigation (consolidated 2026-06-01)
+- Month calendar is the SINGLE day/week navigator — tap any day to select (sets week+day). The old week strip (Calendar.svelte) was REMOVED — it duplicated the month view.
+- Day header has ‹ / › arrows = previous/next day (goToAdjacentDay), crossing week boundaries via date math; clamps at Week 1 Monday.
+- "Today" button in the day header (goToToday) appears when not on today.
+- New weeks are reached by stepping forward past Sunday or tapping a future date in the month view (no "+ Week" button).
+- Day view now sits ABOVE the Statistics toggle.
 
 ### Exercise management
 - Add exercise: autocomplete + history hint in both normal view and workout mode

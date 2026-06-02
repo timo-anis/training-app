@@ -35,8 +35,7 @@ App.svelte
     ├── scroll-content
     │   └── MainView.svelte
     │       ├── topbar          — sticky header (Minimal Crown + gold accent line)
-    │       ├── MonthCalendar.svelte
-    │       ├── Calendar.svelte — week strip + day picker
+    │       ├── MonthCalendar.svelte — sole day/week navigator (tap any day)
     │       ├── [stats-toggle]  — collapsible Stats section
     │       │   └── StatsView.svelte
     │       │       └── BodyMap.svelte
