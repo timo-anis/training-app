@@ -426,7 +426,7 @@ code {
 /* Presentation mode: light / high-contrast for demos on projectors. */
 :root[data-theme="presentation"] {
   --c-w: 24,30,48;
-  --c-gold: 150,108,16;
+  --c-gold: 42,58,92;
   --c-black: 40,55,90;
   --c-blue-a: 70,100,180;
   --c-blue-b: 70,100,180;
@@ -481,7 +481,7 @@ code {
   --c-8-28-16-0_92: rgba(248,250,253,0.92);
   --c-80-120-200-0_30: rgba(56,84,140,0.30);
   --c-80-200-120-0_35: rgba(56,140,84,0.35);
-  --h-030406: #15151c;
+  --h-030406: #dce3ef;
   --h-050508: #dce3ef;
   --h-06080f: #f4f7fc;
   --h-060c18: #f4f7fc;
@@ -492,7 +492,7 @@ code {
   --h-0b1628: #f4f7fc;
   --h-0b1726: #f4f7fc;
   --h-0c0800: #fbf3e0;
-  --h-0c0c0e: #15151c;
+  --h-0c0c0e: #ffffff;
   --h-0d1828: #ffffff;
   --h-0d1a2e: #eef2f8;
   --h-0d1a30: #ffffff;
@@ -513,23 +513,23 @@ code {
   --h-5b82e6: #3a5fc8;
   --h-6a8faa: #3b6aa8;
   --h-6be675: #3aa84a;
-  --h-7a6030: #5e4410;
+  --h-7a6030: #19223a;
   --h-7d72c4: #5247a0;
   --h-7fa8d4: #3b6aa8;
   --h-7fb2ff: #3b6aa8;
   --h-97b8d8: #3b6aa8;
-  --h-9a7828: #7a5510;
+  --h-9a7828: #1f2a44;
   --h-9bc0ff: #3b6aa8;
   --h-9de05e: #5a9e2e;
-  --h-9e6818: #7a5510;
-  --h-a8741f: #7a5510;
-  --h-b07e22: #825e12;
+  --h-9e6818: #1f2a44;
+  --h-a8741f: #1f2a44;
+  --h-b07e22: #22304e;
   --h-b8aee8: #4a3f88;
-  --h-c49230: #9a6f12;
+  --h-c49230: #2a3a5c;
   --h-c6f2db: #1f6b47;
-  --h-cf9433: #9a6f12;
-  --h-d4a038: #a87a18;
-  --h-d4a838: #a87a18;
+  --h-cf9433: #2a3a5c;
+  --h-d4a038: #243150;
+  --h-d4a838: #243150;
   --h-d8eafc: #3a4a64;
   --h-dbe6ff: #3a4a64;
   --h-e0ecff: #3a4a64;

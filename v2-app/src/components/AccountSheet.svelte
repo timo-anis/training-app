@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { currentUser, appState, updateState, showToast, theme, toggleTheme } from '../stores/app';
+  import { currentUser, appState, updateState, showToast, theme, toggleTheme, canUsePresentation } from '../stores/app';
   import { signOut, sendPasswordReset } from '../services/auth';
   import { saveLocal, saveCloud } from '../services/storage';
   import { emptyAppState } from '../types/workout';
@@ -80,6 +80,7 @@
       {#if !resetSent}<span class="action-arrow">›</span>{/if}
     </button>
 
+{#if $canUsePresentation}
     <!-- Presentation mode -->
     <button class="action-row" on:click={toggleTheme} aria-pressed={$theme === 'presentation'}>
       <span class="action-icon">{$theme === 'presentation' ? '☀️' : '🌙'}</span>
@@ -89,6 +90,7 @@
       </div>
       <span class="switch" class:on={$theme === 'presentation'}><span class="knob"></span></span>
     </button>
+    {/if}
 
     <!-- Clear data -->
     <button

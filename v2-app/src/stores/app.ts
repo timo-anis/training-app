@@ -50,6 +50,19 @@ export function toggleTheme() {
 // ---- Auth store ----
 export const currentUser = writable<User | null>(null);
 
+// ---- Presentation-mode access control (allow-list) ----
+const PRESENTATION_EMAILS = ['timo.anis@gmail.com'];
+function presentationAllowed(u: User | null): boolean {
+  return !!u && PRESENTATION_EMAILS.includes((u.email ?? '').toLowerCase());
+}
+export const canUsePresentation = derived(currentUser, ($u) => presentationAllowed($u));
+// Any signed-in user who is not on the allow-list is forced to the dark theme.
+currentUser.subscribe(($u) => {
+  if ($u && !presentationAllowed($u)) {
+    theme.set('dark');
+  }
+});
+
 // ---- App state store ----
 export const appState = writable<AppState>(emptyAppState());
 
