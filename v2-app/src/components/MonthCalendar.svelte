@@ -504,4 +504,14 @@
     .leg-item { font-size: 12px; }
     .nav-btn { width: 38px; height: 38px; font-size: 20px; }
   }
+
+  /* Presentation mode: keep every date legible on transparent/light cells too */
+  :root[data-theme="presentation"] .status-weekend .day-num,
+  :root[data-theme="presentation"] .status-future .day-num,
+  :root[data-theme="presentation"] .status-neutral .day-num {
+    color: rgba(13, 26, 46, 0.62);
+  }
+  :root[data-theme="presentation"] .status-mark.wknd {
+    color: rgba(13, 26, 46, 0.55);
+  }
 </style>
