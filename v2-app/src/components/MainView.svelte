@@ -70,8 +70,11 @@
   let adder: AddExercise;
   function startFirstExercise() {
     exercisesExpanded = true;
-    // wait for the list/adder to render, then open the add panel
-    setTimeout(() => adder?.openNow?.(), 0);
+    // wait for the adder to render, open it, and scroll it into view
+    setTimeout(() => {
+      adder?.openNow?.();
+      document.querySelector('.add-ex-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 40);
   }
 
   // Today highlight for the day-header Today button
@@ -151,6 +154,29 @@
     </section>
   {/if}
 
+  <!-- New-user welcome (top, prominent) -->
+  {#if isNewUser}
+    <section class="section">
+      <div class="welcome-card">
+        <div class="welcome-icon" aria-hidden="true">
+          <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
+            <rect x="6" y="18" width="6" height="8" rx="2" fill="#c49230"/>
+            <rect x="12" y="15" width="5" height="14" rx="2" fill="#c49230"/>
+            <rect x="17" y="20" width="10" height="4" rx="2" fill="#c49230"/>
+            <rect x="27" y="15" width="5" height="14" rx="2" fill="#c49230"/>
+            <rect x="32" y="18" width="6" height="8" rx="2" fill="#c49230"/>
+          </svg>
+        </div>
+        <span class="welcome-title">Welcome — let’s start training</span>
+        <span class="welcome-sub">Plan your week in the calendar and log your first workout.</span>
+        <div class="welcome-actions">
+          <button class="welcome-primary" on:click={startFirstExercise}>+ Add first exercise</button>
+          <button class="welcome-secondary" on:click={() => requestOnboarding.set(true)}>How it works</button>
+        </div>
+      </div>
+    </section>
+  {/if}
+
   <!-- Monthly calendar -->
   <section class="section">
     <MonthCalendar />
@@ -192,23 +218,9 @@
 
     {#if $currentDayExercises.length === 0}
       <div class="empty-state">
-        {#if isNewUser}
-          <div class="empty-icon" aria-hidden="true">
-            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-              <rect x="6" y="18" width="6" height="8" rx="2" fill="#c49230"/>
-              <rect x="12" y="15" width="5" height="14" rx="2" fill="#c49230"/>
-              <rect x="17" y="20" width="10" height="4" rx="2" fill="#c49230"/>
-              <rect x="27" y="15" width="5" height="14" rx="2" fill="#c49230"/>
-              <rect x="32" y="18" width="6" height="8" rx="2" fill="#c49230"/>
-            </svg>
-          </div>
-          <span class="empty-title">Welcome — let’s start training</span>
-          <span class="empty-sub">Add your first exercise to build today’s workout.</span>
-        {:else}
-          <span class="empty-title">{emptyLabel.title}</span>
-          {#if emptyLabel.sub}
-            <span class="empty-sub">{emptyLabel.sub}</span>
-          {/if}
+        <span class="empty-title">{emptyLabel.title}</span>
+        {#if emptyLabel.sub}
+          <span class="empty-sub">{emptyLabel.sub}</span>
         {/if}
         {#if currentDayKind !== 'rest'}
           <button class="add-first-btn" on:click|stopPropagation={startFirstExercise}>
@@ -220,10 +232,6 @@
             Copy from Week {$uiState.week - 1 - $weekOffset}
           </button>
         {/if}
-        {#if isNewUser}
-          <span class="empty-hint">Tip: tap any day in the calendar, then mark it Workout, Recovery or Rest.</span>
-        {/if}
-        <button class="how-link" on:click|stopPropagation={() => requestOnboarding.set(true)}>How it works →</button>
       </div>
     {:else if exercisesExpanded}
       <div class="exercise-list">
@@ -681,29 +689,50 @@
     color: rgba(255,255,255,0.45);
   }
 
-  .empty-icon { margin-bottom: 6px; }
-
-  .empty-hint {
-    margin-top: 14px;
-    font-size: 12px;
-    line-height: 1.5;
-    color: rgba(255,255,255,0.40);
-    max-width: 280px;
+  /* ---- New-user welcome card (top) ---- */
+  .welcome-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 6px;
+    padding: 24px 20px;
+    border-radius: 18px;
+    border: 1px solid rgba(196,148,46,0.35);
+    background: rgba(196,148,46,0.07);
   }
-
-  .how-link {
-    margin-top: 16px;
-    background: none;
-    border: none;
-    color: rgba(255,255,255,0.55);
-    font-size: 12.5px;
+  .welcome-icon { margin-bottom: 4px; }
+  .welcome-title { font-size: 18px; font-weight: 900; color: #ffffff; letter-spacing: -0.01em; }
+  .welcome-sub { font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.55); max-width: 300px; line-height: 1.5; }
+  .welcome-actions { display: flex; gap: 10px; margin-top: 14px; width: 100%; max-width: 360px; }
+  .welcome-primary {
+    flex: 1;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid rgba(196,148,46,0.55);
+    background: rgba(196,148,46,0.18);
+    color: #d4a038;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, transform 0.08s;
+  }
+  .welcome-primary:active { background: rgba(196,148,46,0.28); transform: scale(0.98); }
+  .welcome-secondary {
+    flex: 0 0 auto;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.16);
+    background: rgba(255,255,255,0.05);
+    color: #e8f0ff;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    padding: 6px 4px;
     -webkit-tap-highlight-color: transparent;
-    transition: color 0.12s;
+    transition: background 0.12s;
   }
-  .how-link:active { color: #ffffff; }
+  .welcome-secondary:active { background: rgba(255,255,255,0.12); }
 
 
   .copy-day-btn {
