@@ -14,7 +14,8 @@
 
 - Boot now merges local vs cloud by timestamp (newer wins) — see `lib/state-merge.ts`; prevents a stale cloud copy overwriting newer local edits.
 - Cloud saves are offline-aware with retry/backoff (`stores/app.ts`); flush on `online`.
-- WorkoutMode is being split: `WmHeader` + `WmFooter` extracted (2228 -> 2005 lines). Remaining planned increments (own session): set-editor, rest-controls, add-exercise panel, summary overlay.
+- WorkoutMode split (2228 -> 1492 lines, -33%): extracted `WmHeader`, `WmFooter`, `WmRestControls`, `WmAddExercise`, `WmSummary` as presentational children (parent keeps all state/logic; each verified build + svelte-check 0/0 + tests).
+- **Deferred on purpose:** the per-exercise rows + per-set editor (kg/reps inputs, done toggle, delete). It is the most safety-critical control (set-done during a workout) and its `bind:value` to parent `localKg`/`localReps` maps makes a value+callback conversion reactivity-sensitive in a way automated tests don't cover. Do it in a focused session, ideally after adding a component-level set-row test + manual interaction check.
 - a11y: interactive SVG zones + swipe surface have roles/keyboard; build + svelte-check are 0 warnings.
 - Tests: 122 (added `storage-merge` + `workout-flow` integration).
 

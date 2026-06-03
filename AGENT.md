@@ -44,9 +44,13 @@ App.svelte
     │       │   └── SetRow.svelte (xN)
     │       └── AddExercise.svelte
     ├── workout-bar             — bottom CTA (when exercises exist)
-    ├── WorkoutMode.svelte      — full-screen overlay (when active)
-    │   ├── WmHeader.svelte     — overlay header (progress, clock, segment dots)
-    │   └── WmFooter.svelte     — overlay footer nav (prev / back / next / finish)
+    ├── WorkoutMode.svelte      — full-screen overlay (when active); owns state, delegates UI to:
+    │   ├── WmHeader.svelte       — header (progress, clock, segment dots)
+    │   ├── WmFooter.svelte       — footer nav (prev / back / next / finish)
+    │   ├── WmRestControls.svelte — rest-timer adjust / start / presets
+    │   ├── WmAddExercise.svelte  — in-workout add-exercise panel
+    │   └── WmSummary.svelte      — end-of-workout summary overlay
+    │   (Remaining inline: per-exercise rows + per-set editor — deferred, see note)
     │   └── RestTimer.svelte    — focus mode (fullscreen) or compact (minimized)
     └── OnboardingOverlay.svelte — first-run walkthrough; re-openable via topbar Quick guide
 ```
