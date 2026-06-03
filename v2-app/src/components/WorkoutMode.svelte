@@ -561,7 +561,7 @@
 
   <!-- Block content -->
   {#if block}
-    <div class="wm-content" on:touchstart={onTouchStart} on:touchend={onTouchEnd}>
+    <div class="wm-content" role="group" aria-label="Current workout block (swipe to change)" on:touchstart={onTouchStart} on:touchend={onTouchEnd}>
       <!-- Block badge — only for supersets and conditioning blocks -->
       {#if block.isSuperset || block.exercises[0]?.conditioning}
         <div class="block-title">
@@ -1115,18 +1115,6 @@
     background: rgba(var(--c-w), 0.08);
     border: 1px solid rgba(var(--c-w), 0.20);
     color: rgba(var(--c-w), 0.70);
-  }
-
-  .block-badge.single {
-    background: rgba(var(--c-ink-c), 0.65);
-    border: 1px solid rgba(var(--c-w), 0.12);
-    color: rgba(var(--c-w), 0.45);
-  }
-
-  .block-badge.cond {
-    background: rgba(var(--c-gold), 0.08);
-    border: 1px solid rgba(var(--c-gold), 0.22);
-    color: var(--h-c49230);
   }
 
   .exercises-wrap {

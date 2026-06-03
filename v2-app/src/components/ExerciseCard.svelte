@@ -643,12 +643,6 @@
     line-height: 1.5;
   }
 
-  .edit-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
   .btn-cancel {
     padding: 11px;
     border-radius: 11px;
@@ -754,12 +748,6 @@
     border-color: rgba(var(--c-w), 0.18);
   }
   @media (min-width: 640px) {
-    .ex-name { font-size: 22px; }
-    .ex-sub { font-size: 14px; }
     .superset-badge { font-size: 14px; padding: 5px 12px; border-radius: 10px; }
-    .progress-badge { font-size: 14px; width: 56px; height: 56px; }
-    .card-body { padding: 18px 20px; gap: 14px; }
-    .card-actions { gap: 14px; }
-    .icon-btn { width: 42px; height: 42px; font-size: 18px; }
   }
 </style>

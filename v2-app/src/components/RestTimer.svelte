@@ -467,31 +467,4 @@
     text-transform: uppercase;
   }
 
-  .pill-btn {
-    flex: 1;
-    height: 40px;
-    padding: 0 10px;
-    border-radius: 12px;
-    border: 1px solid rgba(var(--c-w), 0.12);
-    background: rgba(var(--c-w), 0.06);
-    color: rgba(var(--c-w), 0.60);
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s, color 0.12s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .pill-btn:active { background: rgba(var(--c-w), 0.14); color: rgba(var(--c-w), 0.92); }
-
-  .pill-btn.pill-skip {
-    background: rgba(var(--c-gold), 0.10);
-    border-color: rgba(var(--c-gold), 0.30);
-    color: var(--h-c49230);
-  }
-
-  .pill-btn.pill-skip:active { background: rgba(var(--c-gold), 0.22); }
 </style>

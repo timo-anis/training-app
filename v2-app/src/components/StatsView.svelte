@@ -493,17 +493,6 @@
     text-align: right;
   }
 
-  .freq-name {
-    flex: 1 1 0;
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--h-e8f0ff);
-    letter-spacing: -0.01em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .freq-count {
     font-size: 13px;
     font-weight: 800;

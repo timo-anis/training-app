@@ -220,6 +220,7 @@
     box-sizing: border-box;
     transition: border-color 0.12s;
     -webkit-appearance: none;
+    appearance: none;
   }
 
   .search-input::placeholder { color: rgba(var(--c-w), 0.22); }
