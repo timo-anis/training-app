@@ -2,6 +2,7 @@ import { supabase } from './supabase';
 import type { AppState } from '../types/workout';
 import { emptyAppState } from '../types/workout';
 import { parseAndMigrateState } from './migrator';
+import { chooseNewer, hasData } from '../lib/state-merge';
 
 // ---- Local storage ----
 
@@ -19,11 +20,25 @@ export function loadLocal(userId: string): AppState | null {
   }
 }
 
+function localTsKey(userId: string): string {
+  return `timo_training_v4__user__${userId}__savedAt`;
+}
+
 export function saveLocal(userId: string, state: AppState): void {
   try {
     localStorage.setItem(localKey(userId), JSON.stringify(state));
+    localStorage.setItem(localTsKey(userId), new Date().toISOString());
   } catch (e) {
     console.error('Local save failed', e);
+  }
+}
+
+/** Last local-save timestamp (ISO) for this user, or null if never saved / unknown. */
+export function loadLocalTimestamp(userId: string): string | null {
+  try {
+    return localStorage.getItem(localTsKey(userId));
+  } catch {
+    return null;
   }
 }
 
@@ -46,6 +61,28 @@ export async function loadCloud(userId: string): Promise<AppState | null> {
   }
 }
 
+/** Cloud state plus its server updated_at timestamp (ISO), for newer-wins merge. */
+export async function loadCloudWithMeta(
+  userId: string
+): Promise<{ state: AppState | null; updatedAt: string | null }> {
+  try {
+    const { data, error } = await supabase
+      .from('app_state')
+      .select('state_json, updated_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (error) throw error;
+    if (!data?.state_json) return { state: null, updatedAt: null };
+    return {
+      state: parseAndMigrateState(data.state_json),
+      updatedAt: (data.updated_at as string | null) ?? null,
+    };
+  } catch (e) {
+    console.error('Cloud load (meta) failed', e);
+    return { state: null, updatedAt: null };
+  }
+}
+
 export async function saveCloud(userId: string, state: AppState): Promise<boolean> {
   try {
     const { error } = await supabase
@@ -63,16 +100,23 @@ export async function saveCloud(userId: string, state: AppState): Promise<boolea
 }
 
 // ---- Bootstrap: load for signed-in user ----
-// Cloud wins if it has data. Falls back to local. Falls back to empty.
+// Newer of local vs cloud wins (by timestamp). Prevents a stale cloud copy from
+// silently overwriting newer local edits (e.g. made offline) on boot.
 
 export async function bootstrapState(userId: string): Promise<AppState> {
-  const cloud = await loadCloud(userId);
-  if (cloud && cloud.weeks.length > 0) return cloud;
-
+  const cloud = await loadCloudWithMeta(userId);
   const local = loadLocal(userId);
-  if (local && local.weeks.length > 0) return local;
+  const localTs = loadLocalTimestamp(userId);
 
-  return emptyAppState();
+  const choice = chooseNewer(local, localTs, cloud.state, cloud.updatedAt);
+
+  // If newer local won over an existing (older) cloud copy, push it up so the
+  // cloud catches up — fire-and-forget; local already holds the truth.
+  if (choice.source === 'local' && hasData(cloud.state) && choice.state) {
+    void saveCloud(userId, choice.state);
+  }
+
+  return choice.state ?? emptyAppState();
 }
 
 // ---- MVP1 → V2 migration from local storage ----
