@@ -12,7 +12,7 @@
     align-items: center;
     justify-content: center;
     gap: 16px;
-    background: radial-gradient(ellipse at 50% 0%, var(--h-0d1a2e) 0%, var(--h-08090f) 55%, var(--h-050508) 100%);
+    background: radial-gradient(ellipse at 50% 0%, var(--c-bg-1) 0%, var(--c-bg-2) 55%, var(--c-bg-3) 100%);
     color: var(--h-7fa8d4);
     font-size: 14px;
   }

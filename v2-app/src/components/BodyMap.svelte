@@ -396,8 +396,8 @@
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 5px;
-    background: rgba(var(--c-ink-a), 0.50);
-    border: 1px solid rgba(var(--c-blue-b), 0.14);
+    background: rgba(var(--c-surface-a), 0.50);
+    border: 1px solid rgba(var(--c-edge-b), 0.14);
     border-radius: 14px;
     padding: 4px;
   }
@@ -407,7 +407,7 @@
     border-radius: 10px;
     border: none;
     background: transparent;
-    color: rgba(var(--c-w), 0.25);
+    color: rgba(var(--c-fg), 0.25);
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
@@ -416,8 +416,8 @@
   }
 
   .mode-btn.active {
-    background: rgba(var(--c-gold), 0.14);
-    color: var(--h-c49230);
+    background: rgba(var(--c-accent), 0.14);
+    color: var(--c-accent-solid);
   }
 
   /* Body SVG — premium dark card */
@@ -426,8 +426,8 @@
     display: flex;
     justify-content: center;
     background: linear-gradient(180deg, var(--c-8-12-28-0_80) 0%, var(--c-5-7-18-0_90) 100%);
-    border: 1px solid rgba(var(--c-blue-d), 0.18);
-    border-top: 1px solid rgba(var(--c-gold), 0.15);
+    border: 1px solid rgba(var(--c-edge-d), 0.18);
+    border-top: 1px solid rgba(var(--c-accent), 0.15);
     border-radius: 20px;
     padding: 20px 16px;
   }
@@ -439,14 +439,14 @@
   }
 
   .body-shell {
-    fill: rgba(var(--c-w), 0.04);
-    stroke: rgba(var(--c-w), 0.10);
+    fill: rgba(var(--c-fg), 0.04);
+    stroke: rgba(var(--c-fg), 0.10);
     stroke-width: 1;
   }
 
   .body-core-shell {
-    fill: rgba(var(--c-w), 0.02);
-    stroke: rgba(var(--c-w), 0.06);
+    fill: rgba(var(--c-fg), 0.02);
+    stroke: rgba(var(--c-fg), 0.06);
     stroke-width: 0.5;
   }
 
@@ -466,7 +466,7 @@
     align-items: center;
     justify-content: center;
     font-size: 13px;
-    color: rgba(var(--c-w), 0.18);
+    color: rgba(var(--c-fg), 0.18);
     text-align: center;
     line-height: 1.6;
     pointer-events: none;
@@ -485,8 +485,8 @@
     gap: 8px;
     padding: 9px 12px;
     border-radius: 12px;
-    border: 1px solid rgba(var(--c-blue-a), 0.18);
-    background: rgba(var(--c-ink-a), 0.55);
+    border: 1px solid rgba(var(--c-edge-a), 0.18);
+    background: rgba(var(--c-surface-a), 0.55);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: opacity 0.18s, background 0.12s, border-color 0.18s;
@@ -495,12 +495,12 @@
   }
 
   .legend-chip:active {
-    background: rgba(var(--c-ink-a), 0.80);
+    background: rgba(var(--c-surface-a), 0.80);
   }
 
   .legend-chip.chip-hidden {
     opacity: 0.38;
-    border-color: rgba(var(--c-blue-a), 0.10);
+    border-color: rgba(var(--c-edge-a), 0.10);
     background: var(--c-8-12-24-0_40);
   }
 
@@ -529,7 +529,7 @@
   .chip-hidden .chip-name {
     color: var(--c-200-221-244-0_35);
     text-decoration: line-through;
-    text-decoration-color: rgba(var(--c-w), 0.20);
+    text-decoration-color: rgba(var(--c-fg), 0.20);
   }
 
   .chip-sets {
@@ -539,7 +539,7 @@
   }
 
   .chip-eye-off {
-    color: rgba(var(--c-w), 0.20);
+    color: rgba(var(--c-fg), 0.20);
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -557,14 +557,14 @@
     justify-content: space-between;
     padding: 8px 12px;
     border-radius: 10px;
-    background: rgba(var(--c-ink-a), 0.50);
-    border: 1px solid rgba(var(--c-blue-a), 0.13);
+    background: rgba(var(--c-surface-a), 0.50);
+    border: 1px solid rgba(var(--c-edge-a), 0.13);
   }
 
   .insight-lbl {
     font-size: 11px;
     font-weight: 700;
-    color: rgba(var(--c-w), 0.22);
+    color: rgba(var(--c-fg), 0.22);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }

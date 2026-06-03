@@ -35,7 +35,7 @@
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     animation: toast-in 0.2s ease both;
-    box-shadow: 0 4px 24px rgba(var(--c-black), 0.40);
+    box-shadow: 0 4px 24px rgba(var(--c-shadow), 0.40);
   }
 
   @keyframes toast-in {
@@ -57,8 +57,8 @@
 
   .toast-info {
     background: var(--c-10-18-40-0_92);
-    border: 1px solid rgba(var(--c-gold), 0.35);
-    color: var(--h-c49230);
+    border: 1px solid rgba(var(--c-accent), 0.35);
+    color: var(--c-accent-solid);
   }
 
   .toast-icon { font-size: 15px; flex-shrink: 0; }

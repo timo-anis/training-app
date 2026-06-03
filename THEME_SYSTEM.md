@@ -23,14 +23,22 @@ All colours in the app are CSS custom properties ("tokens") defined in
 
 Two families:
 
-1. **Alpha-family RGB triplets** — used as `rgba(var(--token), <alpha>)`. One token carries the RGB, the alpha stays inline, so a single token covers every opacity variant.
-   - `--c-w` white overlays/text · `--c-gold` gold accent · `--c-black` shadows
-   - `--c-blue-a..e` blue-tinted borders/glows · `--c-ink-a..c` navy glass surfaces
-2. **Per-literal tokens** — one per distinct colour:
-   - `--h-<hex>` e.g. `--h-c49230` (solid hex colours)
+1. **Semantic core tokens** — the colours you reach for most. Names describe the
+   *role*, not the colour (the value flips between dark and presentation):
+   - `--c-fg` neutral foreground / overlay (light-on-dark, dark-on-light)
+   - `--c-accent` accent tint base · `--c-accent-solid` solid accent fill
+   - `--c-shadow` shadows · `--c-text` primary text
+   - `--c-edge-a..e` tinted borders / glows · `--c-surface-a..c` glass surfaces
+   - `--c-bg-1..3` app-background gradient stops
+
+   The alpha-family ones are used as `rgba(var(--c-fg), <alpha>)` — one token
+   carries the RGB, the alpha stays inline, so a single token covers every
+   opacity variant.
+2. **Per-literal tokens** — one per distinct one-off colour (left mechanical):
+   - `--h-<hex>` e.g. `--h-ff6060` (solid hex colours)
    - `--c-<r>-<g>-<b>-<alpha>` e.g. `--c-255-80-80-0_18` (one-off rgba colours)
 
-~123 tokens total.
+~123 tokens total (core renamed to semantic; long-tail one-offs kept literal).
 
 ## How to recolour
 
@@ -46,5 +54,5 @@ Two families:
 
 ## Known follow-ups
 
-- Token names are mechanical (`--c-10-18-40-0_92`). A future pass could rename to semantic tokens (`--surface`, `--accent`, `--text`, …).
+- Core tokens are now semantic (`--c-accent`, `--c-surface-*`, `--c-text`, …); the long-tail one-off literals (`--c-10-18-40-0_92`) are intentionally left mechanical.
 - The presentation palette is partly heuristic; polish per-screen if a real demo reveals weak spots.

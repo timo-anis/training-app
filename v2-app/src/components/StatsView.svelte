@@ -280,7 +280,7 @@
 
   .chip {
     background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
-    border: 1px solid rgba(var(--c-blue-e), 0.22);
+    border: 1px solid rgba(var(--c-edge-e), 0.22);
     border-radius: 16px;
     padding: 14px 10px;
     display: flex;
@@ -292,7 +292,7 @@
   .chip-val {
     font-size: 22px;
     font-weight: 900;
-    color: var(--h-c49230);
+    color: var(--c-accent-solid);
     letter-spacing: -0.03em;
     line-height: 1;
   }
@@ -300,7 +300,7 @@
   .chip-lbl {
     font-size: 11px;
     font-weight: 700;
-    color: rgba(var(--c-w), 0.38);
+    color: rgba(var(--c-fg), 0.38);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -309,7 +309,7 @@
   .section-head {
     font-size: 12px;
     font-weight: 800;
-    color: rgba(var(--c-w), 0.38);
+    color: rgba(var(--c-fg), 0.38);
     text-transform: uppercase;
     letter-spacing: 0.08em;
     margin-bottom: 8px;
@@ -325,7 +325,7 @@
   /* Volume sparkline */
   .sparkline-card {
     background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
-    border: 1px solid rgba(var(--c-blue-e), 0.22);
+    border: 1px solid rgba(var(--c-edge-e), 0.22);
     border-radius: 16px;
     padding: 14px 14px 10px;
     margin-bottom: 20px;
@@ -348,7 +348,7 @@
   .spark-val {
     font-size: 9px;
     font-weight: 800;
-    color: var(--h-c49230);
+    color: var(--c-accent-solid);
     letter-spacing: -0.01em;
     min-height: 12px;
     white-space: nowrap;
@@ -366,18 +366,18 @@
     width: 100%;
     max-width: 28px;
     border-radius: 4px 4px 2px 2px;
-    background: rgba(var(--c-w), 0.08);
+    background: rgba(var(--c-fg), 0.08);
     transition: height 0.4s ease;
   }
 
   .spark-bar.active {
-    background: linear-gradient(180deg, rgba(var(--c-gold), 0.90) 0%, rgba(var(--c-gold), 0.45) 100%);
+    background: linear-gradient(180deg, rgba(var(--c-accent), 0.90) 0%, rgba(var(--c-accent), 0.45) 100%);
   }
 
   .spark-lbl {
     font-size: 10px;
     font-weight: 700;
-    color: rgba(var(--c-w), 0.30);
+    color: rgba(var(--c-fg), 0.30);
     letter-spacing: 0.02em;
     text-transform: uppercase;
   }
@@ -394,7 +394,7 @@
     align-items: center;
     gap: 12px;
     background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
-    border: 1px solid rgba(var(--c-blue-e), 0.22);
+    border: 1px solid rgba(var(--c-edge-e), 0.22);
     border-radius: 14px;
     padding: 12px 14px;
   }
@@ -402,7 +402,7 @@
   .week-num {
     font-size: 13px;
     font-weight: 900;
-    color: var(--h-c49230);
+    color: var(--c-accent-solid);
     width: 28px;
     flex-shrink: 0;
     letter-spacing: -0.01em;
@@ -423,7 +423,7 @@
   .wlbl {
     font-size: 10px;
     font-weight: 700;
-    color: rgba(var(--c-w), 0.35);
+    color: rgba(var(--c-fg), 0.35);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -431,7 +431,7 @@
   .wval {
     font-size: 14px;
     font-weight: 800;
-    color: var(--h-e8f0ff);
+    color: var(--c-text);
     letter-spacing: -0.02em;
   }
 
@@ -440,9 +440,9 @@
     width: 100%;
     padding: 11px;
     border-radius: 12px;
-    border: 1px solid rgba(var(--c-blue-d), 0.18);
+    border: 1px solid rgba(var(--c-edge-d), 0.18);
     background: transparent;
-    color: rgba(var(--c-w), 0.38);
+    color: rgba(var(--c-fg), 0.38);
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
@@ -455,7 +455,7 @@
     -webkit-tap-highlight-color: transparent;
   }
 
-  .expand-btn:active { background: rgba(var(--c-ink-c), 0.65); color: rgba(var(--c-w), 0.60); }
+  .expand-btn:active { background: rgba(var(--c-surface-c), 0.65); color: rgba(var(--c-fg), 0.60); }
 
   .expand-chevron {
     display: inline-block;
@@ -480,14 +480,14 @@
     gap: 10px;
     padding: 11px 14px;
     background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
-    border: 1px solid rgba(var(--c-blue-e), 0.22);
+    border: 1px solid rgba(var(--c-edge-e), 0.22);
     border-radius: 12px;
   }
 
   .freq-rank {
     font-size: 12px;
     font-weight: 900;
-    color: rgba(var(--c-w), 0.30);
+    color: rgba(var(--c-fg), 0.30);
     width: 16px;
     flex-shrink: 0;
     text-align: right;
@@ -496,14 +496,14 @@
   .freq-count {
     font-size: 13px;
     font-weight: 800;
-    color: var(--h-c49230);
+    color: var(--c-accent-solid);
     flex-shrink: 0;
   }
 
   .freq-sets {
     font-size: 12px;
     font-weight: 600;
-    color: rgba(var(--c-w), 0.35);
+    color: rgba(var(--c-fg), 0.35);
     flex-shrink: 0;
     min-width: 44px;
     text-align: right;
@@ -515,15 +515,15 @@
     margin-left: 5px;
     font-size: 12px;
     font-weight: 900;
-    color: var(--h-c49230);
+    color: var(--c-accent-solid);
     vertical-align: middle;
     opacity: 0.85;
   }
 
   /* #7 Exercise chart */
   .freq-row-selected {
-    border-color: rgba(var(--c-gold), 0.28);
-    background: linear-gradient(160deg, rgba(var(--c-gold), 0.06), var(--h-080e1c));
+    border-color: rgba(var(--c-accent), 0.28);
+    background: linear-gradient(160deg, rgba(var(--c-accent), 0.06), var(--h-080e1c));
   }
 
   .freq-name-btn {
@@ -534,7 +534,7 @@
     text-align: left;
     font-size: 14px;
     font-weight: 700;
-    color: var(--h-e8f0ff);
+    color: var(--c-text);
     letter-spacing: -0.01em;
     cursor: pointer;
     white-space: nowrap;
@@ -545,7 +545,7 @@
 
   .ex-chart {
     background: linear-gradient(160deg, var(--h-0b1628), var(--h-060c18));
-    border: 1px solid rgba(var(--c-gold), 0.18);
+    border: 1px solid rgba(var(--c-accent), 0.18);
     border-top: none;
     border-radius: 0 0 12px 12px;
     padding: 12px 14px 10px;
@@ -570,7 +570,7 @@
   .ex-chart-val {
     font-size: 9px;
     font-weight: 800;
-    color: var(--h-c49230);
+    color: var(--c-accent-solid);
     letter-spacing: -0.01em;
     min-height: 11px;
     white-space: nowrap;
@@ -588,14 +588,14 @@
     width: 100%;
     max-width: 28px;
     border-radius: 3px 3px 2px 2px;
-    background: linear-gradient(180deg, rgba(var(--c-gold), 0.85) 0%, rgba(var(--c-gold), 0.40) 100%);
+    background: linear-gradient(180deg, rgba(var(--c-accent), 0.85) 0%, rgba(var(--c-accent), 0.40) 100%);
     transition: height 0.3s ease;
   }
 
   .ex-chart-lbl {
     font-size: 9px;
     font-weight: 700;
-    color: rgba(var(--c-w), 0.28);
+    color: rgba(var(--c-fg), 0.28);
     letter-spacing: 0.02em;
     text-transform: uppercase;
   }
@@ -604,7 +604,7 @@
     margin-top: 8px;
     font-size: 10px;
     font-weight: 600;
-    color: rgba(var(--c-w), 0.22);
+    color: rgba(var(--c-fg), 0.22);
     text-align: center;
     letter-spacing: 0.02em;
   }
@@ -612,10 +612,10 @@
   .ex-chart-empty {
     padding: 14px;
     font-size: 12px;
-    color: rgba(var(--c-w), 0.28);
+    color: rgba(var(--c-fg), 0.28);
     text-align: center;
     background: linear-gradient(160deg, var(--h-0b1628), var(--h-060c18));
-    border: 1px solid rgba(var(--c-gold), 0.15);
+    border: 1px solid rgba(var(--c-accent), 0.15);
     border-top: none;
     border-radius: 0 0 12px 12px;
     margin-top: -1px;

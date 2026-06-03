@@ -129,7 +129,7 @@
     position: fixed;
     inset: 0;
     z-index: 199;
-    background: rgba(var(--c-black), 0.55);
+    background: rgba(var(--c-shadow), 0.55);
     backdrop-filter: blur(2px);
     -webkit-backdrop-filter: blur(2px);
   }
@@ -138,9 +138,9 @@
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 200;
-    background: linear-gradient(180deg, var(--h-0d1a2e) 0%, var(--h-080c18) 100%);
-    border: 1px solid rgba(var(--c-blue-d), 0.22);
-    border-top: 1px solid rgba(var(--c-gold), 0.22);
+    background: linear-gradient(180deg, var(--c-bg-1) 0%, var(--h-080c18) 100%);
+    border: 1px solid rgba(var(--c-edge-d), 0.22);
+    border-top: 1px solid rgba(var(--c-accent), 0.22);
     border-radius: 22px 22px 0 0;
     padding-bottom: env(safe-area-inset-bottom, 0px);
     animation: sheet-up 0.24s cubic-bezier(0.32, 0.72, 0, 1) both;
@@ -154,7 +154,7 @@
       width: 440px;
       transform: translateX(-50%);
       border-radius: 20px;
-      border: 1px solid rgba(var(--c-gold), 0.25);
+      border: 1px solid rgba(var(--c-accent), 0.25);
     }
   }
 
@@ -172,7 +172,7 @@
 
   .sheet-handle {
     width: 36px; height: 4px;
-    background: rgba(var(--c-w), 0.15);
+    background: rgba(var(--c-fg), 0.15);
     border-radius: 2px;
     margin: 10px auto 0;
   }
@@ -190,11 +190,11 @@
   .avatar {
     width: 40px; height: 40px;
     border-radius: 12px;
-    background: rgba(var(--c-gold), 0.15);
-    border: 1px solid rgba(var(--c-gold), 0.30);
+    background: rgba(var(--c-accent), 0.15);
+    border: 1px solid rgba(var(--c-accent), 0.30);
     display: flex; align-items: center; justify-content: center;
     font-size: 17px; font-weight: 900;
-    color: var(--h-c49230);
+    color: var(--c-accent-solid);
     flex-shrink: 0;
   }
 
@@ -206,9 +206,9 @@
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
 
-  .user-sub { font-size: 12px; color: rgba(var(--c-w), 0.30); font-weight: 500; }
+  .user-sub { font-size: 12px; color: rgba(var(--c-fg), 0.30); font-weight: 500; }
 
-  .divider { height: 1px; background: rgba(var(--c-w), 0.07); margin: 4px 0; }
+  .divider { height: 1px; background: rgba(var(--c-fg), 0.07); margin: 4px 0; }
 
   /* Action rows */
   .action-row {
@@ -225,23 +225,23 @@
     text-align: left;
   }
 
-  .action-row:active:not(:disabled) { background: rgba(var(--c-w), 0.05); }
+  .action-row:active:not(:disabled) { background: rgba(var(--c-fg), 0.05); }
   .action-row:disabled { opacity: 0.5; }
 
   .action-icon { font-size: 18px; flex-shrink: 0; width: 24px; text-align: center; }
 
   .action-text { flex: 1 1 0; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
-  .action-label { font-size: 15px; font-weight: 700; color: rgba(var(--c-w), 0.85); }
+  .action-label { font-size: 15px; font-weight: 700; color: rgba(var(--c-fg), 0.85); }
   .action-label.danger-lbl { color: var(--h-ff6b6b); }
 
-  .action-sub { font-size: 12px; color: rgba(var(--c-w), 0.35); }
+  .action-sub { font-size: 12px; color: rgba(var(--c-fg), 0.35); }
 
-  .action-arrow { font-size: 18px; color: rgba(var(--c-w), 0.25); flex-shrink: 0; }
+  .action-arrow { font-size: 18px; color: rgba(var(--c-fg), 0.25); flex-shrink: 0; }
 
   .action-row.danger .action-arrow { color: var(--c-255-100-100-0_50); }
 
-  .action-row.signout .action-label { color: rgba(var(--c-w), 0.55); }
+  .action-row.signout .action-label { color: rgba(var(--c-fg), 0.55); }
 
   /* Presentation-mode toggle switch */
   .switch {
@@ -249,14 +249,14 @@
     width: 44px;
     height: 26px;
     border-radius: 13px;
-    background: rgba(var(--c-w), 0.12);
-    border: 1px solid rgba(var(--c-w), 0.14);
+    background: rgba(var(--c-fg), 0.12);
+    border: 1px solid rgba(var(--c-fg), 0.14);
     position: relative;
     transition: background 0.15s, border-color 0.15s;
   }
   .switch.on {
-    background: rgba(var(--c-gold), 0.45);
-    border-color: rgba(var(--c-gold), 0.55);
+    background: rgba(var(--c-accent), 0.45);
+    border-color: rgba(var(--c-accent), 0.55);
   }
   .knob {
     position: absolute;
@@ -265,11 +265,11 @@
     width: 20px;
     height: 20px;
     border-radius: 50%;
-    background: var(--h-e8f0ff);
+    background: var(--c-text);
     transition: transform 0.15s;
   }
   .switch.on .knob {
     transform: translateX(18px);
-    background: var(--h-c49230);
+    background: var(--c-accent-solid);
   }
 </style>

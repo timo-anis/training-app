@@ -181,17 +181,17 @@ code {
 /* ===================== THEME TOKENS (theme-system + presentation mode) ===================== */
 /* Dark defaults == exact original values => dark theme is pixel-identical. */
 :root {
-  --c-w: 255,255,255;
-  --c-gold: 196,148,46;
-  --c-black: 0,0,0;
-  --c-blue-a: 60,90,160;
-  --c-blue-b: 60,90,165;
-  --c-blue-c: 65,100,170;
-  --c-blue-d: 65,100,175;
-  --c-blue-e: 70,110,185;
-  --c-ink-a: 12,20,44;
-  --c-ink-b: 13,24,52;
-  --c-ink-c: 14,25,55;
+  --c-fg: 255,255,255;
+  --c-accent: 196,148,46;
+  --c-shadow: 0,0,0;
+  --c-edge-a: 60,90,160;
+  --c-edge-b: 60,90,165;
+  --c-edge-c: 65,100,170;
+  --c-edge-d: 65,100,175;
+  --c-edge-e: 70,110,185;
+  --c-surface-a: 12,20,44;
+  --c-surface-b: 13,24,52;
+  --c-surface-c: 14,25,55;
   --c-10-18-40-0_92: rgba(10,18,40,0.92);
   --c-10-18-42-0_98: rgba(10,18,42,0.98);
   --c-100-155-255-0_16: rgba(100,155,255,0.16);
@@ -238,10 +238,10 @@ code {
   --c-80-120-200-0_30: rgba(80,120,200,0.30);
   --c-80-200-120-0_35: rgba(80,200,120,0.35);
   --h-030406: #030406;
-  --h-050508: #050508;
+  --c-bg-3: #050508;
   --h-06080f: #06080f;
   --h-060c18: #060c18;
-  --h-08090f: #08090f;
+  --c-bg-2: #08090f;
   --h-080c18: #080c18;
   --h-080e1c: #080e1c;
   --h-0a1a0a: #0a1a0a;
@@ -250,7 +250,7 @@ code {
   --h-0c0800: #0c0800;
   --h-0c0c0e: #0c0c0e;
   --h-0d1828: #0d1828;
-  --h-0d1a2e: #0d1a2e;
+  --c-bg-1: #0d1a2e;
   --h-0d1a30: #0d1a30;
   --h-0f1c30: #0f1c30;
   --h-182438: #182438;
@@ -281,7 +281,7 @@ code {
   --h-a8741f: #a8741f;
   --h-b07e22: #b07e22;
   --h-b8aee8: #b8aee8;
-  --h-c49230: #c49230;
+  --c-accent-solid: #c49230;
   --h-c6f2db: #c6f2db;
   --h-cf9433: #cf9433;
   --h-d4a038: #d4a038;
@@ -289,7 +289,7 @@ code {
   --h-d8eafc: #d8eafc;
   --h-dbe6ff: #dbe6ff;
   --h-e0ecff: #e0ecff;
-  --h-e8f0ff: #e8f0ff;
+  --c-text: #e8f0ff;
   --h-e8f2ff: #e8f2ff;
   --h-eaf1ff: #eaf1ff;
   --h-eafff5: #eafff5;
@@ -308,17 +308,17 @@ code {
 
 /* Presentation mode: light / high-contrast for demos on projectors. */
 :root[data-theme="presentation"] {
-  --c-w: 24,30,48;
-  --c-gold: 42,58,92;
-  --c-black: 40,55,90;
-  --c-blue-a: 70,100,180;
-  --c-blue-b: 70,100,180;
-  --c-blue-c: 70,100,180;
-  --c-blue-d: 70,100,180;
-  --c-blue-e: 70,100,180;
-  --c-ink-a: 236,240,248;
-  --c-ink-b: 236,240,248;
-  --c-ink-c: 236,240,248;
+  --c-fg: 24,30,48;
+  --c-accent: 42,58,92;
+  --c-shadow: 40,55,90;
+  --c-edge-a: 70,100,180;
+  --c-edge-b: 70,100,180;
+  --c-edge-c: 70,100,180;
+  --c-edge-d: 70,100,180;
+  --c-edge-e: 70,100,180;
+  --c-surface-a: 236,240,248;
+  --c-surface-b: 236,240,248;
+  --c-surface-c: 236,240,248;
   --c-10-18-40-0_92: rgba(248,250,253,0.92);
   --c-10-18-42-0_98: rgba(248,250,253,0.98);
   --c-100-155-255-0_16: rgba(70,108,178,0.16);
@@ -365,10 +365,10 @@ code {
   --c-80-120-200-0_30: rgba(56,84,140,0.30);
   --c-80-200-120-0_35: rgba(56,140,84,0.35);
   --h-030406: #dce3ef;
-  --h-050508: #dce3ef;
+  --c-bg-3: #dce3ef;
   --h-06080f: #f4f7fc;
   --h-060c18: #f4f7fc;
-  --h-08090f: #e4e9f2;
+  --c-bg-2: #e4e9f2;
   --h-080c18: #f4f7fc;
   --h-080e1c: #ffffff;
   --h-0a1a0a: #eaf7ee;
@@ -377,7 +377,7 @@ code {
   --h-0c0800: #fbf3e0;
   --h-0c0c0e: #ffffff;
   --h-0d1828: #ffffff;
-  --h-0d1a2e: #eef2f8;
+  --c-bg-1: #eef2f8;
   --h-0d1a30: #ffffff;
   --h-0f1c30: #f4f7fc;
   --h-182438: #e7edf6;
@@ -408,7 +408,7 @@ code {
   --h-a8741f: #1f2a44;
   --h-b07e22: #22304e;
   --h-b8aee8: #4a3f88;
-  --h-c49230: #2a3a5c;
+  --c-accent-solid: #2a3a5c;
   --h-c6f2db: #c6f2db;
   --h-cf9433: #2a3a5c;
   --h-d4a038: #243150;
@@ -416,7 +416,7 @@ code {
   --h-d8eafc: #3a4a64;
   --h-dbe6ff: #dbe6ff;
   --h-e0ecff: #3a4a64;
-  --h-e8f0ff: #0d1a2e;
+  --c-text: #0d1a2e;
   --h-e8f2ff: #0d1a2e;
   --h-eaf1ff: #eaf1ff;
   --h-eafff5: #eafff5;

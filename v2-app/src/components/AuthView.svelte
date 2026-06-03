@@ -123,14 +123,14 @@
     align-items: center;
     justify-content: center;
     padding: 24px;
-    background: radial-gradient(ellipse at 50% 0%, var(--h-0d1a2e) 0%, var(--h-08090f) 55%, var(--h-050508) 100%);
+    background: radial-gradient(ellipse at 50% 0%, var(--c-bg-1) 0%, var(--c-bg-2) 55%, var(--c-bg-3) 100%);
   }
 
   .auth-card {
     width: 100%;
     max-width: 380px;
     background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
-    border: 1px solid rgba(var(--c-blue-c), 0.16);
+    border: 1px solid rgba(var(--c-edge-c), 0.16);
     border-radius: 20px;
     padding: 32px 24px;
   }
@@ -152,7 +152,7 @@
   input {
     padding: 12px 14px;
     border-radius: 10px;
-    border: 1px solid rgba(var(--c-blue-d), 0.20);
+    border: 1px solid rgba(var(--c-edge-d), 0.20);
     background: var(--c-12-22-48-0_55);
     color: var(--h-f0f6ff);
     font-size: 15px;
@@ -166,7 +166,7 @@
     margin-top: 8px;
     border-radius: 12px;
     border: none;
-    background: linear-gradient(180deg, var(--h-c49230), var(--h-9e6818));
+    background: linear-gradient(180deg, var(--c-accent-solid), var(--h-9e6818));
     color: var(--h-1a1204);
     font-size: 15px;
     font-weight: 900;
@@ -198,7 +198,7 @@
   .link-btn {
     background: none;
     border: none;
-    color: var(--h-e8f0ff);
+    color: var(--c-text);
     font-size: 13px;
     font-weight: 600;
     cursor: pointer;
@@ -208,5 +208,5 @@
   }
   .link-btn:hover { color: var(--h-ffffff); }
 
-  .sep { color: rgba(var(--c-w), 0.20); font-size: 12px; }
+  .sep { color: rgba(var(--c-fg), 0.20); font-size: 12px; }
 </style>

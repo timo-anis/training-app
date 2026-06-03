@@ -130,7 +130,7 @@
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    background: radial-gradient(ellipse at 50% 0%, var(--h-0d1a2e) 0%, var(--h-08090f) 52%, var(--h-050508) 100%);
+    background: radial-gradient(ellipse at 50% 0%, var(--c-bg-1) 0%, var(--c-bg-2) 52%, var(--c-bg-3) 100%);
   }
 
   /* ── Scrollable content ── */
@@ -150,7 +150,7 @@
     background: var(--c-7-9-18-0_94);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    border-top: 1px solid rgba(var(--c-blue-b), 0.16);
+    border-top: 1px solid rgba(var(--c-edge-b), 0.16);
   }
 
   /* Timer chip */
@@ -161,9 +161,9 @@
     gap: 7px;
     padding: 15px 16px;
     border-radius: 16px;
-    border: 1px solid rgba(var(--c-w), 0.16);
-    background: rgba(var(--c-w), 0.06);
-    color: rgba(var(--c-w), 0.80);
+    border: 1px solid rgba(var(--c-fg), 0.16);
+    background: rgba(var(--c-fg), 0.06);
+    color: rgba(var(--c-fg), 0.80);
     font-size: 15px;
     font-weight: 800;
     cursor: pointer;
@@ -172,13 +172,13 @@
     white-space: nowrap;
   }
 
-  .timer-btn:active { background: rgba(var(--c-w), 0.12); }
+  .timer-btn:active { background: rgba(var(--c-fg), 0.12); }
 
   .timer-dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    background: rgba(var(--c-w), 0.70);
+    background: rgba(var(--c-fg), 0.70);
     animation: blink 1.2s ease-in-out infinite;
     flex-shrink: 0;
   }
@@ -196,9 +196,9 @@
     flex: 1 1 0;
     padding: 16px;
     border-radius: 16px;
-    border: 1px solid rgba(var(--c-gold), 0.45);
-    background: rgba(var(--c-gold), 0.14);
-    color: var(--h-c49230);
+    border: 1px solid rgba(var(--c-accent), 0.45);
+    background: rgba(var(--c-accent), 0.14);
+    color: var(--c-accent-solid);
     font-size: 16px;
     font-weight: 900;
     cursor: pointer;
@@ -207,7 +207,7 @@
   }
 
   .wm-btn.full {
-    background: var(--h-c49230);
+    background: var(--c-accent-solid);
     color: var(--h-0c0c0e);
     border: none;
     font-size: 17px;
@@ -216,10 +216,10 @@
     text-transform: uppercase;
     padding: 18px;
     border-radius: 18px;
-    box-shadow: 0 4px 28px rgba(var(--c-gold), 0.22);
+    box-shadow: 0 4px 28px rgba(var(--c-accent), 0.22);
   }
 
-  .wm-btn:active { background: rgba(var(--c-gold), 0.22); transform: scale(0.98); }
+  .wm-btn:active { background: rgba(var(--c-accent), 0.22); transform: scale(0.98); }
   .wm-btn.full:active { background: var(--h-b07e22); transform: scale(0.98); box-shadow: none; }
 
   /* ── Help chip ── */
@@ -230,7 +230,7 @@
     .workout-bar {
       justify-content: center;
       padding: 10px 24px;
-      border-top-color: rgba(var(--c-w), 0.07);
+      border-top-color: rgba(var(--c-fg), 0.07);
     }
 
     .wm-btn {
@@ -242,7 +242,7 @@
       padding: 12px 28px;
       font-size: 14px;
       border-radius: 14px;
-      box-shadow: 0 2px 14px rgba(var(--c-gold), 0.18);
+      box-shadow: 0 2px 14px rgba(var(--c-accent), 0.18);
     }
   }
 
@@ -258,7 +258,7 @@
     gap: 10px;
     padding: 12px 14px;
     background: var(--c-18-30-60-0_96);
-    border: 1px solid rgba(var(--c-blue-e), 0.30);
+    border: 1px solid rgba(var(--c-edge-e), 0.30);
     border-radius: 14px;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -275,15 +275,15 @@
     flex: 1;
     font-size: 14px;
     font-weight: 600;
-    color: rgba(var(--c-w), 0.55);
+    color: rgba(var(--c-fg), 0.55);
   }
 
   .undo-btn {
     padding: 7px 14px;
     border-radius: 9px;
-    border: 1px solid rgba(var(--c-gold), 0.35);
-    background: rgba(var(--c-gold), 0.12);
-    color: var(--h-c49230);
+    border: 1px solid rgba(var(--c-accent), 0.35);
+    background: rgba(var(--c-accent), 0.12);
+    color: var(--c-accent-solid);
     font-size: 13px;
     font-weight: 800;
     cursor: pointer;
@@ -291,5 +291,5 @@
     flex-shrink: 0;
   }
 
-  .undo-btn:active { background: rgba(var(--c-gold), 0.25); }
+  .undo-btn:active { background: rgba(var(--c-accent), 0.25); }
 </style>
