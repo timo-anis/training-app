@@ -45,6 +45,8 @@ App.svelte
     │       └── AddExercise.svelte
     ├── workout-bar             — bottom CTA (when exercises exist)
     ├── WorkoutMode.svelte      — full-screen overlay (when active)
+    │   ├── WmHeader.svelte     — overlay header (progress, clock, segment dots)
+    │   └── WmFooter.svelte     — overlay footer nav (prev / back / next / finish)
     │   └── RestTimer.svelte    — focus mode (fullscreen) or compact (minimized)
     └── OnboardingOverlay.svelte — first-run walkthrough; re-openable via topbar Quick guide
 ```

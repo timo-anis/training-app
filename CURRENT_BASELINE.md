@@ -10,6 +10,16 @@
 
 ---
 
+## Code health (updated 2026-06-03)
+
+- Boot now merges local vs cloud by timestamp (newer wins) — see `lib/state-merge.ts`; prevents a stale cloud copy overwriting newer local edits.
+- Cloud saves are offline-aware with retry/backoff (`stores/app.ts`); flush on `online`.
+- WorkoutMode is being split: `WmHeader` + `WmFooter` extracted (2228 -> 2005 lines). Remaining planned increments (own session): set-editor, rest-controls, add-exercise panel, summary overlay.
+- a11y: interactive SVG zones + swipe surface have roles/keyboard; build + svelte-check are 0 warnings.
+- Tests: 122 (added `storage-merge` + `workout-flow` integration).
+
+---
+
 ## Theming (added 2026-06-02)
 
 - All colours are CSS tokens in `v2-app/src/app.css` (see `THEME_SYSTEM.md`).
