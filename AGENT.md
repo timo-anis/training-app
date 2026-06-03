@@ -34,7 +34,7 @@ App.svelte
 ├── AuthView.svelte             — sign-in screen (signed out)
 └── [app-shell]                 — signed in
     ├── scroll-content
-    │   └── MainView.svelte
+    │   └── MainView.svelte (TopBar.svelte = title + sync + actions)
     │       ├── topbar          — sticky header (Minimal Crown + gold accent line)
     │       ├── MonthCalendar.svelte — sole day/week navigator (tap any day)
     │       ├── [stats-toggle]  — collapsible Stats section
@@ -49,8 +49,8 @@ App.svelte
     │   ├── WmFooter.svelte       — footer nav (prev / back / next / finish)
     │   ├── WmRestControls.svelte — rest-timer adjust / start / presets
     │   ├── WmAddExercise.svelte  — in-workout add-exercise panel
-    │   └── WmSummary.svelte      — end-of-workout summary overlay
-    │   (Remaining inline: per-exercise rows + per-set editor — deferred, see note)
+    │   ├── WmSummary.svelte      — end-of-workout summary overlay
+    │   └── WmSetRow.svelte       — per-set editor (kg/reps, done, delete)
     │   └── RestTimer.svelte    — focus mode (fullscreen) or compact (minimized)
     └── OnboardingOverlay.svelte — first-run walkthrough; re-openable via topbar Quick guide
 ```
