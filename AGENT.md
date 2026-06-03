@@ -15,10 +15,11 @@
 
 | Layer | Technology |
 |-------|-----------|
-| Framework | Svelte 4 + TypeScript |
+| Framework | Svelte 5 + TypeScript |
 | Build | Vite |
 | Auth + Cloud | Supabase |
 | Local storage | localStorage (schema 4.0) |
+| Theming | CSS tokens in `app.css` — dark + presentation themes (see THEME_SYSTEM.md) |
 | Deployment | GitHub Pages |
 
 ---

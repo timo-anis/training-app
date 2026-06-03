@@ -1,12 +1,23 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-05-31
+**Last updated:** 2026-06-03
 
 ## Active App: V2
 
 - Source: `v2-app/`
 - Deployed: GitHub Pages — https://timo-anis.github.io/training-app/v2/
 - MVP1 (`index.html`) is legacy — do not touch
+
+---
+
+## Theming (added 2026-06-02)
+
+- All colours are CSS tokens in `v2-app/src/app.css` (see `THEME_SYSTEM.md`).
+- Two themes: **dark** (default, base `:root`) and **presentation** (light/high-contrast, `:root[data-theme="presentation"]`).
+- Dark theme is pixel-identical to pre-token state (tokens default to the exact prior values).
+- Toggle: "Presentation mode" switch in Account sheet. Persisted to localStorage (`timo_training_theme`), applied via `document.documentElement.dataset.theme`; inline boot script in `index.html` prevents flash.
+- **Access-gated:** the toggle is visible/usable only for the allow-listed account (`canUsePresentation`, stores/app.ts). Any other signed-in user is forced to dark.
+- Presentation accent is a restrained graphite-indigo (not gold) for a premium look on a projector; calendar dates stay legible on every day-type tile.
 
 ---
 
