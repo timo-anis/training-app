@@ -9,6 +9,8 @@
     pushUndo, execUndo, undoAction,
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
+  import WmFooter from './WmFooter.svelte';
+  import WmHeader from './WmHeader.svelte';
   import type { DayOfWeek, WorkoutSet, Exercise } from '../types/workout';
   import { searchExercises } from '../data/exercises';
   import RestTimer from './RestTimer.svelte';
@@ -537,27 +539,15 @@
 
 <div class="wm-overlay">
   <!-- Header -->
-  <header class="wm-header">
-    <div class="wm-header-row">
-      <button class="wm-exit" on:click={backToNormal} title="Back to normal view">‹</button>
-      <div class="wm-mid">
-        <span class="wm-blk-label">{totalSetsDone}/{totalSetsAll} sets</span>
-        <span class="wm-progress">{activeIndex + 1} / {blocks.length}</span>
-      </div>
-      <span class="wm-clock">{formatElapsed(elapsed)}</span>
-      <button class="wm-finish-early" on:click={openSummary} title="Finish workout">✓</button>
-    </div>
-    <div class="wm-progress-bar">
-      <div class="wm-progress-fill" style="width: {((activeIndex + 1) / blocks.length) * 100}%"></div>
-    </div>
-    {#if blocks.length > 1}
-      <div class="swipe-dots" aria-hidden="true">
-        {#each blocks as _, i}
-          <span class="swipe-dot" class:active={i === activeIndex}></span>
-        {/each}
-      </div>
-    {/if}
-  </header>
+  <WmHeader
+    setsDone={totalSetsDone}
+    setsAll={totalSetsAll}
+    index={activeIndex}
+    count={blocks.length}
+    clock={formatElapsed(elapsed)}
+    onBack={backToNormal}
+    onFinish={openSummary}
+  />
 
   <!-- Block content -->
   {#if block}
@@ -881,18 +871,7 @@
   {/if}
 
   <!-- Footer nav -->
-  <footer class="wm-footer">
-    {#if isLast}
-      <!-- Last block: always show Finish Workout -->
-      <button class="btn-nav" on:click={prev} disabled={isFirst}>‹ Prev</button>
-      <button class="btn-end" on:click={backToNormal}>← Back</button>
-      <button class="btn-finish-wod" on:click={openSummary}>Finish ✓</button>
-    {:else}
-      <button class="btn-nav" on:click={prev} disabled={isFirst}>‹ Prev</button>
-      <button class="btn-end" on:click={backToNormal}>← Back</button>
-      <button class="btn-nav primary" on:click={next}>Next ›</button>
-    {/if}
-  </footer>
+  <WmFooter {isFirst} {isLast} onPrev={prev} onNext={next} onBack={backToNormal} onFinish={openSummary} />
 </div>
 
 <!-- ===== Completion Flash ===== -->
@@ -964,126 +943,6 @@
     margin: 0 auto;
     overflow: hidden;
   }
-
-  /* Header */
-  .wm-header {
-    display: flex;
-    flex-direction: column;
-    padding-top: env(safe-area-inset-top);
-    border-bottom: 1px solid rgba(var(--c-edge-c), 0.16);
-    flex-shrink: 0;
-  }
-
-  .wm-header-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px 10px;
-  }
-
-  .wm-exit {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1px solid rgba(var(--c-edge-e), 0.24);
-    background: rgba(var(--c-surface-c), 0.65);
-    color: rgba(var(--c-fg), 0.65);
-    font-size: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .wm-mid {
-    flex: 1;
-    display: flex;
-    align-items: baseline;
-    gap: 6px;
-  }
-
-  .wm-blk-label {
-    font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    color: rgba(var(--c-fg), 0.38);
-  }
-
-  .wm-progress {
-    font-size: 20px;
-    font-weight: 900;
-    color: var(--h-ffffff);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-
-  .wm-progress-bar {
-    height: 3px;
-    background: var(--c-20-35-70-0_85);
-    margin: 0 16px 12px;
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .wm-progress-fill {
-    height: 100%;
-    border-radius: 2px;
-    background: var(--c-accent-solid);
-    transition: width 0.3s ease;
-  }
-
-  .swipe-dots {
-    display: flex;
-    justify-content: center;
-    gap: 6px;
-    padding: 0 16px 10px;
-  }
-
-  .swipe-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: rgba(var(--c-fg), 0.18);
-    transition: background 0.2s, transform 0.2s;
-    flex-shrink: 0;
-  }
-
-  .swipe-dot.active {
-    background: var(--c-accent-solid);
-    transform: scale(1.3);
-  }
-
-  .wm-clock {
-    font-size: 15px;
-    font-weight: 800;
-    color: var(--h-ffffff);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 0.02em;
-    flex-shrink: 0;
-  }
-
-  .wm-finish-early {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
-    border: 1px solid rgba(var(--c-accent), 0.35);
-    background: rgba(var(--c-accent), 0.10);
-    color: var(--c-accent-solid);
-    font-size: 16px;
-    font-weight: 900;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
-  }
-
-  .wm-finish-early:active { background: rgba(var(--c-accent), 0.22); }
 
   /* Content */
   .wm-content {
@@ -1942,76 +1801,6 @@
 
   .recovery-toggle:active { background: var(--c-15-28-58-0_80); }
   .recovery-toggle.recovery-done:active { background: rgba(var(--c-fg), 0.16); }
-
-  /* Footer */
-  .wm-footer {
-    padding: 12px 14px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(var(--c-edge-a), 0.13);
-    display: flex;
-    gap: 10px;
-    flex-shrink: 0;
-  }
-
-  .btn-nav {
-    flex: 1;
-    padding: 16px;
-    border-radius: 14px;
-    border: 1px solid var(--c-75-115-195-0_26);
-    background: var(--c-14-26-55-0_70);
-    color: rgba(var(--c-fg), 0.65);
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.12s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .btn-nav.primary {
-    background: rgba(var(--c-accent), 0.12);
-    border-color: rgba(var(--c-accent), 0.30);
-    color: var(--c-accent-solid);
-  }
-
-  .btn-nav:disabled { opacity: 0.25; cursor: not-allowed; }
-  .btn-nav:not(:disabled):active { background: rgba(var(--c-fg), 0.11); }
-  .btn-nav.primary:not(:disabled):active { background: rgba(var(--c-accent), 0.22); }
-
-  .btn-end {
-    flex: 0 0 auto;
-    padding: 16px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(var(--c-edge-e), 0.24);
-    background: rgba(var(--c-surface-c), 0.65);
-    color: rgba(var(--c-fg), 0.50);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
-  }
-
-  .btn-end:active { background: rgba(var(--c-fg), 0.09); color: rgba(var(--c-fg), 0.70); }
-
-  /* Finish Workout — solid gold, last block footer */
-  .btn-finish-wod {
-    flex: 2;
-    padding: 16px;
-    border-radius: 14px;
-    border: none;
-    background: var(--c-accent-solid);
-    color: var(--h-0c0c0e);
-    font-size: 15px;
-    font-weight: 900;
-    cursor: pointer;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    box-shadow: 0 4px 24px rgba(var(--c-accent), 0.25);
-    transition: background 0.12s, transform 0.1s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .btn-finish-wod:active { background: var(--h-b07e22); transform: scale(0.98); }
 
   /* ===== Summary Overlay ===== */
   .summary-overlay {
