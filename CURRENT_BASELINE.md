@@ -12,12 +12,13 @@
 ## Code health (updated 2026-06-03)
 
 - Boot now merges local vs cloud by timestamp (newer wins) — see `lib/state-merge.ts`; prevents a stale cloud copy overwriting newer local edits.
-- Cloud saves are offline-aware with retry/backoff (`stores/app.ts`); flush on `online`.
-- WorkoutMode split (2228 -> 1305 lines, -41%): extracted `WmHeader`, `WmFooter`, `WmRestControls`, `WmAddExercise`, `WmSummary`, `WmSetRow` as presentational children (parent keeps all state/logic; each verified build + svelte-check 0/0 + tests). The per-set editor (`WmSetRow`) preserves two-way binding via `bind:kg`/`bind:reps` through the component boundary (semantically identical to the original).
+- Cloud saves are offline-aware with retry/backoff (`stores/sync.ts`); flush on `online`.
+- WorkoutMode split (2228 -> 1305 lines, -41%): extracted `WmHeader`, `WmFooter`, `WmRestControls`, `WmAddExercise`, `WmSummary`, `WmSetRow` as presentational children.
 - MainView: `TopBar` extracted (1021 -> 917 lines).
-- Follow-up: a WmSetRow component test was attempted but vitest + vite-plugin-svelte v7 integration needs a config fix (the `.svelte` import is not transformed in the test pipeline); deferred.
+- Store split (2026-06-04): `stores/app.ts` (846 lines) split into `ui-state.ts`, `sync.ts`, `workout-state.ts`. `app.ts` is now a barrel re-export — all component imports unchanged.
+- Component tests fixed (2026-06-04): vitest config updated with jsdom + svelteTesting(); `WmSetRow.test.ts` adds 11 component tests.
 - a11y: interactive SVG zones + swipe surface have roles/keyboard; build + svelte-check are 0 warnings.
-- Tests: 122 (added `storage-merge` + `workout-flow` integration).
+- Tests: 133 (122 store/logic + 11 WmSetRow component).
 
 ---
 
@@ -27,7 +28,7 @@
 - Two themes: **dark** (default, base `:root`) and **presentation** (light/high-contrast, `:root[data-theme="presentation"]`).
 - Dark theme is pixel-identical to pre-token state (tokens default to the exact prior values).
 - Toggle: "Presentation mode" switch in Account sheet. Persisted to localStorage (`timo_training_theme`), applied via `document.documentElement.dataset.theme`; inline boot script prevents flash.
-- **Access-gated:** the toggle is visible/usable only for the allow-listed account (`canUsePresentation`, stores/app.ts). Any other signed-in user is forced to dark.
+- **Access-gated:** the toggle is visible/usable only for the allow-listed account (`canUsePresentation`, `stores/ui-state.ts`). Any other signed-in user is forced to dark.
 - Presentation accent is a restrained graphite-indigo (not gold) for a premium look on a projector; calendar dates stay legible on every day-type tile.
 
 ---
@@ -150,12 +151,17 @@ UIState has no `month` field (removed — was dead code).
 | `migrator.test.ts` | 26 |
 | `state-helpers.test.ts` | 42 |
 | `store-actions.test.ts` | 11 |
+| `WmSetRow.test.ts` | 11 |
+| `day-kind.test.ts` | 6 |
+| `day-nav.test.ts` | 5 |
+| `storage-merge.test.ts` | 8 |
+| `workout-flow.test.ts` | 4 |
 
 ---
 
 ## CI Pipeline
 
-Push to main: install → test (122) → TypeScript check → build → deploy to GitHub Pages.
+Push to main: install → test (133) → TypeScript check → build → deploy to GitHub Pages.
 
 ---
 

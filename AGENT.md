@@ -55,17 +55,25 @@ App.svelte
     └── OnboardingOverlay.svelte — first-run walkthrough; re-openable via topbar Quick guide
 ```
 
-### State layer (v2-app/src/stores/app.ts)
+### State layer (v2-app/src/stores/)
 
-| Store | Type | Purpose |
-|-------|------|---------|
+`app.ts` is a barrel re-export — import from here as before. Domain modules:
+
+| Module | Contents |
+|--------|----------|
+| `ui-state.ts` | theme, currentUser, uiState, bootStatus, toast/showToast, searchOpen, sheetOpen, requestOnboarding, undo system, updateUI |
+| `sync.ts` | syncStatus, scheduleSave, retry/backoff logic, online flush |
+| `workout-state.ts` | appState, all derived stores, all mutations, bootForUser, MVP1 migration |
+
+| Key store | Type | Purpose |
+|-----------|------|---------|
 | appState | AppState | All workout data — { weeks: WorkoutDay[], schema: '4.0' } |
-| uiState | UIState | Selected week/day, workout flags, timer timestamps (month field removed) |
+| uiState | UIState | Selected week/day, workout flags, timer timestamps |
 | currentUser | User or null | Supabase auth user |
-| bootStatus | 'idle' or 'loading' or 'ready' or 'error' | App boot phase |
+| bootStatus | 'idle' \| 'loading' \| 'ready' \| 'error' | App boot phase |
+| syncStatus | 'idle' \| 'saving' \| 'saved' \| 'error' | Cloud sync state |
 
-Key derived stores: currentDayExercises, workoutBlocks, availableWeeks, hasMvp1Data.
-Additional stores: syncStatus ('idle'|'saving'|'saved'|'error'), sheetOpen (boolean — hides workout bar when account sheet open), requestOnboarding (boolean — set true to re-open the onboarding walkthrough from anywhere).
+Key derived stores: currentDayExercises, workoutBlocks, availableWeeks, hasMvp1Data, canUsePresentation.
 
 ### Services (v2-app/src/services/)
 
@@ -208,7 +216,10 @@ training-app/
 │   │   ├── app.css
 │   │   ├── main.ts
 │   │   ├── components/   (12 components)
-│   │   ├── stores/app.ts
+│   │   ├── stores/app.ts          (barrel re-export)
+│   │   ├── stores/ui-state.ts     (theme, auth, uiState, undo, toast)
+│   │   ├── stores/sync.ts         (syncStatus, scheduleSave, retry)
+│   │   ├── stores/workout-state.ts (appState, derived, mutations, boot)
 │   │   ├── services/     (auth, storage, supabase, migrator)
 │   │   └── types/workout.ts
 │   └── package.json
