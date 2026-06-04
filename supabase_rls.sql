@@ -50,6 +50,25 @@ CREATE POLICY "profiles_update_own"
   USING      (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
+-- app_errors: users can only insert their own errors (no client-side read needed)
+CREATE TABLE IF NOT EXISTS public.app_errors (
+  id          bigserial PRIMARY KEY,
+  user_id     uuid REFERENCES auth.users(id) ON DELETE CASCADE,
+  occurred_at timestamptz NOT NULL DEFAULT now(),
+  message     text,
+  stack       text,
+  url         text,
+  app_version text
+);
+
+ALTER TABLE public.app_errors ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "users_can_insert_own_errors"
+  ON public.app_errors
+  FOR INSERT
+  TO authenticated
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
 -- ============================================================
 -- FUNCTIONS
 -- ============================================================
