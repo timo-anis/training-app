@@ -466,7 +466,8 @@ if (typeof window !== 'undefined') {
 }
 
 function scheduleSave(userId: string, state: AppState, immediate = false) {
-  saveLocal(userId, state);
+  const localOk = saveLocal(userId, state);
+  if (!localOk) showToast('Storage full — local save failed. Free up device storage.', 'error');
   pendingCloud = { userId, state };
   if (saveTimer) clearTimeout(saveTimer);
   setSyncStatus('saving');

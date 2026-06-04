@@ -24,12 +24,18 @@ function localTsKey(userId: string): string {
   return `timo_training_v4__user__${userId}__savedAt`;
 }
 
-export function saveLocal(userId: string, state: AppState): void {
+export function saveLocal(userId: string, state: AppState): boolean {
   try {
     localStorage.setItem(localKey(userId), JSON.stringify(state));
     localStorage.setItem(localTsKey(userId), new Date().toISOString());
+    return true;
   } catch (e) {
-    console.error('Local save failed', e);
+    if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+      console.error('localStorage quota exceeded — local save failed', e);
+    } else {
+      console.error('Local save failed', e);
+    }
+    return false;
   }
 }
 

@@ -75,6 +75,18 @@
 
 <ToastNotification />
 
+<svelte:boundary>
+  {#snippet failed(error: unknown)}
+    <div class="error-boundary">
+      <div class="error-card">
+        <div class="error-icon">⚠</div>
+        <p class="error-title">Something went wrong</p>
+        <p class="error-msg">{error instanceof Error ? error.message : 'Unexpected error'}</p>
+        <button class="error-reload" on:click={() => window.location.reload()}>Reload app</button>
+      </div>
+    </div>
+  {/snippet}
+
 {#if $bootStatus === 'loading'}
   <BootOverlay />
 {:else if $currentUser && $bootStatus === 'ready'}
@@ -124,6 +136,8 @@
 {:else}
   <AuthView />
 {/if}
+
+</svelte:boundary>
 
 <style>
   .app-shell {
@@ -292,4 +306,53 @@
   }
 
   .undo-btn:active { background: rgba(var(--c-accent), 0.25); }
+
+  /* ── Error boundary fallback ── */
+  .error-boundary {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(ellipse at 50% 0%, var(--c-bg-1, #0d1a2e) 0%, var(--c-bg-3, #050508) 100%);
+    padding: 24px;
+    z-index: 9999;
+  }
+
+  .error-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    max-width: 320px;
+    text-align: center;
+  }
+
+  .error-icon { font-size: 36px; opacity: 0.6; }
+
+  .error-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: rgba(232, 240, 255, 0.9);
+    margin: 0;
+  }
+
+  .error-msg {
+    font-size: 13px;
+    color: rgba(232, 240, 255, 0.45);
+    margin: 0;
+    word-break: break-word;
+  }
+
+  .error-reload {
+    margin-top: 8px;
+    padding: 12px 28px;
+    border-radius: 14px;
+    border: 1px solid rgba(196, 146, 48, 0.45);
+    background: rgba(196, 146, 48, 0.14);
+    color: #d4a038;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+  }
 </style>
