@@ -1,3 +1,8 @@
+// TODO (next time you're in here): split into domain stores
+//   workout-state.ts — appState, week/day actions, exercise/set mutations
+//   ui-state.ts      — uiState, workoutMode, searchOpen, sheetOpen, undo, onboarding
+//   sync.ts          — saveLocal, saveCloud, scheduleSave, syncStatus, retry logic
+// ~half a day of work, do it alongside the next feature that touches this file.
 import { writable, derived, get } from 'svelte/store';
 import type { User } from '@supabase/supabase-js';
 import type { AppState, UIState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';

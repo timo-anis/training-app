@@ -180,7 +180,7 @@ Before writing any change, confirm:
 ### 5. Build (and test) before commit
 
 Always run npm run build in v2-app/ and confirm a clean build before committing.
-Run npm test as well when logic/state/date code changed (122 tests must pass).
+Run npm test as well when logic/state/date code changed (133 tests must pass).
 
 ---
 
@@ -188,7 +188,7 @@ Run npm test as well when logic/state/date code changed (122 tests must pass).
 
 1. Claude edits files in v2-app/src/
 2. Claude runs: cd v2-app && npm run build  (clean build required)
-3. Claude runs: npm test  (when logic/state changed — 122 tests must pass)
+3. Claude runs: npm test  (when logic/state changed — 133 tests must pass)
 4. Claude commits and pushes: git add -A && git commit -m "..." && git push
 5. CI runs test → typecheck → build → deploy. Live on GitHub Pages after push.
 

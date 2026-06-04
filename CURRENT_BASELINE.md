@@ -142,7 +142,7 @@ UIState has no `month` field (removed — was dead code).
 
 ## Test Suite
 
-122 automated tests — `npm test` in `v2-app/`.
+133 automated tests — `npm test` in `v2-app/`.
 
 | File | Tests |
 |------|-------|
