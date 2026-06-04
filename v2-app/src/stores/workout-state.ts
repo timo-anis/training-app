@@ -1,0 +1,541 @@
+/**
+ * workout-state.ts — Workout data, derived stores, all mutations, boot logic.
+ * Imports from ui-state.ts and sync.ts; no circular deps.
+ */
+import { writable, derived, get } from 'svelte/store';
+import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
+import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
+import { bootstrapState, saveLocal, saveCloud, detectMvp1Data, importFromMvp1 } from '../services/storage';
+import { PS_UTC } from '../lib/program';
+import { getDateForWeekDay, getWeekDayForDate } from '../lib/dates';
+import {
+  mapExercise,
+  toggleSetDoneInState,
+  deleteSetFromState,
+  insertSetInState,
+  addSetToState,
+  updateSetFieldInState,
+  deleteExerciseFromState,
+  insertExerciseAtState,
+  renameExerciseInState,
+  moveExerciseInState,
+  buildWorkoutBlocks as _buildWorkoutBlocks,
+} from '../lib/state-helpers';
+import {
+  uiState, bootStatus, currentUser, updateUI, pushUndo,
+} from './ui-state';
+import { scheduleSave } from './sync';
+
+// ---- App state store ----
+export const appState = writable<AppState>(emptyAppState());
+
+// ---- Week display offset ----
+export const weekOffset = derived(appState, $s => ($s.userStartWeek ?? 1) - 1);
+
+// ---- Derived: all weeks that have data + current selected week ----
+export const availableWeeks = derived([appState, uiState], ([$state, $ui]) => {
+  const weeks = new Set($state.weeks.map(w => w.week));
+  weeks.add($ui.week);
+  if (!weeks.size) weeks.add(1);
+  return Array.from(weeks).sort((a, b) => a - b);
+});
+
+// ---- Derived: days with data in current week ----
+export const currentWeekDays = derived([appState, uiState], ([$state, $ui]) =>
+  $state.weeks.filter(w => w.week === $ui.week)
+);
+
+// ---- Derived: current day exercises ----
+export const currentDayExercises = derived(
+  [appState, uiState],
+  ([$state, $ui]) => {
+    const day = $state.weeks.find(
+      w => w.week === $ui.week && w.day === $ui.day
+    );
+    return day?.exercises ?? [];
+  }
+);
+
+// ---- Derived: latest week (for default selection after boot) ----
+export const latestWeek = derived(availableWeeks, ($weeks) =>
+  $weeks[$weeks.length - 1] ?? 1
+);
+
+// ---- Workout blocks ----
+export interface WorkoutBlock {
+  id: string;
+  exercises: Exercise[];
+  isSuperset: boolean;
+  code: string;
+}
+
+export const workoutBlocks = derived(currentDayExercises, ($exercises) =>
+  _buildWorkoutBlocks($exercises)
+);
+
+// ---- Progression: find last session for an exercise by name ----
+export interface LastSession {
+  week: number;
+  day: DayOfWeek;
+  sets: { kg: string; reps: string }[];
+}
+
+export function findLastSession(
+  state: AppState,
+  name: string,
+  currentWeek: number,
+  currentDay: DayOfWeek
+): LastSession | null {
+  const lower = name.toLowerCase();
+  let result: LastSession | null = null;
+  let bestWeek = -1;
+  let bestDayIdx = -1;
+
+  for (const wd of state.weeks) {
+    if (wd.week === currentWeek && wd.day === currentDay) continue;
+    for (const ex of wd.exercises) {
+      if (ex.name.toLowerCase() !== lower) continue;
+      if (ex.sets.length === 0) continue;
+      const dayIdx = DAY_ORDER.indexOf(wd.day);
+      const isBetter = wd.week > bestWeek || (wd.week === bestWeek && dayIdx > bestDayIdx);
+      if (isBetter) {
+        bestWeek = wd.week;
+        bestDayIdx = dayIdx;
+        result = { week: wd.week, day: wd.day, sets: ex.sets.map(s => ({ kg: s.kg, reps: s.reps })) };
+      }
+    }
+  }
+  return result;
+}
+
+// ---- Progression: find last conditioning note ----
+export function findLastConditioningNote(
+  state: AppState,
+  name: string,
+  currentWeek: number,
+  currentDay: DayOfWeek
+): string {
+  const lower = name.toLowerCase();
+  let result = '';
+  let bestWeek = -1;
+  let bestDayIdx = -1;
+
+  for (const wd of state.weeks) {
+    if (wd.week === currentWeek && wd.day === currentDay) continue;
+    for (const ex of wd.exercises) {
+      if (ex.name.toLowerCase() !== lower) continue;
+      if (!ex.conditioning || !ex.conditioningNote) continue;
+      const dayIdx = DAY_ORDER.indexOf(wd.day);
+      const isBetter = wd.week > bestWeek || (wd.week === bestWeek && dayIdx > bestDayIdx);
+      if (isBetter) {
+        bestWeek = wd.week;
+        bestDayIdx = dayIdx;
+        result = ex.conditioningNote;
+      }
+    }
+  }
+  return result;
+}
+
+// ---- Add new week ----
+export function addNewWeek() {
+  const state = get(appState);
+  const weeks = state.weeks.map(w => w.week);
+  const nextWeek = weeks.length > 0 ? Math.max(...weeks) + 1 : 1;
+  uiState.update(ui => ({ ...ui, week: nextWeek }));
+}
+
+// ---- Day navigation ----
+export function todayWeekDay(): { week: number; day: DayOfWeek } | null {
+  const n = new Date();
+  const iso = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+  return getWeekDayForDate(iso);
+}
+
+export function goToAdjacentDay(delta: number) {
+  const ui = get(uiState);
+  const curISO = getDateForWeekDay(ui.week, ui.day);
+  const [y, mo, d] = curISO.split('-').map(Number);
+  const next = new Date(Date.UTC(y, mo - 1, d) + delta * 86400000);
+  const iso = `${next.getUTCFullYear()}-${String(next.getUTCMonth() + 1).padStart(2, '0')}-${String(next.getUTCDate()).padStart(2, '0')}`;
+  const wd = getWeekDayForDate(iso);
+  if (!wd) return;
+  updateUI(u => ({ ...u, week: wd.week, day: wd.day }));
+}
+
+export function goToToday() {
+  const wd = todayWeekDay();
+  if (wd) updateUI(u => ({ ...u, week: wd.week, day: wd.day }));
+}
+
+// ---- Copy previous week's same day ----
+export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
+  const state = get(appState);
+  const sourceWeek = targetWeek - 1;
+  const sourceDay = state.weeks.find(w => w.week === sourceWeek && w.day === day);
+  if (!sourceDay || sourceDay.exercises.length === 0) return;
+
+  const filtered = state.weeks.filter(w => !(w.week === targetWeek && w.day === day));
+  const cloned: WorkoutDay = {
+    week: targetWeek,
+    day,
+    date: getDateForWeekDay(targetWeek, day),
+    exercises: sourceDay.exercises.map(ex => ({
+      ...ex,
+      id: `${ex.id}_w${targetWeek}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      sets: ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false })),
+      recoveryDone: false,
+      conditioningDone: false,
+      conditioningNote: '',
+    })),
+  };
+  updateState(() => ({ ...state, weeks: [...filtered, cloned] }));
+}
+
+// ---- Workout mode actions ----
+export function startWorkout() {
+  uiState.update(ui => ({
+    ...ui,
+    workoutActive: true,
+    workoutStartTime: ui.workoutStartTime ?? Date.now(),
+  }));
+}
+
+export function openWorkoutMode() {
+  uiState.update(ui => ({
+    ...ui,
+    workoutActive: true,
+    workoutMode: true,
+    activeExerciseIndex: 0,
+    workoutStartTime: ui.workoutStartTime ?? Date.now(),
+  }));
+}
+
+export function closeWorkoutMode() {
+  uiState.update(ui => ({ ...ui, workoutMode: false }));
+}
+
+export function markWorkoutComplete(week: number, day: DayOfWeek) {
+  updateState(state => ({
+    ...state,
+    weeks: state.weeks.map(w =>
+      w.week === week && w.day === day ? { ...w, completed: true } : w
+    ),
+  }), true);
+}
+
+export function setDayKind(week: number, day: DayOfWeek, kind: DayKind | null) {
+  updateState(state => {
+    const exists = state.weeks.find(w => w.week === week && w.day === day);
+    if (exists) {
+      return {
+        ...state,
+        weeks: state.weeks.map(w => {
+          if (w.week !== week || w.day !== day) return w;
+          if (kind === null) {
+            const { kind: _k, ...rest } = w;
+            return rest as WorkoutDay;
+          }
+          return { ...w, kind };
+        }),
+      };
+    }
+    if (kind === null) return state;
+    const date = getDateForWeekDay(week, day);
+    const newDay: WorkoutDay = { week, day, date, exercises: [], kind };
+    return { ...state, weeks: [...state.weeks, newDay] };
+  });
+}
+
+export function exitWorkout() {
+  uiState.update(ui => ({
+    ...ui,
+    workoutActive: false,
+    workoutMode: false,
+    activeExerciseIndex: 0,
+    workoutStartTime: null,
+  }));
+}
+
+export function setActiveBlock(index: number) {
+  uiState.update(ui => ({ ...ui, activeExerciseIndex: index }));
+}
+
+// ---- Core state updater ----
+export function updateState(updater: (s: AppState) => AppState, immediate = false) {
+  appState.update(s => {
+    const next = updater(s);
+    const user = get(currentUser);
+    if (user) scheduleSave(user.id, next, immediate);
+    return next;
+  });
+}
+
+// ---- One-time migrations ----
+const MIGRATION_PS_UTC = PS_UTC;
+
+function applyPastDaysCompleted(state: AppState): { state: AppState; changed: boolean } {
+  const todayUTC = (() => {
+    const t = new Date();
+    return Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+  })();
+  let changed = false;
+  const weeks = state.weeks.map(wd => {
+    if (wd.exercises.length === 0) return wd;
+    const dayIdx = DAY_ORDER.indexOf(wd.day);
+    const dayUTC = MIGRATION_PS_UTC + ((wd.week - 1) * 7 + dayIdx) * 86400000;
+    if (dayUTC >= todayUTC) return wd;
+    const alreadyDone =
+      wd.completed === true &&
+      wd.exercises.every(ex => {
+        if (ex.recovery) return ex.recoveryDone;
+        if (ex.conditioning) return ex.conditioningDone === true;
+        return ex.sets.every(s => s.done);
+      });
+    if (alreadyDone) return wd;
+    changed = true;
+    return {
+      ...wd,
+      completed: true,
+      exercises: wd.exercises.map(ex => ({
+        ...ex,
+        recoveryDone: ex.recovery ? true : ex.recoveryDone,
+        conditioningDone: ex.conditioning ? true : ex.conditioningDone,
+        sets: ex.sets.map(s => ({ ...s, done: true })),
+      })),
+    };
+  });
+  return { state: changed ? { ...state, weeks } : state, changed };
+}
+
+function cleanupBackfilledRecovery(state: AppState): { state: AppState; changed: boolean } {
+  let changed = false;
+  const weeks = state.weeks
+    .map(wd => {
+      if (wd.day !== 'Wednesday') return wd;
+      const filtered = wd.exercises.filter(ex => !ex.id.startsWith('active_recovery_w'));
+      if (filtered.length === wd.exercises.length) return wd;
+      changed = true;
+      return { ...wd, exercises: filtered };
+    })
+    .filter(wd => {
+      if (wd.day !== 'Wednesday') return true;
+      if (wd.exercises.length > 0) return true;
+      if (wd.completed) return true;
+      if (wd.kind) return true;
+      return false;
+    });
+  return { state: changed ? { ...state, weeks } : state, changed };
+}
+
+const WEDNESDAY_RECOVERY_WEEKS = new Set([2, 3, 4, 5, 6, 7]);
+
+function clearWednesdayRecoveryDays(state: AppState): { state: AppState; changed: boolean } {
+  let changed = false;
+  const weeks = state.weeks.map(wd => {
+    if (wd.day !== 'Wednesday') return wd;
+    if (!WEDNESDAY_RECOVERY_WEEKS.has(wd.week)) return wd;
+    if (wd.exercises.length === 0 && !wd.completed) return wd;
+    changed = true;
+    const { completed: _c, ...rest } = wd;
+    return { ...rest, exercises: [] };
+  });
+  return { state: changed ? { ...state, weeks } : state, changed };
+}
+
+const MIGRATIONS_KEY = (uid: string) => `timo_training_v4_migrations__${uid}`;
+
+function getAppliedMigrations(uid: string): Set<string> {
+  try {
+    const raw = localStorage.getItem(MIGRATIONS_KEY(uid));
+    return new Set(raw ? JSON.parse(raw) : []);
+  } catch { return new Set(); }
+}
+
+function markMigrationApplied(uid: string, id: string) {
+  const applied = getAppliedMigrations(uid);
+  applied.add(id);
+  try { localStorage.setItem(MIGRATIONS_KEY(uid), JSON.stringify([...applied])); } catch { /* ignore */ }
+}
+
+// ---- Boot ----
+import type { User } from '@supabase/supabase-js';
+
+export async function bootForUser(user: User) {
+  bootStatus.set('loading');
+  try {
+    const raw = await bootstrapState(user.id);
+    const applied = getAppliedMigrations(user.id);
+
+    let state = raw;
+    let changed = false;
+
+    if (!applied.has('clear_wednesday_w2_w7')) {
+      const { state: s, changed: c } = clearWednesdayRecoveryDays(state);
+      state = s; changed = changed || c;
+      markMigrationApplied(user.id, 'clear_wednesday_w2_w7');
+    }
+
+    if (!applied.has('cleanup_backfilled_recovery')) {
+      const { state: s, changed: c } = cleanupBackfilledRecovery(state);
+      state = s; changed = changed || c;
+      markMigrationApplied(user.id, 'cleanup_backfilled_recovery');
+    }
+
+    const { state: final, changed: c3 } = applyPastDaysCompleted(state);
+    state = final; changed = changed || c3;
+
+    const todayUTC2 = (() => {
+      const t = new Date();
+      return Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
+    })();
+    const todayWeek = Math.max(1, Math.floor((todayUTC2 - MIGRATION_PS_UTC) / 86400000 / 7) + 1);
+
+    if (!state.userStartWeek) {
+      const hasExistingData = state.weeks.some(w => w.exercises.length > 0);
+      const startWeek = hasExistingData ? 1 : todayWeek;
+      state = { ...state, userStartWeek: startWeek };
+      changed = true;
+    }
+
+    appState.set(state);
+
+    if (changed) {
+      saveLocal(user.id, state);
+      saveCloud(user.id, state);
+    }
+
+    const todayDayIdx = (() => {
+      const d = new Date().getDay();
+      return d === 0 ? 6 : d - 1;
+    })();
+    const todayDay = DAY_ORDER[todayDayIdx];
+    uiState.update(ui => ({ ...ui, week: todayWeek, day: todayDay }));
+    bootStatus.set('ready');
+  } catch {
+    bootStatus.set('error');
+  }
+}
+
+// ---- Exercise / set mutations ----
+
+export function updateExerciseMeta(
+  week: number, day: DayOfWeek, exId: string,
+  fields: Partial<Pick<Exercise, 'name' | 'rest' | 'note' | 'type' | 'code' | 'conditioning'>>
+) {
+  updateState(state => mapExercise(state, week, day, exId, ex => ({ ...ex, ...fields })));
+}
+
+export function updateConditioningNote(week: number, day: DayOfWeek, exId: string, note: string) {
+  updateState(state => mapExercise(state, week, day, exId, ex => ({ ...ex, conditioningNote: note })));
+}
+
+export function moveExercise(week: number, day: DayOfWeek, exId: string, direction: 'up' | 'down') {
+  updateState(state => moveExerciseInState(state, week, day, exId, direction));
+}
+
+export function toggleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number) {
+  updateState(state => toggleSetDoneInState(state, week, day, exId, setIndex), true);
+}
+
+export function updateSetField(
+  week: number, day: DayOfWeek, exId: string,
+  setIndex: number, field: 'kg' | 'reps', value: string
+) {
+  updateState(state => updateSetFieldInState(state, week, day, exId, setIndex, field, value));
+}
+
+export function addSet(week: number, day: DayOfWeek, exId: string) {
+  updateState(state => addSetToState(state, week, day, exId));
+}
+
+export function addExercise(week: number, day: DayOfWeek, name: string) {
+  const id = `${name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
+  updateState(state => {
+    const exists = state.weeks.find(w => w.week === week && w.day === day);
+    if (exists) {
+      return {
+        ...state,
+        weeks: state.weeks.map(w => {
+          if (w.week !== week || w.day !== day) return w;
+          return { ...w, kind: w.kind ?? 'workout', exercises: [...w.exercises, emptyExercise(id, name)] };
+        }),
+      };
+    }
+    const date = getDateForWeekDay(week, day);
+    const newDay: WorkoutDay = { week, day, date, exercises: [emptyExercise(id, name)], kind: 'workout' };
+    return { ...state, weeks: [...state.weeks, newDay] };
+  });
+}
+
+export function deleteSet(week: number, day: DayOfWeek, exId: string, setIndex: number) {
+  updateState(state => deleteSetFromState(state, week, day, exId, setIndex));
+}
+
+export function insertSet(week: number, day: DayOfWeek, exId: string, index: number, set: WorkoutSet) {
+  updateState(state => insertSetInState(state, week, day, exId, index, set));
+}
+
+export function updateDayNote(week: number, day: DayOfWeek, note: string) {
+  updateState(s => ({
+    ...s,
+    weeks: s.weeks.map(w => {
+      if (w.week !== week || w.day !== day) return w;
+      return { ...w, note: note.trim() || undefined };
+    }),
+  }), true);
+}
+
+export function renameExercise(week: number, day: DayOfWeek, exId: string, newName: string) {
+  updateState(state => renameExerciseInState(state, week, day, exId, newName), true);
+}
+
+export function toggleRecoveryDone(week: number, day: DayOfWeek, exId: string) {
+  updateState(state => mapExercise(state, week, day, exId, ex => ({ ...ex, recoveryDone: !ex.recoveryDone })), true);
+}
+
+export function toggleConditioningDone(week: number, day: DayOfWeek, exId: string) {
+  updateState(state => mapExercise(state, week, day, exId, ex => ({ ...ex, conditioningDone: !ex.conditioningDone })), true);
+}
+
+export function insertExerciseAt(week: number, day: DayOfWeek, index: number, exercise: Exercise) {
+  updateState(state => insertExerciseAtState(state, week, day, index, exercise));
+}
+
+export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
+  const state = get(appState);
+  const wd = state.weeks.find(w => w.week === week && w.day === day);
+  const exIndex = wd?.exercises.findIndex(e => e.id === exId) ?? -1;
+  const captured = wd?.exercises[exIndex];
+  updateState(s => deleteExerciseFromState(s, week, day, exId));
+  if (captured && exIndex >= 0) {
+    const ex = { ...captured };
+    pushUndo({
+      label: `"${ex.name}" deleted`,
+      fn: () => updateState(s => insertExerciseAtState(s, week, day, exIndex, ex)),
+    });
+  }
+}
+
+// ---- MVP1 migration ----
+export const hasMvp1Data = derived(currentUser, ($user) => {
+  if (!$user) return false;
+  return detectMvp1Data($user.id);
+});
+
+export function runMvp1Import(): boolean {
+  const user = get(currentUser);
+  if (!user) return false;
+
+  const migrated = importFromMvp1(user.id);
+  if (!migrated || migrated.weeks.length === 0) return false;
+
+  appState.set(migrated);
+  saveLocal(user.id, migrated);
+  saveCloud(user.id, migrated);
+
+  const maxWeek = Math.max(...migrated.weeks.map(w => w.week));
+  uiState.update(ui => ({ ...ui, week: maxWeek }));
+
+  return true;
+}

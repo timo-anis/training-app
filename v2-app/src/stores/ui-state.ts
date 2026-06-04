@@ -1,0 +1,122 @@
+/**
+ * ui-state.ts — UI-only state with no dependency on other store modules.
+ * Contains: theme, currentUser, auth access control, uiState, bootStatus,
+ * toast, search/sheet/onboarding flags, undo system, updateUI.
+ */
+import { writable, derived, get } from 'svelte/store';
+import type { User } from '@supabase/supabase-js';
+import type { UIState } from '../types/workout';
+import { DAY_ORDER } from '../types/workout';
+
+// ---- Theme (dark | presentation) ----
+export type Theme = 'dark' | 'presentation';
+const THEME_KEY = 'timo_training_theme';
+function readTheme(): Theme {
+  try {
+    return localStorage.getItem(THEME_KEY) === 'presentation' ? 'presentation' : 'dark';
+  } catch {
+    return 'dark';
+  }
+}
+export const theme = writable<Theme>(readTheme());
+function applyTheme(t: Theme) {
+  if (typeof document !== 'undefined') {
+    document.documentElement.dataset.theme = t;
+  }
+}
+theme.subscribe((t) => {
+  applyTheme(t);
+  try {
+    localStorage.setItem(THEME_KEY, t);
+  } catch { /* ignore */ }
+});
+export function toggleTheme() {
+  theme.update((t) => (t === 'presentation' ? 'dark' : 'presentation'));
+}
+
+// ---- Auth store ----
+export const currentUser = writable<User | null>(null);
+
+// ---- Presentation-mode access control (allow-list) ----
+const PRESENTATION_EMAILS = ['timo.anis@gmail.com'];
+function presentationAllowed(u: User | null): boolean {
+  return !!u && PRESENTATION_EMAILS.includes((u.email ?? '').toLowerCase());
+}
+export const canUsePresentation = derived(currentUser, ($u) => presentationAllowed($u));
+// Any signed-in user who is not on the allow-list is forced to the dark theme.
+currentUser.subscribe(($u) => {
+  if ($u && !presentationAllowed($u)) {
+    theme.set('dark');
+  }
+});
+
+// ---- UI state store ----
+const today = new Date();
+const defaultDay = DAY_ORDER[today.getDay() === 0 ? 6 : today.getDay() - 1];
+export const uiState = writable<UIState>({
+  week: 1,
+  day: defaultDay,
+  search: '',
+  workoutActive: false,
+  workoutMode: false,
+  activeExerciseIndex: 0,
+  radarMode: 'day',
+  calendarCollapsed: false,
+  workoutStartTime: null,
+  restStartTime: null,
+  restTotal: null,
+  highlightExercise: null,
+});
+
+// ---- Boot status ----
+export type BootStatus = 'idle' | 'loading' | 'ready' | 'error';
+export const bootStatus = writable<BootStatus>('idle');
+
+// ---- Toast notifications ----
+export interface Toast { msg: string; type: 'error' | 'success' | 'info'; }
+export const toast = writable<Toast | null>(null);
+let toastTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function showToast(msg: string, type: Toast['type'] = 'info') {
+  if (toastTimer) clearTimeout(toastTimer);
+  toast.set({ msg, type });
+  toastTimer = setTimeout(() => toast.set(null), 4000);
+}
+
+// ---- Search overlay (global, rendered at App level) ----
+export const searchOpen = writable<boolean>(false);
+
+// ---- Sheet open (account, etc.) — hides workout bar ----
+export const sheetOpen = writable<boolean>(false);
+
+// Set true from anywhere to (re)open the onboarding walkthrough
+export const requestOnboarding = writable<boolean>(false);
+
+// ---- Global undo ----
+export interface UndoAction { label: string; fn: () => void; }
+export const undoAction = writable<UndoAction | null>(null);
+let _undoTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function pushUndo(action: UndoAction) {
+  if (_undoTimer) clearTimeout(_undoTimer);
+  undoAction.set(action);
+  _undoTimer = setTimeout(() => undoAction.set(null), 5000);
+}
+
+export function execUndo() {
+  const a = get(undoAction);
+  if (!a) return;
+  if (_undoTimer) clearTimeout(_undoTimer);
+  undoAction.set(null);
+  a.fn();
+}
+
+export function clearUndo() {
+  if (_undoTimer) clearTimeout(_undoTimer);
+  undoAction.set(null);
+}
+
+// ---- updateUI ----
+export function updateUI(updater: (s: UIState) => UIState) {
+  uiState.update(updater);
+}
