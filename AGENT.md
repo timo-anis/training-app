@@ -7,7 +7,7 @@
 - Source: `v2-app/` (Svelte + TypeScript + Vite)
 - Build output: `v2-dist/`
 - Deployed: GitHub Pages from `v2-dist/`
-- Legacy: `index.html` (MVP1) — do not touch unless explicitly requested
+- Live: https://timo-anis.github.io/training-app/
 
 ---
 
@@ -180,7 +180,7 @@ Before writing any change, confirm:
 ### 5. Build (and test) before commit
 
 Always run npm run build in v2-app/ and confirm a clean build before committing.
-Run npm test as well when logic/state/date code changed (99 tests must pass).
+Run npm test as well when logic/state/date code changed (122 tests must pass).
 
 ---
 
@@ -188,7 +188,7 @@ Run npm test as well when logic/state/date code changed (99 tests must pass).
 
 1. Claude edits files in v2-app/src/
 2. Claude runs: cd v2-app && npm run build  (clean build required)
-3. Claude runs: npm test  (when logic/state changed — 99 tests must pass)
+3. Claude runs: npm test  (when logic/state changed — 122 tests must pass)
 4. Claude commits and pushes: git add -A && git commit -m "..." && git push
 5. CI runs test → typecheck → build → deploy. Live on GitHub Pages after push.
 
@@ -213,7 +213,6 @@ training-app/
 │   │   └── types/workout.ts
 │   └── package.json
 ├── v2-dist/              DEPLOYED BUILD (auto-generated, do not edit)
-├── index.html            MVP1 LEGACY (do not touch)
 ├── AGENT.md              this file
 └── CURRENT_BASELINE.md   current state summary
 ```

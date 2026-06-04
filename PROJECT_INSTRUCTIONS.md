@@ -1,16 +1,10 @@
-# Timo Training App — Project Instructions (V2)
-
-> Paste this text into the Cowork project settings ("Timo Training App" → project instructions),
-> replacing the old version. It reflects the real V2 codebase, not the legacy MVP1 single-file era.
-
----
+# Timo Training App — Project Instructions
 
 ## Context
 
 This is a real, production training app that Timo uses daily — not a demo.
 
-**Active app is V2:** Svelte 4 + TypeScript + Vite + Supabase, deployed to GitHub Pages via CI.
-The old `index.html` (MVP1, single file) is **legacy — never touch it**.
+**Stack:** Svelte 5 + TypeScript + Vite + Supabase, deployed to GitHub Pages via CI.
 
 Repo: `training-app`. Active source: `v2-app/src/`. Deployed build: `v2-dist/` (auto-generated).
 
@@ -67,7 +61,7 @@ alignment · Superset code pairing & grouping · `lib/state-helpers.ts` pure fun
 
 1. Edit files in `v2-app/src/`.
 2. Run `cd v2-app && npm run build` — must be clean before continuing.
-3. Run `npm test` when logic/state code changed (99 tests must pass).
+3. Run `npm test` when logic/state code changed (122 tests must pass).
 4. `git add -A && git commit -m "..." && git push`.
 5. CI runs test → typecheck → build → deploy. Live on GitHub Pages after push.
 
