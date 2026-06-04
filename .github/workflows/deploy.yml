@@ -44,19 +44,10 @@ jobs:
 
       - name: Assemble deploy folder
         run: |
-          mkdir -p _deploy/v2
+          mkdir -p _deploy
 
-          # MVP1 root files
-          cp index.html _deploy/
-          cp manifest.json _deploy/
-          cp icon_180.png icon_192.png icon_512.png _deploy/
-          [ -f favicon.ico ] && cp favicon.ico _deploy/ || true
-
-          # Old v2/ helper scripts (keep for MVP1 compatibility)
-          cp -r v2/. _deploy/v2/
-
-          # V2 Svelte build — overwrites/merges into v2/
-          cp -r v2-dist/. _deploy/v2/
+          # V2 Svelte build — deploy to root
+          cp -r v2-dist/. _deploy/
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
