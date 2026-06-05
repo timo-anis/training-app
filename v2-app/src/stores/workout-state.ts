@@ -438,7 +438,34 @@ export function updateExerciseMeta(
   week: number, day: DayOfWeek, exId: string,
   fields: Partial<Pick<Exercise, 'name' | 'rest' | 'note' | 'type' | 'code' | 'conditioning'>>
 ) {
-  updateState(state => mapExercise(state, week, day, exId, ex => ({ ...ex, ...fields })));
+  updateState(state => {
+    const updated = mapExercise(state, week, day, exId, ex => ({ ...ex, ...fields }));
+    // If code changed, re-sort exercises by code so A1<A2<B1<B2 order is maintained
+    if ('code' in fields) {
+      return {
+        ...updated,
+        weeks: updated.weeks.map(w => {
+          if (w.week !== week || w.day !== day) return w;
+          return {
+            ...w,
+            exercises: [...w.exercises].sort((a, b) => {
+              const aC = a.code.match(/^([A-Z])(\d+)?$/);
+              const bC = b.code.match(/^([A-Z])(\d+)?$/);
+              if (a.recovery !== b.recovery) return a.recovery ? 1 : -1;
+              if (aC && bC) {
+                if (aC[1] !== bC[1]) return aC[1].localeCompare(bC[1]);
+                return (Number(aC[2]) || 0) - (Number(bC[2]) || 0);
+              }
+              if (aC && !bC) return -1;
+              if (!aC && bC) return 1;
+              return 0;
+            }),
+          };
+        }),
+      };
+    }
+    return updated;
+  });
 }
 
 export function updateConditioningNote(week: number, day: DayOfWeek, exId: string, note: string) {
