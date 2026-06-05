@@ -1,6 +1,6 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-06-03
+**Last updated:** 2026-06-05
 
 ## Active App: V2
 
@@ -45,17 +45,22 @@
 - `goToToday()` works even when today's week has no workout data
 - `goToToday()` sets both week AND day (not just week)
 
-### Calendar — month view
+### Calendar — month view (redesigned 2026-06-05)
 - Initialises to today's month on every boot
 - Does NOT auto-follow uiState.week (fixed — was root cause of wrong-month bug)
 - Today button appears when user has navigated away from current month
-- Day status is data- + day.kind-driven (NO hardcoded weekday rules — removed 2026-06-01):
-  - green ✓ = completed/all sets done; amber ◑ = partial; blue dot = workout (marked or logged, not done)
-  - amber ○ = recovery (recovery exercises OR kind='recovery'); subdued = rest (kind='rest')
-  - unmarked day with no data = neutral/empty (new users see an empty calendar)
-  - marked days get a clear coloured cell fill (workout=blue, recovery=amber, rest=grey + dash); today and selected are RINGS (gold / white) so the type colour shows through even on today
+- **Visual design: circle-based (Oura-style)** — no colored cell backgrounds:
+  - Done: green filled circle (rgba(79,192,141) tint + border)
+  - Partial: white outline circle (workout in progress)
+  - Workout planned: subtle white outline circle
+  - Recovery: amber outline circle
+  - Rest / neutral: no circle, dim number only
+  - Today: gold outline ring around the circle
+  - Selected: white outline ring around the circle
+  - SAT/SUN column headers dimmer than weekday headers
+- Day status is still data- + day.kind-driven (NO hardcoded weekday rules)
 - Future days: clickable (for planning), cursor pointer
-- Legend: Done / Partial / Workout / Recovery / Rest
+- Legend: Done / Workout / Recovery / Rest (circle swatches)
 
 ### Day-type marking (added 2026-06-01)
 - Each day can be marked workout / recovery / rest via a segment toggle under the day heading (setDayKind)
