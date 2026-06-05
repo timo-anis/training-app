@@ -190,20 +190,9 @@
               class:today
               on:click={() => selectDay(date)}
             >
-              <span class="day-num">{date.getDate()}</span>
-              {#if status === 'done'}
-                <span class="status-mark">✓</span>
-              {:else if status === 'partial'}
-                <span class="status-mark partial-mark">◑</span>
-              {:else if status === 'has-data'}
-                <span class="status-dot"></span>
-              {:else if status === 'active-recovery'}
-                <span class="status-mark rec">○</span>
-              {:else if status === 'rest'}
-                <span class="status-mark rest-mark">–</span>
-              {:else if status === 'weekend'}
-                <span class="status-mark wknd">–</span>
-              {/if}
+              <span class="day-circle">
+                <span class="day-num">{date.getDate()}</span>
+              </span>
             </button>
           {:else}
             <div class="day-cell empty"></div>
@@ -214,10 +203,10 @@
 
     <!-- Legend -->
     <div class="legend">
-      <span class="leg-item"><span class="leg-swatch done-sw">✓</span>Done</span>
-      <span class="leg-item"><span class="leg-swatch data-sw"></span>Workout</span>
-      <span class="leg-item"><span class="leg-swatch rec-sw">○</span>Recovery</span>
-      <span class="leg-item"><span class="leg-swatch rest-sw"></span>Rest</span>
+      <span class="leg-item"><span class="leg-c done-c"></span>Done</span>
+      <span class="leg-item"><span class="leg-c wod-c"></span>Workout</span>
+      <span class="leg-item"><span class="leg-c rec-c"></span>Recovery</span>
+      <span class="leg-item leg-rest">– Rest</span>
     </div>
   {/if}
 </div>
@@ -350,111 +339,93 @@
   /* ---- Day cell base ---- */
   .day-cell {
     aspect-ratio: 1;
-    border-radius: 9px;
-    border: 1px solid transparent;
     background: transparent;
+    border: none;
     cursor: pointer;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1px;
     padding: 0;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.1s, border-color 0.1s;
-    position: relative;
   }
 
   .day-cell.empty { cursor: default; }
+
+  /* Circle inside each cell */
+  .day-circle {
+    width: 76%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: transparent;
+    transition: border-color 0.12s, background 0.12s;
+  }
 
   .day-num {
     font-size: 15px;
     font-weight: 700;
     line-height: 1;
+    color: rgba(var(--c-fg), 0.28);
   }
 
-  /* ---- Status styles — Monochrome + single gold (palette B) ---- */
+  /* ---- Circle status styles ---- */
 
-  /* Done: green — fully completed */
-  .status-done {
-    background: var(--h-2e7d57);
-    border-color: var(--h-3fa06f);
+  /* Done: green filled ring */
+  .status-done .day-circle {
+    background: rgba(79, 192, 141, 0.14);
+    border: 2px solid rgba(79, 192, 141, 0.65);
   }
-  .status-done .day-num { color: var(--h-eafff5); }
+  .status-done .day-num { color: #5dd4a0; }
 
-  /* Partial: amber/yellow — started but not finished */
-  .status-partial {
-    background: var(--h-2f5bd0);
-    border-color: var(--h-5b82e6);
+  /* Partial: workout in progress — white outline ring */
+  .status-partial .day-circle {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1.5px solid rgba(255, 255, 255, 0.30);
   }
-  .status-partial .day-num { color: var(--h-eaf1ff); }
+  .status-partial .day-num { color: rgba(255, 255, 255, 0.88); }
 
-  /* Has-data: workout logged, not fully done — slightly lighter white */
-  .status-has-data {
-    background: var(--h-2f5bd0);
-    border-color: var(--h-5b82e6);
+  /* Workout planned (has-data) — subtle white outline */
+  .status-has-data .day-circle {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1.5px solid rgba(255, 255, 255, 0.18);
   }
-  .status-has-data .day-num { color: var(--h-eaf1ff); }
+  .status-has-data .day-num { color: rgba(255, 255, 255, 0.80); }
 
-  /* Active recovery — gentle amber tint, same family as gold */
-  .status-active-recovery {
-    background: var(--h-a8741f);
-    border-color: var(--h-cf9433);
+  /* Recovery — amber outline */
+  .status-active-recovery .day-circle {
+    background: rgba(196, 146, 48, 0.10);
+    border: 1.5px solid rgba(196, 146, 48, 0.52);
   }
-  .status-active-recovery .day-num { color: var(--h-fff6e6); }
+  .status-active-recovery .day-num { color: #d4a342; }
 
-  /* Weekend — dim but readable */
-  .status-weekend .day-num { color: rgba(var(--c-fg), 0.22); }
+  /* Rest — no circle, very dim number */
+  .status-rest .day-num { color: rgba(255, 255, 255, 0.14); }
 
-  /* Rest: explicitly marked rest day — distinct violet */
-  .status-rest {
-    background: var(--h-544aa0);
-    border-color: var(--h-7d72c4);
-  }
-  .status-rest .day-num { color: var(--h-f1eeff); }
-  .rest-mark { color: var(--h-f1eeff); font-weight: 700; font-size: 12px; line-height: 1; }
+  /* Neutral / future — no circle */
+  .status-neutral .day-num { color: rgba(255, 255, 255, 0.28); }
+  .status-future .day-num  { color: rgba(255, 255, 255, 0.18); }
+  .status-weekend .day-num { color: rgba(255, 255, 255, 0.14); }
 
-  /* Future — visible but clearly lighter than past */
-  .status-future .day-num { color: rgba(var(--c-fg), 0.18); }
-  .status-future { cursor: pointer; }
-
-  /* Unmarked day — neutral, empty look (no marker) */
-  .status-neutral .day-num { color: rgba(var(--c-fg), 0.30); }
-  .status-neutral { cursor: pointer; }
-
-  /* Today — solid gold, THE single strong accent */
-  .today {
-    box-shadow: inset 0 0 0 2px var(--c-accent-solid) !important;
-    border-color: var(--c-accent-solid) !important;
-  }
-  .today .day-num { color: var(--h-ffffff) !important; font-weight: 900 !important; }
-
-  /* Selected — white ring, distinct from today (today's gold ring wins when both) */
-  .selected {
-    box-shadow: inset 0 0 0 2px rgba(var(--c-fg), 0.55);
-    border-color: rgba(var(--c-fg), 0.45);
-  }
-  .selected .day-num { color: var(--h-ffffff); }
-
-  /* Status marks */
-  .status-mark {
-    font-size: 11px;
-    font-weight: 900;
-    line-height: 1;
-    color: rgba(var(--c-fg), 0.85);
+  /* Today — gold ring outside the circle */
+  .today .day-circle {
+    outline: 2.5px solid rgba(196, 146, 48, 0.85);
+    outline-offset: 3px;
   }
 
-  .status-done .status-mark { color: var(--h-eafff5); }
-  .partial-mark { color: var(--h-c6f2db) !important; font-size: 12px; }
+  /* Selected — white ring outside the circle */
+  .selected .day-circle {
+    outline: 2px solid rgba(var(--c-fg), 0.55);
+    outline-offset: 2px;
+  }
 
-  .status-mark.rec  { color: var(--h-fff6e6); font-weight: 400; font-size: 12px; }
-  .status-mark.wknd { color: var(--h-182438); font-weight: 600; font-size: 11px; }
-
-  .status-dot {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--h-dbe6ff);
+  /* Today wins over selected */
+  .today .day-circle,
+  .today.selected .day-circle {
+    outline: 2.5px solid rgba(196, 146, 48, 0.85);
+    outline-offset: 3px;
   }
 
   /* ---- Legend ---- */
@@ -471,47 +442,44 @@
   .leg-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     font-size: 10px;
-    color: rgba(var(--c-fg), 0.45);
+    color: rgba(var(--c-fg), 0.40);
     font-weight: 600;
   }
 
-  .leg-swatch {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 15px;
-    height: 15px;
-    border-radius: 4px;
-    font-size: 9px;
-    font-weight: 900;
+  .leg-rest {
+    font-size: 10px;
+    color: rgba(var(--c-fg), 0.28);
+    font-weight: 600;
+    letter-spacing: 0.02em;
   }
 
-  .done-sw    { background: var(--h-2e7d57); border: 1px solid var(--h-3fa06f); color: var(--h-eafff5); }
-  .partial-sw { background: rgba(var(--c-accent), 0.10); border: 1px solid rgba(var(--c-accent), 0.30); color: var(--c-accent-solid); font-size: 10px; }
-  .data-sw  { background: var(--h-2f5bd0); border: 1px solid var(--h-5b82e6); }
-  .data-sw::after { content: ''; width: 5px; height: 5px; border-radius: 50%; background: var(--h-dbe6ff); }
-  .rec-sw   { background: var(--h-a8741f); border: 1px solid var(--h-cf9433); color: var(--h-fff6e6); font-size: 10px; }
-  .wknd-sw  { background: transparent; border: 1px solid rgba(var(--c-fg), 0.10); color: var(--h-2e4060); font-size: 10px; }
-  .rest-sw  { background: var(--h-544aa0); border: 1px solid var(--h-7d72c4); }
+  .leg-c {
+    display: block;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .done-c { background: rgba(79, 192, 141, 0.14); border: 2px solid rgba(79, 192, 141, 0.65); }
+  .wod-c  { background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(255, 255, 255, 0.2); }
+  .rec-c  { background: rgba(196, 146, 48, 0.10); border: 1.5px solid rgba(196, 146, 48, 0.5); }
+
   @media (min-width: 640px) {
     .month-label { font-size: 17px; }
     .day-num { font-size: 17px; }
     .day-hdr { font-size: 13px; }
-    .day-cell { border-radius: 11px; }
-    .status-mark { font-size: 13px; }
     .leg-item { font-size: 12px; }
     .nav-btn { width: 38px; height: 38px; font-size: 20px; }
   }
 
-  /* Presentation mode: keep every date legible on transparent/light cells too */
-  :root[data-theme="presentation"] .status-weekend .day-num,
+  /* Presentation mode */
+  :root[data-theme="presentation"] .status-neutral .day-num,
   :root[data-theme="presentation"] .status-future .day-num,
-  :root[data-theme="presentation"] .status-neutral .day-num {
-    color: rgba(13, 26, 46, 0.62);
-  }
-  :root[data-theme="presentation"] .status-mark.wknd {
-    color: rgba(13, 26, 46, 0.55);
+  :root[data-theme="presentation"] .status-weekend .day-num,
+  :root[data-theme="presentation"] .status-rest .day-num {
+    color: rgba(13, 26, 46, 0.40);
   }
 </style>
