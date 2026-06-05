@@ -212,8 +212,8 @@
     }
   }
 
-  function prev() { if (!isFirst) setActiveBlock(activeIndex - 1); }
-  function next() { if (!isLast) setActiveBlock(activeIndex + 1); }
+  function prev() { if (!isFirst) { clearRest(); setActiveBlock(activeIndex - 1); } }
+  function next() { if (!isLast) { clearRest(); setActiveBlock(activeIndex + 1); } }
   function backToNormal() { closeWorkoutMode(); }
 
   // ---- Workout summary ----
@@ -788,8 +788,10 @@
     </div>
   {/if}
 
-  <!-- Footer nav -->
-  <WmFooter {isFirst} {isLast} onPrev={prev} onNext={next} onBack={backToNormal} onFinish={openSummary} />
+  <!-- Footer nav — fixed above rest timer overlay (z-index 150) -->
+  <div class="wm-footer-outer">
+    <WmFooter {isFirst} {isLast} onPrev={prev} onNext={next} onBack={backToNormal} onFinish={openSummary} />
+  </div>
 </div>
 
 <!-- ===== Completion Flash ===== -->
@@ -827,7 +829,7 @@
   .wm-content {
     flex: 1;
     overflow-y: auto;
-    padding: 16px 14px;
+    padding: 16px 14px calc(80px + env(safe-area-inset-bottom, 0px));
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -1301,5 +1303,17 @@
     0%   { transform: scale(0.3); opacity: 0; }
     60%  { transform: scale(1.1); opacity: 1; }
     100% { transform: scale(1);   opacity: 0.9; }
+  }
+
+  /* Footer pinned above rest timer overlay */
+  .wm-footer-outer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 200;
+    max-width: 640px;
+    margin: 0 auto;
+    background: linear-gradient(0deg, var(--h-050508, #050508) 0%, rgba(8,9,15,0.97) 100%);
   }
 </style>
