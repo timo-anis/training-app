@@ -23,6 +23,7 @@ easy to extend.
 - **Reliability over cleverness** — no fragile hacks; must work consistently across sessions.
 - **Speed of use** — user is mid-workout; minimal taps, zero confusion.
 - **Data integrity first** — no broken states, no misaligned dates, no mixed exercise structures.
+- **Minimum viable change** — smallest change that delivers the requested value. No gold-plating.
 
 ## Data model (schema 4.0 — source of truth: `v2-app/src/types/workout.ts`)
 
@@ -42,7 +43,7 @@ Non-negotiable data rules:
 - Never silently normalize or migrate data.
 - If unsure → ask, or preserve existing structure. Never guess.
 
-## How to work (component architecture)
+## How to work
 
 This is a component app, not an HTML file. There is no "deliver a new HTML file" step.
 
@@ -63,12 +64,38 @@ alignment · Superset code pairing & grouping · `lib/state-helpers.ts` pure fun
 2. Run `cd v2-app && npm run build` — must be clean before continuing.
 3. Run `npm test` when logic/state code changed (133 tests must pass).
 4. `git add -A && git commit -m "..." && git push`.
-5. CI runs test → typecheck → build → deploy. Live on GitHub Pages after push.
+5. **Update docs** (no need to ask — always do this):
+   - `CURRENT_BASELINE.md` if any feature description changed.
+   - Memory: `project_assessment_open_items.md` — add ✅ line for the fix.
+   - Memory: `project_training_app.md` — update if design system, calendar, or architecture changed.
+6. CI runs test → typecheck → build → deploy. Live on GitHub Pages after push.
 
-**Decision (2026-06-01): we stay on this build → push → live flow.** It is reliable and
-low-friction. No preview branch for now — revisit only if testing-before-deploy becomes a real
-need (e.g. risky multi-file changes). The safety net is: build + tests must pass locally before
-every push.
+**Milestone tags:** when a meaningful feature set is complete (not every push), create a tag:
+`git tag v2-<short-description>-YYYY-MM-DD && git push origin --tags`
+
+## Definition of Done
+
+A change is done when ALL of the following are true:
+
+- [ ] Build is clean (`npm run build`)
+- [ ] Tests pass (`npm test`) if logic/state was touched
+- [ ] The change works in a real workout scenario (mental walkthrough)
+- [ ] UX consistency check: if a visual pattern was changed, verify all related elements match
+      (e.g. adding dashed circles to the legend → check if the calendar also needs them)
+- [ ] Docs updated (CURRENT_BASELINE.md + memory files)
+- [ ] Pushed and CI green
+
+## Proactive flags — surface without being asked
+
+Claude must raise the following proactively, without waiting to be asked:
+
+- **Security / expiry:** PAT/token nearing expiry, exposed credentials.
+- **Data risk:** anything that could cause data loss, corruption, or broken state.
+- **UX inconsistency:** if changing one UI element creates a mismatch with a related element.
+- **Missing safety net:** if a structural risk has no backup or rollback path.
+- **Scope creep:** if while fixing X, Claude notices Y is also broken — flag it, do not silently fix it.
+
+Format: one short sentence, clearly labelled (e.g. "⚠️ UX: legend shows dashed circles but calendar does not — fix?").
 
 ## Before delivering any change, confirm
 
