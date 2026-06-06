@@ -896,6 +896,7 @@
     color: rgba(var(--c-fg), 0.55);
     line-height: 1.5;
     margin: 0;
+    text-align: left;
   }
 
   :global(.hint-desc em) {
