@@ -475,11 +475,39 @@
     .nav-btn { width: 38px; height: 38px; font-size: 20px; }
   }
 
-  /* Presentation mode */
+  /* Presentation mode — override dark-theme rgba values for white/light background */
+  :root[data-theme="presentation"] .status-done .day-circle {
+    background: rgba(79, 192, 141, 0.18);
+    border: 2px solid rgba(79, 192, 141, 0.80);
+  }
+  :root[data-theme="presentation"] .status-done .day-num {
+    color: #1a7a54;
+  }
+  :root[data-theme="presentation"] .status-has-data .day-circle {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1.5px solid rgba(13, 26, 46, 0.22);
+  }
+  :root[data-theme="presentation"] .status-has-data .day-num {
+    color: rgba(13, 26, 46, 0.75);
+  }
+  :root[data-theme="presentation"] .status-active-recovery .day-circle {
+    background: rgba(196, 146, 48, 0.14);
+    border: 1.5px solid rgba(196, 146, 48, 0.75);
+  }
+  :root[data-theme="presentation"] .status-active-recovery .day-num {
+    color: #7a4e08;
+  }
+  :root[data-theme="presentation"] .status-rest .day-num,
   :root[data-theme="presentation"] .status-neutral .day-num,
   :root[data-theme="presentation"] .status-future .day-num,
-  :root[data-theme="presentation"] .status-weekend .day-num,
-  :root[data-theme="presentation"] .status-rest .day-num {
-    color: rgba(13, 26, 46, 0.40);
+  :root[data-theme="presentation"] .status-weekend .day-num {
+    color: rgba(13, 26, 46, 0.32);
+  }
+  :root[data-theme="presentation"] .today .day-num {
+    color: rgba(13, 26, 46, 0.90);
+  }
+  :root[data-theme="presentation"] .wod-c {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1.5px solid rgba(13, 26, 46, 0.25);
   }
 </style>
