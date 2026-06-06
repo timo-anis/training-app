@@ -206,7 +206,7 @@
       <span class="leg-item"><span class="leg-c done-c"></span>Done</span>
       <span class="leg-item"><span class="leg-c wod-c"></span>Workout</span>
       <span class="leg-item"><span class="leg-c rec-c"></span>Recovery</span>
-      <span class="leg-item leg-rest">– Rest</span>
+      <span class="leg-item"><span class="leg-c rest-c"></span>Rest</span>
     </div>
   {/if}
 </div>
@@ -448,13 +448,6 @@
     font-weight: 600;
   }
 
-  .leg-rest {
-    font-size: 10px;
-    color: rgba(var(--c-fg), 0.28);
-    font-weight: 600;
-    letter-spacing: 0.02em;
-  }
-
   .leg-c {
     display: block;
     width: 13px;
@@ -466,6 +459,7 @@
   .done-c { background: rgba(79, 192, 141, 0.14); border: 2px solid rgba(79, 192, 141, 0.65); }
   .wod-c  { background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(255, 255, 255, 0.2); }
   .rec-c  { background: rgba(196, 146, 48, 0.10); border: 1.5px solid rgba(196, 146, 48, 0.5); }
+  .rest-c { background: transparent; border: 1.5px dashed rgba(255, 255, 255, 0.18); }
 
   @media (min-width: 640px) {
     .month-label { font-size: 17px; }
@@ -509,5 +503,24 @@
   :root[data-theme="presentation"] .wod-c {
     background: rgba(0, 0, 0, 0.03);
     border: 1.5px solid rgba(13, 26, 46, 0.25);
+  }
+  /* Presentation mode — legend circles */
+  :root[data-theme="presentation"] .wod-c {
+    background: rgba(0, 0, 0, 0.03);
+    border: 1.5px solid rgba(13, 26, 46, 0.25);
+  }
+  :root[data-theme="presentation"] .done-c {
+    background: rgba(79, 192, 141, 0.18);
+    border: 2px solid rgba(79, 192, 141, 0.80);
+  }
+  :root[data-theme="presentation"] .rec-c {
+    background: rgba(196, 146, 48, 0.14);
+    border: 1.5px solid rgba(196, 146, 48, 0.75);
+  }
+  :root[data-theme="presentation"] .rest-c {
+    border: 1.5px dashed rgba(13, 26, 46, 0.22);
+  }
+  :root[data-theme="presentation"] .leg-item {
+    color: rgba(13, 26, 46, 0.55);
   }
 </style>
