@@ -401,13 +401,21 @@
   }
   .status-active-recovery .day-num { color: #d4a342; }
 
-  /* Rest — no circle, very dim number */
-  .status-rest .day-num { color: rgba(255, 255, 255, 0.14); }
+  /* Rest — dashed circle, very dim number */
+  .status-rest .day-circle {
+    border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  }
+  .status-rest .day-num { color: rgba(255, 255, 255, 0.22); }
+
+  /* Weekend — dashed circle, very dim number */
+  .status-weekend .day-circle {
+    border: 1.5px dashed rgba(255, 255, 255, 0.18);
+  }
+  .status-weekend .day-num { color: rgba(255, 255, 255, 0.22); }
 
   /* Neutral / future — no circle */
   .status-neutral .day-num { color: rgba(255, 255, 255, 0.28); }
   .status-future .day-num  { color: rgba(255, 255, 255, 0.18); }
-  .status-weekend .day-num { color: rgba(255, 255, 255, 0.14); }
 
   /* Today — gold ring outside the circle */
   .today .day-circle {
@@ -490,6 +498,10 @@
   }
   :root[data-theme="presentation"] .status-active-recovery .day-num {
     color: #7a4e08;
+  }
+  :root[data-theme="presentation"] .status-rest .day-circle,
+  :root[data-theme="presentation"] .status-weekend .day-circle {
+    border: 1.5px dashed rgba(13, 26, 46, 0.22);
   }
   :root[data-theme="presentation"] .status-rest .day-num,
   :root[data-theme="presentation"] .status-neutral .day-num,
