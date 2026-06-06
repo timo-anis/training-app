@@ -45,7 +45,7 @@
 - `goToToday()` works even when today's week has no workout data
 - `goToToday()` sets both week AND day (not just week)
 
-### Calendar — month view (redesigned 2026-06-05)
+### Calendar — month view (updated 2026-06-06)
 - Initialises to today's month on every boot
 - Does NOT auto-follow uiState.week (fixed — was root cause of wrong-month bug)
 - Today button appears when user has navigated away from current month
@@ -54,13 +54,15 @@
   - Partial: white outline circle (workout in progress)
   - Workout planned: subtle white outline circle
   - Recovery: amber outline circle
-  - Rest / neutral: no circle, dim number only
+  - Rest / weekend: dashed circle outline, dim number
+  - Neutral / future: no circle, dim number only
   - Today: gold outline ring around the circle
   - Selected: white outline ring around the circle
   - SAT/SUN column headers dimmer than weekday headers
 - Day status is still data- + day.kind-driven (NO hardcoded weekday rules)
 - Future days: clickable (for planning), cursor pointer
-- Legend: Done / Workout / Recovery / Rest (circle swatches)
+- Legend: 4 swatches (Done/Workout/Recovery/Rest) all with circle visuals + labels
+- Presentation mode (`[data-theme="presentation"]`): all circle statuses + legend override to be visible on white background
 
 ### Day-type marking (added 2026-06-01)
 - Each day can be marked workout / recovery / rest via a segment toggle under the day heading (setDayKind)
