@@ -464,7 +464,7 @@
   }
 
   .type-btn {
-    padding: 9px;
+    padding: 7px;
     border-radius: 10px;
     border: 1px solid rgba(var(--c-edge-e), 0.22);
     background: var(--c-12-22-48-0_55);
@@ -542,9 +542,9 @@
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 12px 16px 4px;
+    padding: 8px 16px 4px;
     display: grid;
-    gap: 14px;
+    gap: 8px;
   }
 
   /* Desktop: center sheet */
@@ -569,7 +569,7 @@
   .edit-field {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
 
   .edit-label {
@@ -584,7 +584,7 @@
     background: rgba(var(--c-surface-c), 0.65);
     border: 1px solid rgba(var(--c-edge-d), 0.18);
     border-radius: 10px;
-    padding: 10px 12px;
+    padding: 8px 12px;
     font-size: 16px;
     font-weight: 600;
     color: var(--h-e8f2ff);
