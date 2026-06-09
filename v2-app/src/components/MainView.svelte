@@ -5,6 +5,7 @@
   import TopBar from './TopBar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import AddExercise from './AddExercise.svelte';
+  import CopyDayFrom from './CopyDayFrom.svelte';
   import StatsView from './StatsView.svelte';
   import AccountSheet from './AccountSheet.svelte';
 
@@ -227,6 +228,7 @@
     {#if exercisesExpanded}
       <div class="add-ex-wrap">
         <AddExercise bind:this={adder} week={$uiState.week} day={$uiState.day} />
+        <CopyDayFrom week={$uiState.week} day={$uiState.day} />
       </div>
     {/if}
   </section>

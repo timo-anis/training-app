@@ -207,6 +207,54 @@ export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
   updateState(() => ({ ...state, weeks: [...filtered, cloned] }));
 }
 
+// ---- Copy any past day into a target day (append) ----
+export function copyDayFrom(srcWeek: number, srcDay: DayOfWeek, tgtWeek: number, tgtDay: DayOfWeek) {
+  const state = get(appState);
+  const sourceDay = state.weeks.find(w => w.week === srcWeek && w.day === srcDay);
+  if (!sourceDay || sourceDay.exercises.length === 0) return;
+
+  const cloned = sourceDay.exercises.map(ex => ({
+    ...ex,
+    id: `${ex.id}_copy_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    sets: ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false as const })),
+    recoveryDone: false,
+    conditioningDone: false,
+    conditioningNote: '',
+  }));
+
+  // Preserve superset order: A1 < A2 < B1 < B2, recovery last
+  const sorted = [...cloned].sort((a, b) => {
+    const aC = a.code.match(/^([A-Z])(\d+)?$/);
+    const bC = b.code.match(/^([A-Z])(\d+)?$/);
+    if (a.recovery !== b.recovery) return a.recovery ? 1 : -1;
+    if (aC && bC) {
+      if (aC[1] !== bC[1]) return aC[1].localeCompare(bC[1]);
+      return (Number(aC[2]) || 0) - (Number(bC[2]) || 0);
+    }
+    if (aC && !bC) return -1;
+    if (!aC && bC) return 1;
+    return 0;
+  });
+
+  const date = getDateForWeekDay(tgtWeek, tgtDay);
+
+  updateState(s => {
+    const existing = s.weeks.find(w => w.week === tgtWeek && w.day === tgtDay);
+    if (existing) {
+      return {
+        ...s,
+        weeks: s.weeks.map(w =>
+          w.week === tgtWeek && w.day === tgtDay
+            ? { ...w, exercises: [...w.exercises, ...sorted] }
+            : w
+        ),
+      };
+    }
+    const newDay: WorkoutDay = { week: tgtWeek, day: tgtDay, date, exercises: sorted, kind: 'workout' };
+    return { ...s, weeks: [...s.weeks, newDay] };
+  });
+}
+
 // ---- Workout mode actions ----
 export function startWorkout() {
   uiState.update(ui => ({
