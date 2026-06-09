@@ -197,7 +197,11 @@
 {#if editOpen}
   <div class="edit-backdrop" on:click={closeEdit} aria-hidden="true"></div>
   <div class="edit-sheet" role="dialog" aria-label="Edit exercise">
-    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <button class="btn-cancel" on:click={closeEdit}>Cancel</button>
+      <div class="sheet-handle"></div>
+      <button class="btn-save" on:click={saveEdit} disabled={!editName.trim()}>Save</button>
+    </div>
     <div class="sheet-body">
 
       <div class="edit-field">
@@ -272,10 +276,6 @@
         ></textarea>
       </div>
 
-    </div>
-    <div class="sheet-actions">
-      <button class="btn-cancel" on:click={closeEdit}>Cancel</button>
-      <button class="btn-save" on:click={saveEdit} disabled={!editName.trim()}>Save</button>
     </div>
   </div>
 {/if}
@@ -532,12 +532,20 @@
     to   { transform: translateY(0); }
   }
 
+  .sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px 8px;
+    flex-shrink: 0;
+    border-bottom: 1px solid rgba(var(--c-fg), 0.07);
+  }
+
   .sheet-handle {
     width: 36px;
     height: 4px;
     border-radius: 2px;
     background: rgba(var(--c-fg), 0.14);
-    margin: 10px auto 4px;
     flex-shrink: 0;
   }
 
@@ -549,16 +557,6 @@
     padding: 12px 16px 4px;
     display: grid;
     gap: 14px;
-  }
-
-  .sheet-actions {
-    flex-shrink: 0;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    padding: 12px 16px;
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
-    border-top: 1px solid rgba(var(--c-fg), 0.07);
   }
 
   /* Desktop: center sheet */
@@ -618,27 +616,31 @@
   }
 
   .btn-cancel {
-    padding: 11px;
-    border-radius: 11px;
-    border: 1px solid rgba(var(--c-fg), 0.10);
-    background: rgba(var(--c-surface-a), 0.50);
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
     color: rgba(var(--c-fg), 0.45);
-    font-size: 13px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    min-width: 64px;
+    text-align: left;
   }
 
   .btn-save {
-    padding: 11px;
-    border-radius: 11px;
-    border: 1px solid rgba(var(--c-fg), 0.25);
-    background: rgba(var(--c-fg), 0.10);
-    color: var(--h-ffffff);
-    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    color: var(--h-e8f2ff);
+    font-size: 14px;
     font-weight: 800;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    min-width: 64px;
+    text-align: right;
   }
 
   .btn-save:disabled { opacity: 0.35; cursor: not-allowed; }
