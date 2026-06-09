@@ -460,11 +460,11 @@
   .type-toggle {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    gap: 6px;
+    gap: 4px;
   }
 
   .type-btn {
-    padding: 7px;
+    padding: 5px;
     border-radius: 10px;
     border: 1px solid rgba(var(--c-edge-e), 0.22);
     background: var(--c-12-22-48-0_55);
@@ -483,7 +483,7 @@
   }
 
   .type-hint {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 600;
     color: rgba(var(--c-fg), 0.28);
     text-align: center;
@@ -524,7 +524,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 16px 8px;
+    padding: 6px 16px 6px;
     flex-shrink: 0;
     border-bottom: 1px solid rgba(var(--c-fg), 0.07);
   }
@@ -542,9 +542,9 @@
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 8px 16px 4px;
+    padding: 6px 14px 4px;
     display: grid;
-    gap: 8px;
+    gap: 4px;
   }
 
   /* Desktop: center sheet */
@@ -569,7 +569,7 @@
   .edit-field {
     display: flex;
     flex-direction: column;
-    gap: 3px;
+    gap: 2px;
   }
 
   .edit-label {
@@ -584,7 +584,7 @@
     background: rgba(var(--c-surface-c), 0.65);
     border: 1px solid rgba(var(--c-edge-d), 0.18);
     border-radius: 10px;
-    padding: 8px 12px;
+    padding: 7px 12px;
     font-size: 16px;
     font-weight: 600;
     color: var(--h-e8f2ff);
