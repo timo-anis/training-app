@@ -184,7 +184,7 @@ export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
       const mapped = sourceDay.exercises.map(ex => ({
         ...ex,
         id: `${ex.id}_w${targetWeek}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        sets: ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false })),
+        sets: ex.sets.length > 0 ? ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false })) : [{ kg: '', reps: '', done: false }],
         recoveryDone: false,
         conditioningDone: false,
         conditioningNote: '',
@@ -216,7 +216,7 @@ export function copyDayFrom(srcWeek: number, srcDay: DayOfWeek, tgtWeek: number,
   const cloned = sourceDay.exercises.map(ex => ({
     ...ex,
     id: `${ex.id}_copy_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-    sets: ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false as const })),
+    sets: ex.sets.length > 0 ? ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false as const })) : [{ kg: '', reps: '', done: false as const }],
     recoveryDone: false,
     conditioningDone: false,
     conditioningNote: '',
@@ -542,18 +542,27 @@ export function addSet(week: number, day: DayOfWeek, exId: string) {
 export function addExercise(week: number, day: DayOfWeek, name: string) {
   const id = `${name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}`;
   updateState(state => {
+    // Inherit rest time from last occurrence of same exercise name
+    const lower = name.toLowerCase();
+    let inheritedRest = '';
+    for (const wd of state.weeks) {
+      for (const ex of wd.exercises) {
+        if (ex.name.toLowerCase() === lower && ex.rest) inheritedRest = ex.rest;
+      }
+    }
+    const newEx = { ...emptyExercise(id, name), rest: inheritedRest };
     const exists = state.weeks.find(w => w.week === week && w.day === day);
     if (exists) {
       return {
         ...state,
         weeks: state.weeks.map(w => {
           if (w.week !== week || w.day !== day) return w;
-          return { ...w, kind: w.kind ?? 'workout', exercises: [...w.exercises, emptyExercise(id, name)] };
+          return { ...w, kind: w.kind ?? 'workout', exercises: [...w.exercises, newEx] };
         }),
       };
     }
     const date = getDateForWeekDay(week, day);
-    const newDay: WorkoutDay = { week, day, date, exercises: [emptyExercise(id, name)], kind: 'workout' };
+    const newDay: WorkoutDay = { week, day, date, exercises: [newEx], kind: 'workout' };
     return { ...state, weeks: [...state.weeks, newDay] };
   });
 }
