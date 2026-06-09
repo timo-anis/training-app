@@ -129,9 +129,11 @@ export async function bootstrapState(userId: string): Promise<AppState> {
 // MVP1 stored data under "timo_training_v81_real__user__{userId}" (or global key).
 // Returns migrated AppState or null if no MVP1 data found.
 
+// Only check user-specific MVP1 key. The generic 'timo_training_v81_real'
+// (pre-auth era) belongs to the original user and must not trigger the import
+// banner for new users — original user data is already migrated to V2.
 const MVP1_KEYS = (userId: string) => [
   `timo_training_v81_real__user__${userId}`,
-  'timo_training_v81_real',
 ];
 
 export function detectMvp1Data(userId: string): boolean {
