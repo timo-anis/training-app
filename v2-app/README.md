@@ -48,7 +48,7 @@ src/
 │   ├── auth.ts         — Supabase auth
 │   ├── storage.ts      — localStorage + cloud sync
 │   ├── supabase.ts     — Supabase client
-│   └── migrator.ts     — MVP1 → V2 data import
+│   └── state-parser.ts — parse/normalise stored V2 state
 └── types/
     └── workout.ts      — domain types (schema 4.0)
 ```

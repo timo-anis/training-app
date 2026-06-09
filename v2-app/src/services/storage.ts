@@ -1,7 +1,7 @@
 import { supabase } from './supabase';
 import type { AppState } from '../types/workout';
 import { emptyAppState } from '../types/workout';
-import { parseAndMigrateState } from './migrator';
+import { parseAndMigrateState } from './state-parser';
 import { chooseNewer, hasData } from '../lib/state-merge';
 
 // ---- Local storage ----

@@ -1,5 +1,5 @@
 /**
- * Tests for src/services/migrator.ts
+ * Tests for src/services/state-parser.ts
  *
  * Coverage:
  * - V2 schema normalisation (parseAndMigrateState): pass-through, missing
@@ -7,7 +7,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { parseAndMigrateState } from '../services/migrator';
+import { parseAndMigrateState } from '../services/state-parser';
 
 describe('parseAndMigrateState', () => {
   it('passes through valid V2 state unchanged (schema preserved)', () => {

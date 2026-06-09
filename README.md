@@ -45,7 +45,7 @@ training-app/
 │   │   ├── App.svelte
 │   │   ├── types/workout.ts        Domain types — single source of truth
 │   │   ├── stores/app.ts           All state, actions, derived stores
-│   │   ├── services/               auth, storage, supabase, migrator
+│   │   ├── services/               auth, storage, supabase, state-parser
 │   │   ├── lib/                    Pure functions: dates, state-helpers, program
 │   │   └── components/             UI components
 │   └── vite.config.ts

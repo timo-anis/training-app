@@ -119,19 +119,8 @@ WorkoutSet { kg, reps, done }
 
 ## Test Suite
 
-133 automated tests — `npm test` in `v2-app/`.
-
-| File | Tests |
-|------|-------|
-| `dates.test.ts` | 20 |
-| `migrator.test.ts` | 26 |
-| `state-helpers.test.ts` | 42 |
-| `store-actions.test.ts` | 11 |
-| `WmSetRow.test.ts` | 11 |
-| `day-kind.test.ts` | 6 |
-| `day-nav.test.ts` | 5 |
-| `storage-merge.test.ts` | 8 |
-| `workout-flow.test.ts` | 4 |
+122 automated tests across 10 files — run `npm test` in `v2-app/`.
+(Per-file counts intentionally not listed here to avoid drift; the runner is the source of truth.)
 
 ---
 
