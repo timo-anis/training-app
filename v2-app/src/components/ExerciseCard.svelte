@@ -174,6 +174,23 @@
       <span class="meta-value">{exercise.note}</span>
     </div>
   {/if}
+
+  {#if total > 1}
+    <div class="order-controls">
+      <button
+        class="order-btn"
+        disabled={index === 0}
+        on:click|stopPropagation={() => moveExercise(week, day, exercise.id, 'up')}
+        aria-label="Move exercise up"
+      >↑</button>
+      <button
+        class="order-btn"
+        disabled={index === total - 1}
+        on:click|stopPropagation={() => moveExercise(week, day, exercise.id, 'down')}
+        aria-label="Move exercise down"
+      >↓</button>
+    </div>
+  {/if}
 </div>
 
 <!-- ── Edit bottom sheet ── -->
@@ -707,4 +724,36 @@
   @media (min-width: 640px) {
     .superset-badge { font-size: 14px; padding: 5px 12px; border-radius: 10px; }
   }
+  /* ── Exercise reorder controls ── */
+  .order-controls {
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(var(--c-fg), 0.05);
+  }
+
+  .order-btn {
+    padding: 4px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(var(--c-edge-e), 0.20);
+    background: rgba(var(--c-fg), 0.04);
+    color: rgba(var(--c-fg), 0.40);
+    font-size: 13px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, color 0.12s;
+  }
+
+  .order-btn:not(:disabled):active {
+    background: rgba(var(--c-fg), 0.10);
+    color: rgba(var(--c-fg), 0.80);
+  }
+
+  .order-btn:disabled {
+    opacity: 0.20;
+    cursor: not-allowed;
+  }
+
 </style>
