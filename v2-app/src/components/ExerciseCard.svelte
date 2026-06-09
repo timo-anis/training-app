@@ -545,6 +545,7 @@
     padding: 6px 14px 4px;
     display: grid;
     gap: 4px;
+    align-content: start;
   }
 
   /* Desktop: center sheet */
