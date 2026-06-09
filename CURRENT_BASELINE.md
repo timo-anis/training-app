@@ -1,6 +1,6 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-06-05
+**Last updated:** 2026-06-09
 
 ## Active App: V2
 
@@ -9,27 +9,23 @@
 
 ---
 
-## Code health (updated 2026-06-03)
+## Code health
 
-- Boot now merges local vs cloud by timestamp (newer wins) — see `lib/state-merge.ts`; prevents a stale cloud copy overwriting newer local edits.
-- Cloud saves are offline-aware with retry/backoff (`stores/sync.ts`); flush on `online`.
-- WorkoutMode split (2228 -> 1305 lines, -41%): extracted `WmHeader`, `WmFooter`, `WmRestControls`, `WmAddExercise`, `WmSummary`, `WmSetRow` as presentational children.
-- MainView: `TopBar` extracted (1021 -> 917 lines).
-- Store split (2026-06-04): `stores/app.ts` (846 lines) split into `ui-state.ts`, `sync.ts`, `workout-state.ts`. `app.ts` is now a barrel re-export — all component imports unchanged.
-- Component tests fixed (2026-06-04): vitest config updated with jsdom + svelteTesting(); `WmSetRow.test.ts` adds 11 component tests.
-- a11y: interactive SVG zones + swipe surface have roles/keyboard; build + svelte-check are 0 warnings.
-- Tests: 133 (122 store/logic + 11 WmSetRow component).
+- Boot merges local vs cloud by timestamp (newer wins) — `lib/state-merge.ts`
+- Cloud saves are offline-aware with retry/backoff (`stores/sync.ts`); flush on `online`
+- WorkoutMode split (2228 → 1305 lines, -41%): extracted `WmHeader`, `WmFooter`, `WmRestControls`, `WmAddExercise`, `WmSummary`, `WmSetRow` as presentational children
+- Store split (2026-06-04): `stores/app.ts` barrel re-exports `ui-state.ts`, `sync.ts`, `workout-state.ts`
+- Tests: 133 (122 store/logic + 11 WmSetRow component) — all green
+- a11y: interactive SVG zones + swipe surface have roles/keyboard; build + svelte-check 0 warnings
 
 ---
 
-## Theming (added 2026-06-02)
+## Theming
 
-- All colours are CSS tokens in `v2-app/src/app.css` (see `THEME_SYSTEM.md`).
-- Two themes: **dark** (default, base `:root`) and **presentation** (light/high-contrast, `:root[data-theme="presentation"]`).
-- Dark theme is pixel-identical to pre-token state (tokens default to the exact prior values).
-- Toggle: "Presentation mode" switch in Account sheet. Persisted to localStorage (`timo_training_theme`), applied via `document.documentElement.dataset.theme`; inline boot script prevents flash.
-- **Access-gated:** the toggle is visible/usable only for the allow-listed account (`canUsePresentation`, `stores/ui-state.ts`). Any other signed-in user is forced to dark.
-- Presentation accent is a restrained graphite-indigo (not gold) for a premium look on a projector; calendar dates stay legible on every day-type tile.
+- All colours are CSS tokens in `v2-app/src/app.css` (see `THEME_SYSTEM.md`)
+- Two themes: **dark** (default) and **presentation** (light/high-contrast)
+- Toggle: "Presentation mode" in Account sheet — access-gated (`canUsePresentation`)
+- Persisted to localStorage (`timo_training_theme`); inline boot script prevents flash
 
 ---
 
@@ -43,108 +39,81 @@
 ### Boot
 - Always lands on today's week + today's day
 - `goToToday()` works even when today's week has no workout data
-- `goToToday()` sets both week AND day (not just week)
 
-### Calendar — month view (updated 2026-06-06)
-- Initialises to today's month on every boot
-- Does NOT auto-follow uiState.week (fixed — was root cause of wrong-month bug)
-- Today button appears when user has navigated away from current month
-- **Visual design: circle-based (Oura-style)** — no colored cell backgrounds:
-  - Done: green filled circle (rgba(79,192,141) tint + border)
-  - Partial: white outline circle (workout in progress)
-  - Workout planned: subtle white outline circle
-  - Recovery: amber outline circle
-  - Rest / weekend: dashed circle outline, dim number
-  - Neutral / future: no circle, dim number only
-  - Today: gold outline ring around the circle
-  - Selected: white outline ring around the circle
-  - SAT/SUN column headers dimmer than weekday headers
-- Day status is still data- + day.kind-driven (NO hardcoded weekday rules)
-- Future days: clickable (for planning), cursor pointer
-- Legend: 4 swatches (Done/Workout/Recovery/Rest) all with circle visuals + labels
-- Presentation mode (`[data-theme="presentation"]`): all circle statuses + legend override to be visible on white background
+### Calendar — month view
+- Circle-based design (Oura-style) — no coloured cell backgrounds
+  - Done: green filled circle | Partial: white outline | Recovery: amber | Rest: dashed | Today: gold ring
+- Day status is data- + `day.kind`-driven (no hardcoded weekday rules)
+- Presentation mode: all states + legend override for white background
 
-### Day-type marking (added 2026-06-01)
-- Each day can be marked workout / recovery / rest via a segment toggle under the day heading (setDayKind)
-- Stored as optional WorkoutDay.kind; unmarked = neutral. Adding the first exercise auto-sets kind='workout' (unless already marked)
-- One-time Wednesday cleanup never prunes a day that has kind set
-- Empty-state card shows kind-aware copy + a "＋ Add first exercise" CTA (opens AddExercise) on workout/unmarked days
+### Day-type marking
+- Segment toggle: workout / recovery / rest (stored as `WorkoutDay.kind`)
+- Adding first exercise auto-sets `kind='workout'` unless already marked
 
-### Navigation (consolidated 2026-06-01)
-- Month calendar is the SINGLE day/week navigator — tap any day to select (sets week+day). The old week strip (Calendar.svelte) was REMOVED — it duplicated the month view.
-- Day header has ‹ / › arrows = previous/next day (goToAdjacentDay), crossing week boundaries via date math; clamps at Week 1 Monday.
-- "Today" button in the day header (goToToday) appears when not on today.
-- New weeks are reached by stepping forward past Sunday or tapping a future date in the month view (no "+ Week" button).
-- Day view now sits ABOVE the Statistics toggle.
+### Navigation
+- Month calendar is the SINGLE navigator — tap any day sets week+day
+- Day header ‹ / › arrows = previous/next day (crosses week boundaries via date math)
+- "Today" button appears when not on today
 
 ### Exercise management
-- Add exercise: autocomplete + history hint in both normal view and workout mode
-- Delete exercise: undo toast (5s) in both views
-- Delete set: undo toast (5s)
-- Set done toggle: undo toast (5s, lets user recover accidental tap)
-- Exercise position badges: all exercises show letter badge (A, B, C…)
-  - Supersets grouped by FIRST LETTER of code (A1+A2+A3 = one A group → B comes next)
-  - Conditioning shows next available letter after all superset groups
-  - Both main view and workout mode use same grouping logic
+- Add exercise: autocomplete + history hint; **inherits rest time from last use of same name**
+- Delete exercise/set: undo toast (5s)
+- Set done toggle: undo toast (5s)
+- Exercise position badges: A, B, C… (supersets grouped by first letter of code)
+
+### Edit sheet (ExerciseCard)
+- Opens as bottom sheet on pencil icon tap
+- Fields: Name, Type (Weighted/Superset/No weights), Group Code (conditional), Rest, Note
+- **Move up/down removed** — was causing Save button visibility issues; order management TBD
+- CSS: `height: min(88vh, 600px)` — `vh` used (not `dvh`) for iOS Safari compatibility
+- Flex layout: handle → scrollable body → Cancel/Save (flex-shrink: 0, always visible)
+
+### Copy Day From (added 2026-06-09)
+- New `CopyDaySheet.svelte` — bottom sheet showing all past days with exercises (newest first, max 30)
+- Each row: day label + exercise name preview + count badge
+- Select row → confirm button "Copy X exercises" → calls `copyDayFrom()` → appends to target day
+- Accessible via "Copy from another day →" button on empty/non-empty day views
+- `copyDayFrom(srcWeek, srcDay, tgtWeek, tgtDay)` in `workout-state.ts`:
+  - Appends cloned exercises from source (does NOT replace)
+  - Resets all done states
+  - Guarantees min 1 set per exercise
+- `copyPreviousDay` also updated: guarantees min 1 set per exercise
 
 ### Workout mode
 - Swipe dots below progress bar
-- Progress header: "X/Y sets" (not block count)
-- Finish ✓ button always in header — can finish from any block
-- Set done: visual flash (iOS) + vibrate 10ms (Android)
-- PR detection: gold badge + celebratory vibration when beating previous max weight
-- kg/reps committed before block navigation (no data loss on swipe)
-- Add exercise: autocomplete + navigates to new block after adding
+- Progress header: "X/Y sets"
+- Finish ✓ button always in header
+- Set done: visual flash + vibrate 10ms (Android only — iOS unsupported)
+- PR detection: gold badge + celebratory vibration
 
 ### Rest timer
-- Opens fullscreen by default (focus mode) — dark overlay, 240px ring, 72px number
-- Compact mode: tap anywhere on card to expand (no small button)
-- Sound ON by default (opt-out)
-- Ascending countdown beep last 5 seconds
-- Reset button: works correctly (force remount via {#key})
-- Warning: amber ring + pulse last 5s
-- Auto-start: timer begins on set done using the exercise's configured rest
+- Fullscreen by default; compact mode available
+- Sound ON by default; ascending beep last 5s
+- Auto-start on set done using exercise's configured rest
+- `+`/`-` stepper (15s steps); presets 1′/1:30/2′/3′
 
-### Rest timer — manual controls (WorkoutMode)
-- `＋` / `－` stepper adjusts duration in 15s steps
-- Tapping `＋15s rest` when idle ARMS a duration but does NOT start the countdown — build up 15s → 30s → 45s … first
-- Pending (armed) state shows a gold `Start · M:SS` button; countdown begins only on Start
-- `－` while pending drops 15s; reaching 0 clears back to idle. `－` while running floors at 15s
-- Presets row (1′ / 1:30 / 2′ / 3′) starts the countdown immediately; shown only in idle state
+### Onboarding / Help
+- **Auto-shows only for new users (no training data)** — existing users skip auto-show
+- Re-openable via topbar `?` → Quick guide → "Ava tutvustus uuesti"
+- Walkthrough: calendar → day types → add exercise → rest chip
 
 ### Sync + topbar
-- Cloud sync dot: pulsing amber (saving) → green 2.5s (saved) → idle
-- Sync status visible in topbar
+- Cloud sync dot: pulsing amber (saving) → green 2.5s → idle
 
-### Account sheet
-- z-index 200 — above workout bar
-- Workout bar hidden when sheet open
-
-### New-user onboarding (improved 2026-06-01)
-- Empty-state hero now shows ALWAYS when the current day has no exercises (no longer hidden behind the collapsed day section). Brand-new users (no workouts anywhere) see a welcome hero with a barbell icon, "+ Add first exercise" CTA, and a tip to mark day types.
-- OnboardingOverlay walkthrough refreshed to the current model (calendar tap + day-type marking, add exercise, rest-chip editing); removed stale references to the week strip / "+ Week" / hardcoded Wednesday recovery.
-
-### Help / onboarding
-- Single help entry: topbar `?` icon opens the "Quick guide" sheet
-- Quick guide has an `▶ Ava tutvustus uuesti` button that re-opens the full onboarding walkthrough (`OnboardingOverlay`) via the `requestOnboarding` store
-- The old floating "Juhised" chip (position: fixed, bottom-right) was REMOVED — it overlapped page content (e.g. the day card)
-- Onboarding still auto-shows once on first login per user (localStorage key `timo_training_v4_onboarded__<userId>`)
+### workout-bar z-index
+- `position: relative; z-index: 1` — explicitly below edit sheet backdrop (z-index: 94) and sheet (z-index: 95)
+- Fixes iOS Safari compositing issue where `backdrop-filter` on workout-bar appeared above edit sheet
 
 ---
 
 ## Data Model: Schema 4.0
 
 ```
-WorkoutDay { week, day, date, exercises[], completed?, note? }
+WorkoutDay { week, day, date, exercises[], completed?, note?, kind? }
 Exercise   { id, name, type, code, sets[], rest, note,
-             recovery, recoveryDone,
-             conditioning, conditioningNote, conditioningDone }
+             recovery, recoveryDone, conditioning, conditioningNote, conditioningDone }
 WorkoutSet { kg, reps, done }
 ```
-
-Superset codes: multi-character supported (A1, A2, B1, B2, B3…).
-Grouping logic uses `code[0]` — first letter only — for block letter assignment.
-UIState has no `month` field (removed — was dead code).
 
 ---
 
@@ -172,13 +141,16 @@ Push to main: install → test (133) → TypeScript check → build → deploy t
 
 ---
 
-## Known Limitations
+## Known Limitations / Pending
 
-- iOS vibration: Web Vibration API unsupported on Safari/iOS — no haptic feedback
+- **Exercise reordering** — Move up/down removed from edit sheet; no reorder UI currently exists
+- **Onboarding copy stale** — tip mentions "blue/amber/violet fill" but calendar is now circle-based
+- iOS vibration: Web Vibration API unsupported on Safari/iOS
 - No push notifications / reminders
-- No export / backup UI
+- No export / backup UI (data backup scheduled via automated task — Sundays)
 - Undo covers: set delete, exercise delete, set done toggle (not exercise done or all-sets-done)
-- GitHub PAT expires 2026-06-25 — reminder set for 2026-06-18
+- **GitHub PAT expires 2026-06-25** — renewal reminder set for 2026-06-18
+- No test coverage for: `copyDayFrom`, rest time inheritance in `addExercise`
 
 ---
 
@@ -191,4 +163,4 @@ Push to main: install → test (133) → TypeScript check → build → deploy t
 - Date/weekday alignment logic
 - Superset code pairing and grouping logic
 - `immediate=true` flag on `updateState`
-- `lib/state-helpers.ts` — pure functions used by both store actions and tests
+- `lib/state-helpers.ts`

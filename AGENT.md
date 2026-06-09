@@ -41,6 +41,7 @@ App.svelte
     │       │   └── StatsView.svelte
     │       │       └── BodyMap.svelte
     │       ├── ExerciseCard.svelte (xN)
+    │       │   └── CopyDaySheet.svelte   — copy-from-day bottom sheet
     │       │   └── SetRow.svelte (xN)
     │       └── AddExercise.svelte
     ├── workout-bar             — bottom CTA (when exercises exist)
@@ -215,7 +216,7 @@ training-app/
 │   │   ├── App.svelte
 │   │   ├── app.css
 │   │   ├── main.ts
-│   │   ├── components/   (12 components)
+│   │   ├── components/   (13 components — incl. CopyDaySheet.svelte)
 │   │   ├── stores/app.ts          (barrel re-export)
 │   │   ├── stores/ui-state.ts     (theme, auth, uiState, undo, toast)
 │   │   ├── stores/sync.ts         (syncStatus, scheduleSave, retry)
