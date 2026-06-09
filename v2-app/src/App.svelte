@@ -156,6 +156,8 @@
 
   /* ── Bottom workout bar ── */
   .workout-bar {
+    position: relative;
+    z-index: 1;
     flex-shrink: 0;
     display: flex;
     gap: 8px;
