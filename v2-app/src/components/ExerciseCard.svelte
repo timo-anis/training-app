@@ -254,18 +254,6 @@
       </div>
 
       <div class="edit-field">
-        <label class="edit-label" for="edit-rest-{exercise.id}">Rest</label>
-        <input
-          id="edit-rest-{exercise.id}"
-          class="edit-input"
-          type="text"
-          bind:value={editRest}
-          placeholder="e.g. 90s"
-          autocomplete="off"
-        />
-      </div>
-
-      <div class="edit-field">
         <label class="edit-label" for="edit-note-{exercise.id}">Note</label>
         <textarea
           id="edit-note-{exercise.id}"
