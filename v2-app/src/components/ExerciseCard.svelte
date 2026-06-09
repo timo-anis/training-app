@@ -520,7 +520,7 @@
     position: fixed;
     left: 0; right: 0; bottom: 0;
     z-index: 95;
-    max-height: min(88dvh, 600px);
+    max-height: min(88vh, 600px);
     display: flex;
     flex-direction: column;
     background: linear-gradient(180deg, var(--c-bg-1) 0%, var(--h-080c18) 100%);
