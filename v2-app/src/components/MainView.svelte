@@ -5,7 +5,7 @@
   import TopBar from './TopBar.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import AddExercise from './AddExercise.svelte';
-  import CopyDayFrom from './CopyDayFrom.svelte';
+  import CopyDaySheet from './CopyDaySheet.svelte';
   import StatsView from './StatsView.svelte';
   import AccountSheet from './AccountSheet.svelte';
 
@@ -52,6 +52,7 @@
 
   let migrateStatus: 'idle' | 'done' | 'error' = 'idle';
   let statsOpen = false;
+  let copySheetOpen = false;
   let exercisesExpanded = false;
   let hintsOpen = false;
 
@@ -204,13 +205,10 @@
             + Add first exercise
           </button>
         {/if}
-        {#if canCopyDay}
-          <button class="copy-day-btn" on:click|stopPropagation={() => copyPreviousDay($uiState.week, $uiState.day)}>
-            Copy from Week {$uiState.week - 1 - $weekOffset}
-          </button>
-        {/if}
+        <button class="copy-day-btn" on:click|stopPropagation={() => copySheetOpen = true}>
+          Copy from another day →
+        </button>
       </div>
-      <CopyDayFrom week={$uiState.week} day={$uiState.day} />
     {:else if exercisesExpanded}
       <div class="exercise-list">
         {#each $currentDayExercises as exercise, i (exercise.id)}
@@ -229,7 +227,6 @@
     {#if exercisesExpanded}
       <div class="add-ex-wrap">
         <AddExercise bind:this={adder} week={$uiState.week} day={$uiState.day} />
-        <CopyDayFrom week={$uiState.week} day={$uiState.day} />
       </div>
     {/if}
   </section>
@@ -296,6 +293,14 @@
 
 {#if accountOpen}
   <AccountSheet on:close={() => accountOpen = false} />
+{/if}
+
+{#if copySheetOpen}
+  <CopyDaySheet
+    week={$uiState.week}
+    day={$uiState.day}
+    on:close={() => copySheetOpen = false}
+  />
 {/if}
 
 <style>
