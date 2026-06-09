@@ -210,6 +210,7 @@
           </button>
         {/if}
       </div>
+      <CopyDayFrom week={$uiState.week} day={$uiState.day} />
     {:else if exercisesExpanded}
       <div class="exercise-list">
         {#each $currentDayExercises as exercise, i (exercise.id)}
