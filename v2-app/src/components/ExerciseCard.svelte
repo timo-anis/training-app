@@ -443,7 +443,7 @@
     border: 1px solid rgba(var(--c-edge-d), 0.20);
     border-radius: 12px;
     padding: 12px 14px;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 500;
     color: var(--h-e8f2ff);
     font-family: inherit;

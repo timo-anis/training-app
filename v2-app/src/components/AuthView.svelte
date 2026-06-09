@@ -155,7 +155,7 @@
     border: 1px solid rgba(var(--c-edge-d), 0.20);
     background: var(--c-12-22-48-0_55);
     color: var(--h-f0f6ff);
-    font-size: 15px;
+    font-size: 16px;
     -webkit-tap-highlight-color: transparent;
   }
   input:focus { outline: none; border-color: var(--c-127-178-255-0_45); }
