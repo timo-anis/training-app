@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, hasMvp1Data, runMvp1Import, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
@@ -45,12 +45,8 @@
   );
   $: canCopyDay = $currentDayExercises.length === 0 && hasPrevDay;
 
-  // Show MVP1 import banner when V2 has zero weeks and MVP1 data exists
   $: totalWeeks = $appState.weeks.filter(w => w.exercises.length > 0).length;
   $: isNewUser = totalWeeks === 0;
-  $: showMigrateBanner = totalWeeks === 0 && $hasMvp1Data;
-
-  let migrateStatus: 'idle' | 'done' | 'error' = 'idle';
   let statsOpen = false;
   let copySheetOpen = false;
   let exercisesExpanded = false;
@@ -96,11 +92,6 @@
     { k: 'rest', label: 'Rest' },
   ];
 
-  function handleMigrate() {
-    const ok = runMvp1Import();
-    migrateStatus = ok ? 'done' : 'error';
-  }
-
 </script>
 
 <div class="main">
@@ -111,26 +102,6 @@
     onSearch={() => ($searchOpen = true)}
     onAccount={() => accountOpen = true}
   />
-
-  <!-- MVP1 migration banner -->
-  {#if showMigrateBanner}
-    <section class="section">
-      <div class="migrate-banner">
-        <span class="migrate-icon">📦</span>
-        <div class="migrate-text">
-          <span class="migrate-title">Import previous data</span>
-          <span class="migrate-sub">Old app data found on this device</span>
-        </div>
-        {#if migrateStatus === 'done'}
-          <span class="migrate-done">Imported ✓</span>
-        {:else if migrateStatus === 'error'}
-          <span class="migrate-err">Failed</span>
-        {:else}
-          <button class="migrate-btn" on:click={handleMigrate}>Import</button>
-        {/if}
-      </div>
-    </section>
-  {/if}
 
   <!-- New-user welcome (top, prominent) -->
   {#if isNewUser}
@@ -640,7 +611,6 @@
   }
   .welcome-secondary:active { background: rgba(var(--c-fg), 0.12); }
 
-
   .copy-day-btn {
     margin-top: 12px;
     width: 100%;
@@ -657,68 +627,6 @@
   }
 
   .copy-day-btn:active { background: var(--c-127-178-255-0_15); }
-
-  /* ---- Migration banner ---- */
-  .migrate-banner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 14px 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(var(--c-accent), 0.22);
-    background: rgba(var(--c-accent), 0.07);
-  }
-
-  .migrate-icon { font-size: 20px; flex-shrink: 0; }
-
-  .migrate-text {
-    flex: 1 1 0;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-  }
-
-  .migrate-title {
-    font-size: 13px;
-    font-weight: 800;
-    color: var(--c-accent-solid);
-    letter-spacing: -0.01em;
-  }
-
-  .migrate-sub {
-    font-size: 11px;
-    color: var(--h-7a6030);
-  }
-
-  .migrate-btn {
-    padding: 8px 16px;
-    border-radius: 10px;
-    border: 1px solid rgba(var(--c-accent), 0.40);
-    background: rgba(var(--c-accent), 0.14);
-    color: var(--c-accent-solid);
-    font-size: 13px;
-    font-weight: 800;
-    cursor: pointer;
-    flex-shrink: 0;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
-  }
-
-  .migrate-btn:active { background: rgba(var(--c-accent), 0.24); }
-
-  .migrate-done {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--h-4fc08d);
-    flex-shrink: 0;
-  }
-
-  .migrate-err {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--h-ff6060);
-    flex-shrink: 0;
-  }
 
   /* ---- Exercise list spacing when expanded ---- */
   .exercise-list { margin-top: 10px; }

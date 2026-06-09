@@ -5,7 +5,7 @@
  * Domain modules:
  *   ui-state.ts     — theme, currentUser, uiState, bootStatus, toast, undo, search/sheet
  *   sync.ts         — syncStatus, scheduleSave, retry/backoff, online flush
- *   workout-state.ts — appState, derived stores, all mutations, boot, MVP1 migration
+ *   workout-state.ts — appState, derived stores, all mutations, boot logic
  */
 export * from './ui-state';
 export * from './sync';

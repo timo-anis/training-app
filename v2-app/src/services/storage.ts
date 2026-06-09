@@ -59,7 +59,6 @@ export async function loadCloud(userId: string): Promise<AppState | null> {
       .maybeSingle();
     if (error) throw error;
     if (!data?.state_json) return null;
-    // parseAndMigrateState handles both MVP1 flat format and V2 structured format
     return parseAndMigrateState(data.state_json);
   } catch (e) {
     console.error('Cloud load failed', e);
@@ -123,36 +122,4 @@ export async function bootstrapState(userId: string): Promise<AppState> {
   }
 
   return choice.state ?? emptyAppState();
-}
-
-// ---- MVP1 → V2 migration from local storage ----
-// MVP1 stored data under "timo_training_v81_real__user__{userId}" (or global key).
-// Returns migrated AppState or null if no MVP1 data found.
-
-// Only check user-specific MVP1 key. The generic 'timo_training_v81_real'
-// (pre-auth era) belongs to the original user and must not trigger the import
-// banner for new users — original user data is already migrated to V2.
-const MVP1_KEYS = (userId: string) => [
-  `timo_training_v81_real__user__${userId}`,
-];
-
-export function detectMvp1Data(userId: string): boolean {
-  return MVP1_KEYS(userId).some(k => {
-    try { return !!localStorage.getItem(k); } catch { return false; }
-  });
-}
-
-export function importFromMvp1(userId: string): AppState | null {
-  for (const key of MVP1_KEYS(userId)) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) continue;
-      const parsed = JSON.parse(raw);
-      const migrated = parseAndMigrateState(parsed);
-      if (migrated && migrated.weeks.length > 0) return migrated;
-    } catch {
-      continue;
-    }
-  }
-  return null;
 }

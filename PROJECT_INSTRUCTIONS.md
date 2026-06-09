@@ -62,7 +62,7 @@ alignment · Superset code pairing & grouping · `lib/state-helpers.ts` pure fun
 
 1. Edit files in `v2-app/src/`.
 2. Run `cd v2-app && npm run build` — must be clean before continuing.
-3. Run `npm test` when logic/state code changed (133 tests must pass).
+3. Run `npm test` when logic/state code changed (all tests must pass).
 4. `git add -A && git commit -m "..." && git push`.
 5. **Update docs** (no need to ask — always do this):
    - `CURRENT_BASELINE.md` if any feature description changed.

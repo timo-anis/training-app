@@ -5,7 +5,7 @@
 import { writable, derived, get } from 'svelte/store';
 import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
-import { bootstrapState, saveLocal, saveCloud, detectMvp1Data, importFromMvp1 } from '../services/storage';
+import { bootstrapState, saveLocal, saveCloud } from '../services/storage';
 import { PS_UTC } from '../lib/program';
 import { getDateForWeekDay, getWeekDayForDate } from '../lib/dates';
 import {
@@ -614,27 +614,4 @@ export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
       fn: () => updateState(s => insertExerciseAtState(s, week, day, exIndex, ex)),
     });
   }
-}
-
-// ---- MVP1 migration ----
-export const hasMvp1Data = derived(currentUser, ($user) => {
-  if (!$user) return false;
-  return detectMvp1Data($user.id);
-});
-
-export function runMvp1Import(): boolean {
-  const user = get(currentUser);
-  if (!user) return false;
-
-  const migrated = importFromMvp1(user.id);
-  if (!migrated || migrated.weeks.length === 0) return false;
-
-  appState.set(migrated);
-  saveLocal(user.id, migrated);
-  saveCloud(user.id, migrated);
-
-  const maxWeek = Math.max(...migrated.weeks.map(w => w.week));
-  uiState.update(ui => ({ ...ui, week: maxWeek }));
-
-  return true;
 }
