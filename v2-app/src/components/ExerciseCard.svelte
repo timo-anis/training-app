@@ -255,25 +255,6 @@
         ></textarea>
       </div>
 
-      <!-- Order buttons -->
-      {#if total > 1}
-        <div class="edit-field">
-          <span class="edit-label">Order</span>
-          <div class="order-row">
-            <button
-              class="order-sheet-btn"
-              disabled={index === 0}
-              on:click={() => { moveExercise(week, day, exercise.id, 'up'); closeEdit(); }}
-            >↑ Move up</button>
-            <button
-              class="order-sheet-btn"
-              disabled={index === total - 1}
-              on:click={() => { moveExercise(week, day, exercise.id, 'down'); closeEdit(); }}
-            >↓ Move down</button>
-          </div>
-        </div>
-      {/if}
-
     </div>
     <div class="sheet-actions">
       <button class="btn-cancel" on:click={closeEdit}>Cancel</button>
@@ -581,29 +562,6 @@
       to   { opacity: 1; transform: translateX(-50%) translateY(-50%) scale(1); }
     }
   }
-
-  /* Order in edit sheet */
-  .order-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .order-sheet-btn {
-    padding: 10px;
-    border-radius: 10px;
-    border: 1px solid rgba(var(--c-edge-e), 0.22);
-    background: var(--c-12-22-48-0_55);
-    color: rgba(var(--c-fg), 0.55);
-    font-size: 13px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: background 0.12s, color 0.12s;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .order-sheet-btn:disabled { opacity: 0.22; cursor: not-allowed; }
-  .order-sheet-btn:not(:disabled):active { background: rgba(var(--c-fg), 0.09); color: var(--h-ffffff); }
 
   .edit-field {
     display: flex;
