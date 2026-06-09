@@ -56,8 +56,9 @@
       if (state.status === 'signed_in') {
         currentUser.set(state.user);
         await bootForUser(state.user);
-        // Show onboarding for new users who haven't seen it yet
-        showOnboarding = checkOnboarding(state.user.id);
+        // Show onboarding only for users with no training data yet
+        const hasData = $appState.weeks.some(w => w.exercises.length > 0);
+        showOnboarding = !hasData && checkOnboarding(state.user.id);
       } else if (state.status === 'signed_out') {
         currentUser.set(null);
         bootStatus.set('idle');
