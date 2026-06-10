@@ -5,7 +5,7 @@
 ## Active App: V2
 
 - Source: `v2-app/`
-- Deployed: GitHub Pages — https://timo-anis.github.io/training-app/
+- Deployed: GitHub Pages — custom domain https://trainingapp.timoanis.com/ (root). Moved from https://timo-anis.github.io/training-app/ on 2026-06-10; github.io project URL 301-redirects to the custom domain. base path /training-app/ -> / (vite.config.ts, PWA scope/start_url, 404.html). DNS: CNAME trainingapp.timoanis.com -> timo-anis.github.io at Zone.ee. public/CNAME holds the domain.
 
 ---
 
@@ -36,7 +36,7 @@
 - `onAuthChange` fires only on INITIAL_SESSION and SIGNED_IN — TOKEN_REFRESHED ignored
 - Sign out via Account sheet (z-index 200, workout bar hidden when open)
 - Signup needing confirmation -> dedicated 'Confirm your email' screen (AuthView mode 'confirm'); no premature sign-in form. 'Email not confirmed' on sign-in routes there too. Resend via `resendConfirmation()` (auth.ts)
-- `public/404.html`: GitHub Pages SPA + auth-redirect safety net — bounces unknown paths to /training-app/ preserving query + hash (auth tokens)
+- `public/404.html`: GitHub Pages SPA + auth-redirect safety net — bounces unknown paths to / (root) preserving query + hash (auth tokens)
 
 ### Open config (dashboard — not in code)
 - Post-confirmation redirect dropped the `/training-app/` path and landed on bare host root (no Pages site -> 404), even with correct Site URL. FIXED in code 2026-06-10: `signUpWithEmail` + `resendConfirmation` now pass explicit `emailRedirectTo = origin + import.meta.env.BASE_URL` (auth.ts), so confirmations land on the real app URL.

@@ -7,7 +7,7 @@
 - Source: `v2-app/` (Svelte + TypeScript + Vite)
 - Build output: `v2-dist/`
 - Deployed: GitHub Pages from `v2-dist/`
-- Live: https://timo-anis.github.io/training-app/
+- Live: https://trainingapp.timoanis.com/ (custom domain, served from root). Old https://timo-anis.github.io/training-app/ 301-redirects here. base = / (was /training-app/).
 
 ---
 
