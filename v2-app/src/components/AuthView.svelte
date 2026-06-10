@@ -147,7 +147,7 @@
             Confirm password
             <input type="password" bind:value={passwordConfirm} required autocomplete="new-password" />
           </label>
-          <p class="pw-hint">At least 8 characters, with an uppercase &amp; lowercase letter, a number and a symbol.</p>
+          <p class="pw-hint">At least 8 characters, using letters and numbers. A password manager's suggestion works fine.</p>
         {/if}
 
         {#if error}
