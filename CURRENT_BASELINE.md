@@ -40,7 +40,7 @@
 
 ### Open config (dashboard — not in code)
 - Supabase Site URL = `https://mullemeeldibtrenniteha2026.github.io/training-app/` + redirect allowlist `.../training-app/**` — CONFIRMED CORRECT (screenshot 2026-06-10). So post-confirmation 404 was NOT a Site URL misconfig; `public/404.html` is the safety net for any edge-path 404
-- Password policy still requires a symbol -> rejects symbol-less password-manager suggestions; relax to letters+digits (Auth > Providers > Email). When relaxed, update AuthView pw-hint to match (currently states the strict rule truthfully)
+- Password policy relaxed to 'Letters and digits' (was requiring a symbol -> rejected password-manager suggestions; architect feedback) 2026-06-10. Min length 8. AuthView pw-hint updated to match.
 
 ### Boot
 - Always lands on today's week + today's day
