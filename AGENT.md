@@ -31,7 +31,7 @@
 ```
 App.svelte
 ├── BootOverlay.svelte          — loading screen
-├── AuthView.svelte             — sign-in screen (signed out)
+├── AuthView.svelte             — auth screen (signed out): sign in / sign up / confirm-email + resend / password reset
 └── [app-shell]                 — signed in
     ├── scroll-content
     │   └── MainView.svelte (TopBar.svelte = title + sync + actions)
@@ -80,7 +80,7 @@ Key derived stores: currentDayExercises, workoutBlocks, availableWeeks, canUsePr
 
 | File | Purpose |
 |------|---------|
-| auth.ts | Supabase auth (sign in, sign out, onAuthChange — fires only on INITIAL_SESSION and SIGNED_IN) |
+| auth.ts | Supabase auth: signIn, signUp (+ explicit emailRedirectTo = origin+BASE_URL), resendConfirmation, signOut, onAuthChange (fires only on INITIAL_SESSION and SIGNED_IN). NB: emailRedirectTo is required — Site URL fallback drops the path → root 404 |
 | storage.ts | bootstrapState, saveLocal, saveCloud — localStorage + Supabase sync |
 | supabase.ts | Supabase client singleton |
 | state-parser.ts | parseAndMigrateState — parse + normalise stored V2 state (backfills schema fields added after launch) |
