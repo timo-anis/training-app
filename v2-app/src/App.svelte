@@ -12,6 +12,13 @@
 
   let unsubscribeAuth: (() => void) | null = null;
 
+  // Password-reset landing: show the set-new-password screen instead of booting.
+  // Seeded synchronously from the URL hash so the app never flashes first.
+  let recoveryMode = false;
+  try {
+    recoveryMode = window.location.hash.includes('type=recovery');
+  } catch { /* ignore */ }
+
   // Onboarding — show once on first login, then as a floating chip until first workout done
   let showOnboarding = false;
 
@@ -53,18 +60,42 @@
 
   onMount(() => {
     unsubscribeAuth = onAuthChange(async (state) => {
+      if (state.status === 'recovery') {
+        // Reset link: hold at the set-new-password screen; do not boot yet.
+        recoveryMode = true;
+        currentUser.set(state.user);
+        return;
+      }
       if (state.status === 'signed_in') {
         currentUser.set(state.user);
+        // While recovering, the session is valid but we wait for the new
+        // password before entering the app.
+        if (recoveryMode) return;
         await bootForUser(state.user);
         // Show onboarding only for users with no training data yet
         const hasData = $appState.weeks.some(w => w.exercises.length > 0);
         showOnboarding = !hasData && checkOnboarding(state.user.id);
       } else if (state.status === 'signed_out') {
         currentUser.set(null);
+        recoveryMode = false;
         bootStatus.set('idle');
       }
     });
   });
+
+  async function handleRecovered() {
+    recoveryMode = false;
+    // Drop the recovery hash so a reload doesn't re-trigger the flow.
+    try {
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+    } catch { /* ignore */ }
+    const user = $currentUser;
+    if (user) {
+      await bootForUser(user);
+      const hasData = $appState.weeks.some(w => w.exercises.length > 0);
+      showOnboarding = !hasData && checkOnboarding(user.id);
+    }
+  }
 
   onDestroy(() => {
     unsubscribeAuth?.();
@@ -88,7 +119,9 @@
     </div>
   {/snippet}
 
-{#if $bootStatus === 'loading'}
+{#if recoveryMode}
+  <AuthView recovery={true} onRecovered={handleRecovered} />
+{:else if $bootStatus === 'loading'}
   <BootOverlay />
 {:else if $currentUser && $bootStatus === 'ready'}
   <div class="app-shell">

@@ -1,8 +1,14 @@
 <script lang="ts">
-  import { signInWithEmail, signUpWithEmail, sendPasswordReset, resendConfirmation } from '../services/auth';
+  import { signInWithEmail, signUpWithEmail, sendPasswordReset, resendConfirmation, updatePassword, signOut } from '../services/auth';
 
-  type Mode = 'signin' | 'signup' | 'reset' | 'confirm';
-  let mode: Mode = 'signin';
+  // When arriving from a password-reset link, App.svelte mounts this in
+  // recovery mode: the user is already authenticated and only sets a new
+  // password, then drops straight into the app via onRecovered().
+  export let recovery = false;
+  export let onRecovered: (() => void) | null = null;
+
+  type Mode = 'signin' | 'signup' | 'reset' | 'confirm' | 'set-password';
+  let mode: Mode = recovery ? 'set-password' : 'signin';
 
   let email = '';
   let password = '';
@@ -30,18 +36,21 @@
     error = '';
     info = '';
 
-    if (mode === 'signup' && password !== passwordConfirm) {
+    if ((mode === 'signup' || mode === 'set-password') && password !== passwordConfirm) {
       error = 'Passwords do not match';
       return;
     }
-    if (mode === 'signup' && password.length < 8) {
+    if ((mode === 'signup' || mode === 'set-password') && password.length < 8) {
       error = 'Password must be at least 8 characters';
       return;
     }
 
     loading = true;
     try {
-      if (mode === 'signin') {
+      if (mode === 'set-password') {
+        await updatePassword(password);
+        onRecovered?.();
+      } else if (mode === 'signin') {
         await signInWithEmail(email, password);
         // onAuthChange in App.svelte handles the rest
       } else if (mode === 'signup') {
@@ -72,6 +81,14 @@
     }
   }
 
+  async function cancelRecovery() {
+    try { await signOut(); } catch { /* ignore */ }
+    mode = 'signin';
+    password = '';
+    passwordConfirm = '';
+    error = '';
+  }
+
   async function handleResend() {
     error = '';
     info = '';
@@ -89,10 +106,11 @@
   $: title = mode === 'signup' ? 'Create account'
     : mode === 'reset' ? 'Reset password'
     : mode === 'confirm' ? 'Confirm your email'
+    : mode === 'set-password' ? 'Set a new password'
     : 'Sign in';
   $: btnLabel = loading
-    ? (mode === 'signup' ? 'Creating account…' : mode === 'reset' ? 'Sending…' : 'Signing in…')
-    : (mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Send reset email' : 'Sign in');
+    ? (mode === 'signup' ? 'Creating account…' : mode === 'reset' ? 'Sending…' : mode === 'set-password' ? 'Saving…' : 'Signing in…')
+    : (mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Send reset email' : mode === 'set-password' ? 'Set password & continue' : 'Sign in');
 </script>
 
 <div class="auth-wrap">
@@ -118,6 +136,30 @@
 
       <div class="auth-links">
         <button class="link-btn" on:click={() => switchMode('signin')}>← Back to sign in</button>
+      </div>
+    {:else if mode === 'set-password'}
+      <p class="confirm-steps">Choose a new password for your account.</p>
+
+      <form on:submit|preventDefault={handleSubmit}>
+        <label>
+          New password
+          <input type="password" bind:value={password} required autocomplete="new-password" />
+        </label>
+        <label>
+          Confirm new password
+          <input type="password" bind:value={passwordConfirm} required autocomplete="new-password" />
+        </label>
+        <p class="pw-hint">At least 8 characters, using letters and numbers. A password manager's suggestion works fine.</p>
+
+        {#if error}
+          <p class="error">{error}</p>
+        {/if}
+
+        <button type="submit" disabled={loading}>{btnLabel}</button>
+      </form>
+
+      <div class="auth-links">
+        <button class="link-btn" on:click={cancelRecovery}>← Back to sign in</button>
       </div>
     {:else}
       {#if info}

@@ -4,7 +4,10 @@ import type { User } from '@supabase/supabase-js';
 export type AuthState =
   | { status: 'loading' }
   | { status: 'signed_out' }
-  | { status: 'signed_in'; user: User };
+  | { status: 'signed_in'; user: User }
+  // User arrived via a password-reset link: authenticated, but must set a new
+  // password before entering the app.
+  | { status: 'recovery'; user: User };
 
 export async function signInWithEmail(email: string, password: string) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -43,8 +46,14 @@ export async function resendConfirmation(email: string) {
 
 export async function sendPasswordReset(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.href,
+    redirectTo: emailRedirectTo(),
   });
+  if (error) throw error;
+}
+
+// Set a new password for the currently-authenticated (recovery) session.
+export async function updatePassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
 }
 
@@ -65,6 +74,12 @@ export function onAuthChange(callback: (state: AuthState) => void): () => void {
   // This prevents bootForUser from being re-triggered on every token refresh (~60 min),
   // which would reset the user's navigation back to today mid-session.
   const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'PASSWORD_RECOVERY') {
+      // Reset-link landing: surface the set-new-password screen instead of
+      // silently booting the user into the app.
+      if (session?.user) callback({ status: 'recovery', user: session.user });
+      return;
+    }
     if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN') {
       if (session?.user) {
         callback({ status: 'signed_in', user: session.user });
@@ -74,7 +89,7 @@ export function onAuthChange(callback: (state: AuthState) => void): () => void {
     } else if (event === 'SIGNED_OUT') {
       callback({ status: 'signed_out' });
     }
-    // TOKEN_REFRESHED, USER_UPDATED, PASSWORD_RECOVERY — ignored intentionally
+    // TOKEN_REFRESHED, USER_UPDATED — ignored intentionally
   });
 
   return () => subscription.unsubscribe();
