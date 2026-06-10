@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { signInWithEmail, signUpWithEmail, sendPasswordReset } from '../services/auth';
+  import { signInWithEmail, signUpWithEmail, sendPasswordReset, resendConfirmation } from '../services/auth';
 
-  type Mode = 'signin' | 'signup' | 'reset';
+  type Mode = 'signin' | 'signup' | 'reset' | 'confirm';
   let mode: Mode = 'signin';
 
   let email = '';
@@ -10,6 +10,8 @@
   let error = '';
   let info = '';
   let loading = false;
+  // Email address awaiting confirmation (shown on the 'confirm' screen)
+  let pendingEmail = '';
 
   function switchMode(m: Mode) {
     mode = m;
@@ -17,6 +19,11 @@
     info = '';
     password = '';
     passwordConfirm = '';
+  }
+
+  function isUnconfirmedError(e: unknown): boolean {
+    const msg = (e instanceof Error ? e.message : String(e)).toLowerCase();
+    return msg.includes('not confirmed') || msg.includes('email not confirmed');
   }
 
   async function handleSubmit() {
@@ -40,8 +47,10 @@
       } else if (mode === 'signup') {
         const { needsConfirmation } = await signUpWithEmail(email, password);
         if (needsConfirmation) {
-          info = 'Check your email to confirm your account, then sign in.';
-          switchMode('signin');
+          // Don't drop the user on the sign-in form — they can't sign in yet.
+          // Show a dedicated "confirm your email" screen instead.
+          pendingEmail = email;
+          switchMode('confirm');
         }
         // If no confirmation needed, onAuthChange fires automatically
       } else if (mode === 'reset') {
@@ -50,13 +59,37 @@
         email = '';
       }
     } catch (e: unknown) {
-      error = e instanceof Error ? e.message : 'Something went wrong';
+      // Signing in before confirming email is the most common stumble —
+      // route the user to the confirm screen instead of a raw error.
+      if (mode === 'signin' && isUnconfirmedError(e)) {
+        pendingEmail = email;
+        switchMode('confirm');
+      } else {
+        error = e instanceof Error ? e.message : 'Something went wrong';
+      }
     } finally {
       loading = false;
     }
   }
 
-  $: title = mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Reset password' : 'Sign in';
+  async function handleResend() {
+    error = '';
+    info = '';
+    loading = true;
+    try {
+      await resendConfirmation(pendingEmail);
+      info = 'Confirmation email sent again. Check your inbox (and spam).';
+    } catch (e: unknown) {
+      error = e instanceof Error ? e.message : 'Could not resend — try again shortly.';
+    } finally {
+      loading = false;
+    }
+  }
+
+  $: title = mode === 'signup' ? 'Create account'
+    : mode === 'reset' ? 'Reset password'
+    : mode === 'confirm' ? 'Confirm your email'
+    : 'Sign in';
   $: btnLabel = loading
     ? (mode === 'signup' ? 'Creating account…' : mode === 'reset' ? 'Sending…' : 'Signing in…')
     : (mode === 'signup' ? 'Create account' : mode === 'reset' ? 'Send reset email' : 'Sign in');
@@ -67,52 +100,73 @@
     <h1>Timo Training</h1>
     <p class="sub">{title}</p>
 
-    {#if info}
-      <p class="info">{info}</p>
-    {/if}
+    {#if mode === 'confirm'}
+      <!-- Dedicated post-signup state: no active sign-in form here. -->
+      <p class="confirm-lead">
+        We sent a confirmation link to<br /><strong>{pendingEmail}</strong>.
+      </p>
+      <p class="confirm-steps">
+        Open it to activate your account, then come back here and sign in.
+      </p>
 
-    <form on:submit|preventDefault={handleSubmit}>
-      <label>
-        Email
-        <input type="email" bind:value={email} required autocomplete="email" />
-      </label>
+      {#if info}<p class="info">{info}</p>{/if}
+      {#if error}<p class="error">{error}</p>{/if}
 
-      {#if mode !== 'reset'}
-        <label>
-          Password
-          <input
-            type="password"
-            bind:value={password}
-            required
-            autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
-          />
-        </label>
-      {/if}
+      <button type="button" class="secondary" on:click={handleResend} disabled={loading}>
+        {loading ? 'Sending…' : 'Resend confirmation email'}
+      </button>
 
-      {#if mode === 'signup'}
-        <label>
-          Confirm password
-          <input type="password" bind:value={passwordConfirm} required autocomplete="new-password" />
-        </label>
-        <p class="pw-hint">At least 8 characters, with an uppercase &amp; lowercase letter, a number and a symbol.</p>
-      {/if}
-
-      {#if error}
-        <p class="error">{error}</p>
-      {/if}
-
-      <button type="submit" disabled={loading}>{btnLabel}</button>
-    </form>
-
-    <div class="auth-links">
-      {#if mode === 'signin'}
-        <button class="link-btn" on:click={() => switchMode('signup')}>Create account</button>
-        <span class="sep">·</span>
-        <button class="link-btn" on:click={() => switchMode('reset')}>Forgot password?</button>
-      {:else}
+      <div class="auth-links">
         <button class="link-btn" on:click={() => switchMode('signin')}>← Back to sign in</button>
+      </div>
+    {:else}
+      {#if info}
+        <p class="info">{info}</p>
       {/if}
-    </div>
+
+      <form on:submit|preventDefault={handleSubmit}>
+        <label>
+          Email
+          <input type="email" bind:value={email} required autocomplete="email" />
+        </label>
+
+        {#if mode !== 'reset'}
+          <label>
+            Password
+            <input
+              type="password"
+              bind:value={password}
+              required
+              autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
+            />
+          </label>
+        {/if}
+
+        {#if mode === 'signup'}
+          <label>
+            Confirm password
+            <input type="password" bind:value={passwordConfirm} required autocomplete="new-password" />
+          </label>
+          <p class="pw-hint">At least 8 characters, with an uppercase &amp; lowercase letter, a number and a symbol.</p>
+        {/if}
+
+        {#if error}
+          <p class="error">{error}</p>
+        {/if}
+
+        <button type="submit" disabled={loading}>{btnLabel}</button>
+      </form>
+
+      <div class="auth-links">
+        {#if mode === 'signin'}
+          <button class="link-btn" on:click={() => switchMode('signup')}>Create account</button>
+          <span class="sep">·</span>
+          <button class="link-btn" on:click={() => switchMode('reset')}>Forgot password?</button>
+        {:else}
+          <button class="link-btn" on:click={() => switchMode('signin')}>← Back to sign in</button>
+        {/if}
+      </div>
+    {/if}
   </div>
 </div>
 
@@ -176,6 +230,28 @@
   }
   button[type="submit"]:disabled { opacity: 0.6; cursor: not-allowed; }
   button[type="submit"]:active:not(:disabled) { opacity: 0.85; }
+
+  /* Secondary action (e.g. resend) — outlined, lower emphasis than primary CTA */
+  button.secondary {
+    width: 100%;
+    padding: 13px;
+    margin-top: 4px;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--c-edge-d), 0.30);
+    background: var(--c-12-22-48-0_55);
+    color: var(--h-f0f6ff);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.12s;
+  }
+  button.secondary:disabled { opacity: 0.6; cursor: not-allowed; }
+  button.secondary:active:not(:disabled) { opacity: 0.85; }
+
+  .confirm-lead { margin: 0 0 10px; color: var(--h-f0f6ff); font-size: 15px; line-height: 1.5; }
+  .confirm-lead strong { color: var(--c-accent-solid); }
+  .confirm-steps { margin: 0 0 20px; color: var(--h-97b8d8); font-size: 13px; line-height: 1.5; }
 
   .error { color: var(--h-ff6b6b); font-size: 13px; margin: 6px 0 8px; }
 
