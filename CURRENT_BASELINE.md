@@ -90,6 +90,7 @@
 - Swipe dots below progress bar
 - Progress header: "X/Y sets"
 - Finish ✓ button always in header
+- Finish summary (WmSummary) is a premium recap: animated count-up (duration/sets/volume), streak pill (≥2 consecutive weeks with activity), volume vs last session (% + kg delta), personal-record rows (old→new kg, gold sweep), best set, and a next-session hook. All derived read-only in WorkoutMode (dayHasActivity/dayVolume + reactive blocks); respects prefers-reduced-motion; tap skips to final state. Added 2026-06-10.
 - Set done: visual flash + vibrate 10ms (Android only — iOS unsupported)
 - PR detection: gold badge + celebratory vibration
 

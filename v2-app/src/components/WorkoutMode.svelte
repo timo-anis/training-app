@@ -15,7 +15,8 @@
   import WmRestControls from './WmRestControls.svelte';
   import WmAddExercise from './WmAddExercise.svelte';
   import WmSetRow from './WmSetRow.svelte';
-  import type { DayOfWeek, WorkoutSet, Exercise } from '../types/workout';
+  import type { DayOfWeek, WorkoutSet, Exercise, WorkoutDay } from '../types/workout';
+  import { DAY_ORDER } from '../types/workout';
   import { searchExercises } from '../data/exercises';
   import RestTimer from './RestTimer.svelte';
 
@@ -268,6 +269,138 @@
         setsTotal: ex.conditioning || ex.recovery ? 0 : ex.sets.length,
       }))
     : [];
+
+  // ---- Premium summary extras (streak, volume delta, best set, PRs, next) ----
+  // Pure read-only derivations from existing state — no mutation, no new schema.
+
+  // A day "counts" as trained if it has any logged activity.
+  function dayHasActivity(wd: WorkoutDay): boolean {
+    return wd.completed === true || wd.exercises.some(ex =>
+      ex.sets.some(s => s.done) || ex.conditioningDone || ex.recoveryDone);
+  }
+
+  // Strength volume of a day (done sets only).
+  function dayVolume(wd: WorkoutDay): number {
+    let v = 0;
+    for (const ex of wd.exercises) {
+      if (ex.recovery || ex.conditioning) continue;
+      for (const s of ex.sets) {
+        if (!s.done) continue;
+        const kg = parseFloat(s.kg);
+        const reps = parseInt(s.reps);
+        if (!isNaN(kg) && !isNaN(reps)) v += kg * reps;
+      }
+    }
+    return v;
+  }
+
+  // Display week number (absolute -> user-facing).
+  $: summaryWeekDisplay = $uiState.week - $weekOffset;
+
+  // Streak: consecutive weeks (this week going back) with logged activity.
+  $: summaryStreak = (() => {
+    const active = new Set<number>();
+    for (const wd of $appState.weeks) if (dayHasActivity(wd)) active.add(wd.week);
+    active.add($uiState.week); // current session counts even before "completed" is set
+    let streak = 0;
+    let w = $uiState.week;
+    while (active.has(w)) { streak++; w--; }
+    return streak;
+  })();
+
+  // Volume of the most recent prior session that had strength volume.
+  $: summaryPrevVolume = (() => {
+    if (!summaryDay) return null;
+    const curIdx = DAY_ORDER.indexOf($uiState.day);
+    let best: { week: number; dayIdx: number; vol: number } | null = null;
+    for (const wd of $appState.weeks) {
+      if (wd.week === $uiState.week && wd.day === $uiState.day) continue;
+      const dIdx = DAY_ORDER.indexOf(wd.day);
+      const isBefore = wd.week < $uiState.week || (wd.week === $uiState.week && dIdx < curIdx);
+      if (!isBefore) continue;
+      const vol = dayVolume(wd);
+      if (vol <= 0) continue;
+      const better = !best || wd.week > best.week || (wd.week === best.week && dIdx > best.dayIdx);
+      if (better) best = { week: wd.week, dayIdx: dIdx, vol };
+    }
+    return best ? best.vol : null;
+  })();
+
+  $: summaryVolumeDelta = (() => {
+    if (summaryPrevVolume === null || summaryPrevVolume <= 0) return null;
+    const abs = summaryVolume - summaryPrevVolume;
+    if (Math.round(abs) === 0) return null;
+    const pct = Math.round((abs / summaryPrevVolume) * 100);
+    const sign = abs >= 0 ? '+' : '-';
+    const dir: 'up' | 'down' = abs >= 0 ? 'up' : 'down';
+    return { pct, dir, label: `${sign}${fmtVolume(Math.abs(abs))}` };
+  })();
+
+  // Best (heaviest) done set of the session.
+  $: summaryBestSet = (() => {
+    if (!summaryDay) return null;
+    let best: { name: string; kg: number; reps: string } | null = null;
+    for (const ex of summaryDay.exercises) {
+      if (ex.recovery || ex.conditioning) continue;
+      for (const s of ex.sets) {
+        if (!s.done) continue;
+        const kg = parseFloat(s.kg);
+        if (isNaN(kg) || kg <= 0) continue;
+        const reps = parseInt(s.reps) || 0;
+        const bestReps = best ? (parseInt(best.reps) || 0) : -1;
+        if (!best || kg > best.kg || (kg === best.kg && reps > bestReps)) {
+          best = { name: ex.name, kg, reps: s.reps };
+        }
+      }
+    }
+    return best ? `${best.name} ${best.kg} × ${best.reps}` : null;
+  })();
+
+  // PRs hit this session: exercise whose top done kg beats its prior all-time max.
+  $: summaryPRs = (() => {
+    if (!summaryDay) return [] as { name: string; oldKg: number; newKg: number }[];
+    const out: { name: string; oldKg: number; newKg: number }[] = [];
+    for (const ex of summaryDay.exercises) {
+      if (ex.recovery || ex.conditioning) continue;
+      let newKg = 0;
+      for (const s of ex.sets) {
+        if (!s.done) continue;
+        const v = parseFloat(s.kg);
+        if (!isNaN(v) && v > newKg) newKg = v;
+      }
+      if (newKg <= 0) continue;
+      let prevMax = 0;
+      for (const wd of $appState.weeks) {
+        if (wd.week === $uiState.week && wd.day === $uiState.day) continue;
+        for (const e of wd.exercises) {
+          if (e.name.toLowerCase() !== ex.name.toLowerCase()) continue;
+          for (const s of e.sets) {
+            const v = parseFloat(s.kg);
+            if (!isNaN(v) && v > prevMax) prevMax = v;
+          }
+        }
+      }
+      if (prevMax > 0 && newKg > prevMax) out.push({ name: ex.name, oldKg: prevMax, newKg });
+    }
+    return out;
+  })();
+
+  // Next planned session (soonest day after the current one that has exercises).
+  $: summaryNext = (() => {
+    const curIdx = DAY_ORDER.indexOf($uiState.day);
+    let best: { week: number; dayIdx: number; day: DayOfWeek; count: number } | null = null;
+    for (const wd of $appState.weeks) {
+      const dIdx = DAY_ORDER.indexOf(wd.day);
+      const isAfter = wd.week > $uiState.week || (wd.week === $uiState.week && dIdx > curIdx);
+      if (!isAfter) continue;
+      const count = wd.exercises.filter(e => !e.recovery).length;
+      if (count === 0) continue;
+      const earlier = !best || wd.week < best.week || (wd.week === best.week && dIdx < best.dayIdx);
+      if (earlier) best = { week: wd.week, dayIdx: dIdx, day: wd.day, count };
+    }
+    if (!best) return null;
+    return { day: best.day, count: best.count, nextWeek: best.week > $uiState.week };
+  })();
 
   // ---- Inline exercise rename ----
   let editingNameId: string | null = null;
@@ -804,9 +937,15 @@
 <!-- ===== Workout Summary Overlay ===== -->
 {#if showSummary}
   <WmSummary
-    duration={formatElapsed(summaryElapsed)}
+    durationSeconds={summaryElapsed}
     setsDone={summarySetsDone}
-    volume={fmtVolume(summaryVolume)}
+    volumeKg={summaryVolume}
+    weekDisplay={summaryWeekDisplay}
+    streak={summaryStreak}
+    volumeDelta={summaryVolumeDelta}
+    bestSet={summaryBestSet}
+    prs={summaryPRs}
+    next={summaryNext}
     exercises={summaryExercises}
     onDone={confirmFinish}
   />
