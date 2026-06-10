@@ -1,6 +1,6 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-06-09
+**Last updated:** 2026-06-10
 
 ## Active App: V2
 
@@ -35,6 +35,12 @@
 - Email/password sign in via Supabase
 - `onAuthChange` fires only on INITIAL_SESSION and SIGNED_IN — TOKEN_REFRESHED ignored
 - Sign out via Account sheet (z-index 200, workout bar hidden when open)
+- Signup needing confirmation -> dedicated 'Confirm your email' screen (AuthView mode 'confirm'); no premature sign-in form. 'Email not confirmed' on sign-in routes there too. Resend via `resendConfirmation()` (auth.ts)
+- `public/404.html`: GitHub Pages SPA + auth-redirect safety net — bounces unknown paths to /training-app/ preserving query + hash (auth tokens)
+
+### Open config (dashboard — not in code)
+- Supabase Site URL must be `https://timo-anis.github.io/training-app/` + redirect allowlist `.../training-app/**` (real fix for post-confirmation GH Pages 404)
+- Password policy still requires a symbol -> rejects symbol-less password-manager suggestions; relax to letters+digits (Auth > Providers > Email). When relaxed, update AuthView pw-hint to match (currently states the strict rule truthfully)
 
 ### Boot
 - Always lands on today's week + today's day
