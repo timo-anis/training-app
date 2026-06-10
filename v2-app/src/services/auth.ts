@@ -12,15 +12,32 @@ export async function signInWithEmail(email: string, password: string) {
   return data.user;
 }
 
+// Where Supabase should send the user after they click the email-confirmation
+// link. We pass this EXPLICITLY rather than relying on the dashboard Site URL
+// fallback, because that fallback drops the path and lands on the bare host
+// root (which has no GitHub Pages site -> 404). origin + BASE_URL always
+// resolves to the real app URL, e.g. https://timo-anis.github.io/training-app/.
+function emailRedirectTo(): string {
+  return `${window.location.origin}${import.meta.env.BASE_URL}`;
+}
+
 export async function signUpWithEmail(email: string, password: string) {
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: emailRedirectTo() },
+  });
   if (error) throw error;
   // data.session is null if email confirmation is required
   return { user: data.user, needsConfirmation: !data.session };
 }
 
 export async function resendConfirmation(email: string) {
-  const { error } = await supabase.auth.resend({ type: 'signup', email });
+  const { error } = await supabase.auth.resend({
+    type: 'signup',
+    email,
+    options: { emailRedirectTo: emailRedirectTo() },
+  });
   if (error) throw error;
 }
 
