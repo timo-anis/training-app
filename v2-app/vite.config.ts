@@ -8,7 +8,7 @@ export default defineConfig({
     svelte(),
     VitePWA({
       registerType: 'autoUpdate',
-      base: '/training-app/',
+      base: '/',
       manifest: {
         name: 'Timo Training',
         short_name: 'Training',
@@ -17,8 +17,8 @@ export default defineConfig({
         background_color: '#08172d',
         display: 'standalone',
         orientation: 'portrait',
-        start_url: '/training-app/',
-        scope: '/training-app/',
+        start_url: '/',
+        scope: '/',
         icons: [
           {
             src: 'pwa-192.png',
@@ -54,8 +54,8 @@ export default defineConfig({
       },
     }),
   ],
-  // GitHub Pages: serve from /training-app/
-  base: '/training-app/',
+  // Custom domain trainingapp.timoanis.com: served from root
+  base: '/',
   build: {
     outDir: '../v2-dist',
     emptyOutDir: true,

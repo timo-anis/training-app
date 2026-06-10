@@ -16,7 +16,7 @@ export async function signInWithEmail(email: string, password: string) {
 // link. We pass this EXPLICITLY rather than relying on the dashboard Site URL
 // fallback, because that fallback drops the path and lands on the bare host
 // root (which has no GitHub Pages site -> 404). origin + BASE_URL always
-// resolves to the real app URL, e.g. https://timo-anis.github.io/training-app/.
+// resolves to the real app URL, e.g. https://trainingapp.timoanis.com/.
 function emailRedirectTo(): string {
   return `${window.location.origin}${import.meta.env.BASE_URL}`;
 }
