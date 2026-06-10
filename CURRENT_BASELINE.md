@@ -162,3 +162,4 @@ Push to main: install → test (133) → TypeScript check → build → deploy t
 - `immediate=true` flag on `updateState`
 - `lib/state-helpers.ts`
 - New-user welcome card now offers 3 starter templates (Full Body / Upper-Lower / Push-Pull-Legs): tap one -> scaffolds today's day via addExercise (1 empty set each), then fill weights. "Start blank" + "How it works" kept as secondary. Removes blank-slate friction. MainView.svelte, added 2026-06-10.
+- Persistent streak/consistency strip (`StreakStrip.svelte`) above the calendar in MainView: gold flame + "{n}-week streak", a "this week secured / at risk / start a streak" status line, and a 6-dot recent-weeks row. Three states (active / risk / dormant). Streak logic extracted to shared `streakInfo` derived store + `dayHasActivity` helper in `workout-state.ts` (single source of truth; WorkoutMode finish screen now consumes the shared helper). Pure read-only; no schema/date/superset changes. Added 2026-06-10.
