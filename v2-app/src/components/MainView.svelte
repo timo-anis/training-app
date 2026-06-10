@@ -764,7 +764,7 @@
   }
 
   :global(.hints-sheet) {
-    background: var(--c-10-18-42-0_98);
+    background: linear-gradient(180deg, var(--c-bg-1) 0%, var(--h-080c18) 100%);
     border: 1px solid rgba(var(--c-edge-b), 0.25);
     border-radius: 20px 20px 0 0;
     padding: 20px 20px 36px;
@@ -787,7 +787,7 @@
     margin-bottom: 16px;
     position: sticky;
     top: 0;
-    background: var(--c-10-18-42-0_98);
+    background: var(--c-bg-1);
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(var(--c-edge-b), 0.18);
     z-index: 10;
