@@ -66,7 +66,9 @@ export const latestWeek = derived(availableWeeks, ($weeks) =>
 // Shared single source of truth — consumed by the finish screen and the
 // persistent momentum strip. Pure read; no mutation, no schema change.
 export function dayHasActivity(wd: WorkoutDay): boolean {
-  return wd.completed === true || wd.exercises.some(ex =>
+  // Real logged work only — a stale `completed: true` with everything since
+  // un-checked must NOT count (keeps streak consistent with the calendar).
+  return wd.exercises.some(ex =>
     ex.sets.some(s => s.done) || ex.conditioningDone || ex.recoveryDone);
 }
 

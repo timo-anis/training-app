@@ -29,8 +29,11 @@
     const hasData = workoutDay && workoutDay.exercises.length > 0;
 
     if (hasData) {
-      // Logged work present — completion drives the colour.
-      if (workoutDay!.completed === true) return 'done';
+      // Logged work present. A finished day stays green only while it still
+      // has real done work — un-checking every set clears the green ring.
+      const hasDoneWork = workoutDay!.exercises.some(ex =>
+        ex.sets.some(s => s.done) || ex.conditioningDone || ex.recoveryDone);
+      if (workoutDay!.completed === true && hasDoneWork) return 'done';
       const nonRecovery = workoutDay!.exercises.filter(e => !e.recovery);
       const hasRecovery = workoutDay!.exercises.some(e => e.recovery && e.recoveryDone);
       if (nonRecovery.length === 0) {
