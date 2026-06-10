@@ -5,7 +5,7 @@
 ## Active App: V2
 
 - Source: `v2-app/`
-- Deployed: GitHub Pages — https://timo-anis.github.io/training-app/
+- Deployed: GitHub Pages — https://mullemeeldibtrenniteha2026.github.io/training-app/
 
 ---
 
@@ -39,7 +39,7 @@
 - `public/404.html`: GitHub Pages SPA + auth-redirect safety net — bounces unknown paths to /training-app/ preserving query + hash (auth tokens)
 
 ### Open config (dashboard — not in code)
-- Supabase Site URL must be `https://timo-anis.github.io/training-app/` + redirect allowlist `.../training-app/**` (real fix for post-confirmation GH Pages 404)
+- Supabase Site URL = `https://mullemeeldibtrenniteha2026.github.io/training-app/` + redirect allowlist `.../training-app/**` — CONFIRMED CORRECT (screenshot 2026-06-10). So post-confirmation 404 was NOT a Site URL misconfig; `public/404.html` is the safety net for any edge-path 404
 - Password policy still requires a symbol -> rejects symbol-less password-manager suggestions; relax to letters+digits (Auth > Providers > Email). When relaxed, update AuthView pw-hint to match (currently states the strict rule truthfully)
 
 ### Boot
