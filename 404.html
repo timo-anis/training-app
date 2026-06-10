@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#08172d" />
+    <title>Timo Training</title>
+    <script>
+      // GitHub Pages SPA + auth-redirect safety net.
+      // GitHub Pages serves this file for any unknown path (e.g. when the
+      // Supabase email-confirmation redirect lands on a path with no real file).
+      // We bounce to the app base path, preserving query string and URL hash -
+      // the hash can carry Supabase auth tokens, so it must survive.
+      (function () {
+        var base = '/training-app/';
+        var target = base + window.location.search + window.location.hash;
+        if (window.location.pathname !== base) {
+          window.location.replace(target);
+        }
+      })();
+    </script>
+  </head>
+  <body style="margin:0;background:#08172d;color:#7fa8d4;font-family:system-ui,sans-serif">
+    <p style="padding:24px">Loading Timo Training... <a href="/training-app/" style="color:#c4942e">Continue</a></p>
+  </body>
+</html>
