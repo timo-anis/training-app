@@ -8,3 +8,26 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ---- Password-recovery intent (captured at the earliest point) ----
+// With the PKCE flow the reset link returns as `?code=...` (no `type=recovery`
+// hash), and the token exchange fires PASSWORD_RECOVERY asynchronously — often
+// before the app attaches its own auth listener in onMount. If we miss it we'd
+// only see SIGNED_IN and boot the user straight into the app. So we listen here,
+// synchronously at client creation, and persist the intent to sessionStorage so
+// the app can reliably show the set-new-password screen instead of booting in.
+const RECOVERY_KEY = 'timo_pw_recovery';
+
+export function isRecoveryPending(): boolean {
+  try { return sessionStorage.getItem(RECOVERY_KEY) === '1'; } catch { return false; }
+}
+
+export function clearRecoveryPending(): void {
+  try { sessionStorage.removeItem(RECOVERY_KEY); } catch { /* ignore */ }
+}
+
+supabase.auth.onAuthStateChange((event) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    try { sessionStorage.setItem(RECOVERY_KEY, '1'); } catch { /* ignore */ }
+  }
+});

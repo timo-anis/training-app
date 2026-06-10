@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
+  import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
   import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
@@ -13,11 +14,10 @@
   let unsubscribeAuth: (() => void) | null = null;
 
   // Password-reset landing: show the set-new-password screen instead of booting.
-  // Seeded synchronously from the URL hash so the app never flashes first.
-  let recoveryMode = false;
-  try {
-    recoveryMode = window.location.hash.includes('type=recovery');
-  } catch { /* ignore */ }
+  // Seeded from the recovery flag captured at client creation (supabase.ts),
+  // which is reliable regardless of flow type (PKCE ?code= vs implicit hash)
+  // and auth-event timing.
+  let recoveryMode = isRecoveryPending();
 
   // Onboarding — show once on first login, then as a floating chip until first workout done
   let showOnboarding = false;
@@ -69,8 +69,9 @@
       if (state.status === 'signed_in') {
         currentUser.set(state.user);
         // While recovering, the session is valid but we wait for the new
-        // password before entering the app.
-        if (recoveryMode) return;
+        // password before entering the app. Re-check the persisted flag in case
+        // PASSWORD_RECOVERY landed between init and this event.
+        if (recoveryMode || isRecoveryPending()) { recoveryMode = true; return; }
         await bootForUser(state.user);
         // Show onboarding only for users with no training data yet
         const hasData = $appState.weeks.some(w => w.exercises.length > 0);
@@ -78,6 +79,7 @@
       } else if (state.status === 'signed_out') {
         currentUser.set(null);
         recoveryMode = false;
+        clearRecoveryPending();
         bootStatus.set('idle');
       }
     });
@@ -85,9 +87,10 @@
 
   async function handleRecovered() {
     recoveryMode = false;
-    // Drop the recovery hash so a reload doesn't re-trigger the flow.
+    clearRecoveryPending();
+    // Drop the recovery code/hash so a reload doesn't re-trigger the flow.
     try {
-      history.replaceState(null, '', window.location.pathname + window.location.search);
+      history.replaceState(null, '', window.location.pathname);
     } catch { /* ignore */ }
     const user = $currentUser;
     if (user) {
