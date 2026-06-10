@@ -39,6 +39,7 @@
 - `public/404.html`: GitHub Pages SPA + auth-redirect safety net — bounces unknown paths to /training-app/ preserving query + hash (auth tokens)
 
 ### Open config (dashboard — not in code)
+- Post-confirmation redirect dropped the `/training-app/` path and landed on bare host root (no Pages site -> 404), even with correct Site URL. FIXED in code 2026-06-10: `signUpWithEmail` + `resendConfirmation` now pass explicit `emailRedirectTo = origin + import.meta.env.BASE_URL` (auth.ts), so confirmations land on the real app URL.
 - ROOT CAUSE of post-confirmation 404 (found 2026-06-10): Supabase Site URL + redirect were set to `https://mullemeeldibtrenniteha2026.github.io/training-app/` — a host with NO Pages site. App actually lives at `https://timo-anis.github.io/training-app/`. Fix = set Supabase Site URL + Redirect URLs to `https://timo-anis.github.io/training-app/` (+ `/**`). Verified via fetch: timo-anis host serves the app, mullemeeldibtrenniteha2026 returns 'no site here'. `public/404.html` stays as a net for genuine sub-path 404s on the real host.
 - Password policy relaxed to 'Letters and digits' (was requiring a symbol -> rejected password-manager suggestions; architect feedback) 2026-06-10. Min length 8. AuthView pw-hint updated to match.
 
