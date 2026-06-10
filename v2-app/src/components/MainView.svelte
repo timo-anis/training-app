@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
@@ -76,6 +76,21 @@
     }, 40);
   }
 
+  // ---- #2 Starter templates (new-user first-run) ----
+  const STARTER_TEMPLATES: { name: string; sub: string; exercises: string[] }[] = [
+    { name: 'Full Body', sub: '5 exercises', exercises: ['Squat', 'Bench Press', 'Barbell Row', 'Overhead Press', 'Plank'] },
+    { name: 'Upper / Lower', sub: 'today: Upper', exercises: ['Bench Press', 'Barbell Row', 'Overhead Press', 'Lat Pulldown', 'Biceps Curl'] },
+    { name: 'Push / Pull / Legs', sub: 'today: Push', exercises: ['Bench Press', 'Overhead Press', 'Incline DB Press', 'Triceps Pushdown'] },
+  ];
+  let selectedTemplate = 0;
+
+  function applyTemplate(i: number) {
+    const tpl = STARTER_TEMPLATES[i];
+    for (const name of tpl.exercises) addExercise($uiState.week, $uiState.day, name);
+    exercisesExpanded = true;
+    showToast(`${tpl.name} added \u2014 fill in your weights`, 'success');
+  }
+
   // Today highlight for the day-header Today button
   $: _today = todayWeekDay();
   $: onToday = !!_today && _today.week === $uiState.week && _today.day === $uiState.day;
@@ -118,8 +133,24 @@
         </div>
         <span class="welcome-title">Welcome — let’s start training</span>
         <span class="welcome-sub">Plan your week in the calendar and log your first workout.</span>
+        <div class="tpl-list">
+          {#each STARTER_TEMPLATES as tpl, i}
+            <button type="button" class="tpl-row" class:sel={selectedTemplate === i} on:click={() => (selectedTemplate = i)}>
+              <span class="tpl-name">{tpl.name}</span>
+              <span class="tpl-sub">{tpl.sub}</span>
+            </button>
+          {/each}
+        </div>
+        <div class="tpl-pills">
+          {#each STARTER_TEMPLATES[selectedTemplate].exercises as ex}
+            <span class="tpl-pill">{ex}</span>
+          {/each}
+        </div>
+        <button class="tpl-cta" on:click={() => applyTemplate(selectedTemplate)}>
+          Add {STARTER_TEMPLATES[selectedTemplate].exercises.length} exercises to today
+        </button>
         <div class="welcome-actions">
-          <button class="welcome-primary" on:click={startFirstExercise}>+ Add first exercise</button>
+          <button class="welcome-secondary" on:click={startFirstExercise}>Start blank</button>
           <button class="welcome-secondary" on:click={() => requestOnboarding.set(true)}>How it works</button>
         </div>
       </div>
@@ -610,6 +641,38 @@
     transition: background 0.12s;
   }
   .welcome-secondary:active { background: rgba(var(--c-fg), 0.12); }
+
+  .welcome-actions .welcome-secondary { flex: 1; }
+
+  .tpl-list { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 360px; margin-top: 12px; }
+  .tpl-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 13px 14px; border-radius: 13px;
+    border: 1px solid rgba(var(--c-fg), 0.12);
+    background: rgba(var(--c-fg), 0.04);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, border-color 0.12s;
+  }
+  .tpl-row.sel { border-color: rgba(var(--c-accent), 0.55); background: rgba(var(--c-accent), 0.10); }
+  .tpl-name { font-size: 15px; font-weight: 800; color: var(--h-ffffff); }
+  .tpl-sub { margin-left: auto; font-size: 12px; color: rgba(var(--c-fg), 0.40); }
+
+  .tpl-pills { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; width: 100%; max-width: 360px; margin-top: 10px; }
+  .tpl-pill {
+    font-size: 12px; color: rgba(var(--c-fg), 0.70);
+    background: rgba(var(--c-fg), 0.06); border: 1px solid rgba(var(--c-fg), 0.10);
+    border-radius: 999px; padding: 4px 10px;
+  }
+
+  .tpl-cta {
+    width: 100%; max-width: 360px; margin-top: 14px; padding: 15px;
+    border-radius: 13px; border: 1px solid rgba(var(--c-accent), 0.55);
+    background: rgba(var(--c-accent), 0.18); color: var(--h-d4a038);
+    font-size: 15px; font-weight: 800; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, transform 0.08s;
+  }
+  .tpl-cta:active { background: rgba(var(--c-accent), 0.28); transform: scale(0.98); }
 
   .copy-day-btn {
     margin-top: 12px;

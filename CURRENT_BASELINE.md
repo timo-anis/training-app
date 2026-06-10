@@ -161,3 +161,4 @@ Push to main: install → test (133) → TypeScript check → build → deploy t
 - Superset code pairing and grouping logic
 - `immediate=true` flag on `updateState`
 - `lib/state-helpers.ts`
+- New-user welcome card now offers 3 starter templates (Full Body / Upper-Lower / Push-Pull-Legs): tap one -> scaffolds today's day via addExercise (1 empty set each), then fill weights. "Start blank" + "How it works" kept as secondary. Removes blank-slate friction. MainView.svelte, added 2026-06-10.
