@@ -142,7 +142,7 @@
 
       <form on:submit|preventDefault={handleSubmit}>
         <label>
-          New password
+          Create a new password
           <input type="password" bind:value={password} required autocomplete="new-password" />
         </label>
         <label>
