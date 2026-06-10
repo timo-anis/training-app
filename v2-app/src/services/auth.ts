@@ -19,6 +19,11 @@ export async function signUpWithEmail(email: string, password: string) {
   return { user: data.user, needsConfirmation: !data.session };
 }
 
+export async function resendConfirmation(email: string) {
+  const { error } = await supabase.auth.resend({ type: 'signup', email });
+  if (error) throw error;
+}
+
 export async function sendPasswordReset(email: string) {
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: window.location.href,
