@@ -3,6 +3,7 @@
   import type { DayKind } from '../types/workout';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
+  import StreakStrip from './StreakStrip.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import AddExercise from './AddExercise.svelte';
   import CopyDaySheet from './CopyDaySheet.svelte';
@@ -156,6 +157,11 @@
       </div>
     </section>
   {/if}
+
+  <!-- Streak / consistency momentum strip -->
+  <section class="section section-tight">
+    <StreakStrip />
+  </section>
 
   <!-- Monthly calendar -->
   <section class="section">

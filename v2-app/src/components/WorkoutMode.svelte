@@ -6,7 +6,7 @@
     findLastConditioningNote, toggleRecoveryDone, toggleConditioningDone, updateUI,
     addSet, deleteSet, insertSet, updateConditioningNote, markWorkoutComplete,
     renameExercise, updateDayNote, addExercise, deleteExercise, updateExerciseMeta,
-    pushUndo, execUndo, undoAction,
+    pushUndo, execUndo, undoAction, dayHasActivity,
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
   import WmFooter from './WmFooter.svelte';
@@ -272,12 +272,6 @@
 
   // ---- Premium summary extras (streak, volume delta, best set, PRs, next) ----
   // Pure read-only derivations from existing state — no mutation, no new schema.
-
-  // A day "counts" as trained if it has any logged activity.
-  function dayHasActivity(wd: WorkoutDay): boolean {
-    return wd.completed === true || wd.exercises.some(ex =>
-      ex.sets.some(s => s.done) || ex.conditioningDone || ex.recoveryDone);
-  }
 
   // Strength volume of a day (done sets only).
   function dayVolume(wd: WorkoutDay): number {

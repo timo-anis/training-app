@@ -61,6 +61,40 @@ export const latestWeek = derived(availableWeeks, ($weeks) =>
   $weeks[$weeks.length - 1] ?? 1
 );
 
+// ---- Streak / consistency ----
+// A day "counts" as trained if it has any logged activity.
+// Shared single source of truth — consumed by the finish screen and the
+// persistent momentum strip. Pure read; no mutation, no schema change.
+export function dayHasActivity(wd: WorkoutDay): boolean {
+  return wd.completed === true || wd.exercises.some(ex =>
+    ex.sets.some(s => s.done) || ex.conditioningDone || ex.recoveryDone);
+}
+
+export interface StreakInfo {
+  /** Consecutive weeks with activity, ending at the current week (if trained)
+   *  or the last trained week before it (streak standing, current week at risk). */
+  count: number;
+  /** Whether the current week already has logged activity. */
+  thisWeekActive: boolean;
+  /** Last 6 weeks (oldest -> newest, ending at current week): trained or not. */
+  recent: boolean[];
+}
+
+// Persistent streak view: counts real logged activity only (current week is
+// NOT assumed active — that absence is the "at risk" signal the strip surfaces).
+export const streakInfo = derived([appState, uiState], ([$s, $ui]): StreakInfo => {
+  const active = new Set<number>();
+  for (const wd of $s.weeks) if (dayHasActivity(wd)) active.add(wd.week);
+  const cur = $ui.week;
+  const thisWeekActive = active.has(cur);
+  let count = 0;
+  let w = thisWeekActive ? cur : cur - 1;
+  while (active.has(w)) { count++; w--; }
+  const recent: boolean[] = [];
+  for (let i = 5; i >= 0; i--) recent.push(active.has(cur - i));
+  return { count, thisWeekActive, recent };
+});
+
 // ---- Workout blocks ----
 export interface WorkoutBlock {
   id: string;
