@@ -12,7 +12,7 @@
       // We bounce to the app base path, preserving query string and URL hash -
       // the hash can carry Supabase auth tokens, so it must survive.
       (function () {
-        var base = '/training-app/';
+        var base = '/';
         var target = base + window.location.search + window.location.hash;
         if (window.location.pathname !== base) {
           window.location.replace(target);
@@ -21,6 +21,6 @@
     </script>
   </head>
   <body style="margin:0;background:#08172d;color:#7fa8d4;font-family:system-ui,sans-serif">
-    <p style="padding:24px">Loading Timo Training... <a href="/training-app/" style="color:#c4942e">Continue</a></p>
+    <p style="padding:24px">Loading Timo Training... <a href="/" style="color:#c4942e">Continue</a></p>
   </body>
 </html>
