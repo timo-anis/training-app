@@ -11,6 +11,8 @@
 
 ## Code health
 
+- **Error tracking enriched 2026-06-11:** errors are now distinguishable + groupable. Real build version stamped (`__APP_VERSION__` = date+git-sha via vite define; was `VITE_APP_VERSION` → always "unknown"). `errorTracker.ts` captures error name, source file:line:col, stack, kind (error vs unhandledrejection), and classifies app vs external/cross-origin (extensions/third-party "Script error." noise tagged so it can't masquerade as an app bug). Verified live in the deployed bundle. ⚠️ Build note: the sandbox `npm run build` returns a STALE phantom bundle (does not reflect source) — verify builds via the deployed `gh-pages` bundle or trust `npm run check` + `npm test`; do not trust local `vite build` output here.
+
 - **Audit fixes 2026-06-11 (P0/P1/P2):** boot no longer fabricates past-day done-states (`applyPastDaysCompleted` removed — days now reflect real logged work; existing data untouched); boot-failure shows a recoverable error screen instead of the sign-in form for an authenticated user; added tests for `streakInfo`/`dayHasActivity`/`copyDayFrom`, and extracted `getDayStatus` into a pure `lib/day-status.ts` with its own tests; `SearchOverlay` typed (no `as any`); CopyDaySheet dialog focusable → svelte-check 0 warnings; week/day↔Date math centralised in `lib/dates` (`weekDayToUTCDate`/`weekDayToLocalDate`/`localDateToWeekDay`) — MonthCalendar/SearchOverlay/BodyMap no longer re-implement it. Suite now 144 tests across 12 files.
 
 - Boot merges local vs cloud by timestamp (newer wins) — `lib/state-merge.ts`
