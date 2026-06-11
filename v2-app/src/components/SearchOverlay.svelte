@@ -1,12 +1,13 @@
 <script lang="ts">
   import { appState, updateUI, searchOpen, weekOffset } from '../stores/app';
   import { DAY_ORDER } from '../types/workout';
+  import type { DayOfWeek } from '../types/workout';
   import { PS_UTC } from '../lib/program';
 
   function close() { $searchOpen = false; }
 
-  function weekDayToDate(week: number, day: string): Date {
-    const dayIdx = DAY_ORDER.indexOf(day as any);
+  function weekDayToDate(week: number, day: DayOfWeek): Date {
+    const dayIdx = DAY_ORDER.indexOf(day);
     const utc = PS_UTC + ((week - 1) * 7 + dayIdx) * 86400000;
     const d = new Date(utc);
     return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
@@ -18,14 +19,14 @@
     Thursday: 'Thu', Friday: 'Fri', Saturday: 'Sat', Sunday: 'Sun',
   };
 
-  function fmtDate(week: number, day: string): string {
+  function fmtDate(week: number, day: DayOfWeek): string {
     const d = weekDayToDate(week, day);
     return `${DAY_SHORT[day] ?? day}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`;
   }
 
   interface SearchResult {
     week: number;
-    day: string;
+    day: DayOfWeek;
     exName: string;
     dateLabel: string;
     lastKg: string;
@@ -63,13 +64,13 @@
     // Sort newest first (highest week/day)
     out.sort((a, b) => {
       if (b.week !== a.week) return b.week - a.week;
-      return DAY_ORDER.indexOf(b.day as any) - DAY_ORDER.indexOf(a.day as any);
+      return DAY_ORDER.indexOf(b.day) - DAY_ORDER.indexOf(a.day);
     });
     return out;
   })();
 
-  function openDay(week: number, day: string, exName: string) {
-    updateUI(ui => ({ ...ui, week, day: day as any, highlightExercise: exName }));
+  function openDay(week: number, day: DayOfWeek, exName: string) {
+    updateUI(ui => ({ ...ui, week, day, highlightExercise: exName }));
     close();
   }
 
