@@ -1,0 +1,28 @@
+# Dependabot — routine dependency update PRs (weekly, grouped to avoid noise).
+# NOTE: real-time vulnerability protection comes from "Dependabot alerts" +
+# "Dependabot security updates" in repo Settings → Security (event-driven on CVE
+# disclosure, independent of this schedule). Keep those ON.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/v2-app"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Tallinn"
+    groups:
+      all-deps:
+        patterns: ["*"]
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Tallinn"
+    commit-message:
+      prefix: "ci"
