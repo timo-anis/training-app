@@ -62,7 +62,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="backdrop" on:click={close} on:keydown={onBackdropKey} role="presentation">
-  <div class="sheet" on:click|stopPropagation role="dialog" aria-modal="true" aria-label="Copy day">
+  <div class="sheet" on:click|stopPropagation role="dialog" aria-modal="true" aria-label="Copy day" tabindex="-1">
     <div class="handle" aria-hidden="true"></div>
     <div class="sheet-head">
       <span class="sheet-title">Copy from another day</span>
