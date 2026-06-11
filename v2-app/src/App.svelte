@@ -170,6 +170,17 @@
     <OnboardingOverlay on:done={dismissOnboarding} />
   {/if}
 
+{:else if $currentUser && $bootStatus === 'error'}
+  <!-- Authenticated but boot failed: show a recoverable error, not the
+       sign-in form (which wrongly implies the user is signed out). -->
+  <div class="error-boundary">
+    <div class="error-card">
+      <div class="error-icon">⚠</div>
+      <p class="error-title">Couldn’t load your training data</p>
+      <p class="error-msg">Check your connection and try again.</p>
+      <button class="error-reload" on:click={() => window.location.reload()}>Reload app</button>
+    </div>
+  </div>
 {:else}
   <AuthView />
 {/if}
