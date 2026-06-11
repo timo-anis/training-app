@@ -11,6 +11,8 @@
 
 ## Code health
 
+- **Audit fixes 2026-06-11 (P0/P1/P2):** boot no longer fabricates past-day done-states (`applyPastDaysCompleted` removed — days now reflect real logged work; existing data untouched); boot-failure shows a recoverable error screen instead of the sign-in form for an authenticated user; added tests for `streakInfo`/`dayHasActivity`/`copyDayFrom` (133 green); `SearchOverlay` typed (no `as any`); CopyDaySheet dialog focusable → svelte-check 0 warnings.
+
 - Boot merges local vs cloud by timestamp (newer wins) — `lib/state-merge.ts`
 - Cloud saves are offline-aware with retry/backoff (`stores/sync.ts`); flush on `online`
 - WorkoutMode split (2228 → 1305 lines, -41%): extracted `WmHeader`, `WmFooter`, `WmRestControls`, `WmAddExercise`, `WmSummary`, `WmSetRow` as presentational children
@@ -72,7 +74,7 @@
 ### Edit sheet (ExerciseCard)
 - Opens as bottom sheet on pencil icon tap
 - Fields: Name, Type (Weighted/Superset/No weights), Group Code (conditional), Rest, Note
-- **Move up/down removed** — was causing Save button visibility issues; order management TBD
+- **Move up/down reorder** — present in ExerciseCard (`moveExercise` up/down); reorders within the day
 - CSS: `height: min(88vh, 600px)` — `vh` used (not `dvh`) for iOS Safari compatibility
 - Flex layout: handle → scrollable body → Cancel/Save (flex-shrink: 0, always visible)
 
@@ -128,7 +130,7 @@ WorkoutSet { kg, reps, done }
 
 ## Test Suite
 
-122 automated tests across 10 files — run `npm test` in `v2-app/`.
+133 automated tests across 11 files — run `npm test` in `v2-app/`.
 (Per-file counts intentionally not listed here to avoid drift; the runner is the source of truth.)
 
 ---
@@ -141,7 +143,6 @@ Push to main: install → test (133) → TypeScript check → build → deploy t
 
 ## Known Limitations / Pending
 
-- **Exercise reordering** — Move up/down removed from edit sheet; no reorder UI currently exists
 - **Onboarding copy stale** — tip mentions "blue/amber/violet fill" but calendar is now circle-based
 - iOS vibration: Web Vibration API unsupported on Safari/iOS
 - No push notifications / reminders
