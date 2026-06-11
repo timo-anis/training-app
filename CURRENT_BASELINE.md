@@ -11,7 +11,7 @@
 
 ## Code health
 
-- **Audit fixes 2026-06-11 (P0/P1/P2):** boot no longer fabricates past-day done-states (`applyPastDaysCompleted` removed — days now reflect real logged work; existing data untouched); boot-failure shows a recoverable error screen instead of the sign-in form for an authenticated user; added tests for `streakInfo`/`dayHasActivity`/`copyDayFrom` (133 green); `SearchOverlay` typed (no `as any`); CopyDaySheet dialog focusable → svelte-check 0 warnings.
+- **Audit fixes 2026-06-11 (P0/P1/P2):** boot no longer fabricates past-day done-states (`applyPastDaysCompleted` removed — days now reflect real logged work; existing data untouched); boot-failure shows a recoverable error screen instead of the sign-in form for an authenticated user; added tests for `streakInfo`/`dayHasActivity`/`copyDayFrom` (133 green); `SearchOverlay` typed (no `as any`); CopyDaySheet dialog focusable → svelte-check 0 warnings; week/day↔Date math centralised in `lib/dates` (`weekDayToUTCDate`/`weekDayToLocalDate`/`localDateToWeekDay`) — MonthCalendar/SearchOverlay/BodyMap no longer re-implement it. Suite now 137 tests.
 
 - Boot merges local vs cloud by timestamp (newer wins) — `lib/state-merge.ts`
 - Cloud saves are offline-aware with retry/backoff (`stores/sync.ts`); flush on `online`
