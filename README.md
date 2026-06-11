@@ -2,7 +2,7 @@
 
 A mobile-first training app built for real daily use — fast logging during workouts, reliable state handling, and Supabase-backed cloud sync.
 
-**Live:** https://timo-anis.github.io/training-app/
+**Live:** https://trainingapp.timoanis.com/
 
 ---
 
@@ -45,7 +45,7 @@ training-app/
 │   │   ├── App.svelte
 │   │   ├── types/workout.ts        Domain types — single source of truth
 │   │   ├── stores/app.ts           All state, actions, derived stores
-│   │   ├── services/               auth, storage, supabase, state-parser
+│   │   ├── services/               auth, storage, supabase, state-parser, errorTracker
 │   │   ├── lib/                    Pure functions: dates, state-helpers, program
 │   │   └── components/             UI components
 │   └── vite.config.ts
@@ -82,14 +82,14 @@ npm run build   # outputs to ../v2-dist/
 Tests:
 
 ```bash
-npm test        # 122 tests
+npm test        # 144 tests
 ```
 
 ---
 
 ## Deployment
 
-Push to `main` → GitHub Actions runs tests → TypeScript check → builds `v2-app` → deploys to `gh-pages` branch → live at `https://timo-anis.github.io/training-app/`.
+Push to `main` → GitHub Actions runs tests → TypeScript check → builds `v2-app` → deploys to `gh-pages` branch → live at `https://trainingapp.timoanis.com/` (custom domain; old `timo-anis.github.io/training-app/` 301-redirects here).
 
 ---
 

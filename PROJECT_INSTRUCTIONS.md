@@ -30,7 +30,7 @@ easy to extend.
 ```
 WorkoutDay { week:number, day:DayOfWeek, date:string (ISO), exercises:Exercise[] }
 Exercise   { id, name, type:'single'|'superset', code, sets:WorkoutSet[],
-             rest, note, recovery, recoveryDone, conditioning, conditioningNote }
+             rest, note, recovery, recoveryDone, conditioning, conditioningNote, conditioningDone }
 WorkoutSet { kg, reps, done }
 ```
 

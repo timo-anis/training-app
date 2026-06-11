@@ -11,13 +11,13 @@
 
 ## Code health
 
-- **Audit fixes 2026-06-11 (P0/P1/P2):** boot no longer fabricates past-day done-states (`applyPastDaysCompleted` removed — days now reflect real logged work; existing data untouched); boot-failure shows a recoverable error screen instead of the sign-in form for an authenticated user; added tests for `streakInfo`/`dayHasActivity`/`copyDayFrom` (133 green); `SearchOverlay` typed (no `as any`); CopyDaySheet dialog focusable → svelte-check 0 warnings; week/day↔Date math centralised in `lib/dates` (`weekDayToUTCDate`/`weekDayToLocalDate`/`localDateToWeekDay`) — MonthCalendar/SearchOverlay/BodyMap no longer re-implement it. Suite now 137 tests.
+- **Audit fixes 2026-06-11 (P0/P1/P2):** boot no longer fabricates past-day done-states (`applyPastDaysCompleted` removed — days now reflect real logged work; existing data untouched); boot-failure shows a recoverable error screen instead of the sign-in form for an authenticated user; added tests for `streakInfo`/`dayHasActivity`/`copyDayFrom`, and extracted `getDayStatus` into a pure `lib/day-status.ts` with its own tests; `SearchOverlay` typed (no `as any`); CopyDaySheet dialog focusable → svelte-check 0 warnings; week/day↔Date math centralised in `lib/dates` (`weekDayToUTCDate`/`weekDayToLocalDate`/`localDateToWeekDay`) — MonthCalendar/SearchOverlay/BodyMap no longer re-implement it. Suite now 144 tests across 12 files.
 
 - Boot merges local vs cloud by timestamp (newer wins) — `lib/state-merge.ts`
 - Cloud saves are offline-aware with retry/backoff (`stores/sync.ts`); flush on `online`
 - WorkoutMode split (2228 → 1305 lines, -41%): extracted `WmHeader`, `WmFooter`, `WmRestControls`, `WmAddExercise`, `WmSummary`, `WmSetRow` as presentational children
 - Store split (2026-06-04): `stores/app.ts` barrel re-exports `ui-state.ts`, `sync.ts`, `workout-state.ts`
-- Tests: 133 (122 store/logic + 11 WmSetRow component) — all green
+- Tests: 144 across 12 files (logic/state/date + component) — all green
 - a11y: interactive SVG zones + swipe surface have roles/keyboard; build + svelte-check 0 warnings
 
 ---
@@ -130,14 +130,14 @@ WorkoutSet { kg, reps, done }
 
 ## Test Suite
 
-133 automated tests across 11 files — run `npm test` in `v2-app/`.
+144 automated tests across 12 files — run `npm test` in `v2-app/`.
 (Per-file counts intentionally not listed here to avoid drift; the runner is the source of truth.)
 
 ---
 
 ## CI Pipeline
 
-Push to main: install → test (133) → TypeScript check → build → deploy to GitHub Pages.
+Push to main: install → test (144) → TypeScript check → build → deploy to GitHub Pages.
 
 ---
 
