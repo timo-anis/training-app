@@ -2,46 +2,13 @@
   import { DAY_ORDER, type DayOfWeek, type AppState, type UIState } from '../types/workout';
   import { appState, uiState, updateUI } from '../stores/app';
   import { weekDayToLocalDate, localDateToWeekDay } from '../lib/dates';
-
-  type DayStatus = 'done' | 'partial' | 'active-recovery' | 'has-data' | 'rest' | 'weekend' | 'future' | 'neutral';
+  import { computeDayStatus, type DayStatus } from '../lib/day-status';
 
   function getDayStatus(date: Date, state: AppState): DayStatus {
     const wd = localDateToWeekDay(date);
-    // Outside the program range — nothing to show.
     if (!wd) return 'neutral';
-
     const workoutDay = state.weeks.find(w => w.week === wd.week && w.day === wd.day);
-    const hasData = workoutDay && workoutDay.exercises.length > 0;
-
-    if (hasData) {
-      // Logged work present. A finished day stays green only while it still
-      // has real done work — un-checking every set clears the green ring.
-      const hasDoneWork = workoutDay!.exercises.some(ex =>
-        ex.sets.some(s => s.done) || ex.conditioningDone || ex.recoveryDone);
-      if (workoutDay!.completed === true && hasDoneWork) return 'done';
-      const nonRecovery = workoutDay!.exercises.filter(e => !e.recovery);
-      const hasRecovery = workoutDay!.exercises.some(e => e.recovery && e.recoveryDone);
-      if (nonRecovery.length === 0) {
-        if (hasRecovery || workoutDay!.kind === 'recovery') return 'active-recovery';
-        return 'has-data';
-      }
-      const allDone = nonRecovery.every(ex => ex.sets.length > 0 && ex.sets.every(s => s.done));
-      if (allDone) return 'done';
-      // Partially done — some sets completed but not all
-      const anyDone = nonRecovery.some(ex => ex.sets.some(s => s.done));
-      if (anyDone) return 'partial';
-      if (hasRecovery) return 'active-recovery';
-      return 'has-data';
-    }
-
-    // No logged exercises — the user's explicit day mark drives the look.
-    // Unmarked days stay neutral (empty calendar for new users).
-    switch (workoutDay?.kind) {
-      case 'workout':  return 'has-data';
-      case 'recovery': return 'active-recovery';
-      case 'rest':     return 'rest';
-      default:         return 'neutral';
-    }
+    return computeDayStatus(workoutDay);
   }
 
   function selectDay(date: Date) {
