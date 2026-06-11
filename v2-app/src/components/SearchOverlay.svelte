@@ -2,16 +2,9 @@
   import { appState, updateUI, searchOpen, weekOffset } from '../stores/app';
   import { DAY_ORDER } from '../types/workout';
   import type { DayOfWeek } from '../types/workout';
-  import { PS_UTC } from '../lib/program';
+  import { weekDayToLocalDate } from '../lib/dates';
 
   function close() { $searchOpen = false; }
-
-  function weekDayToDate(week: number, day: DayOfWeek): Date {
-    const dayIdx = DAY_ORDER.indexOf(day);
-    const utc = PS_UTC + ((week - 1) * 7 + dayIdx) * 86400000;
-    const d = new Date(utc);
-    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-  }
 
   const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const DAY_SHORT: Record<string, string> = {
@@ -20,7 +13,7 @@
   };
 
   function fmtDate(week: number, day: DayOfWeek): string {
-    const d = weekDayToDate(week, day);
+    const d = weekDayToLocalDate(week, day);
     return `${DAY_SHORT[day] ?? day}, ${d.getDate()} ${MONTH_SHORT[d.getMonth()]}`;
   }
 

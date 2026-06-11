@@ -1,27 +1,12 @@
 <script lang="ts">
   import { DAY_ORDER, type DayOfWeek, type AppState, type UIState } from '../types/workout';
   import { appState, uiState, updateUI } from '../stores/app';
-  import { PS_UTC } from '../lib/program';
-
-  // Use UTC arithmetic — avoids DST shifts (e.g. 28 Mar 2026 spring-forward)
-  function dateToWeekDay(date: Date): { week: number; day: DayOfWeek } | null {
-    const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-    const diff = Math.round((utc - PS_UTC) / 86400000);
-    if (diff < 0) return null;
-    return { week: Math.floor(diff / 7) + 1, day: DAY_ORDER[diff % 7] };
-  }
-
-  function weekToDate(week: number, day: DayOfWeek): Date {
-    const dayIdx = DAY_ORDER.indexOf(day);
-    const utc = PS_UTC + ((week - 1) * 7 + dayIdx) * 86400000;
-    const d = new Date(utc);
-    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
-  }
+  import { weekDayToLocalDate, localDateToWeekDay } from '../lib/dates';
 
   type DayStatus = 'done' | 'partial' | 'active-recovery' | 'has-data' | 'rest' | 'weekend' | 'future' | 'neutral';
 
   function getDayStatus(date: Date, state: AppState): DayStatus {
-    const wd = dateToWeekDay(date);
+    const wd = localDateToWeekDay(date);
     // Outside the program range — nothing to show.
     if (!wd) return 'neutral';
 
@@ -60,7 +45,7 @@
   }
 
   function selectDay(date: Date) {
-    const wd = dateToWeekDay(date);
+    const wd = localDateToWeekDay(date);
     if (!wd) return;
     // Sync view to the selected day's month (user explicitly chose this day)
     viewYear = date.getFullYear();
@@ -70,7 +55,7 @@
   }
 
   function isSelected(date: Date, ui: UIState): boolean {
-    const wd = dateToWeekDay(date);
+    const wd = localDateToWeekDay(date);
     if (!wd) return false;
     return wd.week === ui.week && wd.day === ui.day;
   }
@@ -96,7 +81,7 @@
 
   // Sync view to selected day only on first mount (before any manual nav)
   $: if (!manualMonth) {
-    const ref = weekToDate($uiState.week, $uiState.day);
+    const ref = weekDayToLocalDate($uiState.week, $uiState.day);
     viewYear = ref.getFullYear();
     viewMonth = ref.getMonth();
   }

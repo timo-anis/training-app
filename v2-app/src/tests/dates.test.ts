@@ -9,7 +9,8 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { getDateForWeekDay, getWeekDayForDate } from '../lib/dates';
+import { getDateForWeekDay, getWeekDayForDate, weekDayToUTCDate, weekDayToLocalDate, localDateToWeekDay } from '../lib/dates';
+import type { DayOfWeek } from '../types/workout';
 
 describe('getDateForWeekDay', () => {
   // ── Anchor: program start ────────────────────────────────────────────────
@@ -113,4 +114,37 @@ describe('getWeekDayForDate', () => {
       expect(getWeekDayForDate(date)).toEqual({ week, day });
     });
   }
+});
+
+describe('Date-object helpers (centralised from MonthCalendar/SearchOverlay/BodyMap)', () => {
+  it('weekDayToUTCDate holds the program date in UTC fields', () => {
+    const d = weekDayToUTCDate(1, 'Monday');
+    expect(d.getUTCFullYear()).toBe(2026);
+    expect(d.getUTCMonth()).toBe(1); // February
+    expect(d.getUTCDate()).toBe(16);
+  });
+
+  it('weekDayToLocalDate places the date at local midnight', () => {
+    const d = weekDayToLocalDate(2, 'Wednesday'); // 2026-02-25
+    expect(d.getFullYear()).toBe(2026);
+    expect(d.getMonth()).toBe(1);
+    expect(d.getDate()).toBe(25);
+    expect(d.getHours()).toBe(0);
+  });
+
+  it('localDateToWeekDay round-trips with weekDayToLocalDate across weeks/days incl. DST boundary', () => {
+    const cases: Array<[number, DayOfWeek]> = [
+      [1, 'Monday'], [2, 'Wednesday'], [6, 'Sunday'], [7, 'Saturday'], [10, 'Friday'],
+    ];
+    for (const [w, d] of cases) {
+      expect(localDateToWeekDay(weekDayToLocalDate(w, d))).toEqual({ week: w, day: d });
+    }
+    // EU spring-forward weekend (29 Mar 2026) must still align
+    const rt = localDateToWeekDay(weekDayToLocalDate(6, 'Sunday'));
+    expect(rt).toEqual({ week: 6, day: 'Sunday' });
+  });
+
+  it('localDateToWeekDay returns null before program start', () => {
+    expect(localDateToWeekDay(new Date(2026, 1, 15))).toBeNull();
+  });
 });

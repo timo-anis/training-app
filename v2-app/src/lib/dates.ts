@@ -49,3 +49,30 @@ export function getWeekDayForDate(date: string): { week: number; day: DayOfWeek 
   const day = DAY_ORDER[diff % 7];
   return { week, day };
 }
+
+/**
+ * week + day -> Date whose UTC fields hold the program calendar date (UTC midnight).
+ * Use when reading getUTCFullYear/getUTCMonth (e.g. month bucketing).
+ */
+export function weekDayToUTCDate(week: number, day: DayOfWeek): Date {
+  return new Date(PS_UTC + ((week - 1) * 7 + DAY_OFFSET[day]) * 86400000);
+}
+
+/**
+ * week + day -> Date at LOCAL midnight of that calendar date.
+ * Use for calendar-grid placement and "today" comparisons in local time.
+ */
+export function weekDayToLocalDate(week: number, day: DayOfWeek): Date {
+  const d = weekDayToUTCDate(week, day);
+  return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+/**
+ * A local Date -> { week, day }, or null for dates before PROGRAM_START.
+ * Mirror of getWeekDayForDate for callers that already hold a Date object.
+ */
+export function localDateToWeekDay(date: Date): { week: number; day: DayOfWeek } | null {
+  const diff = Math.round((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - PS_UTC) / 86400000);
+  if (diff < 0) return null;
+  return { week: Math.floor(diff / 7) + 1, day: DAY_ORDER[diff % 7] };
+}

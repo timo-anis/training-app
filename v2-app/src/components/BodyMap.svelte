@@ -1,6 +1,6 @@
 <script lang="ts">
   import { appState, uiState } from '../stores/app';
-  import { PS_UTC } from '../lib/program';
+  import { weekDayToUTCDate } from '../lib/dates';
   import type { WorkoutDay } from '../types/workout';
 
   // ---- Muscle keyword map ----
@@ -43,7 +43,6 @@
   type RadarMode = 'day' | 'week' | 'month' | 'alltime';
   let mode: RadarMode = 'week';
 
-  const DAY_ORDER = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 
   // ---- Score computation ----
   function scoreExercise(name: string, note: string, setCount: number): Partial<Record<MuscleKey, number>> {
@@ -83,9 +82,7 @@
 
   function computeForMonth(weeks: WorkoutDay[], year: number, month: number): Record<MuscleKey, number> {
     const filtered = weeks.filter(wd => {
-      const dayIdx = DAY_ORDER.indexOf(wd.day);
-      const ms = PS_UTC + ((wd.week - 1) * 7 + dayIdx) * 86400000;
-      const d = new Date(ms);
+      const d = weekDayToUTCDate(wd.week, wd.day);
       return d.getUTCFullYear() === year && d.getUTCMonth() === month;
     });
     return computeForDays(filtered);
@@ -100,9 +97,7 @@
       return computeForDays(weeks.filter(w => w.week === $uiState.week));
     }
     if (mode === 'month') {
-      const dayIdx = DAY_ORDER.indexOf($uiState.day);
-      const ms = PS_UTC + (($uiState.week - 1) * 7 + dayIdx) * 86400000;
-      const ref = new Date(ms);
+      const ref = weekDayToUTCDate($uiState.week, $uiState.day);
       return computeForMonth(weeks, ref.getUTCFullYear(), ref.getUTCMonth());
     }
     return computeForDays(weeks);
