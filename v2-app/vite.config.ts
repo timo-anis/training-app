@@ -1,9 +1,22 @@
 import { defineConfig } from 'vite'
+import { execSync } from 'node:child_process'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// Build version stamped into the bundle for error attribution (date + git sha).
+function appVersion(): string {
+  const date = new Date().toISOString().slice(0, 10)
+  try {
+    const sha = execSync('git rev-parse --short HEAD', { stdio: ['ignore', 'pipe', 'ignore'] }).toString().trim()
+    return sha ? `${date}+${sha}` : date
+  } catch {
+    return date
+  }
+}
+
 // https://vite.dev/config/
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(appVersion()) },
   plugins: [
     svelte(),
     VitePWA({
