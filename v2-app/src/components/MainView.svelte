@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise } from '../stores/app';
   import type { DayKind } from '../types/workout';
+  import { listIncomingInvites } from '../services/coach';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
   import StreakStrip from './StreakStrip.svelte';
@@ -12,6 +14,14 @@
 
   let accountOpen = false;
   $: sheetOpen.set(accountOpen);
+
+  // Pending coach invite -> show a marker on the account icon so the trainee
+  // knows to open the sheet and accept. Optional layer; failures are silent.
+  let hasInvite = false;
+  async function refreshInvites() {
+    try { hasInvite = (await listIncomingInvites()).length > 0; } catch { /* ignore */ }
+  }
+  onMount(refreshInvites);
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -117,6 +127,7 @@
     onGuide={() => hintsOpen = true}
     onSearch={() => ($searchOpen = true)}
     onAccount={() => accountOpen = true}
+    {hasInvite}
   />
 
   <!-- New-user welcome (top, prominent) -->
@@ -293,14 +304,14 @@
         </div>
       </div>
       <button class="hints-walkthrough" on:click={() => { hintsOpen = false; requestOnboarding.set(true); }}>
-        ▶ Ava tutvustus uuesti
+        ▶ Replay walkthrough
       </button>
     </div>
   </div>
 {/if}
 
 {#if accountOpen}
-  <AccountSheet on:close={() => accountOpen = false} />
+  <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); }} />
 {/if}
 
 {#if copySheetOpen}

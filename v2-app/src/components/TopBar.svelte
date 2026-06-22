@@ -6,6 +6,8 @@
   export let onGuide: () => void;
   export let onSearch: () => void;
   export let onAccount: () => void;
+  /** Show a dot on the account icon when a coach invite is awaiting the user. */
+  export let hasInvite = false;
 </script>
 
 <header class="topbar">
@@ -31,11 +33,12 @@
         <line x1="14.2" y1="14.2" x2="18" y2="18"/>
       </svg>
     </button>
-    <button class="icon-btn" on:click={onAccount} title="Account" aria-label="Account">
+    <button class="icon-btn account-btn" on:click={onAccount} title={hasInvite ? 'Account — coach invite waiting' : 'Account'} aria-label={hasInvite ? 'Account, coach invite waiting' : 'Account'}>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="8" r="4"/>
         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
       </svg>
+      {#if hasInvite}<span class="invite-badge" aria-hidden="true"></span>{/if}
     </button>
   </div>
 </header>
@@ -96,6 +99,19 @@
 .icon-btn:active {
   background: var(--c-14-26-55-0_70);
   color: rgba(var(--c-fg), 0.65);
+}
+
+.account-btn { position: relative; }
+.invite-badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--c-accent-solid);
+  border: 2px solid var(--c-bg-1, #0a0e1a);
+  box-shadow: 0 0 0 1px rgba(var(--c-accent), 0.35);
 }
 
 .sync-dot {
