@@ -3,11 +3,13 @@
   import { DAY_ORDER, emptyAppState, type AppState } from '../../types/workout';
   import {
     appState, uiState, currentDayExercises, weekOffset,
-    goToAdjacentDay, updateUI, showToast,
+    goToAdjacentDay, updateUI, showToast, currentUser,
   } from '../../stores/app';
   import { loadTraineeState, relativeAge, type TraineeRow } from '../../services/coach';
   import MonthCalendar from '../MonthCalendar.svelte';
   import ExerciseCard from '../ExerciseCard.svelte';
+  import CoachNote from '../CoachNote.svelte';
+  import { setCoachNotesContext, clearCoachNotes, loadCoachNotesFor } from '../../stores/coachNotes';
 
   export let trainee: TraineeRow;
 
@@ -47,6 +49,9 @@
       updatedAt = res.updatedAt;
       now = Date.now();
       pickInitialDay(state);
+      const coachId = $currentUser?.id ?? null;
+      setCoachNotesContext({ coachId, traineeId: trainee.traineeId, canEdit: !!coachId });
+      try { await loadCoachNotesFor(trainee.traineeId); } catch { /* notes are optional */ }
     } catch {
       showToast('Could not load trainee data', 'error');
       appState.set(emptyAppState());
@@ -58,7 +63,7 @@
   onMount(load);
 
   // Leave the shared store clean when the coach navigates away.
-  onDestroy(() => { appState.set(emptyAppState()); });
+  onDestroy(() => { appState.set(emptyAppState()); clearCoachNotes(); });
 </script>
 
 <div class="trainee-view">
@@ -87,6 +92,8 @@
         <button class="day-nav-arrow" on:click={() => goToAdjacentDay(1)} aria-label="Next day">›</button>
       </div>
 
+      <CoachNote week={$uiState.week} day={$uiState.day} exerciseId={null} authoring={true} />
+
       {#if $currentDayExercises.length === 0}
         <div class="empty-state">
           <span class="empty-title">Nothing logged this day</span>
@@ -103,6 +110,7 @@
               blockIndex={blockIndices[exercise.id] ?? i}
               total={$currentDayExercises.length}
               readonly={true}
+              coachAuthoring={true}
             />
           {/each}
         </div>

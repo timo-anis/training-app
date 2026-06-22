@@ -274,3 +274,72 @@ drop trigger if exists trg_refresh_activity_summary on public.app_state;
 create trigger trg_refresh_activity_summary
   after insert or update of state_json on public.app_state
   for each row execute function public.refresh_activity_summary();
+
+-- ============================================================
+-- TRAINER MODE — Track 2 (coach annotations / async feedback)
+-- Added 2026-06-23. Purely additive. ONE primitive (coach_notes) covers BOTH
+-- day-level (exercise_id IS NULL) and exercise-level (exercise_id = stable
+-- Exercise.id) comments. One-way coach -> trainee. Set-level deferred (spec 9.1).
+-- Proven with a 16-assertion adversarial RLS matrix BEFORE any client code.
+-- Invariants: single-writer (ONLY the coach writes coach_notes; the trainee can
+-- NEVER write a coach row); coach writes only OWN rows AND only while the link is
+-- accepted; revoke instantly hides the whole annotation layer from BOTH sides.
+-- ============================================================
+
+create table if not exists public.coach_notes (
+  id          uuid primary key default gen_random_uuid(),
+  coach_id    uuid not null references auth.users(id) on delete cascade,
+  trainee_id  uuid not null references auth.users(id) on delete cascade,
+  week        int  not null,
+  day         text not null,
+  exercise_id text,                                   -- NULL => day-level note
+  body        text not null check (length(btrim(body)) > 0),
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  -- exactly one note per anchor; NULLS NOT DISTINCT makes the day-level anchor
+  -- unique too (PG15+; project runs PG17). Doubles as the upsert conflict target.
+  constraint coach_notes_anchor_uniq
+    unique nulls not distinct (coach_id, trainee_id, week, day, exercise_id)
+);
+create index if not exists coach_notes_lookup_idx
+  on public.coach_notes (trainee_id, week, day);
+alter table public.coach_notes enable row level security;
+
+-- Bump updated_at on edit (fires on ON CONFLICT DO UPDATE upserts too).
+create or replace function public.touch_coach_notes_updated_at()
+returns trigger language plpgsql set search_path = public as $$
+begin new.updated_at = now(); return new; end; $$;
+drop trigger if exists trg_touch_coach_notes on public.coach_notes;
+create trigger trg_touch_coach_notes before update on public.coach_notes
+  for each row execute function public.touch_coach_notes_updated_at();
+
+-- Helper: does the CURRENT user (a trainee) have _coach as their accepted coach?
+-- Mirror of is_accepted_coach. Leaks nothing: only inspects the caller's own links.
+create or replace function public.has_accepted_coach(_coach uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (select 1 from public.coach_links l
+    where l.coach_id = _coach and l.trainee_id = auth.uid() and l.status = 'accepted');
+$$;
+revoke execute on function public.has_accepted_coach(uuid) from public, anon;
+grant  execute on function public.has_accepted_coach(uuid) to authenticated;
+
+-- Coach: full CRUD, but ONLY own rows AND only while the link is accepted.
+create policy "notes_coach_select" on public.coach_notes
+  for select to authenticated
+  using (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+create policy "notes_coach_insert" on public.coach_notes
+  for insert to authenticated
+  with check (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+create policy "notes_coach_update" on public.coach_notes
+  for update to authenticated
+  using      (coach_id = auth.uid() and public.is_accepted_coach(trainee_id))
+  with check (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+create policy "notes_coach_delete" on public.coach_notes
+  for delete to authenticated
+  using (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+
+-- Trainee: READ-ONLY, own notes only, only via an accepted link. NO write policy
+-- => the trainee can never write a coach row; revoke flips this to invisible.
+create policy "notes_trainee_select" on public.coach_notes
+  for select to authenticated
+  using (trainee_id = auth.uid() and public.has_accepted_coach(coach_id));

@@ -251,3 +251,11 @@ Coach surface: `CoachApp` (auth + routing) -> `CoachDashboard` (invite by email,
 Read-only reuse: `ExerciseCard`/`SetRow`/`RpeControl` take an optional `readonly` prop (default `false`). When true, every mutation control is hidden/disabled and blur/commit handlers early-return — trainee behavior is byte-identical when false.
 
 Data model + security: `coach_links`, `activity_summary`, SELECT-only coach read policy on `app_state`, accept/revoke RPCs, and a guarded `app_state` trigger that maintains `activity_summary`. **Single-writer invariant: only the trainee's client ever writes the trainee blob; the coach has READ only.** Full DDL + the adversarial RLS guarantees are in `supabase_rls.sql`. Trainee-side accept/revoke lives in `CoachInviteSection` (mounted in `AccountSheet`).
+
+## Trainer Mode (Track 2 — coach annotations, 2026-06-23)
+
+Async coach→trainee feedback. ONE primitive `coach_notes` covers both levels: `exercise_id IS NULL` = day-level, else exercise-level keyed by the stable `exercise.id` (set-level deferred — spec 9.1). The coach authors; the trainee reads in context (day note under the day header; exercise note inside the card).
+
+Client: pure `lib/coachNotes.ts` (`anchorKey`, `indexNotes` — unit-tested, no Supabase) → `stores/coachNotes.ts` (anchor-keyed map + optimistic coach-only `writeCoachNote`; context carries `canEdit`) → one reused `CoachNote.svelte` (renders read for the trainee, edit/remove for the coach). Wired into the trainee `MainView` (day-level, read-only) and `ExerciseCard` via a new `coachAuthoring` prop (default `false` → trainee unchanged); the coach `CoachTraineeView` sets the context and passes `coachAuthoring={true}`. Notes load on view open and reload when the trainee's Account sheet closes (covers accept/revoke).
+
+Security: coach writes ONLY own rows AND only while the link is accepted (`is_accepted_coach`); the trainee has a SELECT-only policy and NO write policy → can never write a coach row; revoke flips `has_accepted_coach` to false so the whole annotation layer disappears from BOTH sides. Anchor uniqueness uses `UNIQUE NULLS NOT DISTINCT` (also the upsert conflict target). **Proven with a 16-assertion adversarial RLS matrix before any client code.** Full DDL in `supabase_rls.sql`.

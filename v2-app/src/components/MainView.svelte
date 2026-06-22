@@ -3,10 +3,12 @@
   import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites } from '../services/coach';
+  import { loadCoachNotesFor } from '../stores/coachNotes';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
   import StreakStrip from './StreakStrip.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
+  import CoachNote from './CoachNote.svelte';
   import AddExercise from './AddExercise.svelte';
   import CopyDaySheet from './CopyDaySheet.svelte';
   import StatsView from './StatsView.svelte';
@@ -21,7 +23,14 @@
   async function refreshInvites() {
     try { hasInvite = (await listIncomingInvites()).length > 0; } catch { /* ignore */ }
   }
-  onMount(refreshInvites);
+  // Coach notes (Track 2): read-only for the trainee. Empty when no accepted
+  // coach or after revoke (RLS). Optional layer; failures are silent.
+  async function refreshCoachNotes() {
+    const me = $currentUser?.id;
+    if (!me) return;
+    try { await loadCoachNotesFor(me); } catch { /* notes optional */ }
+  }
+  onMount(() => { refreshInvites(); refreshCoachNotes(); });
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -213,6 +222,8 @@
       {/each}
     </div>
 
+    <CoachNote week={$uiState.week} day={$uiState.day} exerciseId={null} authoring={false} />
+
     {#if $currentDayExercises.length === 0}
       <div class="empty-state">
         <span class="empty-title">{emptyLabel.title}</span>
@@ -311,7 +322,7 @@
 {/if}
 
 {#if accountOpen}
-  <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); }} />
+  <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); refreshCoachNotes(); }} />
 {/if}
 
 {#if copySheetOpen}

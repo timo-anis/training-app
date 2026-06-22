@@ -3,6 +3,7 @@
   import type { Exercise, DayOfWeek } from '../types/workout';
   import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone, toggleConditioningDone, updateConditioningNote, uiState, updateUI } from '../stores/app';
   import SetRow from './SetRow.svelte';
+  import CoachNote from './CoachNote.svelte';
 
   export let exercise: Exercise;
   export let week: number;
@@ -12,6 +13,8 @@
   export let total: number = 1;
   /** Coach read-only view: show data, disable every mutation control. */
   export let readonly = false;
+  /** Coach view: allow authoring the coach-note for this exercise. */
+  export let coachAuthoring = false;
 
   // Scroll into view + brief highlight when navigated to from search
   let cardEl: HTMLDivElement;
@@ -227,6 +230,8 @@
       </button>
     {/if}
   </div>
+
+  <CoachNote {week} {day} exerciseId={exercise.id} authoring={coachAuthoring} />
 
   {#if total > 1 && !readonly}
     <div class="order-controls">
