@@ -73,7 +73,7 @@ export function insertSetInState(
     ...ex,
     sets: [
       ...ex.sets.slice(0, index),
-      { kg: set.kg, reps: set.reps, done: set.done },
+      { kg: set.kg, reps: set.reps, done: set.done, rpe: set.rpe },
       ...ex.sets.slice(index),
     ],
   }));
@@ -90,7 +90,7 @@ export function addSetToState(
     const last = ex.sets[ex.sets.length - 1];
     return {
       ...ex,
-      sets: [...ex.sets, { kg: last?.kg ?? '', reps: last?.reps ?? '', done: false }],
+      sets: [...ex.sets, { kg: last?.kg ?? '', reps: last?.reps ?? '', done: false, rpe: '' }],
     };
   });
 }
@@ -108,6 +108,21 @@ export function updateSetFieldInState(
   return mapExercise(state, week, day, exId, ex => ({
     ...ex,
     sets: ex.sets.map((s, i) => i === setIndex ? { ...s, [field]: value } : s),
+  }));
+}
+
+/** Update a single set's RPE. '' clears it back to unrated. */
+export function updateSetRpeInState(
+  state: AppState,
+  week: number,
+  day: DayOfWeek,
+  exId: string,
+  setIndex: number,
+  value: string
+): AppState {
+  return mapExercise(state, week, day, exId, ex => ({
+    ...ex,
+    sets: ex.sets.map((s, i) => i === setIndex ? { ...s, rpe: value } : s),
   }));
 }
 

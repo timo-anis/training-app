@@ -30,7 +30,7 @@ import type { WorkoutDay, DayOfWeek, Exercise } from '../types/workout';
 
 // ---- helpers ----
 function exWithSet(id: string, name: string, done: boolean): Exercise {
-  return { ...emptyExercise(id, name), sets: [{ kg: '80', reps: '5', done }] };
+  return { ...emptyExercise(id, name), sets: [{ kg: '80', reps: '5', done, rpe: '' }] };
 }
 function day(week: number, d: DayOfWeek, opts: Partial<WorkoutDay> = {}): WorkoutDay {
   return { ...emptyDay(week, d, '2026-01-01'), ...opts };
@@ -111,8 +111,8 @@ describe('copyDayFrom — clones, resets done, preserves source', () => {
     appState.set({
       weeks: [day(1, 'Monday', {
         exercises: [
-          { ...emptyExercise('a', 'Bench'), sets: [{ kg: '60', reps: '5', done: true }, { kg: '60', reps: '5', done: true }] },
-          { ...emptyExercise('b', 'Row'), type: 'superset', code: 'A', sets: [{ kg: '40', reps: '8', done: true }] },
+          { ...emptyExercise('a', 'Bench'), sets: [{ kg: '60', reps: '5', done: true, rpe: '' }, { kg: '60', reps: '5', done: true, rpe: '' }] },
+          { ...emptyExercise('b', 'Row'), type: 'superset', code: 'A', sets: [{ kg: '40', reps: '8', done: true, rpe: '' }] },
         ],
       })],
       schema: '4.0',

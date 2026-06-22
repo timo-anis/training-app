@@ -14,7 +14,7 @@ import WmSetRow from '../components/WmSetRow.svelte';
 import type { WorkoutSet } from '../types/workout';
 
 function makeSet(overrides: Partial<WorkoutSet> = {}): WorkoutSet {
-  return { kg: '80', reps: '8', done: false, ...overrides };
+  return { kg: '80', reps: '8', done: false, rpe: '', ...overrides };
 }
 
 function props(set: WorkoutSet, overrides = {}) {

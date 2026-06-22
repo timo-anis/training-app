@@ -26,7 +26,7 @@ import type { AppState, Exercise, WorkoutDay } from '../types/workout';
 // ---- helpers ----
 
 function makeSet(done = false, kg = '80', reps = '5') {
-  return { kg, reps, done };
+  return { kg, reps, done, rpe: '' };
 }
 
 function makeEx(id: string, name: string, rest = '', sets = [makeSet()]): Exercise {

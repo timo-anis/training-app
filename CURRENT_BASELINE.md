@@ -125,27 +125,27 @@
 
 ---
 
-## Data Model: Schema 4.0
+## Data Model: Schema 4.1
 
 ```
 WorkoutDay { week, day, date, exercises[], completed?, note?, kind? }
 Exercise   { id, name, type, code, sets[], rest, note,
              recovery, recoveryDone, conditioning, conditioningNote, conditioningDone }
-WorkoutSet { kg, reps, done }
+WorkoutSet { kg, reps, done, rpe }   // rpe: RIR-based RPE 6–10, '' = unrated (4.1)
 ```
 
 ---
 
 ## Test Suite
 
-144 automated tests across 12 files — run `npm test` in `v2-app/`.
+159 automated tests across 13 files — run `npm test` in `v2-app/`.
 (Per-file counts intentionally not listed here to avoid drift; the runner is the source of truth.)
 
 ---
 
 ## CI Pipeline
 
-Push to main: install → test (144) → TypeScript check → build → deploy to GitHub Pages.
+Push to main: install → test (159) → TypeScript check → build → deploy to GitHub Pages.
 
 ---
 

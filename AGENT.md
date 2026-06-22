@@ -18,7 +18,7 @@
 | Framework | Svelte 5 + TypeScript |
 | Build | Vite |
 | Auth + Cloud | Supabase |
-| Local storage | localStorage (schema 4.0) |
+| Local storage | localStorage (schema 4.1) |
 | Theming | CSS tokens in `app.css` — dark + presentation themes (see THEME_SYSTEM.md) |
 | Deployment | GitHub Pages |
 
@@ -69,7 +69,7 @@ App.svelte
 
 | Key store | Type | Purpose |
 |-----------|------|---------|
-| appState | AppState | All workout data — { weeks: WorkoutDay[], schema: '4.0' } |
+| appState | AppState | All workout data — { weeks: WorkoutDay[], schema: '4.1' } |
 | uiState | UIState | Selected week/day, workout flags, timer timestamps |
 | currentUser | User or null | Supabase auth user |
 | bootStatus | 'idle' \| 'loading' \| 'ready' \| 'error' | App boot phase |
@@ -93,7 +93,7 @@ The app is a PWA (vite-plugin-pwa, `registerType: 'autoUpdate'`). The service wo
 
 ---
 
-## Data Model (v2-app/src/types/workout.ts, schema 4.0)
+## Data Model (v2-app/src/types/workout.ts, schema 4.1)
 
 ```typescript
 WorkoutDay {
@@ -125,6 +125,7 @@ WorkoutSet {
   kg: string
   reps: string
   done: boolean
+  rpe: string   // RIR-based RPE 6–10 (half-steps); '' = not rated (schema 4.1)
 }
 ```
 

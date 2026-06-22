@@ -4,7 +4,7 @@ import { emptyDay, emptyExercise } from '../types/workout';
 import type { WorkoutDay, Exercise } from '../types/workout';
 
 function ex(id: string, doneFlags: boolean[]): Exercise {
-  return { ...emptyExercise(id, id), sets: doneFlags.map(d => ({ kg: '50', reps: '5', done: d })) };
+  return { ...emptyExercise(id, id), sets: doneFlags.map(d => ({ kg: '50', reps: '5', done: d, rpe: '' })) };
 }
 function day(opts: Partial<WorkoutDay>): WorkoutDay {
   return { ...emptyDay(1, 'Monday', '2026-02-16'), ...opts };

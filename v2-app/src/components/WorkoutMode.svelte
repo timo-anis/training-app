@@ -2,7 +2,7 @@
   import { onMount, onDestroy, tick } from 'svelte';
   import {
     uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode, weekOffset,
-    setActiveBlock, toggleSetDone, updateSetField, findLastSession,
+    setActiveBlock, toggleSetDone, updateSetField, updateSetRpe, suggestRpeForSet, findLastSession,
     findLastConditioningNote, toggleRecoveryDone, toggleConditioningDone, updateUI,
     addSet, deleteSet, insertSet, updateConditioningNote, markWorkoutComplete,
     renameExercise, updateDayNote, addExercise, deleteExercise, updateExerciseMeta,
@@ -868,6 +868,9 @@
                     onAdjustReps={(d) => adjustReps(week, day, ex.id, i, d)}
                     onDone={() => handleSetDone(week, day, ex.id, i, set.done, ex.rest, ex.name, localKg[k] ?? set.kg)}
                     onDelete={() => handleDeleteSet(week, day, ex.id, i)}
+                    rpeSuggestion={suggestRpeForSet($appState, ex.name, week, day, localKg[k] ?? set.kg, localReps[k] ?? set.reps)}
+                    onPickRpe={(v) => updateSetRpe(week, day, ex.id, i, v)}
+                    onClearRpe={() => updateSetRpe(week, day, ex.id, i, '')}
                   />
                 {/each}
               </div>

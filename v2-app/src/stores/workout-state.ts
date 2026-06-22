@@ -8,6 +8,7 @@ import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud } from '../services/storage';
 import { PS_UTC } from '../lib/program';
 import { getDateForWeekDay, getWeekDayForDate } from '../lib/dates';
+import { bestE1RM, suggestRpe } from '../lib/rpe';
 import {
   mapExercise,
   toggleSetDoneInState,
@@ -15,6 +16,7 @@ import {
   insertSetInState,
   addSetToState,
   updateSetFieldInState,
+  updateSetRpeInState,
   deleteExerciseFromState,
   insertExerciseAtState,
   renameExerciseInState,
@@ -144,6 +146,44 @@ export function findLastSession(
   return result;
 }
 
+// ---- RPE auto-suggest: collect this exercise's history + suggest an RPE ----
+/** All (kg, reps) sets logged for an exercise name on OTHER days (any week). */
+export function exerciseHistorySets(
+  state: AppState,
+  name: string,
+  currentWeek: number,
+  currentDay: DayOfWeek
+): { kg: string; reps: string }[] {
+  const lower = name.toLowerCase();
+  const out: { kg: string; reps: string }[] = [];
+  for (const wd of state.weeks) {
+    if (wd.week === currentWeek && wd.day === currentDay) continue;
+    for (const ex of wd.exercises) {
+      if (ex.name.toLowerCase() !== lower) continue;
+      for (const s of ex.sets) out.push({ kg: s.kg, reps: s.reps });
+    }
+  }
+  return out;
+}
+
+/**
+ * Suggested RPE for a set at today's load, from the exercise's prior history.
+ * Returns null when kg/reps are blank OR there is no usable history — manual only.
+ * A rough pre-fill: it is shown faint and never recorded unless confirmed.
+ */
+export function suggestRpeForSet(
+  state: AppState,
+  name: string,
+  currentWeek: number,
+  currentDay: DayOfWeek,
+  kgNow: string,
+  repsNow: string
+): number | null {
+  if (!kgNow || !repsNow) return null;
+  const e1RM = bestE1RM(exerciseHistorySets(state, name, currentWeek, currentDay));
+  return suggestRpe(kgNow, repsNow, e1RM);
+}
+
 // ---- Progression: find last conditioning note ----
 export function findLastConditioningNote(
   state: AppState,
@@ -220,7 +260,7 @@ export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
       const mapped = sourceDay.exercises.map(ex => ({
         ...ex,
         id: `${ex.id}_w${targetWeek}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-        sets: ex.sets.length > 0 ? ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false })) : [{ kg: '', reps: '', done: false }],
+        sets: ex.sets.length > 0 ? ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false, rpe: '' })) : [{ kg: '', reps: '', done: false, rpe: '' }],
         recoveryDone: false,
         conditioningDone: false,
         conditioningNote: '',
@@ -252,7 +292,7 @@ export function copyDayFrom(srcWeek: number, srcDay: DayOfWeek, tgtWeek: number,
   const cloned = sourceDay.exercises.map(ex => ({
     ...ex,
     id: `${ex.id}_copy_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
-    sets: ex.sets.length > 0 ? ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false as const })) : [{ kg: '', reps: '', done: false as const }],
+    sets: ex.sets.length > 0 ? ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false as const, rpe: '' })) : [{ kg: '', reps: '', done: false as const, rpe: '' }],
     recoveryDone: false,
     conditioningDone: false,
     conditioningNote: '',
@@ -532,6 +572,13 @@ export function updateSetField(
   setIndex: number, field: 'kg' | 'reps', value: string
 ) {
   updateState(state => updateSetFieldInState(state, week, day, exId, setIndex, field, value));
+}
+
+export function updateSetRpe(
+  week: number, day: DayOfWeek, exId: string,
+  setIndex: number, value: string
+) {
+  updateState(state => updateSetRpeInState(state, week, day, exId, setIndex, value), true);
 }
 
 export function addSet(week: number, day: DayOfWeek, exId: string) {

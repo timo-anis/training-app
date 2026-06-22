@@ -15,6 +15,8 @@ export interface WorkoutSet {
   kg: string;
   reps: string;
   done: boolean;
+  /** RIR-based RPE 6–10 (half-steps e.g. '7.5'); '' = not rated. */
+  rpe: string;
 }
 
 export interface Exercise {
@@ -55,7 +57,7 @@ export interface WorkoutDay {
 
 export interface AppState {
   weeks: WorkoutDay[];
-  schema: '4.0';
+  schema: '4.0' | '4.1';
   /**
    * Absolute week number when this user started training.
    * Display week = absoluteWeek - (userStartWeek - 1).
@@ -87,7 +89,7 @@ export interface UIState {
 // ---- Helpers ----
 
 export function emptySet(): WorkoutSet {
-  return { kg: '', reps: '', done: false };
+  return { kg: '', reps: '', done: false, rpe: '' };
 }
 
 export function emptyExercise(id: string, name: string): Exercise {
@@ -112,5 +114,5 @@ export function emptyDay(week: number, day: DayOfWeek, date: string): WorkoutDay
 }
 
 export function emptyAppState(): AppState {
-  return { weeks: [], schema: '4.0' };
+  return { weeks: [], schema: '4.1' };
 }

@@ -36,9 +36,9 @@ function makeExercise(id: string, name = 'Bench Press', overrides: Partial<Exerc
     type: 'single',
     code: '',
     sets: [
-      { kg: '80', reps: '8', done: false },
-      { kg: '80', reps: '8', done: false },
-      { kg: '75', reps: '10', done: false },
+      { kg: '80', reps: '8', done: false, rpe: '' },
+      { kg: '80', reps: '8', done: false, rpe: '' },
+      { kg: '75', reps: '10', done: false, rpe: '' },
     ],
     rest: '',
     note: '',
@@ -70,7 +70,7 @@ describe('toggleSetDoneInState', () => {
   });
 
   it('toggles done=true → false', () => {
-    const ex = makeExercise('ex1', 'Bench', { sets: [{ kg: '80', reps: '8', done: true }] });
+    const ex = makeExercise('ex1', 'Bench', { sets: [{ kg: '80', reps: '8', done: true, rpe: '' }] });
     const state = makeState([ex]);
     const next = toggleSetDoneInState(state, 1, 'Monday', 'ex1', 0);
     expect(next.weeks[0].exercises[0].sets[0].done).toBe(false);
@@ -135,21 +135,21 @@ describe('deleteSetFromState', () => {
 describe('insertSetInState', () => {
   it('inserts at index 0 (prepend)', () => {
     const state = makeState();
-    const newSet = { kg: '90', reps: '5', done: true };
+    const newSet = { kg: '90', reps: '5', done: true, rpe: '' };
     const next = insertSetInState(state, 1, 'Monday', 'ex1', 0, newSet);
     const sets = next.weeks[0].exercises[0].sets;
     expect(sets).toHaveLength(4);
-    expect(sets[0]).toEqual({ kg: '90', reps: '5', done: true });
+    expect(sets[0]).toEqual({ kg: '90', reps: '5', done: true, rpe: '' });
     expect(sets[1].kg).toBe('80'); // original first
   });
 
   it('inserts at index 1 (middle)', () => {
     const state = makeState();
-    const newSet = { kg: '70', reps: '12', done: false };
+    const newSet = { kg: '70', reps: '12', done: false, rpe: '' };
     const next = insertSetInState(state, 1, 'Monday', 'ex1', 1, newSet);
     const sets = next.weeks[0].exercises[0].sets;
     expect(sets).toHaveLength(4);
-    expect(sets[1]).toEqual({ kg: '70', reps: '12', done: false });
+    expect(sets[1]).toEqual({ kg: '70', reps: '12', done: false, rpe: '' });
   });
 
   it('round-trips with deleteSetFromState (undo scenario)', () => {
@@ -181,7 +181,7 @@ describe('addSetToState', () => {
 
   it('new set is always done=false', () => {
     const ex = makeExercise('ex1', 'Bench', {
-      sets: [{ kg: '80', reps: '8', done: true }],
+      sets: [{ kg: '80', reps: '8', done: true, rpe: '' }],
     });
     const state = makeState([ex]);
     const next = addSetToState(state, 1, 'Monday', 'ex1');
@@ -194,7 +194,7 @@ describe('addSetToState', () => {
     const next = addSetToState(state, 1, 'Monday', 'ex1');
     const sets = next.weeks[0].exercises[0].sets;
     expect(sets).toHaveLength(1);
-    expect(sets[0]).toEqual({ kg: '', reps: '', done: false });
+    expect(sets[0]).toEqual({ kg: '', reps: '', done: false, rpe: '' });
   });
 });
 

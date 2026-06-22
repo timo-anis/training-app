@@ -1,14 +1,19 @@
 <script lang="ts">
   import type { WorkoutSet, DayOfWeek } from '../types/workout';
-  import { toggleSetDone, updateSetField, deleteSet } from '../stores/app';
+  import { toggleSetDone, updateSetField, updateSetRpe, deleteSet, suggestRpeForSet, appState } from '../stores/app';
+  import RpeControl from './RpeControl.svelte';
 
   export let set: WorkoutSet;
   export let index: number;
   export let week: number;
   export let day: DayOfWeek;
   export let exId: string;
+  export let exName: string = '';
 
   $: displayIndex = index + 1;
+
+  // Faint RPE pre-fill from this exercise's history (null = no suggestion).
+  $: rpeSuggestion = suggestRpeForSet($appState, exName, week, day, set.kg, set.reps);
 
   // Local input values — sync from prop, commit on blur
   let kgLocal = set.kg;
@@ -79,15 +84,23 @@
     />
   </div>
 
-  <button
-    class="donebtn"
-    class:on={set.done}
-    on:click={() => toggleSetDone(week, day, exId, index)}
-    aria-label={set.done ? 'Mark set undone' : 'Mark set done'}
-    aria-pressed={set.done}
-  >
-    {set.done ? '✓' : '○'}
-  </button>
+  <div class="donecell">
+    <button
+      class="donebtn"
+      class:on={set.done}
+      on:click={() => toggleSetDone(week, day, exId, index)}
+      aria-label={set.done ? 'Mark set undone' : 'Mark set done'}
+      aria-pressed={set.done}
+    >
+      {set.done ? '✓' : '○'}
+    </button>
+    <RpeControl
+      value={set.rpe}
+      suggestion={rpeSuggestion}
+      onPick={(v) => updateSetRpe(week, day, exId, index, v)}
+      onClear={() => updateSetRpe(week, day, exId, index, '')}
+    />
+  </div>
 
   <button
     class="delbtn"
@@ -171,6 +184,13 @@
   .setinput::placeholder { color: rgba(var(--c-fg), 0.20); }
 
   .setinput:focus { color: var(--h-ffffff); }
+
+  .donecell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: stretch;
+  }
 
   .donebtn {
     height: 46px;

@@ -38,8 +38,8 @@ import type { AppState } from '../types/workout';
 function seed(): void {
   const ex = emptyExercise('e1', 'Bench Press');
   ex.sets = [
-    { kg: '80', reps: '5', done: false },
-    { kg: '80', reps: '5', done: false },
+    { kg: '80', reps: '5', done: false, rpe: '' },
+    { kg: '80', reps: '5', done: false, rpe: '' },
   ];
   const state: AppState = {
     weeks: [{ week: 1, day: 'Monday', date: '2026-06-01', exercises: [ex] }],

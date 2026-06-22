@@ -164,7 +164,7 @@
   {:else if !exercise.recovery}
     <div class="sets-list">
       {#each exercise.sets as set, i (i)}
-        <SetRow {set} index={i} {week} {day} exId={exercise.id} />
+        <SetRow {set} index={i} {week} {day} exId={exercise.id} exName={exercise.name} />
       {/each}
     </div>
     <button class="add-set-btn" on:click={() => addSet(week, day, exercise.id)}>

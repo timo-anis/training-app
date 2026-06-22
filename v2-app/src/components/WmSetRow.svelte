@@ -1,7 +1,8 @@
 <script lang="ts">
   import type { WorkoutSet } from '../types/workout';
+  import RpeControl from './RpeControl.svelte';
   // Presentational set-row editor (kg / reps inputs + step buttons, done toggle,
-  // delete). The parent owns the kg/reps values (bound) and all actions.
+  // RPE chip, delete). The parent owns the kg/reps values (bound) and all actions.
   export let set: WorkoutSet;
   export let index: number;        // 0-based set index
   export let idBase: string;       // unique id base for input ids, e.g. `${exId}-${i}`
@@ -14,6 +15,9 @@
   export let onAdjustReps: (delta: number) => void;
   export let onDone: () => void;
   export let onDelete: () => void;
+  export let rpeSuggestion: number | null = null;
+  export let onPickRpe: (v: string) => void = () => {};
+  export let onClearRpe: () => void = () => {};
 </script>
 
 <div class="set-row" class:done={set.done}>
@@ -57,16 +61,25 @@
     </div>
   </div>
 
-  <button
-    class="done-btn"
-    class:on={set.done}
-    class:flash={flash}
-    on:click={onDone}
-    aria-pressed={set.done}
-    aria-label={set.done ? 'Undo set' : 'Mark set done'}
-  >
-    {set.done ? '✓' : '○'}
-  </button>
+  <div class="done-cell">
+    <button
+      class="done-btn"
+      class:on={set.done}
+      class:flash={flash}
+      on:click={onDone}
+      aria-pressed={set.done}
+      aria-label={set.done ? 'Undo set' : 'Mark set done'}
+    >
+      {set.done ? '✓' : '○'}
+    </button>
+    <RpeControl
+      big
+      value={set.rpe}
+      suggestion={rpeSuggestion}
+      onPick={onPickRpe}
+      onClear={onClearRpe}
+    />
+  </div>
 
   <button class="del-btn" on:click={onDelete} aria-label="Delete set">×</button>
 </div>
@@ -139,8 +152,15 @@
 .set-inp::placeholder { color: rgba(var(--c-fg), 0.18); }
 .set-inp:focus { color: var(--h-ffffff); }
 
+.done-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  align-items: stretch;
+}
+
 .done-btn {
-  height: 68px;
+  height: 54px;
   border-radius: 13px;
   border: 1px solid var(--c-80-120-200-0_30);
   background: rgba(var(--c-surface-c), 0.65);
