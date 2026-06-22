@@ -157,7 +157,7 @@ Push to main: install → test (159) → TypeScript check → build → deploy t
 - No push notifications / reminders
 - No export / backup UI (data backup scheduled via automated task — Sundays)
 - Undo covers: set delete, exercise delete, set done toggle (not exercise done or all-sets-done)
-- **GitHub PAT expires 2026-06-25** — renewal reminder set for 2026-06-18
+- **GitHub PAT rotated 2026-06-22** (fine-grained, repo `contents:write`) — prior token revoked
 - Recovery helpers (`isRecoveryPending`/`clearRecoveryPending`) are integration-level (sessionStorage in supabase.ts, env-dependent) — exercised via the live flow, not unit-tested
 
 ---
