@@ -9,6 +9,8 @@
   export let day: DayOfWeek;
   export let exId: string;
   export let exName: string = '';
+  /** Coach read-only view: show values, disable all editing. */
+  export let readonly = false;
 
   $: displayIndex = index + 1;
 
@@ -29,6 +31,7 @@
   }
 
   function onKgBlur() {
+    if (readonly) return;
     const normalised = kgLocal.replace(',', '.').trim();
     kgLocal = normalised;
     updateSetField(week, day, exId, index, 'kg', normalised);
@@ -36,6 +39,7 @@
   }
 
   function onRepsBlur() {
+    if (readonly) return;
     const normalised = repsLocal.trim();
     repsLocal = normalised;
     updateSetField(week, day, exId, index, 'reps', normalised);
@@ -66,6 +70,7 @@
       on:keydown={onKgKeydown}
       placeholder="—"
       autocomplete="off"
+      readonly={readonly}
     />
   </div>
 
@@ -81,6 +86,7 @@
       on:keydown={onRepsKeydown}
       placeholder="—"
       autocomplete="off"
+      readonly={readonly}
     />
   </div>
 
@@ -89,6 +95,7 @@
       class="donebtn"
       class:on={set.done}
       on:click={() => toggleSetDone(week, day, exId, index)}
+      disabled={readonly}
       aria-label={set.done ? 'Mark set undone' : 'Mark set done'}
       aria-pressed={set.done}
     >
@@ -99,16 +106,19 @@
       suggestion={rpeSuggestion}
       onPick={(v) => updateSetRpe(week, day, exId, index, v)}
       onClear={() => updateSetRpe(week, day, exId, index, '')}
+      {readonly}
     />
   </div>
 
-  <button
-    class="delbtn"
-    on:click={() => deleteSet(week, day, exId, index)}
-    aria-label="Delete set"
-  >
-    ×
-  </button>
+  {#if !readonly}
+    <button
+      class="delbtn"
+      on:click={() => deleteSet(week, day, exId, index)}
+      aria-label="Delete set"
+    >
+      ×
+    </button>
+  {/if}
 </div>
 
 <style>

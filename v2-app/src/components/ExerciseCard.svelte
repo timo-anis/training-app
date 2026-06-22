@@ -10,6 +10,8 @@
   export let index: number = 0;
   export let blockIndex: number = 0;
   export let total: number = 1;
+  /** Coach read-only view: show data, disable every mutation control. */
+  export let readonly = false;
 
   // Scroll into view + brief highlight when navigated to from search
   let cardEl: HTMLDivElement;
@@ -63,6 +65,7 @@
   $: localCondNote = exercise.conditioningNote;
 
   function onCondNoteBlur() {
+    if (readonly) return;
     updateConditioningNote(week, day, exercise.id, localCondNote);
   }
 
@@ -135,15 +138,17 @@
         {doneCount}/{totalCount}
       </span>
     {/if}
-    <button class="edit-btn" on:click={openEdit} aria-label="Edit exercise">✎</button>
-    <button
-      class="del-ex-btn"
-      class:confirm={confirmDelete}
-      on:click={onDeleteTap}
-      aria-label={confirmDelete ? 'Confirm delete exercise' : 'Delete exercise'}
-    >
-      {confirmDelete ? 'Delete?' : '×'}
-    </button>
+    {#if !readonly}
+      <button class="edit-btn" on:click={openEdit} aria-label="Edit exercise">✎</button>
+      <button
+        class="del-ex-btn"
+        class:confirm={confirmDelete}
+        on:click={onDeleteTap}
+        aria-label={confirmDelete ? 'Confirm delete exercise' : 'Delete exercise'}
+      >
+        {confirmDelete ? 'Delete?' : '×'}
+      </button>
+    {/if}
   </div>
 
   {#if exercise.conditioning}
@@ -151,6 +156,7 @@
       class="cond-done-btn"
       class:cond-done={exercise.conditioningDone}
       on:click={() => toggleConditioningDone(week, day, exercise.id)}
+      disabled={readonly}
     >
       {exercise.conditioningDone ? '✓ Done' : 'Tap to mark done'}
     </button>
@@ -160,21 +166,25 @@
       on:blur={onCondNoteBlur}
       placeholder="Log your session — e.g. 10 min @ 150W avg, felt strong"
       rows="3"
+      readonly={readonly}
     ></textarea>
   {:else if !exercise.recovery}
     <div class="sets-list">
       {#each exercise.sets as set, i (i)}
-        <SetRow {set} index={i} {week} {day} exId={exercise.id} exName={exercise.name} />
+        <SetRow {set} index={i} {week} {day} exId={exercise.id} exName={exercise.name} {readonly} />
       {/each}
     </div>
-    <button class="add-set-btn" on:click={() => addSet(week, day, exercise.id)}>
-      + Set
-    </button>
+    {#if !readonly}
+      <button class="add-set-btn" on:click={() => addSet(week, day, exercise.id)}>
+        + Set
+      </button>
+    {/if}
   {:else}
     <button
       class="recovery-row"
       class:recovery-done={exercise.recoveryDone}
       on:click={() => toggleRecoveryDone(week, day, exercise.id)}
+      disabled={readonly}
     >
       <span class="recovery-label">Recovery</span>
       <span class="recovery-status">{exercise.recoveryDone ? 'Done ✓' : 'Tap to mark done'}</span>
@@ -189,7 +199,14 @@
   {/if}
 
   <div class="note-block">
-    {#if noteEditing}
+    {#if readonly}
+      {#if exercise.note}
+        <div class="note-row filled">
+          <span class="meta-label">Note</span>
+          <span class="note-value">{exercise.note}</span>
+        </div>
+      {/if}
+    {:else if noteEditing}
       <textarea
         class="note-input"
         bind:this={noteFieldEl}
@@ -211,7 +228,7 @@
     {/if}
   </div>
 
-  {#if total > 1}
+  {#if total > 1 && !readonly}
     <div class="order-controls">
       <button
         class="order-btn"

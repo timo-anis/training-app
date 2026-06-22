@@ -237,3 +237,17 @@ training-app/
 ├── AGENT.md              this file
 └── CURRENT_BASELINE.md   current state summary
 ```
+
+---
+
+## Trainer Mode (Track 1 — read-only visibility, 2026-06-22)
+
+Two Vite entries from ONE project, ONE source of types/services/components:
+- `index.html` -> trainee PWA (boot + service worker) — **untouched** by Trainer Mode.
+- `coach.html` -> `coach-main.ts` -> `CoachApp.svelte` — coach SPA, own boot/root, **NO service worker** (`vite.config.ts` sets `injectRegister: null`; only `main.ts` registers the SW). `build.rollupOptions.input` emits both.
+
+Coach surface: `CoachApp` (auth + routing) -> `CoachDashboard` (invite by email, pending invites, trainee list from `activity_summary` with honest "updated Xm ago") -> `CoachTraineeView` (loads the trainee's real blob into the shared stores and renders `MonthCalendar` + `ExerciseCard` with `readonly={true}`). Data access: `services/coach.ts`; freshness label: pure `lib/freshness.ts` (unit-tested).
+
+Read-only reuse: `ExerciseCard`/`SetRow`/`RpeControl` take an optional `readonly` prop (default `false`). When true, every mutation control is hidden/disabled and blur/commit handlers early-return — trainee behavior is byte-identical when false.
+
+Data model + security: `coach_links`, `activity_summary`, SELECT-only coach read policy on `app_state`, accept/revoke RPCs, and a guarded `app_state` trigger that maintains `activity_summary`. **Single-writer invariant: only the trainee's client ever writes the trainee blob; the coach has READ only.** Full DDL + the adversarial RLS guarantees are in `supabase_rls.sql`. Trainee-side accept/revoke lives in `CoachInviteSection` (mounted in `AccountSheet`).

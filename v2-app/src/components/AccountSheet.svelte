@@ -4,6 +4,7 @@
   import { signOut, sendPasswordReset } from '../services/auth';
   import { saveLocal, saveCloud } from '../services/storage';
   import { emptyAppState } from '../types/workout';
+  import CoachInviteSection from './CoachInviteSection.svelte';
 
   const dispatch = createEventDispatcher<{ close: void }>();
 
@@ -112,6 +113,9 @@
     </button>
 
     <div class="divider"></div>
+
+    <!-- Coaching (invites + current coach) — optional layer, hidden when none -->
+    <CoachInviteSection />
 
     <!-- Sign out -->
     <button class="action-row signout" on:click={handleSignOut}>

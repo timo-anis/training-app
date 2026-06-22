@@ -8,6 +8,8 @@
   export let big = false;                   // workout mode → larger thumb targets
   export let onPick: (v: string) => void = () => {};
   export let onClear: () => void = () => {};
+  /** Coach read-only view: show the value, never open the picker. */
+  export let readonly = false;
 
   const EDU_KEY = 'timo_rpe_edu_seen';
 
@@ -18,6 +20,7 @@
   $: hasSuggestion = !rated && suggestion != null;
 
   function openPicker() {
+    if (readonly) return;
     open = true;
     // Just-in-time education: auto-show once on first ever open.
     try {
@@ -47,6 +50,7 @@
   class:rated
   class:suggest={hasSuggestion}
   on:click|stopPropagation={openPicker}
+  disabled={readonly}
   aria-label={rated ? `RPE ${value}` : 'Set RPE'}
 >
   {#if rated}

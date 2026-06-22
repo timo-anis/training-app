@@ -1,4 +1,5 @@
 import { defineConfig } from 'vite'
+import { resolve } from 'node:path'
 import { execSync } from 'node:child_process'
 import { svelte } from '@sveltejs/vite-plugin-svelte'
 import { VitePWA } from 'vite-plugin-pwa'
@@ -22,6 +23,10 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       base: '/',
+      // The trainee PWA registers its service worker EXPLICITLY in main.ts.
+      // Disabling auto-injection guarantees the coach entry (coach.html) gets
+      // NO service worker — it never imports virtual:pwa-register.
+      injectRegister: null,
       manifest: {
         name: 'Timo Training',
         short_name: 'Training',
@@ -72,5 +77,14 @@ export default defineConfig({
   build: {
     outDir: '../v2-dist',
     emptyOutDir: true,
+    // Two entry points from ONE project: the trainee PWA (index.html) and the
+    // read-only coach surface (coach.html). Shared types/services/components
+    // come from a single source — no duplication, no drift.
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        coach: resolve(__dirname, 'coach.html'),
+      },
+    },
   },
 })
