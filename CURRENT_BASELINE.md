@@ -1,6 +1,6 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-06-10
+**Last updated:** 2026-06-22
 
 ## Active App: V2
 
@@ -72,6 +72,12 @@
 - Delete exercise/set: undo toast (5s)
 - Set done toggle: undo toast (5s)
 - Exercise position badges: A, B, C… (supersets grouped by first letter of code)
+
+### Exercise note (always visible) — added 2026-06-22
+- Note row is **always rendered** under each exercise in both ExerciseCard and WorkoutMode (previously shown only when filled)
+- Empty: tappable dashed "+ Note" ghost row; Filled: tap-to-edit inline textarea, commits on blur
+- Reuses `updateExerciseMeta(week, day, exId, { note })` — no schema change
+- WorkoutMode: `localNote` map + `noteEditingId` mirror the existing `localCondNote`/`editingNameId` pattern; committed on block navigation
 
 ### Edit sheet (ExerciseCard)
 - Opens as bottom sheet on pencil icon tap
