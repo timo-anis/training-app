@@ -66,6 +66,26 @@
     updateConditioningNote(week, day, exercise.id, localCondNote);
   }
 
+  // Always-visible exercise note — inline edit, commits on blur
+  let noteLocal = exercise.note;
+  $: noteLocal = exercise.note;
+  let noteEditing = false;
+  let noteFieldEl: HTMLTextAreaElement;
+
+  function startEditNote() {
+    noteEditing = true;
+    setTimeout(() => noteFieldEl?.focus(), 0);
+  }
+
+  function commitNote() {
+    const trimmed = noteLocal.trim();
+    noteLocal = trimmed;
+    if (trimmed !== exercise.note) {
+      updateExerciseMeta(week, day, exercise.id, { note: trimmed });
+    }
+    noteEditing = false;
+  }
+
   function openEdit() {
     editName = exercise.name;
     editRest = exercise.rest;
@@ -168,12 +188,28 @@
     </div>
   {/if}
 
-  {#if exercise.note}
-    <div class="meta-row note">
-      <span class="meta-label">Note</span>
-      <span class="meta-value">{exercise.note}</span>
-    </div>
-  {/if}
+  <div class="note-block">
+    {#if noteEditing}
+      <textarea
+        class="note-input"
+        bind:this={noteFieldEl}
+        bind:value={noteLocal}
+        on:blur={commitNote}
+        placeholder="Add a note…"
+        rows="2"
+      ></textarea>
+    {:else if exercise.note}
+      <button class="note-row filled" on:click={startEditNote} aria-label="Edit note">
+        <span class="meta-label">Note</span>
+        <span class="note-value">{exercise.note}</span>
+        <span class="note-hint">✎</span>
+      </button>
+    {:else}
+      <button class="note-row empty" on:click={startEditNote} aria-label="Add note">
+        <span class="note-add">+ Note</span>
+      </button>
+    {/if}
+  </div>
 
   {#if total > 1}
     <div class="order-controls">
@@ -647,7 +683,65 @@
     border: 1px solid rgba(var(--c-fg), 0.07);
   }
 
-  .meta-row.note { align-items: flex-start; }
+  /* Always-visible exercise note */
+  .note-block { margin-top: 2px; }
+
+  .note-row {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    padding: 6px 10px;
+    border-radius: 10px;
+    background: rgba(var(--c-surface-a), 0.50);
+    border: 1px solid rgba(var(--c-fg), 0.07);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, border-color 0.12s;
+  }
+
+  .note-row.filled { align-items: flex-start; }
+  .note-row.empty { background: transparent; border-style: dashed; }
+  .note-row:active { background: rgba(var(--c-surface-a), 0.70); }
+
+  .note-value {
+    flex: 1 1 auto;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(var(--c-fg), 0.65);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .note-hint { flex: 0 0 auto; font-size: 13px; color: rgba(var(--c-fg), 0.28); }
+
+  .note-add {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: rgba(var(--c-fg), 0.38);
+  }
+
+  .note-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(var(--c-surface-c), 0.65);
+    border: 1px solid rgba(var(--c-edge-d), 0.20);
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--h-e8f2ff);
+    font-family: inherit;
+    line-height: 1.45;
+    resize: none;
+    outline: none;
+    transition: border-color 0.12s;
+  }
+
+  .note-input:focus { border-color: rgba(var(--c-edge-d), 0.45); }
+  .note-input::placeholder { color: rgba(var(--c-fg), 0.28); }
 
   .meta-label {
     font-size: 11px;

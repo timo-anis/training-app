@@ -556,6 +556,8 @@
   let localKg: Record<string, string> = {};
   let localReps: Record<string, string> = {};
   let localCondNote: Record<string, string> = {};
+  let localNote: Record<string, string> = {};
+  let noteEditingId: string | null = null;
 
   // Sync locals when block changes — prefill from last session when set is empty
   $: {
@@ -572,6 +574,8 @@
           localCondNote[ex.id] = ex.conditioningNote ||
             findLastConditioningNote($appState, ex.name, $uiState.week, $uiState.day);
         }
+        // Exercise note: prefill from stored value (empty string if none)
+        if (localNote[ex.id] === undefined) localNote[ex.id] = ex.note ?? '';
       }
     }
   }
@@ -593,12 +597,15 @@
         if (ex.conditioning && localCondNote[ex.id] !== undefined) {
           commitCondNote(week, day, ex.id);
         }
+        if (localNote[ex.id] !== undefined) commitNote(week, day, ex.id);
       }
     }
     prevActiveIndex = activeIndex;
     localKg = {};
     localReps = {};
     localCondNote = {};
+    localNote = {};
+    noteEditingId = null;
     editingNameId = null;
   }
 
@@ -619,6 +626,20 @@
   function commitCondNote(week: number, day: DayOfWeek, exId: string) {
     updateConditioningNote(week, day, exId, localCondNote[exId] ?? '');
   }
+
+  function commitNote(week: number, day: DayOfWeek, exId: string) {
+    const ex = block?.exercises.find(e => e.id === exId);
+    const val = (localNote[exId] ?? '').trim();
+    localNote[exId] = val;
+    if (!ex || val !== ex.note) updateExerciseMeta(week, day, exId, { note: val });
+  }
+
+  function startNote(exId: string) {
+    if (localNote[exId] === undefined) localNote[exId] = '';
+    noteEditingId = exId;
+  }
+
+  function focusEl(node: HTMLElement) { node.focus(); }
 
   function handleAddSet(week: number, day: DayOfWeek, exId: string) {
     addSet(week, day, exId);
@@ -776,9 +797,25 @@
               </div>
             {/if}
 
-            {#if ex.note}
-              <div class="ex-note">{ex.note}</div>
-            {/if}
+            <div class="ex-note-block">
+              {#if noteEditingId === ex.id}
+                <textarea
+                  class="ex-note-input"
+                  bind:value={localNote[ex.id]}
+                  on:blur={() => { commitNote(week, day, ex.id); noteEditingId = null; }}
+                  use:focusEl
+                  placeholder="Add a note…"
+                  rows="2"
+                ></textarea>
+              {:else if ex.note}
+                <button class="ex-note filled" on:click={() => startNote(ex.id)} aria-label="Edit note">
+                  <span class="ex-note-text">{ex.note}</span>
+                  <span class="ex-note-hint">✎</span>
+                </button>
+              {:else}
+                <button class="ex-note empty" on:click={() => startNote(ex.id)} aria-label="Add note">+ Note</button>
+              {/if}
+            </div>
 
             {#if ex.conditioning}
               <!-- Conditioning: done toggle + textarea + previous session -->
@@ -1273,14 +1310,56 @@
     -webkit-tap-highlight-color: transparent;
   }
 
+  .ex-note-block { width: 100%; }
+
   .ex-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
     font-size: 14px;
-    color: rgba(var(--c-fg), 0.45);
-    padding: 8px 12px;
+    color: rgba(var(--c-fg), 0.55);
+    padding: 10px 12px;
     border-radius: 10px;
     background: rgba(var(--c-surface-a), 0.50);
     border: 1px solid rgba(var(--c-edge-a), 0.13);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, border-color 0.12s;
   }
+
+  .ex-note:active { background: rgba(var(--c-surface-a), 0.70); }
+  .ex-note.empty {
+    color: rgba(var(--c-fg), 0.40);
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    background: transparent;
+    border-style: dashed;
+  }
+
+  .ex-note-text { flex: 1 1 auto; white-space: pre-wrap; word-break: break-word; }
+  .ex-note-hint { flex: 0 0 auto; font-size: 13px; color: rgba(var(--c-fg), 0.28); }
+
+  .ex-note-input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(var(--c-surface-c), 0.65);
+    border: 1px solid rgba(var(--c-edge-d), 0.20);
+    border-radius: 12px;
+    padding: 11px 14px;
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--h-e8f2ff);
+    font-family: inherit;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    transition: border-color 0.12s;
+  }
+
+  .ex-note-input:focus { border-color: rgba(var(--c-edge-d), 0.45); }
+  .ex-note-input::placeholder { color: rgba(var(--c-fg), 0.28); }
 
   /* Last session (strength) */
   .last-session {
