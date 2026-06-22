@@ -82,7 +82,7 @@ npm run build   # outputs to ../v2-dist/
 Tests:
 
 ```bash
-npm test        # 144 tests
+npm test        # 159 tests
 ```
 
 ---

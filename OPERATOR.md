@@ -74,7 +74,7 @@ Manual fallback (no CI), deploying straight to the `gh-pages` branch:
 ```bash
 cd v2-app
 npm ci
-npm test                    # ~144 tests — all must pass
+npm test                    # ~159 tests — all must pass
 npm run check               # TypeScript + Svelte check
 npm run build               # outputs to ../v2-dist/
                             # build needs VITE_SUPABASE_URL / VITE_SUPABASE_KEY in env or .env
@@ -105,18 +105,18 @@ Do **not** trust a sandbox build as proof of correctness. Trust instead:
 
 User workout data is the only thing that can't be rebuilt from source. Protect it first.
 
-**Schema 4.0** (full types in `v2-app/src/types/workout.ts` — single source of truth):
+**Schema 4.1** (full types in `v2-app/src/types/workout.ts` — single source of truth):
 
 ```
-AppState { schema:'4.0', weeks: WorkoutDay[], userStartWeek? }
+AppState { schema:'4.0'|'4.1', weeks: WorkoutDay[], userStartWeek? }  // parser upgrades 4.0→4.1
 WorkoutDay { week, day, date (ISO 'YYYY-MM-DD'), exercises[], completed?, note?, kind? }
 Exercise   { id, name, type:'single'|'superset', code (A/B…), sets[], rest, note,
              recovery, recoveryDone, conditioning, conditioningNote, conditioningDone }
-WorkoutSet { kg, reps, done }
+WorkoutSet { kg, reps, done, rpe }   // rpe: RIR-based RPE 6–10, '' = unrated (added 4.1)
 ```
 
 Non-negotiable integrity rules (also in PROJECT_INSTRUCTIONS): never mix weekday/date,
-never break superset structure, never reorder exercises, never drop `done` states.
+never break superset structure, never reorder exercises, never drop `done` or `rpe` states.
 
 **Supabase tables:** `app_state`, `app_state_history`, `profiles`, `app_errors`.
 **Security layer:** Row Level Security — each user can only touch their own row.

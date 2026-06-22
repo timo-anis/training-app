@@ -32,7 +32,13 @@
 
   function pick(v: string) { onPick(v); close(); }
   function clear() { onClear(); close(); }
+
+  function onKeydown(e: KeyboardEvent) {
+    if (open && e.key === 'Escape') { e.stopPropagation(); close(); }
+  }
 </script>
+
+<svelte:window on:keydown={onKeydown} />
 
 <button
   type="button"

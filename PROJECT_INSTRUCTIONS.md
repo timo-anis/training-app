@@ -25,19 +25,20 @@ easy to extend.
 - **Data integrity first** — no broken states, no misaligned dates, no mixed exercise structures.
 - **Minimum viable change** — smallest change that delivers the requested value. No gold-plating.
 
-## Data model (schema 4.0 — source of truth: `v2-app/src/types/workout.ts`)
+## Data model (schema 4.1 — source of truth: `v2-app/src/types/workout.ts`)
 
 ```
 WorkoutDay { week:number, day:DayOfWeek, date:string (ISO), exercises:Exercise[] }
 Exercise   { id, name, type:'single'|'superset', code, sets:WorkoutSet[],
              rest, note, recovery, recoveryDone, conditioning, conditioningNote, conditioningDone }
-WorkoutSet { kg, reps, done }
+WorkoutSet { kg, reps, done, rpe }   // rpe: RIR-based RPE 6–10 (half-steps), '' = unrated
 ```
 
 Non-negotiable data rules:
 
 - Never mix weekdays and dates; keep week numbers consistent.
 - Never break superset structure — `type` + `code` stay paired.
+- Never drop `done` or `rpe` states; migrations backfill `rpe:''`, never overwrite an existing rating.
 - Never reorder exercises unless explicitly asked.
 - Never drop sets, reps, weights, or `done` states.
 - Never silently normalize or migrate data.
