@@ -5,12 +5,13 @@
     appState, uiState, currentDayExercises, weekOffset,
     goToAdjacentDay, updateUI, showToast, currentUser,
   } from '../../stores/app';
-  import { loadTraineeState, relativeAge, type TraineeRow } from '../../services/coach';
+  import { loadTraineeState, relativeAge, listUnreadCounts, type TraineeRow } from '../../services/coach';
   import MonthCalendar from '../MonthCalendar.svelte';
   import ExerciseCard from '../ExerciseCard.svelte';
   import CoachNote from '../CoachNote.svelte';
   import { setCoachNotesContext, clearCoachNotes, loadCoachNotesFor } from '../../stores/coachNotes';
   import AssignmentEditor from './AssignmentEditor.svelte';
+  import ChatView from '../ChatView.svelte';
   import { setAssignmentContext, clearAssignments, loadAssignmentsFor } from '../../stores/assignments';
 
   export let trainee: TraineeRow;
@@ -18,6 +19,8 @@
   let loading = true;
   let updatedAt: string | null = null;
   let now = Date.now();
+  let showChat = false;
+  let unreadCount = 0;
 
   // Block index map — groups supersets as one block (A, B, C…). Same rule as MainView.
   $: blockIndices = (() => {
@@ -56,6 +59,10 @@
       try { await loadCoachNotesFor(trainee.traineeId); } catch { /* notes are optional */ }
       setAssignmentContext({ coachId, traineeId: trainee.traineeId, canEdit: !!coachId });
       try { await loadAssignmentsFor(trainee.traineeId); } catch { /* plan is optional */ }
+      try {
+        const counts = await listUnreadCounts(coachId ?? '');
+        unreadCount = counts[trainee.linkId] ?? 0;
+      } catch { /* badge is optional */ }
     } catch {
       showToast('Could not load trainee data', 'error');
       appState.set(emptyAppState());
@@ -65,6 +72,9 @@
   }
 
   onMount(load);
+
+  function openChat() { unreadCount = 0; showChat = true; }
+  function closeChat() { showChat = false; }
 
   // Leave the shared store clean when the coach navigates away.
   onDestroy(() => { appState.set(emptyAppState()); clearCoachNotes(); clearAssignments(); });
@@ -78,6 +88,10 @@
         {#if loading}Loading…{:else if updatedAt}Updated {relativeAge(updatedAt, now)} · read-only{:else}No cloud data yet{/if}
       </span>
     </div>
+    <button class="tv-chat" on:click={openChat} aria-label="Open chat">
+      💬<span class="tv-chat-lbl">Chat</span>
+      {#if unreadCount > 0}<span class="tv-badge">{unreadCount}</span>{/if}
+    </button>
     <button class="tv-refresh" on:click={load} disabled={loading} aria-label="Refresh">↻</button>
   </div>
 
@@ -119,6 +133,17 @@
         </div>
       {/if}
     </section>
+  {/if}
+
+  {#if showChat}
+    <div class="chat-overlay">
+      <ChatView
+        linkId={trainee.linkId}
+        myUserId={$currentUser?.id ?? ''}
+        peerName={trainee.email}
+        onClose={closeChat}
+      />
+    </div>
   {/if}
 </div>
 
@@ -172,6 +197,38 @@
     color: rgba(var(--c-fg), 0.50);
     border: 1px solid rgba(var(--c-fg), 0.08); border-radius: 11px;
     background: rgba(var(--c-fg), 0.03);
+  }
+
+  .tv-chat {
+    flex: 0 0 auto; position: relative;
+    display: inline-flex; align-items: center; gap: 5px;
+    height: 34px; padding: 0 11px; border-radius: 9px;
+    border: 1px solid rgba(var(--c-accent), 0.35);
+    background: rgba(var(--c-accent), 0.12);
+    color: var(--c-accent-solid); font-size: 13px; font-weight: 800; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tv-chat:active { background: rgba(var(--c-accent), 0.22); }
+  .tv-chat-lbl { font-size: 13px; }
+  .tv-badge {
+    position: absolute; top: -6px; right: -6px;
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--h-ff6060, #ff6060); color: #fff;
+    font-size: 11px; font-weight: 900; line-height: 1;
+  }
+  .chat-overlay {
+    position: fixed; inset: 0; z-index: 120;
+    display: flex; flex-direction: column;
+    background: linear-gradient(180deg, var(--c-bg-1) 0%, var(--c-bg-2) 60%, var(--c-bg-3) 100%);
+  }
+  @media (min-width: 640px) {
+    .chat-overlay {
+      left: 50%; transform: translateX(-50%);
+      width: 480px; right: auto;
+      border-left: 1px solid rgba(var(--c-fg), 0.08);
+      border-right: 1px solid rgba(var(--c-fg), 0.08);
+    }
   }
 
   </style>

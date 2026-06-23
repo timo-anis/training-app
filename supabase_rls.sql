@@ -404,3 +404,108 @@ create policy "assign_coach_delete" on public.coach_assignments
 create policy "assign_trainee_select" on public.coach_assignments
   for select to authenticated
   using (trainee_id = auth.uid() and public.has_accepted_coach(coach_id));
+
+-- ============================================================
+-- TRAINER MODE — Track 4 (chat / relationship layer)
+-- Added 2026-06-23. Purely additive. The ONLY two-way layer (notes/assignments
+-- stay one-way). One message thread per accepted coach_links row, link-scoped.
+-- Both parties read AND write ONLY their own link's messages; sender_id is bound
+-- to auth.uid() in the INSERT policy (no spoofing). Messages are immutable from
+-- the client (NO update/delete policy) — read receipts go through a narrow
+-- SECURITY DEFINER RPC that only marks messages the caller RECEIVED. Revoke
+-- instantly cuts chat for BOTH sides (is_link_participant requires
+-- status='accepted'). Single-writer preserved: messages is its own table and
+-- NEVER touches app_state. Proven BEFORE any client code with a 17-assertion
+-- adversarial RLS matrix (read scoping + no cross-link leak; send-as-self only,
+-- spoof/stranger/cross-link/pending/blank-body all denied; read receipts mark
+-- only received msgs and reject non-participants; revoke kills read+write+
+-- mark-read for both sides without leaking into the other link).
+-- ============================================================
+
+create table if not exists public.messages (
+  id         uuid primary key default gen_random_uuid(),
+  link_id    uuid not null references public.coach_links(id) on delete cascade,
+  sender_id  uuid not null references auth.users(id) on delete cascade,
+  body       text not null check (length(btrim(body)) > 0 and length(body) <= 4000),
+  created_at timestamptz not null default now(),
+  read_at    timestamptz
+);
+create index if not exists messages_link_created_idx
+  on public.messages (link_id, created_at);
+create index if not exists messages_unread_idx
+  on public.messages (link_id, read_at) where read_at is null;
+alter table public.messages enable row level security;
+
+-- Helper: is the CURRENT user a participant (coach OR trainee) of an ACCEPTED
+-- link? Mirrors is_accepted_coach / has_accepted_coach. status='accepted' is
+-- what makes revoke instant for both sides.
+create or replace function public.is_link_participant(_link_id uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.coach_links l
+    where l.id = _link_id
+      and l.status = 'accepted'
+      and (l.coach_id = auth.uid() or l.trainee_id = auth.uid()));
+$$;
+revoke execute on function public.is_link_participant(uuid) from public, anon;
+grant  execute on function public.is_link_participant(uuid) to authenticated;
+
+-- Both participants may READ the whole thread on their accepted link.
+create policy "messages_participant_select" on public.messages
+  for select to authenticated
+  using (public.is_link_participant(link_id));
+
+-- Both participants may WRITE, but ONLY as themselves (sender bound to
+-- auth.uid()) AND only while the link is accepted.
+create policy "messages_participant_insert" on public.messages
+  for insert to authenticated
+  with check (sender_id = auth.uid() and public.is_link_participant(link_id));
+
+-- Read receipts: caller may only mark messages they RECEIVED on a link they
+-- currently participate in. Revoke blocks it (is_link_participant = false).
+create or replace function public.mark_messages_read(_link_id uuid)
+returns integer language plpgsql security definer set search_path = public as $$
+declare _n integer;
+begin
+  if not public.is_link_participant(_link_id) then
+    raise exception 'not a participant of this link';
+  end if;
+  update public.messages
+     set read_at = now()
+   where link_id = _link_id
+     and sender_id <> auth.uid()
+     and read_at is null;
+  get diagnostics _n = row_count;
+  return _n;
+end; $$;
+revoke execute on function public.mark_messages_read(uuid) from public, anon;
+grant  execute on function public.mark_messages_read(uuid) to authenticated;
+
+-- Realtime: chat is the one layer that genuinely wants live delivery.
+-- RLS still applies to realtime for the authenticated role.
+alter publication supabase_realtime add table public.messages;
+
+-- ============================================================
+-- TRAINER MODE — Track 4 (push enhancement — OFF until validated on device)
+-- Added 2026-06-23. Per spec §9.4 push is an ENHANCEMENT, never a dependency:
+-- the in-app unread badge is complete without any of this. This table is only a
+-- device registry. Strictly own-rows RLS (no coach access), identical to the
+-- profiles pattern; the delivery edge function runs as the service role and
+-- bypasses RLS to read subscriptions and send. Nothing here touches messages or
+-- app_state. Proven with a 4-assertion own-rows adversarial matrix.
+-- ============================================================
+create table if not exists public.push_subscriptions (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  endpoint    text not null unique,
+  p256dh      text not null,
+  auth        text not null,
+  user_agent  text,
+  created_at  timestamptz not null default now()
+);
+create index if not exists push_subscriptions_user_idx on public.push_subscriptions (user_id);
+alter table public.push_subscriptions enable row level security;
+create policy "push_owner_all" on public.push_subscriptions
+  for all to authenticated
+  using      (user_id = auth.uid())
+  with check (user_id = auth.uid());

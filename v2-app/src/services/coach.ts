@@ -343,3 +343,102 @@ export async function deleteAssignment(
     .eq('day', day);
   if (error) throw error;
 }
+
+// ============================================================
+// CHAT (Track 4) — the relationship layer. The ONLY two-way layer.
+// Link-scoped messages between an accepted coach and trainee. Both parties
+// read AND write only their own link's thread (RLS-enforced; sender bound to
+// auth.uid()). Messages are immutable from the client; read receipts go through
+// the mark_messages_read RPC. Realtime is opt-in per link. Single-writer
+// preserved: messages is its own table and never touches app_state.
+// ============================================================
+import type { RealtimeChannel } from '@supabase/supabase-js';
+import {
+  type ChatMessage, tallyUnreadByLink,
+} from '../lib/messages';
+export type { ChatMessage };
+
+const MSG_COLS = 'id, link_id, sender_id, body, created_at, read_at';
+
+function rowToMessage(r: any): ChatMessage {
+  return {
+    id: r.id as string,
+    linkId: r.link_id as string,
+    senderId: r.sender_id as string,
+    body: r.body as string,
+    createdAt: r.created_at as string,
+    readAt: (r.read_at ?? null) as string | null,
+  };
+}
+
+/** Full thread for a link, oldest-first. RLS returns rows only to the two
+ *  participants of an accepted link; everyone else (and post-revoke) sees none. */
+export async function listMessages(linkId: string): Promise<ChatMessage[]> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select(MSG_COLS)
+    .eq('link_id', linkId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map(rowToMessage);
+}
+
+/** Send a message. sender_id is checked against auth.uid() by RLS; the DB also
+ *  guards a non-empty body (<=4000). Returns the persisted row. */
+export async function sendMessage(linkId: string, senderId: string, body: string): Promise<ChatMessage> {
+  const trimmed = body.trim();
+  if (!trimmed) throw new Error('Empty message');
+  const { data, error } = await supabase
+    .from('messages')
+    .insert({ link_id: linkId, sender_id: senderId, body: trimmed.slice(0, 4000) })
+    .select(MSG_COLS)
+    .single();
+  if (error) throw error;
+  return rowToMessage(data);
+}
+
+/** Mark every message I RECEIVED on this link as read (narrow SECURITY DEFINER
+ *  RPC; only the recipient's rows are touched). Returns the count marked. */
+export async function markMessagesRead(linkId: string): Promise<number> {
+  const { data, error } = await supabase.rpc('mark_messages_read', { _link_id: linkId });
+  if (error) throw error;
+  return (data as number) ?? 0;
+}
+
+/** Unread-from-peer counts per link for the signed-in user (dashboard badges).
+ *  RLS scopes the rows to the caller's links; we tally what isn't ours. */
+export async function listUnreadCounts(myUserId: string): Promise<Record<string, number>> {
+  const { data, error } = await supabase
+    .from('messages')
+    .select('link_id, sender_id, read_at')
+    .is('read_at', null);
+  if (error) throw error;
+  const rows = (data ?? []).map((r) => ({
+    linkId: r.link_id as string,
+    senderId: r.sender_id as string,
+    readAt: (r.read_at ?? null) as string | null,
+  }));
+  return tallyUnreadByLink(rows, myUserId);
+}
+
+/** Live updates for a link's thread. RLS applies to realtime too, so only the
+ *  two participants receive events. Returns an unsubscribe fn. */
+export function subscribeToMessages(
+  linkId: string,
+  handlers: { onInsert?: (m: ChatMessage) => void; onUpdate?: (m: ChatMessage) => void }
+): () => void {
+  const channel: RealtimeChannel = supabase
+    .channel(`messages:${linkId}`)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'messages', filter: `link_id=eq.${linkId}` },
+      (payload) => handlers.onInsert?.(rowToMessage(payload.new))
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'messages', filter: `link_id=eq.${linkId}` },
+      (payload) => handlers.onUpdate?.(rowToMessage(payload.new))
+    )
+    .subscribe();
+  return () => { void supabase.removeChannel(channel); };
+}

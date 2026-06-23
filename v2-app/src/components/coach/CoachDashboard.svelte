@@ -4,7 +4,7 @@
   import { showToast } from '../../stores/app';
   import {
     listTrainees, listPendingInvites, inviteTrainee, cancelInvite, revokeLink,
-    relativeAge, type TraineeRow, type PendingInvite,
+    listUnreadCounts, relativeAge, type TraineeRow, type PendingInvite,
   } from '../../services/coach';
 
   export let user: User | null = null;
@@ -17,6 +17,7 @@
   let inviting = false;
   let now = Date.now();
   let confirmRevoke: string | null = null;
+  let unreadMap: Record<string, number> = {};
 
   async function refresh() {
     if (!user) return;
@@ -27,6 +28,7 @@
         listPendingInvites(user.id),
       ]);
       now = Date.now();
+      try { unreadMap = await listUnreadCounts(user.id); } catch { unreadMap = {}; }
     } catch (e) {
       showToast('Could not load trainees', 'error');
     } finally {
@@ -132,6 +134,7 @@
                 {#if t.summaryUpdatedAt} · updated {relativeAge(t.summaryUpdatedAt, now)}{/if}
               </span>
             </span>
+            {#if unreadMap[t.linkId] > 0}<span class="row-unread">{unreadMap[t.linkId]}</span>{/if}
             <span class="row-arrow">›</span>
           </button>
           <button
@@ -227,6 +230,12 @@
   }
   .row-meta { font-size: 12px; color: rgba(var(--c-fg), 0.45); }
   .row-arrow { flex: 0 0 auto; font-size: 18px; color: rgba(var(--c-fg), 0.28); }
+  .row-unread {
+    flex: 0 0 auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: rgba(var(--c-accent), 0.20); border: 1px solid rgba(var(--c-accent), 0.45);
+    color: var(--c-accent-solid); font-size: 11px; font-weight: 900; line-height: 1;
+  }
 
   .row-action {
     flex: 0 0 auto; padding: 0 14px; border: none; cursor: pointer;

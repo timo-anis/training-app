@@ -1,8 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { currentUser, showToast } from '../stores/app';
+  import ChatView from './ChatView.svelte';
   import {
-    listIncomingInvites, getMyCoach, acceptInvite, revokeMyCoach,
+    listIncomingInvites, getMyCoach, acceptInvite, revokeMyCoach, listUnreadCounts,
     type IncomingInvite, type MyCoach,
   } from '../services/coach';
 
@@ -11,6 +12,8 @@
   let coach: MyCoach | null = null;
   let busy = false;
   let confirmRevoke = false;
+  let showChat = false;
+  let unreadCount = 0;
 
   async function refresh() {
     const u = $currentUser;
@@ -18,6 +21,10 @@
     loading = true;
     try {
       [invites, coach] = await Promise.all([listIncomingInvites(), getMyCoach(u.id)]);
+      if (coach) {
+        try { const counts = await listUnreadCounts(u.id); unreadCount = counts[coach.linkId] ?? 0; }
+        catch { /* badge is optional */ }
+      }
     } catch {
       // Silent — coaching is an optional layer; never disrupt the account sheet.
     } finally {
@@ -54,6 +61,9 @@
     }
   }
 
+  function openChat() { unreadCount = 0; showChat = true; }
+  function closeChat() { showChat = false; }
+
   onMount(refresh);
 </script>
 
@@ -71,6 +81,12 @@
           {confirmRevoke ? 'Confirm' : 'Revoke'}
         </button>
       </div>
+      <button class="coach-chat-row" on:click={openChat}>
+        <span class="ccr-icon">💬</span>
+        <span class="ccr-text">Message your coach</span>
+        {#if unreadCount > 0}<span class="ccr-badge">{unreadCount}</span>{/if}
+        <span class="ccr-arrow">›</span>
+      </button>
     {/if}
 
     {#each invites as inv (inv.id)}
@@ -82,6 +98,18 @@
         <button class="sec-btn accept" on:click={() => accept(inv.id)} disabled={busy}>Accept</button>
       </div>
     {/each}
+  </div>
+{/if}
+
+
+{#if showChat && coach}
+  <div class="coach-chat-overlay">
+    <ChatView
+      linkId={coach.linkId}
+      myUserId={$currentUser?.id ?? ''}
+      peerName={coach.coachEmail ?? 'Your coach'}
+      onClose={closeChat}
+    />
   </div>
 {/if}
 
@@ -119,4 +147,30 @@
     background: transparent; color: rgba(var(--c-fg), 0.55);
   }
   .sec-btn.danger.confirm { background: var(--c-255-80-80-0_12); color: var(--h-ff6060); border-color: var(--c-255-80-80-0_25); }
+  .coach-chat-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 11px 12px; border-radius: 12px;
+    border: 1px solid rgba(var(--c-accent), 0.30);
+    background: rgba(var(--c-accent), 0.10);
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
+    text-align: left; width: 100%;
+  }
+  .coach-chat-row:active { background: rgba(var(--c-accent), 0.18); }
+  .ccr-icon { font-size: 16px; flex: 0 0 auto; }
+  .ccr-text { flex: 1 1 auto; font-size: 14px; font-weight: 800; color: var(--c-accent-solid); }
+  .ccr-badge {
+    flex: 0 0 auto; min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--h-ff6060, #ff6060); color: #fff; font-size: 11px; font-weight: 900; line-height: 1;
+  }
+  .ccr-arrow { flex: 0 0 auto; font-size: 18px; color: rgba(var(--c-accent), 0.55); }
+  .coach-chat-overlay {
+    position: fixed; inset: 0; z-index: 210;
+    display: flex; flex-direction: column;
+    background: linear-gradient(180deg, var(--c-bg-1) 0%, var(--h-080c18) 100%);
+  }
+  @media (min-width: 640px) {
+    .coach-chat-overlay { left: 50%; transform: translateX(-50%); width: 440px; right: auto; }
+  }
+
 </style>
