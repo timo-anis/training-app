@@ -425,10 +425,11 @@ export async function listUnreadCounts(myUserId: string): Promise<Record<string,
  *  two participants receive events. Returns an unsubscribe fn. */
 export function subscribeToMessages(
   linkId: string,
-  handlers: { onInsert?: (m: ChatMessage) => void; onUpdate?: (m: ChatMessage) => void }
+  handlers: { onInsert?: (m: ChatMessage) => void; onUpdate?: (m: ChatMessage) => void },
+  channelKey = `messages:${linkId}`
 ): () => void {
   const channel: RealtimeChannel = supabase
-    .channel(`messages:${linkId}`)
+    .channel(channelKey)
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'messages', filter: `link_id=eq.${linkId}` },

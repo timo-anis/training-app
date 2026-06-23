@@ -4,7 +4,8 @@
 // store owns the realtime subscription lifecycle.
 import { get, writable, derived } from 'svelte/store';
 import {
-  listMessages, sendMessage, markMessagesRead, subscribeToMessages, type ChatMessage,
+  listMessages, sendMessage, markMessagesRead, subscribeToMessages,
+  listUnreadCounts, getMyCoach, type ChatMessage,
 } from '../services/coach';
 import { sortMessages, mergeMessage, replaceMessage, unreadFromPeer } from '../lib/messages';
 
@@ -73,4 +74,44 @@ export async function markChatRead(): Promise<void> {
       cur.map((m) => (m.senderId !== me && !m.readAt ? { ...m, readAt: stamp } : m))
     );
   } catch { /* best-effort */ }
+}
+
+
+// ============================================================
+// GLOBAL UNREAD (top-level badge) — so a trainee sees "you have a message"
+// on the main view without opening the menu. The coach's dashboard already
+// badges per trainee on login. Lives independently of the open-thread store.
+// ============================================================
+export const coachUnreadTotal = writable(0);
+let unreadWatch: (() => void) | null = null;
+
+/** Recompute the trainee's total unread-from-coach (sum across links). */
+export async function refreshCoachUnread(userId: string): Promise<void> {
+  try {
+    const counts = await listUnreadCounts(userId);
+    coachUnreadTotal.set(Object.values(counts).reduce((a, b) => a + b, 0));
+  } catch { /* optional layer */ }
+}
+
+/** Start a live watch: initial count + realtime bump on the trainee's accepted
+ *  link (distinct channel from the open chat). Safe no-op without a coach. */
+export async function startCoachUnreadWatch(userId: string): Promise<void> {
+  await refreshCoachUnread(userId);
+  try {
+    const coach = await getMyCoach(userId);
+    unreadWatch?.(); unreadWatch = null;
+    if (coach) {
+      unreadWatch = subscribeToMessages(
+        coach.linkId,
+        { onInsert: () => void refreshCoachUnread(userId),
+          onUpdate: () => void refreshCoachUnread(userId) },
+        `messages-unread:${coach.linkId}`
+      );
+    }
+  } catch { /* optional layer */ }
+}
+
+export function stopCoachUnreadWatch(): void {
+  unreadWatch?.(); unreadWatch = null;
+  coachUnreadTotal.set(0);
 }

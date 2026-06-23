@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
+  import { coachUnreadTotal, startCoachUnreadWatch, stopCoachUnreadWatch, refreshCoachUnread } from '../stores/messages';
   import { assignments, assignmentKey, setAssignmentContext, loadAssignmentsFor } from '../stores/assignments';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
@@ -39,7 +40,12 @@
     setAssignmentContext({ coachId: null, traineeId: me, canEdit: false });
     try { await loadAssignmentsFor(me); } catch { /* plan optional */ }
   }
-  onMount(() => { refreshInvites(); refreshCoachNotes(); refreshAssignments(); });
+  onMount(() => {
+    refreshInvites(); refreshCoachNotes(); refreshAssignments();
+    const me = $currentUser?.id;
+    if (me) startCoachUnreadWatch(me);
+  });
+  onDestroy(() => stopCoachUnreadWatch());
 
   // Plan-vs-actual per current day (§3.4): a prescribed day the trainee has not
   // yet touched renders read-mostly; first touch materializes it into the blob.
@@ -169,6 +175,7 @@
     onSearch={() => ($searchOpen = true)}
     onAccount={() => accountOpen = true}
     {hasInvite}
+    unreadMessages={$coachUnreadTotal}
   />
 
   <!-- New-user welcome (top, prominent) -->
@@ -372,7 +379,7 @@
 {/if}
 
 {#if accountOpen}
-  <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); refreshCoachNotes(); refreshAssignments(); }} />
+  <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); refreshCoachNotes(); refreshAssignments(); const me = $currentUser?.id; if (me) refreshCoachUnread(me); }} />
 {/if}
 
 {#if copySheetOpen}

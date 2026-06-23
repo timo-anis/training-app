@@ -58,3 +58,29 @@ export function tallyUnreadByLink(
   }
   return out;
 }
+
+
+export interface MessageGroup { label: string; items: ChatMessage[]; }
+
+/** Human day label for a message ("Today" / "Yesterday" / "Mon, 3 Jun"). */
+export function dayLabel(iso: string, now: number = Date.now()): string {
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const startOf = (t: Date) => new Date(t.getFullYear(), t.getMonth(), t.getDate()).getTime();
+  const diff = Math.round((startOf(new Date(now)) - startOf(d)) / 86400000);
+  if (diff <= 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  return d.toLocaleDateString([], { weekday: 'short', day: 'numeric', month: 'short' });
+}
+
+/** Group a sorted message list into day buckets for date separators in the UI. */
+export function groupMessagesByDay(list: ChatMessage[], now: number = Date.now()): MessageGroup[] {
+  const groups: MessageGroup[] = [];
+  for (const m of list) {
+    const label = dayLabel(m.createdAt, now);
+    const last = groups[groups.length - 1];
+    if (last && last.label === label) last.items.push(m);
+    else groups.push({ label, items: [m] });
+  }
+  return groups;
+}

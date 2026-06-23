@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   sortMessages, mergeMessage, replaceMessage, isMine, unreadFromPeer, tallyUnreadByLink,
+  dayLabel, groupMessagesByDay,
   type ChatMessage,
 } from '../lib/messages';
 
@@ -87,5 +88,41 @@ describe('tallyUnreadByLink — dashboard badges', () => {
 
   it('empty rows yield empty map', () => {
     expect(tallyUnreadByLink([], ME)).toEqual({});
+  });
+});
+
+describe('dayLabel — friendly date separators', () => {
+  const now = Date.parse('2026-06-23T12:00:00');
+  it('labels same calendar day as Today', () => {
+    expect(dayLabel('2026-06-23T08:00:00', now)).toBe('Today');
+  });
+  it('labels the previous day as Yesterday', () => {
+    expect(dayLabel('2026-06-22T23:00:00', now)).toBe('Yesterday');
+  });
+  it('labels older days with a weekday+date string (not Today/Yesterday)', () => {
+    const l = dayLabel('2026-06-20T10:00:00', now);
+    expect(l).not.toBe('Today');
+    expect(l).not.toBe('Yesterday');
+    expect(l.length).toBeGreaterThan(0);
+  });
+  it('returns empty string for an invalid date', () => {
+    expect(dayLabel('nope', now)).toBe('');
+  });
+});
+
+describe('groupMessagesByDay — buckets for separators', () => {
+  const now = Date.parse('2026-06-23T12:00:00');
+  it('groups consecutive same-day messages and splits across days, preserving order', () => {
+    const groups = groupMessagesByDay([
+      msg({ id: 'a', createdAt: '2026-06-22T09:00:00' }),
+      msg({ id: 'b', createdAt: '2026-06-22T10:00:00' }),
+      msg({ id: 'c', createdAt: '2026-06-23T09:00:00' }),
+    ], now);
+    expect(groups.map((g) => g.label)).toEqual(['Yesterday', 'Today']);
+    expect(groups[0].items.map((m) => m.id)).toEqual(['a', 'b']);
+    expect(groups[1].items.map((m) => m.id)).toEqual(['c']);
+  });
+  it('empty list yields no groups', () => {
+    expect(groupMessagesByDay([], now)).toEqual([]);
   });
 });

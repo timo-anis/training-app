@@ -8,6 +8,8 @@
   export let onAccount: () => void;
   /** Show a dot on the account icon when a coach invite is awaiting the user. */
   export let hasInvite = false;
+  /** Unread coach messages — shown as a count badge (takes precedence over the invite dot). */
+  export let unreadMessages = 0;
 </script>
 
 <header class="topbar">
@@ -33,12 +35,16 @@
         <line x1="14.2" y1="14.2" x2="18" y2="18"/>
       </svg>
     </button>
-    <button class="icon-btn account-btn" on:click={onAccount} title={hasInvite ? 'Account — coach invite waiting' : 'Account'} aria-label={hasInvite ? 'Account, coach invite waiting' : 'Account'}>
+    <button class="icon-btn account-btn" on:click={onAccount} title={unreadMessages > 0 ? 'Account — new message' : hasInvite ? 'Account — coach invite waiting' : 'Account'} aria-label={unreadMessages > 0 ? 'Account, new message' : hasInvite ? 'Account, coach invite waiting' : 'Account'}>
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <circle cx="12" cy="8" r="4"/>
         <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
       </svg>
-      {#if hasInvite}<span class="invite-badge" aria-hidden="true"></span>{/if}
+      {#if unreadMessages > 0}
+        <span class="unread-badge" aria-hidden="true">{unreadMessages > 9 ? '9+' : unreadMessages}</span>
+      {:else if hasInvite}
+        <span class="invite-badge" aria-hidden="true"></span>
+      {/if}
     </button>
   </div>
 </header>
@@ -110,6 +116,26 @@
   height: 11px;
   border-radius: 50%;
   background: var(--c-accent-solid);
+  border: 2px solid var(--c-bg-1, #0a0e1a);
+  box-shadow: 0 0 0 1px rgba(var(--c-accent), 0.35);
+}
+
+.unread-badge {
+  position: absolute;
+  top: -7px;
+  right: -7px;
+  min-width: 17px;
+  height: 17px;
+  padding: 0 4px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-accent-solid);
+  color: var(--h-0c0c0e, #0c0c0e);
+  font-size: 10.5px;
+  font-weight: 900;
+  line-height: 1;
   border: 2px solid var(--c-bg-1, #0a0e1a);
   box-shadow: 0 0 0 1px rgba(var(--c-accent), 0.35);
 }
