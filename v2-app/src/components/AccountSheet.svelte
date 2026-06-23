@@ -1,16 +1,54 @@
 <script lang="ts">
-  import { createEventDispatcher } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import { currentUser, appState, updateState, showToast, theme, toggleTheme, canUsePresentation } from '../stores/app';
   import { signOut, sendPasswordReset } from '../services/auth';
   import { saveLocal, saveCloud } from '../services/storage';
   import { emptyAppState } from '../types/workout';
   import CoachInviteSection from './CoachInviteSection.svelte';
+  import { getPushState, enablePush, disablePush, type PushReason } from '../services/push';
 
   const dispatch = createEventDispatcher<{ close: void }>();
 
   let confirmClear = false;
   let resetSent = false;
   let loading = false;
+
+  // Push notifications — the row is hidden unless push is configured (VAPID armed)
+  // AND supported, so the default build is visually unchanged. See runbook.
+  let pushReady = false;       // configured + supported
+  let pushOn = false;          // OS permission already granted
+  let pushBusy = false;
+  function refreshPushState() {
+    const st = getPushState();
+    pushReady = st.configured && st.supported;
+    pushOn = st.permission === 'granted';
+  }
+  const PUSH_MSG: Record<PushReason, string> = {
+    'ok': 'Notifications on',
+    'not-configured': 'Notifications not set up yet',
+    'unsupported': 'This browser can’t do notifications',
+    'not-standalone': 'Add the app to your Home Screen first',
+    'denied': 'Notifications were blocked — enable them in Settings',
+    'error': 'Could not enable notifications',
+  };
+  async function togglePush() {
+    const user = $currentUser;
+    if (!user || pushBusy) return;
+    pushBusy = true;
+    try {
+      if (pushOn) {
+        await disablePush(user.id);
+        showToast('Notifications off', 'info');
+      } else {
+        const reason = await enablePush(user.id);
+        showToast(PUSH_MSG[reason], reason === 'ok' ? 'success' : 'error');
+      }
+      refreshPushState();
+    } finally {
+      pushBusy = false;
+    }
+  }
+  onMount(refreshPushState);
 
   async function handlePasswordReset() {
     const email = $currentUser?.email;
@@ -113,6 +151,18 @@
     </button>
 
     <div class="divider"></div>
+
+    {#if pushReady}
+    <!-- Push notifications — only rendered once push is configured (hidden otherwise) -->
+    <button class="action-row" on:click={togglePush} disabled={pushBusy} aria-pressed={pushOn}>
+      <span class="action-icon">🔔</span>
+      <div class="action-text">
+        <span class="action-label">{pushOn ? 'Notifications on' : 'Enable notifications'}</span>
+        <span class="action-sub">{pushOn ? 'New messages will ping this device' : 'Get pinged when your coach messages you'}</span>
+      </div>
+      <span class="switch" class:on={pushOn}><span class="knob"></span></span>
+    </button>
+    {/if}
 
     <!-- Coaching (invites + current coach) — optional layer, hidden when none -->
     <CoachInviteSection />

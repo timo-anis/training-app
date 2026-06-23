@@ -1,58 +1,51 @@
-# Track 4 — Web Push activation runbook (OFF until validated on a real iPhone)
+# Track 4 — Web Push activation runbook
 
-**Status:** scaffolded, not active. The shipped, proven product is the **in-app
-unread badge** (coach dashboard + trainee account + in-chat). Push is the §9.4
-*enhancement* — it must be validated on a physical iOS device before you promise
-it, and it must never become a dependency. If any step below is flaky, do nothing:
-the in-app loop already closes the awareness gap.
+**Status:** client side is **fully wired and inert by default**. Push turns on the
+moment you (1) arm the public VAPID key in the build, (2) deploy the function +
+set its secrets, and (3) add the async webhook — then validate on your iPhone.
+The shipped, proven product is the **in-app unread badge** (top-level on both
+sides). Push is the §9.4 *enhancement* — never a dependency.
 
-## What already shipped (works with zero push)
-- `public.push_subscriptions` table (own-rows RLS, proven) — the device registry.
-- `src/services/push.ts` — guarded client module. With **no `VITE_VAPID_PUBLIC_KEY`**
-  set, every function is a safe no-op. It is **not imported on any default path**,
-  so the trainee PWA and coach surface bundles are unchanged.
-- `supabase/functions/notify-on-message/index.ts` — delivery Edge Function (NOT deployed).
+## Already shipped (safe, no behavior change until armed)
+- `public/push-sw.js` — push + notificationclick handler, `importScripts`'d into
+  the workbox SW (verified in `v2-dist/sw.js`). Inert until a subscription + a
+  server push exist.
+- Account sheet "Enable notifications" row — **hidden** unless push is configured
+  (`getPushState().configured && supported`), so the current build is unchanged.
+- `services/push.ts` (no-op without the key), `push_subscriptions` table (own-rows
+  RLS, proven), `supabase/functions/notify-on-message/index.ts` (not deployed).
 
-## To turn it on (do this on/with your iPhone)
-1. **Generate VAPID keys** (once): `npx web-push generate-vapid-keys`.
-2. **Arm the client:** add `VITE_VAPID_PUBLIC_KEY=<public>` to the build env, rebuild/deploy.
-3. **Add a SW push handler.** The trainee SW is workbox `generateSW`, which has no
-   `push` listener. Either switch to `injectManifest` with a custom SW, or add a
-   small extra SW that handles:
-   ```js
-   self.addEventListener('push', (e) => {
-     const d = e.data?.json() ?? {};
-     e.waitUntil(self.registration.showNotification(d.title ?? 'New message', {
-       body: d.body, data: { url: d.url ?? '/' },
-     }));
-   });
-   self.addEventListener('notificationclick', (e) => {
-     e.notification.close();
-     e.waitUntil(clients.openWindow(e.notification.data?.url ?? '/'));
-   });
-   ```
-   Keep the coach surface (`coach.html`) decision explicit (§9.3 = no SW today):
-   a coach-side push needs a minimal **push-only** SW on `coach.html` — add it only
-   if you want coach-side push, and keep it push-only (no offline caching).
-4. **Deploy the Edge Function** and set its secrets:
-   `SB_URL`, `SB_SERVICE_ROLE_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`.
-   `supabase functions deploy notify-on-message`.
-5. **Wire the trigger as an async Database Webhook** (Dashboard → Database → Webhooks)
-   on `INSERT` of `public.messages` → HTTP POST to the function URL.
-   **Use a webhook (async), not a synchronous trigger** — delivery must never sit on
-   the message-insert path. If the webhook errors, the message still sends.
-6. **Enable on the device:** install the PWA to the home screen (iOS only delivers
-   push to a standalone PWA), then call `enablePush(userId)` from a user gesture
-   (e.g. an "Enable notifications" row you add to the account sheet). `getPushState()`
-   tells you why it's unavailable (`not-configured` / `unsupported` / `not-standalone`).
-7. **Validate**: send a message from the other side with the app backgrounded;
-   confirm the notification lands and tapping it opens the thread. Test re-subscribe,
-   revoke (push should stop — the function checks `status='accepted'`), and a denied
-   permission (must degrade to in-app badge with no error).
+## Your VAPID keys (generated 2026-06-23)
+- **Public** (safe to commit / ship in the client):
+  `BODLfm3GhYxFxIZ5Ju8Wwy7A2yM4zwkoLu0rOhgf_drvqaO4gW4omgXx1Ci-GPFOgmVpTDGMN24WjSh_mZn0IOE`
+- **Private** (SECRET — set as a function secret only, never commit): Timo has it
+  from chat. If lost, regenerate the pair with `npx web-push generate-vapid-keys`.
 
-## Guardrails (do not regress)
-- Push must stay **off the critical path**: async webhook only; the function swallows
-  all errors and returns 200.
-- The function checks the link is still `accepted`, so **revoke kills push too**.
-- No push code is imported by the default trainee/coach bundles — keep it that way
-  until step 2/3 are deliberately taken.
+## Turn it on (do this with your iPhone)
+1. **Arm the client:** add `VITE_VAPID_PUBLIC_KEY=BODLfm3GhYxFxIZ5Ju8Wwy7A2yM4zwkoLu0rOhgf_drvqaO4gW4omgXx1Ci-GPFOgmVpTDGMN24WjSh_mZn0IOE`
+   to the build env (GitHub Actions build step / `.env`), then redeploy. The
+   account-sheet row appears once this is set.
+2. **Deploy the function** (no JWT gate — it's called server-internally by the webhook):
+   `supabase functions deploy notify-on-message --no-verify-jwt`
+3. **Set the function secrets:**
+   `supabase secrets set VAPID_PUBLIC_KEY=… VAPID_PRIVATE_KEY=… VAPID_SUBJECT=mailto:timo.anis@gmail.com SB_URL=https://krpbqzhttgelrbhkohct.supabase.co SB_SERVICE_ROLE_KEY=…`
+   (service role key from Dashboard → Project Settings → API; keep server-only.)
+4. **Wire the ASYNC webhook** (Dashboard → Database → Webhooks): event = INSERT on
+   `public.messages`, type = Supabase Edge Function → `notify-on-message`.
+   **Async only** — delivery must never sit on the message-insert path; if it
+   errors, the message still sends (the function also swallows all errors → 200).
+5. **Install + enable on device:** add the PWA to the iOS Home Screen (iOS only
+   delivers push to a standalone PWA), open the account sheet → "Enable
+   notifications", grant permission. `getPushState()` explains any block
+   (`not-configured` / `unsupported` / `not-standalone`).
+6. **Validate:** message from the other side with the app backgrounded → confirm
+   the notification lands and tapping it opens the app. Test: re-subscribe,
+   permission denied (must degrade to in-app badge, no error), and **revoke**
+   (push stops — the function checks the link is still `accepted`).
+
+## Guardrails (don't regress)
+- Push stays OFF the critical path (async webhook; function returns 200 on any error).
+- Revoke kills push too (function checks `status='accepted'`).
+- Coach-side push would need a push-only SW on `coach.html` (§9.3 = no SW today) —
+  decide separately; trainee-side is the priority.
+- Optional hardening: have the function check a shared-secret header from the webhook.

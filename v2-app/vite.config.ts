@@ -58,6 +58,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Push-only handler (Track 4). Inert until a subscription + server push
+        // exist; does not change offline/caching behavior. See TRACK4_PUSH_RUNBOOK.md.
+        importScripts: ['push-sw.js'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
