@@ -1,13 +1,19 @@
 <script lang="ts">
   import { DAY_ORDER, type DayOfWeek, type AppState, type UIState } from '../types/workout';
   import { appState, uiState, updateUI } from '../stores/app';
+  import { assignments, assignmentKey } from '../stores/assignments';
   import { weekDayToLocalDate, localDateToWeekDay } from '../lib/dates';
   import { computeDayStatus, type DayStatus } from '../lib/day-status';
 
-  function getDayStatus(date: Date, state: AppState): DayStatus {
+  function getDayStatus(date: Date, state: AppState, plan: Record<string, unknown>): DayStatus | 'planned' {
     const wd = localDateToWeekDay(date);
     if (!wd) return 'neutral';
     const workoutDay = state.weeks.find(w => w.week === wd.week && w.day === wd.day);
+    // Planned-by-coach overlay (Track 3): only while the day has no logged
+    // exercises of its own. Once the trainee materializes/starts it, the real
+    // status wins. Empty plan map (the common case) => identical to before.
+    const hasActual = !!workoutDay && workoutDay.exercises.length > 0;
+    if (!hasActual && plan[assignmentKey(wd.week, wd.day)]) return 'planned';
     return computeDayStatus(workoutDay);
   }
 
@@ -136,7 +142,7 @@
       <div class="week-row">
         {#each week as date}
           {#if date}
-            {@const status = getDayStatus(date, $appState)}
+            {@const status = getDayStatus(date, $appState, $assignments)}
             {@const selected = isSelected(date, $uiState)}
             {@const today = isToday(date)}
             <button
@@ -160,6 +166,7 @@
     <div class="legend">
       <span class="leg-item"><span class="leg-c done-c"></span>Done</span>
       <span class="leg-item"><span class="leg-c wod-c"></span>Workout</span>
+      <span class="leg-item"><span class="leg-c plan-c"></span>Planned</span>
       <span class="leg-item"><span class="leg-c rec-c"></span>Recovery</span>
       <span class="leg-item"><span class="leg-c rest-c"></span>Rest</span>
     </div>
@@ -349,6 +356,13 @@
   }
   .status-has-data .day-num { color: rgba(255, 255, 255, 0.80); }
 
+  /* Planned by coach (Track 3) — dashed gold ring, gold number. Not yet done. */
+  .status-planned .day-circle {
+    background: rgba(196, 146, 48, 0.06);
+    border: 1.5px dashed rgba(196, 146, 48, 0.70);
+  }
+  .status-planned .day-num { color: #d4a342; }
+
   /* Recovery — amber outline */
   .status-active-recovery .day-circle {
     background: rgba(196, 146, 48, 0.10);
@@ -421,6 +435,7 @@
 
   .done-c { background: rgba(79, 192, 141, 0.14); border: 2px solid rgba(79, 192, 141, 0.65); }
   .wod-c  { background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(255, 255, 255, 0.2); }
+  .plan-c { background: rgba(196, 146, 48, 0.06); border: 1.5px dashed rgba(196, 146, 48, 0.70); }
   .rec-c  { background: rgba(196, 146, 48, 0.10); border: 1.5px solid rgba(196, 146, 48, 0.5); }
   .rest-c { background: transparent; border: 1.5px dashed rgba(255, 255, 255, 0.18); }
 
@@ -446,6 +461,17 @@
   }
   :root[data-theme="presentation"] .status-has-data .day-num {
     color: rgba(13, 26, 46, 0.75);
+  }
+  :root[data-theme="presentation"] .status-planned .day-circle {
+    background: rgba(196, 146, 48, 0.10);
+    border: 1.5px dashed rgba(196, 146, 48, 0.85);
+  }
+  :root[data-theme="presentation"] .status-planned .day-num {
+    color: #7a4e08;
+  }
+  :root[data-theme="presentation"] .plan-c {
+    background: rgba(196, 146, 48, 0.10);
+    border: 1.5px dashed rgba(196, 146, 48, 0.85);
   }
   :root[data-theme="presentation"] .status-active-recovery .day-circle {
     background: rgba(196, 146, 48, 0.14);

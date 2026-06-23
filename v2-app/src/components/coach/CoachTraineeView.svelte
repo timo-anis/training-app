@@ -10,6 +10,8 @@
   import ExerciseCard from '../ExerciseCard.svelte';
   import CoachNote from '../CoachNote.svelte';
   import { setCoachNotesContext, clearCoachNotes, loadCoachNotesFor } from '../../stores/coachNotes';
+  import AssignmentEditor from './AssignmentEditor.svelte';
+  import { setAssignmentContext, clearAssignments, loadAssignmentsFor } from '../../stores/assignments';
 
   export let trainee: TraineeRow;
 
@@ -52,6 +54,8 @@
       const coachId = $currentUser?.id ?? null;
       setCoachNotesContext({ coachId, traineeId: trainee.traineeId, canEdit: !!coachId });
       try { await loadCoachNotesFor(trainee.traineeId); } catch { /* notes are optional */ }
+      setAssignmentContext({ coachId, traineeId: trainee.traineeId, canEdit: !!coachId });
+      try { await loadAssignmentsFor(trainee.traineeId); } catch { /* plan is optional */ }
     } catch {
       showToast('Could not load trainee data', 'error');
       appState.set(emptyAppState());
@@ -63,7 +67,7 @@
   onMount(load);
 
   // Leave the shared store clean when the coach navigates away.
-  onDestroy(() => { appState.set(emptyAppState()); clearCoachNotes(); });
+  onDestroy(() => { appState.set(emptyAppState()); clearCoachNotes(); clearAssignments(); });
 </script>
 
 <div class="trainee-view">
@@ -95,11 +99,10 @@
       <CoachNote week={$uiState.week} day={$uiState.day} exerciseId={null} authoring={true} />
 
       {#if $currentDayExercises.length === 0}
-        <div class="empty-state">
-          <span class="empty-title">Nothing logged this day</span>
-          <span class="empty-sub">Pick another day in the calendar above.</span>
-        </div>
+        <!-- Untouched day -> coach owns it: author the prescribed plan (§3.4). -->
+        <AssignmentEditor week={$uiState.week} day={$uiState.day} />
       {:else}
+        <p class="actual-hint">Started by the trainee — this is their actual log. You comment only; you can’t overwrite it.</p>
         <div class="exercise-list">
           {#each $currentDayExercises as exercise, i (exercise.id)}
             <ExerciseCard
@@ -163,11 +166,12 @@
 
   .exercise-list { display: grid; gap: 10px; margin-top: 10px; }
 
-  .empty-state {
-    margin-top: 10px; padding: 32px 20px; text-align: center;
-    border: 1px dashed rgba(var(--c-fg), 0.08); border-radius: 18px;
-    display: flex; flex-direction: column; align-items: center; gap: 6px;
+  .actual-hint {
+    margin: 4px 0 0; padding: 9px 12px;
+    font-size: 12px; font-weight: 600; line-height: 1.5;
+    color: rgba(var(--c-fg), 0.50);
+    border: 1px solid rgba(var(--c-fg), 0.08); border-radius: 11px;
+    background: rgba(var(--c-fg), 0.03);
   }
-  .empty-title { font-size: 16px; font-weight: 700; color: rgba(var(--c-fg), 0.30); }
-  .empty-sub { font-size: 13px; color: rgba(var(--c-fg), 0.45); }
-</style>
+
+  </style>

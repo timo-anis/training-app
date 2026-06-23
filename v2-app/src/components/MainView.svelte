@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
+  import { assignments, assignmentKey, setAssignmentContext, loadAssignmentsFor } from '../stores/assignments';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
   import StreakStrip from './StreakStrip.svelte';
@@ -30,7 +31,38 @@
     if (!me) return;
     try { await loadCoachNotesFor(me); } catch { /* notes optional */ }
   }
-  onMount(() => { refreshInvites(); refreshCoachNotes(); });
+  // Coach program (Track 3): the trainee READS prescribed future days. Empty when
+  // no accepted coach or after revoke (RLS). Optional layer; failures are silent.
+  async function refreshAssignments() {
+    const me = $currentUser?.id;
+    if (!me) return;
+    setAssignmentContext({ coachId: null, traineeId: me, canEdit: false });
+    try { await loadAssignmentsFor(me); } catch { /* plan optional */ }
+  }
+  onMount(() => { refreshInvites(); refreshCoachNotes(); refreshAssignments(); });
+
+  // Plan-vs-actual per current day (§3.4): a prescribed day the trainee has not
+  // yet touched renders read-mostly; first touch materializes it into the blob.
+  $: plannedDay = $assignments[assignmentKey($uiState.week, $uiState.day)] ?? null;
+  $: isPlanOnly = $currentDayExercises.length === 0 && !!plannedDay;
+
+  function startPlanned() {
+    const plan = plannedDay;
+    if (!plan) return;
+    const ok = materializeAssignment($uiState.week, $uiState.day, plan.exercises);
+    if (ok) {
+      exercisesExpanded = true;
+      showToast('Plan started \u2014 log your sets', 'success');
+    }
+  }
+
+  // Compact preview helper for a planned exercise's set line.
+  function planSetLine(ex: { sets: { kg: string; reps: string }[] }): string {
+    if (ex.sets.length === 0) return '';
+    const first = ex.sets[0];
+    const tail = first.kg || first.reps ? ` \u00b7 ${first.kg ? first.kg + 'kg' : ''}${first.kg && first.reps ? ' \u00d7 ' : (first.reps ? '\u00d7 ' : '')}${first.reps || ''}` : '';
+    return `${ex.sets.length} set${ex.sets.length !== 1 ? 's' : ''}${tail}`;
+  }
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -224,7 +256,25 @@
 
     <CoachNote week={$uiState.week} day={$uiState.day} exerciseId={null} authoring={false} />
 
-    {#if $currentDayExercises.length === 0}
+    {#if isPlanOnly && plannedDay}
+      <div class="planned-panel">
+        <div class="planned-head">
+          <span class="planned-badge">PLANNED BY COACH</span>
+          <span class="planned-count">{plannedDay.exercises.length} exercise{plannedDay.exercises.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div class="planned-list">
+          {#each plannedDay.exercises as ex (ex.id)}
+            <div class="planned-row">
+              {#if ex.type === 'superset' && ex.code}<span class="planned-code">{ex.code}</span>{/if}
+              <span class="planned-name">{ex.name}</span>
+              <span class="planned-sets">{planSetLine(ex)}</span>
+            </div>
+          {/each}
+        </div>
+        <button class="planned-cta" on:click={startPlanned}>Start planned workout</button>
+        <span class="planned-foot">Starting copies the plan into your day — then it’s yours to log.</span>
+      </div>
+    {:else if $currentDayExercises.length === 0}
       <div class="empty-state">
         <span class="empty-title">{emptyLabel.title}</span>
         {#if emptyLabel.sub}
@@ -254,7 +304,7 @@
       </div>
     {/if}
 
-    {#if exercisesExpanded}
+    {#if exercisesExpanded && !isPlanOnly}
       <div class="add-ex-wrap">
         <AddExercise bind:this={adder} week={$uiState.week} day={$uiState.day} />
       </div>
@@ -322,7 +372,7 @@
 {/if}
 
 {#if accountOpen}
-  <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); refreshCoachNotes(); }} />
+  <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); refreshCoachNotes(); refreshAssignments(); }} />
 {/if}
 
 {#if copySheetOpen}
@@ -599,6 +649,57 @@
   }
 
   .add-first-btn:active { background: rgba(var(--c-accent), 0.24); transform: scale(0.98); }
+
+  /* ---- Planned-by-coach panel (Track 3) ---- */
+  .planned-panel {
+    margin-top: 10px;
+    padding: 16px 16px 14px;
+    border-radius: 18px;
+    border: 1px solid rgba(var(--c-accent), 0.40);
+    background: rgba(var(--c-accent), 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .planned-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  }
+  .planned-badge {
+    font-size: 11px; font-weight: 900; letter-spacing: 0.12em;
+    color: var(--c-accent-solid);
+    padding: 3px 10px; border-radius: 999px;
+    background: rgba(var(--c-accent), 0.14);
+    border: 1px solid rgba(var(--c-accent), 0.40);
+  }
+  .planned-count { font-size: 12px; font-weight: 700; color: rgba(var(--c-fg), 0.45); }
+  .planned-list { display: grid; gap: 6px; }
+  .planned-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; border-radius: 11px;
+    border: 1px solid rgba(var(--c-fg), 0.08);
+    background: rgba(var(--c-fg), 0.03);
+  }
+  .planned-code {
+    flex: 0 0 auto; width: 20px; height: 20px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 900; color: var(--c-accent-solid);
+    background: rgba(var(--c-accent), 0.14); border: 1px solid rgba(var(--c-accent), 0.35);
+  }
+  .planned-name {
+    flex: 1 1 auto; min-width: 0; font-size: 14px; font-weight: 700; color: var(--c-text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .planned-sets { flex: 0 0 auto; font-size: 12px; font-weight: 600; color: rgba(var(--c-fg), 0.45); }
+  .planned-cta {
+    margin-top: 2px; width: 100%; padding: 14px;
+    border-radius: 13px; border: 1px solid rgba(var(--c-accent), 0.55);
+    background: rgba(var(--c-accent), 0.18); color: var(--h-d4a038);
+    font-size: 15px; font-weight: 800; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, transform 0.08s;
+  }
+  .planned-cta:active { background: rgba(var(--c-accent), 0.28); transform: scale(0.98); }
+  .planned-foot { font-size: 11.5px; color: rgba(var(--c-fg), 0.40); text-align: center; line-height: 1.5; }
 
   /* ---- Empty state ---- */
   .empty-state {

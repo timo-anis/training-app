@@ -343,3 +343,64 @@ create policy "notes_coach_delete" on public.coach_notes
 create policy "notes_trainee_select" on public.coach_notes
   for select to authenticated
   using (trainee_id = auth.uid() and public.has_accepted_coach(coach_id));
+
+-- ============================================================
+-- TRAINER MODE — Track 3 (program authoring / coach_assignments)
+-- Added 2026-06-23. Purely additive. The coach authors FUTURE days (same
+-- exercises[] shape as a workout day). The trainee reads them via an accepted
+-- link and MATERIALIZES a day into their OWN blob on first touch (client-side;
+-- only the trainee's client writes app_state -> single-writer preserved).
+-- One-way coach -> trainee. Reuses is_accepted_coach / has_accepted_coach.
+-- Proven with a 15-assertion adversarial RLS matrix BEFORE any client code
+-- (coach CRUD own only + only while accepted; assign-to-non-accepted blocked;
+-- spoofed coach_id blocked; trainee read-only via accepted link; trainee
+-- INSERT/UPDATE/DELETE all denied; no cross-trainee leak via a shared coach;
+-- post-revoke BOTH sides see 0 + coach write blocked; single-writer intact —
+-- coach can never write a trainee app_state blob).
+-- ============================================================
+
+create table if not exists public.coach_assignments (
+  id          uuid primary key default gen_random_uuid(),
+  coach_id    uuid not null references auth.users(id) on delete cascade,
+  trainee_id  uuid not null references auth.users(id) on delete cascade,
+  week        int  not null,
+  day         text not null,                       -- DayOfWeek
+  payload     jsonb not null,                      -- { exercises: Exercise[] }
+  created_at  timestamptz not null default now(),
+  updated_at  timestamptz not null default now(),
+  -- exactly one prescribed day per anchor; doubles as the upsert conflict target.
+  constraint coach_assignments_anchor_uniq unique (coach_id, trainee_id, week, day),
+  -- integrity guard: a prescribed day always carries an exercises array.
+  constraint coach_assignments_payload_shape
+    check (jsonb_typeof(payload->'exercises') = 'array')
+);
+create index if not exists coach_assignments_lookup_idx
+  on public.coach_assignments (trainee_id, week);
+alter table public.coach_assignments enable row level security;
+
+-- Bump updated_at on edit (fires on ON CONFLICT DO UPDATE upserts too).
+drop trigger if exists trg_touch_coach_assignments on public.coach_assignments;
+create trigger trg_touch_coach_assignments before update on public.coach_assignments
+  for each row execute function public.set_updated_at();
+
+-- Coach: full CRUD, but ONLY own rows AND only while the link is accepted.
+create policy "assign_coach_select" on public.coach_assignments
+  for select to authenticated
+  using (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+create policy "assign_coach_insert" on public.coach_assignments
+  for insert to authenticated
+  with check (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+create policy "assign_coach_update" on public.coach_assignments
+  for update to authenticated
+  using      (coach_id = auth.uid() and public.is_accepted_coach(trainee_id))
+  with check (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+create policy "assign_coach_delete" on public.coach_assignments
+  for delete to authenticated
+  using (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+
+-- Trainee: READ-ONLY, own assignments only, only via an accepted link.
+-- NO write policy => the trainee can never write a coach row; revoke flips this
+-- to invisible (the plan layer vanishes).
+create policy "assign_trainee_select" on public.coach_assignments
+  for select to authenticated
+  using (trainee_id = auth.uid() and public.has_accepted_coach(coach_id));

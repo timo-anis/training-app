@@ -23,6 +23,7 @@ import {
   moveExerciseInState,
   buildWorkoutBlocks as _buildWorkoutBlocks,
 } from '../lib/state-helpers';
+import { materializedDay } from '../lib/assignments';
 import {
   uiState, bootStatus, currentUser, updateUI, pushUndo,
 } from './ui-state';
@@ -660,4 +661,35 @@ export function deleteExercise(week: number, day: DayOfWeek, exId: string) {
       fn: () => updateState(s => insertExerciseAtState(s, week, day, exIndex, ex)),
     });
   }
+}
+
+
+// ---- Materialize a coach assignment on first touch (trainee-only) ----
+// §3.4 ownership flip: an untouched prescribed day lives in coach_assignments;
+// the moment the trainee starts it, the client copies the plan into the
+// trainee's OWN blob (seeded values, done=false, rpe='') and from then it is
+// trainee-owned "actual" — the coach comments only. ONLY the trainee's client
+// writes app_state, so the single-writer invariant holds. Guarded: never
+// overwrites a day that already has logged exercises.
+export function materializeAssignment(week: number, day: DayOfWeek, exercises: import('../types/workout').Exercise[]): boolean {
+  const state = get(appState);
+  const existing = state.weeks.find(w => w.week === week && w.day === day);
+  if (existing && existing.exercises.length > 0) return false; // already actual — do not clobber
+  const date = getDateForWeekDay(week, day);
+  const fresh = materializedDay(week, day, date, exercises);
+  updateState(s => {
+    const has = s.weeks.find(w => w.week === week && w.day === day);
+    if (has) {
+      // empty placeholder day (e.g. a kind mark) — fill it, preserve its kind.
+      return {
+        ...s,
+        weeks: s.weeks.map(w =>
+          w.week === week && w.day === day
+            ? { ...w, exercises: fresh.exercises, kind: w.kind ?? fresh.kind }
+            : w),
+      };
+    }
+    return { ...s, weeks: [...s.weeks, fresh] };
+  }, true);
+  return true;
 }

@@ -267,3 +267,77 @@ export async function deleteCoachNote(anchor: NoteAnchor): Promise<void> {
   const { error } = await q;
   if (error) throw error;
 }
+
+// ============================================================
+// COACH ASSIGNMENTS (Track 3) — program authoring.
+// The coach authors FUTURE days (same exercises[] shape as a workout day) into
+// public.coach_assignments. One-way coach -> trainee. The coach writes; the
+// trainee reads via an accepted link and MATERIALIZES into their OWN blob on
+// first touch (only the trainee's client writes app_state -> single-writer).
+// RLS narrows reads per caller; writes are coach-only (see supabase_rls.sql).
+// ============================================================
+import type { Exercise } from '../types/workout';
+import type { Assignment } from '../lib/assignments';
+export type { Assignment };
+
+const ASSIGN_COLS = 'id, week, day, payload, updated_at';
+
+function rowToAssignment(r: any): Assignment {
+  const exercises = Array.isArray(r?.payload?.exercises) ? (r.payload.exercises as Exercise[]) : [];
+  return {
+    id: r.id as string,
+    week: r.week as number,
+    day: r.day as Assignment['day'],
+    exercises,
+    updatedAt: (r.updated_at ?? null) as string | null,
+  };
+}
+
+/** All assignments for a trainee. RLS returns only what the caller may read:
+ *  the coach sees their own; the trainee sees theirs via an accepted link. */
+export async function listAssignments(traineeId: string): Promise<Assignment[]> {
+  const { data, error } = await supabase
+    .from('coach_assignments')
+    .select(ASSIGN_COLS)
+    .eq('trainee_id', traineeId);
+  if (error) throw error;
+  return (data ?? []).map(rowToAssignment);
+}
+
+/** Coach upsert of a prescribed day by anchor (coach_id, trainee_id, week, day).
+ *  Coach-only; RLS rejects any write by a trainee or a non-accepted coach. */
+export async function saveAssignment(
+  coachId: string,
+  traineeId: string,
+  week: number,
+  day: string,
+  exercises: Exercise[]
+): Promise<Assignment> {
+  const { data, error } = await supabase
+    .from('coach_assignments')
+    .upsert(
+      { coach_id: coachId, trainee_id: traineeId, week, day, payload: { exercises } },
+      { onConflict: 'coach_id,trainee_id,week,day' }
+    )
+    .select(ASSIGN_COLS)
+    .single();
+  if (error) throw error;
+  return rowToAssignment(data);
+}
+
+/** Coach delete of a prescribed day by anchor. */
+export async function deleteAssignment(
+  coachId: string,
+  traineeId: string,
+  week: number,
+  day: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('coach_assignments')
+    .delete()
+    .eq('coach_id', coachId)
+    .eq('trainee_id', traineeId)
+    .eq('week', week)
+    .eq('day', day);
+  if (error) throw error;
+}
