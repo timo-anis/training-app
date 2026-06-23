@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import type { User } from '@supabase/supabase-js';
   import { showToast } from '../../stores/app';
   import {
     listTrainees, listPendingInvites, inviteTrainee, cancelInvite, revokeLink,
-    listUnreadCounts, relativeAge, type TraineeRow, type PendingInvite,
+    listUnreadCounts, subscribeToAllMessages, relativeAge, type TraineeRow, type PendingInvite,
   } from '../../services/coach';
 
   export let user: User | null = null;
@@ -18,6 +18,7 @@
   let now = Date.now();
   let confirmRevoke: string | null = null;
   let unreadMap: Record<string, number> = {};
+  let unreadUnsub: (() => void) | null = null;
 
   async function refresh() {
     if (!user) return;
@@ -68,7 +69,20 @@
     } catch { showToast('Could not revoke', 'error'); }
   }
 
-  onMount(refresh);
+  async function refreshUnread() {
+    if (!user) return;
+    try { unreadMap = await listUnreadCounts(user.id); } catch { /* optional */ }
+  }
+
+  onMount(() => {
+    refresh();
+    // Live: any message on any of the coach's links refreshes the badges.
+    unreadUnsub = subscribeToAllMessages(
+      { onInsert: refreshUnread, onUpdate: refreshUnread },
+      'messages-dashboard'
+    );
+  });
+  onDestroy(() => unreadUnsub?.());
 </script>
 
 <section class="dash">

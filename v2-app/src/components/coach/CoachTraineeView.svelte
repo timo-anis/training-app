@@ -5,7 +5,7 @@
     appState, uiState, currentDayExercises, weekOffset,
     goToAdjacentDay, updateUI, showToast, currentUser,
   } from '../../stores/app';
-  import { loadTraineeState, relativeAge, listUnreadCounts, type TraineeRow } from '../../services/coach';
+  import { loadTraineeState, relativeAge, listUnreadCounts, subscribeToMessages, type TraineeRow } from '../../services/coach';
   import MonthCalendar from '../MonthCalendar.svelte';
   import ExerciseCard from '../ExerciseCard.svelte';
   import CoachNote from '../CoachNote.svelte';
@@ -21,6 +21,7 @@
   let now = Date.now();
   let showChat = false;
   let unreadCount = 0;
+  let unreadUnsub: (() => void) | null = null;
 
   // Block index map — groups supersets as one block (A, B, C…). Same rule as MainView.
   $: blockIndices = (() => {
@@ -73,11 +74,27 @@
 
   onMount(load);
 
+  async function refreshUnread() {
+    if (showChat) return; // chat open => messages are being read live
+    try {
+      const counts = await listUnreadCounts($currentUser?.id ?? '');
+      unreadCount = counts[trainee.linkId] ?? 0;
+    } catch { /* badge is optional */ }
+  }
   function openChat() { unreadCount = 0; showChat = true; }
-  function closeChat() { showChat = false; }
+  function closeChat() { showChat = false; refreshUnread(); }
+
+  // Live: a new message from this trainee bumps the Chat badge without a refresh.
+  onMount(() => {
+    unreadUnsub = subscribeToMessages(
+      trainee.linkId,
+      { onInsert: refreshUnread, onUpdate: refreshUnread },
+      `messages-coachview:${trainee.linkId}`
+    );
+  });
 
   // Leave the shared store clean when the coach navigates away.
-  onDestroy(() => { appState.set(emptyAppState()); clearCoachNotes(); clearAssignments(); });
+  onDestroy(() => { unreadUnsub?.(); appState.set(emptyAppState()); clearCoachNotes(); clearAssignments(); });
 </script>
 
 <div class="trainee-view">

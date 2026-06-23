@@ -443,3 +443,26 @@ export function subscribeToMessages(
     .subscribe();
   return () => { void supabase.removeChannel(channel); };
 }
+
+/** Like subscribeToMessages but UNFILTERED — fires for any message the caller can
+ *  see (RLS scopes to their links). Used by the coach dashboard to keep unread
+ *  badges live across all trainees. Returns an unsubscribe fn. */
+export function subscribeToAllMessages(
+  handlers: { onInsert?: (m: ChatMessage) => void; onUpdate?: (m: ChatMessage) => void },
+  channelKey = 'messages:all'
+): () => void {
+  const channel: RealtimeChannel = supabase
+    .channel(channelKey)
+    .on(
+      'postgres_changes',
+      { event: 'INSERT', schema: 'public', table: 'messages' },
+      (payload) => handlers.onInsert?.(rowToMessage(payload.new))
+    )
+    .on(
+      'postgres_changes',
+      { event: 'UPDATE', schema: 'public', table: 'messages' },
+      (payload) => handlers.onUpdate?.(rowToMessage(payload.new))
+    )
+    .subscribe();
+  return () => { void supabase.removeChannel(channel); };
+}
