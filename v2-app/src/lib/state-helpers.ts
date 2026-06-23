@@ -211,16 +211,21 @@ export interface WorkoutBlock {
 /** Group a flat exercise list into workout blocks (single | superset). */
 export function buildWorkoutBlocks(exercises: Exercise[]): WorkoutBlock[] {
   const blocks: WorkoutBlock[] = [];
-  const seenCodes = new Set<string>();
+  const seenGroups = new Set<string>();
 
   for (const ex of exercises) {
     if (ex.type === 'single' || !ex.code) {
       blocks.push({ id: ex.id, exercises: [ex], isSuperset: false, code: '' });
     } else {
-      if (!seenCodes.has(ex.code)) {
-        seenCodes.add(ex.code);
-        const group = exercises.filter(e => e.type === 'superset' && e.code === ex.code);
-        blocks.push({ id: `superset_${ex.code}`, exercises: group, isSuperset: true, code: ex.code });
+      // Superset members share the FIRST letter of their code (A1, A2 -> "A";
+      // B1, B2, B3 -> "B"). Group by that letter so a multi-exercise superset is
+      // ONE block shown together — the user alternates sets without paging
+      // next/back. Matches the calendar/coach view (which already key on code[0]).
+      const groupKey = ex.code[0];
+      if (!seenGroups.has(groupKey)) {
+        seenGroups.add(groupKey);
+        const group = exercises.filter(e => e.type === 'superset' && !!e.code && e.code[0] === groupKey);
+        blocks.push({ id: `superset_${groupKey}`, exercises: group, isSuperset: true, code: groupKey });
       }
     }
   }

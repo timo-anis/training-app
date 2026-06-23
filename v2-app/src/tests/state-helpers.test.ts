@@ -341,6 +341,40 @@ describe('buildWorkoutBlocks', () => {
     expect(blocks[1].exercises[0].id).toBe('ex3');
   });
 
+  it('superset members coded A1/A2 (shared first letter) → ONE block, order preserved', () => {
+    // Real data codes superset pairs A1, A2 (not a shared exact code). They must
+    // group into one "Superset A" block so the user does not page next/back.
+    const a1 = makeExercise('a1', 'Strict Press', { type: 'superset', code: 'A1' });
+    const a2 = makeExercise('a2', 'Pull-Up', { type: 'superset', code: 'A2' });
+    const blocks = buildWorkoutBlocks([a1, a2]);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].isSuperset).toBe(true);
+    expect(blocks[0].code).toBe('A');
+    expect(blocks[0].exercises.map(e => e.id)).toEqual(['a1', 'a2']); // order preserved
+  });
+
+  it('three-exercise superset B1/B2/B3 → one block of three', () => {
+    const b1 = makeExercise('b1', 'Bench', { type: 'superset', code: 'B1' });
+    const b2 = makeExercise('b2', 'Row', { type: 'superset', code: 'B2' });
+    const b3 = makeExercise('b3', 'Ab Wheel', { type: 'superset', code: 'B3' });
+    const blocks = buildWorkoutBlocks([b1, b2, b3]);
+    expect(blocks).toHaveLength(1);
+    expect(blocks[0].exercises).toHaveLength(3);
+    expect(blocks[0].code).toBe('B');
+  });
+
+  it('standalone lettered lift (A) + a B1/B2 superset → two blocks in order', () => {
+    const a = makeExercise('a', 'Back Squat', { type: 'superset', code: 'A' });
+    const b1 = makeExercise('b1', 'Lunge', { type: 'superset', code: 'B1' });
+    const b2 = makeExercise('b2', 'Ab Wheel', { type: 'superset', code: 'B2' });
+    const blocks = buildWorkoutBlocks([a, b1, b2]);
+    expect(blocks).toHaveLength(2);
+    expect(blocks[0].code).toBe('A');
+    expect(blocks[0].exercises).toHaveLength(1);
+    expect(blocks[1].code).toBe('B');
+    expect(blocks[1].exercises.map(e => e.id)).toEqual(['b1', 'b2']);
+  });
+
   it('two separate supersets (A and B) → two superset blocks', () => {
     const a1 = makeExercise('a1', 'Ex A1', { type: 'superset', code: 'A' });
     const a2 = makeExercise('a2', 'Ex A2', { type: 'superset', code: 'A' });
