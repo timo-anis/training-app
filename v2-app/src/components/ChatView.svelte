@@ -195,7 +195,7 @@
   .chat-scroll {
     flex: 1 1 0; min-height: 0; overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 16px 14px; display: flex; flex-direction: column; gap: 4px;
+    padding: 16px 14px; display: flex; flex-direction: column; gap: 6px;
     scroll-behavior: smooth;
   }
 
@@ -233,18 +233,19 @@
   @keyframes bubble-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 
   .bubble {
-    max-width: 82%;
-    padding: 9px 13px 7px;
-    border-radius: 20px 20px 20px 6px;
-    background: rgba(var(--c-surface-b), 0.70);
-    border: 1px solid rgba(var(--c-edge-b), 0.14);
+    max-width: 80%;
+    padding: 10px 15px 8px;
+    border-radius: 22px;
+    background: rgba(var(--c-surface-b), 0.80);
+    border: 1px solid rgba(var(--c-edge-b), 0.16);
     display: flex; flex-direction: column; gap: 2px;
-    box-shadow: 0 1px 2px rgba(var(--c-shadow), 0.12);
+    box-shadow: 0 2px 12px rgba(var(--c-shadow), 0.20);
   }
   .bubble.mine {
-    border-radius: 20px 20px 6px 20px;
-    background: linear-gradient(135deg, rgba(var(--c-accent), 0.26) 0%, rgba(var(--c-accent), 0.16) 100%);
-    border-color: rgba(var(--c-accent), 0.40);
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(var(--c-accent), 0.30) 0%, rgba(var(--c-accent), 0.17) 100%);
+    border-color: rgba(var(--c-accent), 0.45);
+    box-shadow: 0 6px 20px rgba(var(--c-accent), 0.16);
   }
   .bubble.pending { opacity: 0.55; }
 
@@ -274,7 +275,7 @@
     flex: 1 1 auto; min-width: 0;
     background: rgba(var(--c-surface-c), 0.70);
     border: 1px solid rgba(var(--c-edge-d), 0.20);
-    border-radius: 20px; padding: 11px 15px;
+    border-radius: 22px; padding: 12px 16px;
     font-size: 16px; font-weight: 500; color: var(--h-e8f2ff, #e8f2ff);
     font-family: inherit; line-height: 1.4; resize: none; outline: none;
     max-height: 120px; transition: border-color 0.12s;
