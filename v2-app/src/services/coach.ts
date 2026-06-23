@@ -62,10 +62,12 @@ export async function listTrainees(coachId: string): Promise<TraineeRow[]> {
 
   const summaries: Record<string, any> = {};
   if (ids.length) {
-    const { data: sums } = await supabase
+    const { data: sums, error: sumErr } = await supabase
       .from('activity_summary')
       .select('user_id, last_trained_at, current_week, this_week_active, updated_at')
       .in('user_id', ids);
+    // Non-fatal: dashboard still lists trainees, just without freshness (L2 audit fix).
+    if (sumErr) console.warn('activity_summary load failed; showing trainees without freshness', sumErr);
     for (const s of sums ?? []) summaries[s.user_id] = s;
   }
 

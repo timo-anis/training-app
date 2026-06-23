@@ -42,6 +42,8 @@ export function indexAssignments(list: Assignment[]): Map<string, Assignment> {
 export function seedMaterializedExercises(exercises: Exercise[]): Exercise[] {
   return exercises.map((ex) => ({
     ...ex,
+    // Set shape pinned to schema 4.1 (kg, reps, done, rpe). If WorkoutSet gains a
+    // field, add it here or it is silently dropped on materialize (L3 audit fix).
     sets: ex.sets.map((s) => ({ kg: s.kg, reps: s.reps, done: false, rpe: '' })),
     recoveryDone: false,
     conditioningDone: false,

@@ -680,12 +680,14 @@ export function materializeAssignment(week: number, day: DayOfWeek, exercises: i
   updateState(s => {
     const has = s.weeks.find(w => w.week === week && w.day === day);
     if (has) {
-      // empty placeholder day (e.g. a kind mark) — fill it, preserve its kind.
+      // empty placeholder day (e.g. a kind mark) — fill it. The materialized
+      // workout's kind wins, so a coach workout assigned onto a day the trainee
+      // had marked recovery/rest becomes a 'workout' day (L1 audit fix).
       return {
         ...s,
         weeks: s.weeks.map(w =>
           w.week === week && w.day === day
-            ? { ...w, exercises: fresh.exercises, kind: w.kind ?? fresh.kind }
+            ? { ...w, exercises: fresh.exercises, kind: fresh.kind }
             : w),
       };
     }
