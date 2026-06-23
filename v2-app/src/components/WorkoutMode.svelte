@@ -19,6 +19,7 @@
   import { DAY_ORDER } from '../types/workout';
   import { searchExercises } from '../data/exercises';
   import RestTimer from './RestTimer.svelte';
+  import { nextSupersetIndex, firstUndoneIndex } from '../lib/state-helpers';
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -74,6 +75,30 @@
   $: block = blocks[activeIndex] ?? null;
   $: isFirst = activeIndex === 0;
   $: isLast = activeIndex === blocks.length - 1;
+
+  // ---- Superset: show ONE exercise at a time + auto-advance on rest end ----
+  let activeSubIndex = 0;
+  let advanceAfterRest = false;
+  $: visibleExercises = block
+    ? (block.isSuperset ? [block.exercises[Math.min(activeSubIndex, block.exercises.length - 1)]] : block.exercises)
+    : [];
+  function advanceSuperset() {
+    if (!block || !block.isSuperset) return;
+    const nxt = nextSupersetIndex(block.exercises.map(exDone), activeSubIndex);
+    if (nxt !== null) activeSubIndex = nxt;
+  }
+  function subGoto(i: number) {
+    if (!block?.isSuperset) return;
+    const n = block.exercises.length;
+    activeSubIndex = ((i % n) + n) % n;
+  }
+  // Auto-advance when a set's rest ends (or is skipped); not on manual reset.
+  function onRestEnd() {
+    const advance = advanceAfterRest && (block?.isSuperset ?? false);
+    clearRest();
+    advanceAfterRest = false;
+    if (advance) advanceSuperset();
+  }
 
   // ---- Rest timer (state in uiState — survives overlay close/reopen) ----
   function parseRestToSeconds(s: string): number {
@@ -199,6 +224,12 @@
       if (setDoneFlashTimer) clearTimeout(setDoneFlashTimer);
       setDoneFlashTimer = setTimeout(() => { setDoneFlashKey = null; }, 280);
       if (exRestString) startRest(exRestString);
+      // Superset: advance to the next exercise — after the rest ends if there is
+      // one, immediately if there is no rest. Cycles A1->A2->A3->A1 until done.
+      if (block?.isSuperset) {
+        if (parseRestToSeconds(exRestString) > 0) advanceAfterRest = true;
+        else advanceSuperset();
+      }
       // Undo toast — lets user quickly un-mark if tapped wrong set
       pushUndo({
         label: `Set ${setIndex + 1} marked done`,
@@ -601,6 +632,9 @@
       }
     }
     prevActiveIndex = activeIndex;
+    const nb = blocks[activeIndex];
+    activeSubIndex = nb?.isSuperset ? firstUndoneIndex(nb.exercises.map(exDone)) : 0;
+    advanceAfterRest = false;
     localKg = {};
     localReps = {};
     localCondNote = {};
@@ -726,9 +760,22 @@
         </div>
       {/if}
 
+      <!-- Superset stepper: one exercise at a time; auto-advances on rest end -->
+      {#if block.isSuperset && block.exercises.length > 1}
+        <div class="ss-stepper">
+          <button class="ss-arrow" on:click={() => subGoto(activeSubIndex - 1)} aria-label="Previous superset exercise">‹</button>
+          <div class="ss-dots">
+            {#each block.exercises as e, i}
+              <button class="ss-dot" class:active={i === activeSubIndex} class:done={exDone(e)} on:click={() => subGoto(i)}>{e.code || (i + 1)}</button>
+            {/each}
+          </div>
+          <button class="ss-arrow" on:click={() => subGoto(activeSubIndex + 1)} aria-label="Next superset exercise">›</button>
+        </div>
+      {/if}
+
       <!-- Exercises in this block -->
       <div class="exercises-wrap">
-        {#each block.exercises as ex}
+        {#each visibleExercises as ex}
           {@const week = $uiState.week}
           {@const day = $uiState.day}
           {@const lastSession = ex.conditioning ? null : findLastSession($appState, ex.name, week, day)}
@@ -938,8 +985,8 @@
           <RestTimer
             startTime={$uiState.restStartTime}
             totalSeconds={$uiState.restTotal}
-            on:done={clearRest}
-            on:skip={clearRest}
+            on:done={onRestEnd}
+            on:skip={onRestEnd}
             on:reset={resetRest}
           />
         {/key}
@@ -1531,4 +1578,31 @@
     margin: 0 auto;
     background: linear-gradient(0deg, var(--h-050508, #050508) 0%, rgba(8,9,15,0.97) 100%);
   }
+
+  /* ---- Superset stepper (one exercise at a time) ---- */
+  .ss-stepper { display: flex; align-items: center; gap: 8px; margin: 2px 0 10px; }
+  .ss-arrow {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
+    border: 1px solid rgba(var(--c-fg), 0.10);
+    background: rgba(var(--c-surface-b), 0.50);
+    color: rgba(var(--c-fg), 0.65); font-size: 18px; line-height: 1; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ss-arrow:active { background: rgba(var(--c-surface-b), 0.85); }
+  .ss-dots { flex: 1 1 auto; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+  .ss-dot {
+    min-width: 38px; height: 30px; padding: 0 10px; border-radius: 9px;
+    border: 1px solid rgba(var(--c-fg), 0.12);
+    background: rgba(var(--c-surface-b), 0.40);
+    color: rgba(var(--c-fg), 0.55); font-size: 13px; font-weight: 800; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, border-color 0.12s, color 0.12s;
+  }
+  .ss-dot.done { color: var(--h-4fc08d, #4fc08d); border-color: rgba(79, 192, 141, 0.35); }
+  .ss-dot.active {
+    background: rgba(var(--c-accent), 0.18);
+    border-color: rgba(var(--c-accent), 0.50);
+    color: var(--c-accent-solid);
+  }
+  .ss-dot.active.done { color: var(--c-accent-solid); }
 </style>

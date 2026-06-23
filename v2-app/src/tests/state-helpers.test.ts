@@ -24,6 +24,8 @@ import {
   renameExerciseInState,
   moveExerciseInState,
   buildWorkoutBlocks,
+  nextSupersetIndex,
+  firstUndoneIndex,
 } from '../lib/state-helpers';
 import type { AppState, Exercise } from '../types/workout';
 
@@ -393,5 +395,51 @@ describe('buildWorkoutBlocks', () => {
     const ex = makeExercise('ex1', 'Test', { type: 'single', code: 'A' });
     const blocks = buildWorkoutBlocks([ex]);
     expect(blocks[0].isSuperset).toBe(false);
+  });
+});
+
+// ── nextSupersetIndex / firstUndoneIndex (superset auto-advance) ──────────────
+describe('nextSupersetIndex — superset set-by-set cycling', () => {
+  it('alternates forward and wraps A1->A2->A3->A1 when nothing is fully done', () => {
+    const none = [false, false, false];
+    expect(nextSupersetIndex(none, 0)).toBe(1); // A1 -> A2
+    expect(nextSupersetIndex(none, 1)).toBe(2); // A2 -> A3
+    expect(nextSupersetIndex(none, 2)).toBe(0); // A3 -> A1 (wrap)
+  });
+
+  it('skips a fully-done exercise', () => {
+    // A2 done -> from A1 jump to A3
+    expect(nextSupersetIndex([false, true, false], 0)).toBe(2);
+    // from A3, A2 done -> back to A1
+    expect(nextSupersetIndex([false, true, false], 2)).toBe(0);
+  });
+
+  it('stays on the only remaining exercise (its last sets)', () => {
+    // only A1 has undone sets
+    expect(nextSupersetIndex([false, true, true], 0)).toBe(0);
+  });
+
+  it('returns null when the whole superset is done', () => {
+    expect(nextSupersetIndex([true, true, true], 1)).toBeNull();
+  });
+
+  it('single-exercise superset stays on itself until done, then null', () => {
+    expect(nextSupersetIndex([false], 0)).toBe(0);
+    expect(nextSupersetIndex([true], 0)).toBeNull();
+  });
+
+  it('empty -> null', () => {
+    expect(nextSupersetIndex([], 0)).toBeNull();
+  });
+});
+
+describe('firstUndoneIndex — where a superset starts', () => {
+  it('returns the first not-done index', () => {
+    expect(firstUndoneIndex([true, true, false])).toBe(2);
+    expect(firstUndoneIndex([false, true, false])).toBe(0);
+  });
+  it('returns 0 when all done or empty', () => {
+    expect(firstUndoneIndex([true, true])).toBe(0);
+    expect(firstUndoneIndex([])).toBe(0);
   });
 });

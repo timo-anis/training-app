@@ -231,3 +231,25 @@ export function buildWorkoutBlocks(exercises: Exercise[]): WorkoutBlock[] {
   }
   return blocks;
 }
+
+/**
+ * Next exercise to focus in a superset after finishing a set, given which
+ * exercises are fully done. Cycles forward from `current` (A1->A2->A3->A1...),
+ * skipping fully-done exercises so a superset alternates set-by-set. Returns the
+ * next index to show, or `null` when every exercise in the superset is done.
+ */
+export function nextSupersetIndex(doneFlags: boolean[], current: number): number | null {
+  const n = doneFlags.length;
+  if (n === 0) return null;
+  for (let step = 1; step <= n; step++) {
+    const j = (current + step) % n;
+    if (!doneFlags[j]) return j;
+  }
+  return null; // whole superset complete
+}
+
+/** First not-done index (where to start a superset), or 0 if all done/empty. */
+export function firstUndoneIndex(doneFlags: boolean[]): number {
+  const i = doneFlags.findIndex(f => !f);
+  return i === -1 ? 0 : i;
+}
