@@ -104,6 +104,9 @@ export async function listPendingInvites(coachId: string): Promise<PendingInvite
 export async function inviteTrainee(coachId: string, coachEmail: string, email: string): Promise<void> {
   const invited = email.trim().toLowerCase();
   if (!invited || !invited.includes('@')) throw new Error('Enter a valid email');
+  if (invited === (coachEmail ?? '').trim().toLowerCase()) {
+    throw new Error("You can't invite yourself as a trainee");
+  }
   const { error } = await supabase.from('coach_links').insert({
     coach_id: coachId,
     coach_email: coachEmail,

@@ -214,14 +214,19 @@ create policy "links_invitee_select" on public.coach_links
 -- broad UPDATE policy on coach_links). accept binds auth.uid() + JWT email.
 create or replace function public.accept_coach_invite(_link_id uuid)
 returns public.coach_links language plpgsql security definer set search_path = public as $$
-declare _email text; _row public.coach_links;
+declare _email text; _row public.coach_links; _coach uuid;
 begin
   _email := lower(coalesce(auth.jwt() ->> 'email', ''));
   if _email = '' then raise exception 'no email claim for current user'; end if;
+  -- You cannot be your own coach (block self-coaching: coach_id == trainee_id).
+  select coach_id into _coach from public.coach_links where id = _link_id;
+  if _coach = auth.uid() then raise exception 'you cannot be your own coach'; end if;
   begin
     update public.coach_links
        set status='accepted', trainee_id=auth.uid(), accepted_at=now(), revoked_at=null
-     where id=_link_id and status='pending' and lower(invited_email)=_email
+     where id=_link_id and status='pending'
+       and lower(invited_email)=_email
+       and coach_id <> auth.uid()
     returning * into _row;
   exception when unique_violation then
     raise exception 'you already have an active coach -- revoke it first';
