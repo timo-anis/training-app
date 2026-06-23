@@ -140,4 +140,23 @@
   .ch-signout:active { background: rgba(var(--c-fg), 0.06); }
 
   .coach-main { max-width: 640px; margin: 0 auto; padding: 0 0 40px; }
+
+  /* Desktop framing (>=900px): ambient desk + defined coach panel. Mobile untouched. */
+  @media (min-width: 900px) {
+    .coach-root {
+      background:
+        radial-gradient(110% 70% at 50% -8%, rgba(var(--c-accent), 0.05), transparent 55%),
+        radial-gradient(ellipse at 50% 0%, var(--c-bg-1) 0%, var(--c-bg-2) 45%, var(--c-bg-3) 100%);
+    }
+    .coach-main {
+      max-width: 720px;
+      border-left: 1px solid rgba(var(--c-edge-b), 0.16);
+      border-right: 1px solid rgba(var(--c-edge-b), 0.16);
+      background: linear-gradient(180deg, rgba(var(--c-fg), 0.018), transparent 320px);
+      box-shadow: 0 30px 80px -20px rgba(var(--c-shadow), 0.55),
+                  0 0 40px rgba(var(--c-shadow), 0.22);
+      min-height: calc(100dvh - 54px);
+    }
+  }
+
 </style>

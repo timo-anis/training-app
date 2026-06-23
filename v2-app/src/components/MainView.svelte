@@ -1030,4 +1030,17 @@
     .stats-btn-icon { width: 22px; height: 22px; }
     .empty-title { font-size: 20px; }
   }
+
+  /* Desktop framing (>=900px): .main becomes the app panel. Mobile untouched. */
+  @media (min-width: 900px) {
+    .main {
+      max-width: 672px;
+      border-left: 1px solid rgba(var(--c-edge-b), 0.16);
+      border-right: 1px solid rgba(var(--c-edge-b), 0.16);
+      background: linear-gradient(180deg, rgba(var(--c-fg), 0.018), transparent 320px);
+      box-shadow: 0 30px 80px -20px rgba(var(--c-shadow), 0.55),
+                  0 0 40px rgba(var(--c-shadow), 0.22);
+    }
+  }
+
 </style>
