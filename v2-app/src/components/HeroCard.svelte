@@ -125,7 +125,7 @@
 
 <style>
   .hero-card {
-    background: var(--c-topbar-bg, #111);
+    background: var(--h-0d1a30);
     padding: 14px 16px 16px;
   }
 
