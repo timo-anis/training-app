@@ -19,7 +19,8 @@
   let loading = true;
   let updatedAt: string | null = null;
   let now = Date.now();
-  let showChat = false;
+  type ChatState = 'hidden' | 'mini' | 'open';
+  let chatState: ChatState = 'hidden';
   let unreadCount = 0;
   let unreadUnsub: (() => void) | null = null;
 
@@ -91,14 +92,18 @@
   onMount(load);
 
   async function refreshUnread() {
-    if (showChat) return; // chat open => messages are being read live
+    if (chatState === 'open') return; // chat open => messages are being read live
     try {
       const counts = await listUnreadCounts($currentUser?.id ?? '');
       unreadCount = counts[trainee.linkId] ?? 0;
     } catch { /* badge is optional */ }
   }
-  function openChat() { if (showChat) { closeChat(); } else { unreadCount = 0; showChat = true; } }
-  function closeChat() { showChat = false; refreshUnread(); }
+  function openChat() {
+    if (chatState === 'open') { chatState = 'mini'; }
+    else { unreadCount = 0; chatState = 'open'; }
+  }
+  function minimiseChat() { chatState = 'mini'; refreshUnread(); }
+  function closeChat() { chatState = 'hidden'; refreshUnread(); }
 
   // Live: a new message from this trainee bumps the Chat badge without a refresh.
   onMount(() => {
@@ -122,9 +127,10 @@
         {#if loading}Loading…{:else if updatedAt}Updated {relativeAge(updatedAt, now)} · read-only{:else}No cloud data yet{/if}
       </span>
     </div>
-    <button class="tv-chat" on:click={openChat} aria-label={showChat ? 'Close chat' : 'Open chat'} class:active={showChat}>
-      💬<span class="tv-chat-lbl">{showChat ? 'Close' : 'Chat'}</span>
-      {#if unreadCount > 0 && !showChat}<span class="tv-badge">{unreadCount}</span>{/if}
+    <button class="tv-chat" on:click={openChat} aria-label={chatState === 'open' ? 'Minimise chat' : 'Open chat'} class:active={chatState === 'open'}>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="tv-chat-lbl">Chat</span>
+      {#if unreadCount > 0 && chatState !== 'open'}<span class="tv-badge">{unreadCount}</span>{/if}
     </button>
     <button class="tv-refresh" on:click={load} disabled={loading} aria-label="Refresh">↻</button>
   </div>
@@ -170,15 +176,24 @@
     </section>
   {/if}
 
-  {#if showChat}
+  {#if chatState === 'open'}
     <div class="chat-overlay">
       <ChatView
         linkId={trainee.linkId}
         myUserId={$currentUser?.id ?? ''}
         peerName={trainee.email}
-        onClose={closeChat}
+        onClose={minimiseChat}
       />
     </div>
+  {/if}
+
+  {#if chatState === 'mini'}
+    <button class="chat-mini-tab" on:click={openChat} aria-label="Open chat">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span class="chat-mini-lbl">Chat</span>
+      {#if unreadCount > 0}<span class="chat-mini-badge">{unreadCount > 9 ? '9+' : unreadCount}</span>{/if}
+      <span class="chat-mini-close" role="button" tabindex="0" on:click|stopPropagation={closeChat} on:keydown={(e) => e.key === "Enter" && closeChat()} aria-label="Dismiss chat">✕</span>
+    </button>
   {/if}
 </div>
 
@@ -280,5 +295,50 @@
       box-shadow: 0 -4px 32px rgba(0,0,0,0.40);
     }
   }
+
+
+  /* ---- Minimised chat tab ---- */
+  .chat-mini-tab {
+    position: fixed;
+    bottom: 0;
+    right: 16px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 16px 14px;
+    border-radius: 12px 12px 0 0;
+    border: 1px solid rgba(var(--c-edge-b), 0.28);
+    border-bottom: none;
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
+    color: rgba(var(--c-accent-solid), 0.90);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    z-index: 120;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.35);
+    transition: background 0.12s;
+  }
+  .chat-mini-tab:hover {
+    background: linear-gradient(160deg, #0f2240, #0a1225);
+  }
+  .chat-mini-lbl { letter-spacing: 0.01em; }
+  .chat-mini-badge {
+    min-width: 18px; height: 18px; padding: 0 4px;
+    border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--c-accent-solid);
+    color: #0c0c0e;
+    font-size: 10px; font-weight: 900; line-height: 1;
+  }
+  .chat-mini-close {
+    margin-left: 2px;
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: transparent;
+    color: rgba(var(--c-fg), 0.35);
+    font-size: 11px; cursor: pointer; border-radius: 50%;
+    transition: color 0.12s, background 0.12s;
+  }
+  .chat-mini-close:hover { color: rgba(var(--c-fg), 0.70); background: rgba(var(--c-fg), 0.08); }
 
   </style>
