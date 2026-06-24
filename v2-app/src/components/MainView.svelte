@@ -178,9 +178,17 @@
     unreadMessages={$coachUnreadTotal}
   />
 
-  <!-- New-user welcome (top, prominent) -->
+  <div class="col-rail">
+    <!-- Streak / consistency momentum strip -->
+  <section class="section section-tight r-streak">
+    <StreakStrip />
+  </section>
+  </div>
+
+  <div class="col-center">
+    <!-- New-user welcome (top, prominent) -->
   {#if isNewUser}
-    <section class="section">
+    <section class="section r-welcome">
       <div class="welcome-card">
         <div class="welcome-icon" aria-hidden="true">
           <svg width="40" height="40" viewBox="0 0 44 44" fill="none">
@@ -217,18 +225,31 @@
     </section>
   {/if}
 
-  <!-- Streak / consistency momentum strip -->
-  <section class="section section-tight">
-    <StreakStrip />
-  </section>
-
-  <!-- Monthly calendar -->
-  <section class="section">
+    <!-- Monthly calendar -->
+  <section class="section r-calendar">
     <MonthCalendar />
   </section>
 
-  <!-- Day heading + exercise list (collapsed by default) -->
-  <section class="section">
+    <!-- Statistics button -->
+  <section class="section section-tight r-stats">
+    <button class="stats-btn" on:click={() => statsOpen = !statsOpen} aria-expanded={statsOpen}>
+      <svg class="stats-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
+        <rect x="17" y="3" width="4" height="18"/>
+      </svg>
+      <span class="stats-btn-label">Statistics</span>
+      <span class="stats-chevron" class:open={statsOpen}>›</span>
+    </button>
+  </section>
+  {#if statsOpen}
+    <div class="r-statsview"><StatsView /></div>
+  {/if}
+  </div>
+
+  <div class="col-context">
+    <!-- Day heading + exercise list (collapsed by default) -->
+  <section class="section r-day">
     <div class="day-heading-row">
       <button class="day-nav-arrow" on:click={() => goToAdjacentDay(-1)} aria-label="Previous day">‹</button>
       <button class="day-heading-btn" on:click={() => exercisesExpanded = !exercisesExpanded}>
@@ -317,22 +338,7 @@
       </div>
     {/if}
   </section>
-
-  <!-- Statistics button -->
-  <section class="section section-tight">
-    <button class="stats-btn" on:click={() => statsOpen = !statsOpen} aria-expanded={statsOpen}>
-      <svg class="stats-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
-        <rect x="17" y="3" width="4" height="18"/>
-      </svg>
-      <span class="stats-btn-label">Statistics</span>
-      <span class="stats-chevron" class:open={statsOpen}>›</span>
-    </button>
-  </section>
-  {#if statsOpen}
-    <StatsView />
-  {/if}
+  </div>
 </div>
 
 <!-- Hints overlay -->
@@ -398,7 +404,25 @@
     padding: 0 0 32px;
     max-width: 640px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
   }
+
+  /* Desktop-grid scaffold (PR1). Below 900px the region wrappers are inert
+     (display: contents) so their children flow directly inside .main and the
+     `order` values below reproduce the exact current single-column sequence:
+     TopBar, welcome, streak, calendar, day, stats, statsview. Mobile is
+     byte-identical; the wrappers only become real columns at >=900px. */
+  .col-rail,
+  .col-center,
+  .col-context { display: contents; }
+
+  .r-welcome   { order: 2; }
+  .r-streak    { order: 3; }
+  .r-calendar  { order: 4; }
+  .r-day       { order: 5; }
+  .r-stats     { order: 6; }
+  .r-statsview { order: 7; }
 
   /* ---- Topbar ---- */
   /* ---- Sections ---- */
@@ -1031,16 +1055,26 @@
     .empty-title { font-size: 20px; }
   }
 
-  /* Desktop framing (>=900px): .main becomes the app panel. Mobile untouched. */
+  /* Desktop grid (>=900px): fill the width with purpose instead of a centered
+     strip. TopBar stays full-width sticky across the top; below it a three-column
+     grid (rail | center | context). Mobile/PWA untouched (single column above). */
   @media (min-width: 900px) {
     .main {
-      max-width: 672px;
-      border-left: 1px solid rgba(var(--c-edge-b), 0.16);
-      border-right: 1px solid rgba(var(--c-edge-b), 0.16);
-      background: linear-gradient(180deg, rgba(var(--c-fg), 0.018), transparent 320px);
-      box-shadow: 0 30px 80px -20px rgba(var(--c-shadow), 0.55),
-                  0 0 40px rgba(var(--c-shadow), 0.22);
+      max-width: 1160px;
+      display: grid;
+      grid-template-columns: 200px minmax(0, 1fr) 360px;
+      grid-template-areas:
+        "bar bar bar"
+        "rail center context";
+      column-gap: 18px;
+      align-items: start;
     }
+
+    .main > :global(.topbar) { grid-area: bar; }
+
+    .col-rail    { display: flex; flex-direction: column; grid-area: rail; }
+    .col-center  { display: flex; flex-direction: column; grid-area: center; }
+    .col-context { display: flex; flex-direction: column; grid-area: context; }
   }
 
 </style>

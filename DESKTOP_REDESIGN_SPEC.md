@@ -1,6 +1,6 @@
 # Desktop redesign — "A structure + B craft" (top-tier wide-browser trainee view)
 
-**Status:** SPEC / not started. On-ramp for a FRESH session (track-by-track rule).
+**Status:** PR1 SHIPPED 2026-06-24. PR2/PR3 not started. On-ramp for a FRESH session (track-by-track rule).
 **Approved by Timo 2026-06-24** after the desktop framing shipped (`1ebe320`): the framed
 panel fixed the "floating strip" but a 672px column on a ~2000px screen still wastes ~⅔ of the
 width with purposeless dark void. Direction chosen: **A (real desktop layout that fills the
@@ -44,8 +44,11 @@ single column into a CSS grid:
 Below 900px: grid collapses to one column in current DOM order → identical to today.
 
 ## Phasing (narrow, reversible, each ships green)
-- **PR1 — layout scaffold only.** Introduce the desktop grid + reflow EXISTING content into
-  rail/center/context. No restyle, no logic change. Mobile byte-identical. Reversible in one revert.
+- **PR1 — layout scaffold only. ✅ SHIPPED.** Desktop grid (≥900px) reflows EXISTING content into
+  rail (streak) / center (welcome+calendar+stats) / context (whole day section). TopBar full-width
+  sticky (`grid-area: bar`). Mobile byte-identical via `display:contents` wrappers + flex `order`.
+  No restyle/logic change. Day section kept INTACT in context (its detail→center split is PR2).
+  Bottom workout-bar untouched (PR2 hides it on desktop). MainView.svelte only; one-revert reversible.
 - **PR2 — context "Today's session" panel.** Promote today's exercises + CTA into the right panel;
   hide the bottom workout-bar on desktop (mobile keeps it). Verify start/finish still works.
 - **PR3 — craft pass (B).** (a) Type: tabular-nums on all numerals, tighten heading tracking,
