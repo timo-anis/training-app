@@ -97,7 +97,7 @@
       unreadCount = counts[trainee.linkId] ?? 0;
     } catch { /* badge is optional */ }
   }
-  function openChat() { unreadCount = 0; showChat = true; }
+  function openChat() { if (showChat) { closeChat(); } else { unreadCount = 0; showChat = true; } }
   function closeChat() { showChat = false; refreshUnread(); }
 
   // Live: a new message from this trainee bumps the Chat badge without a refresh.
@@ -122,9 +122,9 @@
         {#if loading}Loading…{:else if updatedAt}Updated {relativeAge(updatedAt, now)} · read-only{:else}No cloud data yet{/if}
       </span>
     </div>
-    <button class="tv-chat" on:click={openChat} aria-label="Open chat">
-      💬<span class="tv-chat-lbl">Chat</span>
-      {#if unreadCount > 0}<span class="tv-badge">{unreadCount}</span>{/if}
+    <button class="tv-chat" on:click={openChat} aria-label={showChat ? 'Close chat' : 'Open chat'} class:active={showChat}>
+      💬<span class="tv-chat-lbl">{showChat ? 'Close' : 'Chat'}</span>
+      {#if unreadCount > 0 && !showChat}<span class="tv-badge">{unreadCount}</span>{/if}
     </button>
     <button class="tv-refresh" on:click={load} disabled={loading} aria-label="Refresh">↻</button>
   </div>
@@ -255,6 +255,7 @@
     -webkit-tap-highlight-color: transparent;
   }
   .tv-chat:active { background: rgba(var(--c-accent), 0.22); }
+  .tv-chat.active { background: rgba(var(--c-accent), 0.18); border-color: rgba(var(--c-accent), 0.55); }
   .tv-chat-lbl { font-size: 13px; }
   .tv-badge {
     position: absolute; top: -6px; right: -6px;
@@ -266,14 +267,17 @@
   .chat-overlay {
     position: fixed; inset: 0; z-index: 120;
     display: flex; flex-direction: column;
-    background: linear-gradient(180deg, var(--c-bg-1) 0%, var(--c-bg-2) 60%, var(--c-bg-3) 100%);
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
   }
-  @media (min-width: 640px) {
+  @media (min-width: 900px) {
     .chat-overlay {
-      left: 50%; transform: translateX(-50%);
-      width: 480px; right: auto;
-      border-left: 1px solid rgba(var(--c-fg), 0.08);
-      border-right: 1px solid rgba(var(--c-fg), 0.08);
+      inset: auto;
+      right: 16px; bottom: 0;
+      width: 360px; height: 72vh;
+      border-radius: 16px 16px 0 0;
+      border: 1px solid rgba(var(--c-edge-b), 0.25);
+      border-bottom: none;
+      box-shadow: 0 -4px 32px rgba(0,0,0,0.40);
     }
   }
 
