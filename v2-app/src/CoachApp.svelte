@@ -40,9 +40,7 @@
   {#if view === 'loading'}
     <div class="coach-loading"><span class="spinner"></span></div>
   {:else if view === 'auth'}
-    <div class="auth-wrap">
-      <AuthView coachMode={true} />
-    </div>
+    <AuthView coachMode={true} />
   {:else}
     <header class="coach-header">
       <div class="ch-left">
@@ -104,7 +102,7 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .auth-wrap { max-width: 460px; margin: 0 auto; padding: 24px 16px; }
+
 
 
   .brand-badge {

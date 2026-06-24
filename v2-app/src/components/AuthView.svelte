@@ -232,7 +232,6 @@
     width: 100%;
     max-width: 380px;
     background: rgba(var(--c-accent), 0.055);
-    border: 0.5px solid rgba(var(--c-accent), 0.22);
     border-radius: 20px;
     padding: 32px 24px;
   }
