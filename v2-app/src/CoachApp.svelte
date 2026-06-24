@@ -9,7 +9,14 @@
   import ToastNotification from './components/ToastNotification.svelte';
   import type { TraineeRow } from './services/coach';
 
-  type View = 'loading' | 'auth' | 'dashboard' | 'trainee';
+  /** Allowlist — only these emails may use the coach surface. */
+  const COACH_EMAILS = ['timo.anis@gmail.com'];
+
+  function isCoachAllowed(u: User | null): boolean {
+    return u?.email ? COACH_EMAILS.includes(u.email.toLowerCase()) : false;
+  }
+
+  type View = 'loading' | 'auth' | 'dashboard' | 'trainee' | 'denied';
   let view: View = 'loading';
   let user: User | null = null;
   let selected: TraineeRow | null = null;
@@ -41,6 +48,15 @@
     <div class="coach-loading"><span class="spinner"></span></div>
   {:else if view === 'auth'}
     <AuthView coachMode={true} />
+  {:else if view === 'denied'}
+    <div class="coach-denied">
+      <div class="denied-card">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        <span class="denied-title">Juurdepääs puudub</span>
+        <span class="denied-sub">{user?.email} ei ole lisatud treeneri kontode nimekirja.</span>
+        <button class="denied-signout" on:click={handleSignOut}>Logi välja</button>
+      </div>
+    </div>
   {:else}
     <header class="coach-header">
       <div class="ch-left">
@@ -90,6 +106,50 @@
     background: var(--c-app-bg, transparent);
     color: var(--c-text);
   }
+
+  .coach-denied {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--c-bg-3);
+    padding: 24px;
+  }
+  .denied-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    padding: 32px 28px;
+    border-radius: 20px;
+    border: 1px solid rgba(var(--c-fg), 0.10);
+    background: rgba(var(--c-surface-b), 0.60);
+    max-width: 360px;
+    text-align: center;
+  }
+  .denied-card svg { color: rgba(var(--c-fg), 0.30); }
+  .denied-title {
+    font-size: 17px;
+    font-weight: 900;
+    color: rgba(var(--c-fg), 0.85);
+  }
+  .denied-sub {
+    font-size: 13px;
+    color: rgba(var(--c-fg), 0.50);
+    line-height: 1.55;
+  }
+  .denied-signout {
+    margin-top: 8px;
+    padding: 10px 24px;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--c-fg), 0.18);
+    background: rgba(var(--c-fg), 0.06);
+    color: rgba(var(--c-fg), 0.70);
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .denied-signout:hover { background: rgba(var(--c-fg), 0.10); }
 
   .coach-loading {
     min-height: 100dvh;
