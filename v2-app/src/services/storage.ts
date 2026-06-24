@@ -89,6 +89,13 @@ export async function loadCloudWithMeta(
 }
 
 export async function saveCloud(userId: string, state: AppState): Promise<boolean> {
+  // Safety guard: never overwrite cloud with an empty state.
+  // An empty weeks array almost certainly means a boot error or a fresh local
+  // state that hasn't synced down yet — not a real "user cleared everything".
+  if (!state.weeks || state.weeks.length === 0) {
+    console.warn('saveCloud blocked: refusing to overwrite cloud with empty state');
+    return false;
+  }
   try {
     const { error } = await supabase
       .from('app_state')
