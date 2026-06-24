@@ -4,7 +4,8 @@
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
-  import { coachUnreadTotal, myCoachLinkId, startCoachUnreadWatch, stopCoachUnreadWatch, refreshCoachUnread } from '../stores/messages';
+  import { coachUnreadTotal, myCoachLinkId, myCoachEmail, startCoachUnreadWatch, stopCoachUnreadWatch, refreshCoachUnread } from '../stores/messages';
+  import ChatView from './ChatView.svelte';
   import { assignments, assignmentKey, setAssignmentContext, loadAssignmentsFor } from '../stores/assignments';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
@@ -142,6 +143,11 @@
   $: isNewUser = totalWeeks === 0;
   let statsOpen = false;
   let recordsOpen = false;
+  type TraineeChatState = 'hidden' | 'mini' | 'open';
+  let traineeChatState: TraineeChatState = 'hidden';
+  function openTraineeChat() { if (traineeChatState === 'open') { traineeChatState = 'mini'; } else { traineeChatState = 'open'; } }
+  function minimiseTraineeChat() { traineeChatState = 'mini'; }
+  function closeTraineeChat() { traineeChatState = 'hidden'; }
   $: overlayBlurred.set(hintsOpen || recordsOpen);
   let copySheetOpen = false;
   let exercisesExpanded = false;
@@ -211,7 +217,7 @@
     onGuide={() => hintsOpen = true}
     onSearch={() => ($searchOpen = true)}
     onAccount={() => accountOpen = true}
-    onChat={() => accountOpen = true}
+    onChat={openTraineeChat}
     {hasInvite}
     hasCoach={!!$myCoachLinkId}
     unreadMessages={$coachUnreadTotal}
@@ -453,6 +459,29 @@
 
 {#if accountOpen}
   <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); refreshCoachNotes(); refreshAssignments(); const me = $currentUser?.id; if (me) refreshCoachUnread(me); }} />
+{/if}
+
+{#if traineeChatState === 'open' && $myCoachLinkId && $currentUser}
+  <div class="trainee-chat-panel">
+    <ChatView
+      linkId={$myCoachLinkId}
+      myUserId={$currentUser.id}
+      peerName={$myCoachEmail ?? 'Coach'}
+      onClose={minimiseTraineeChat}
+    />
+  </div>
+{/if}
+
+{#if traineeChatState === 'mini'}
+  <button class="trainee-chat-mini" on:click={openTraineeChat} aria-label="Open coach chat">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    <span class="trainee-chat-mini-lbl">Coach</span>
+    {#if $coachUnreadTotal > 0}<span class="trainee-chat-mini-badge">{$coachUnreadTotal > 9 ? '9+' : $coachUnreadTotal}</span>{/if}
+    <span class="trainee-chat-mini-close" role="button" tabindex="0"
+      on:click|stopPropagation={closeTraineeChat}
+      on:keydown={(e) => e.key === 'Enter' && closeTraineeChat()}
+      aria-label="Dismiss">✕</span>
+  </button>
 {/if}
 
 {#if copySheetOpen}
@@ -1220,6 +1249,50 @@
 
     /* Editorial heading craft — desktop only (mobile keeps 20px / -0.03em) */
     .day-label { font-size: 23px; letter-spacing: -0.04em; }
+  }
+
+
+  /* ---- Trainee floating chat panel ---- */
+  .trainee-chat-panel {
+    position: fixed; inset: 0; z-index: 120;
+    display: flex; flex-direction: column;
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
+  }
+  .trainee-chat-mini {
+    position: fixed;
+    bottom: 0; right: 16px;
+    display: flex; align-items: center; gap: 7px;
+    padding: 10px 16px 14px;
+    border-radius: 12px 12px 0 0;
+    border: 1px solid rgba(var(--c-edge-b), 0.28); border-bottom: none;
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
+    color: rgba(var(--c-accent-solid), 0.90);
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    z-index: 120;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.35);
+  }
+  .trainee-chat-mini-lbl { letter-spacing: 0.01em; }
+  .trainee-chat-mini-badge {
+    min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--c-accent-solid); color: #0c0c0e;
+    font-size: 10px; font-weight: 900; line-height: 1;
+  }
+  .trainee-chat-mini-close {
+    margin-left: 2px; width: 20px; height: 20px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border: none; background: transparent;
+    color: rgba(var(--c-fg), 0.35); font-size: 11px; cursor: pointer;
+    border-radius: 50%;
+  }
+  @media (min-width: 900px) {
+    .trainee-chat-panel {
+      inset: auto; right: 16px; bottom: 0;
+      width: 360px; height: 72vh;
+      border-radius: 16px 16px 0 0;
+      border: 1px solid rgba(var(--c-edge-b), 0.25); border-bottom: none;
+      box-shadow: 0 -4px 32px rgba(0,0,0,0.40);
+    }
   }
 
 </style>

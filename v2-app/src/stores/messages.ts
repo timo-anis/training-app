@@ -85,6 +85,8 @@ export async function markChatRead(): Promise<void> {
 export const coachUnreadTotal = writable(0);
 /** The linkId of the trainee's accepted coach (null = no coach). Set on watch start. */
 export const myCoachLinkId = writable<string | null>(null);
+/** Email of the accepted coach (for chat peer display). Set on watch start. */
+export const myCoachEmail = writable<string | null>(null);
 let unreadWatch: (() => void) | null = null;
 
 /** Recompute the trainee's total unread-from-coach (sum across links). */
@@ -104,6 +106,7 @@ export async function startCoachUnreadWatch(userId: string): Promise<void> {
     unreadWatch?.(); unreadWatch = null;
     if (coach) {
       myCoachLinkId.set(coach.linkId);
+      myCoachEmail.set(coach.coachEmail);
       unreadWatch = subscribeToMessages(
         coach.linkId,
         { onInsert: () => void refreshCoachUnread(userId),
@@ -118,4 +121,5 @@ export function stopCoachUnreadWatch(): void {
   unreadWatch?.(); unreadWatch = null;
   coachUnreadTotal.set(0);
   myCoachLinkId.set(null);
+  myCoachEmail.set(null);
 }
