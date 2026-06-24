@@ -663,6 +663,7 @@
     color: rgba(var(--c-fg), 0.50);
     letter-spacing: 0.02em;
     flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
     transition: background 0.2s, border-color 0.2s, color 0.2s;
   }
 
@@ -1140,6 +1141,9 @@
     .col-session { display: flex; flex-direction: column; grid-area: session; }
 
     .session-cta-wrap { display: flex; gap: 8px; padding: 14px 20px 0; }
+
+    /* Editorial heading craft — desktop only (mobile keeps 20px / -0.03em) */
+    .day-label { font-size: 23px; letter-spacing: -0.04em; }
   }
 
 </style>

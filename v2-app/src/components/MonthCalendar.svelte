@@ -331,77 +331,79 @@
     font-weight: 700;
     line-height: 1;
     color: rgba(var(--c-fg), 0.28);
+    font-variant-numeric: tabular-nums;
   }
 
   /* ---- Circle status styles ---- */
 
-  /* Done: green filled ring */
+  /* Done — soft gold disc (filled) */
   .status-done .day-circle {
-    background: rgba(79, 192, 141, 0.14);
-    border: 2px solid rgba(79, 192, 141, 0.65);
+    background: rgba(var(--c-accent), 0.22);
+    border: 1px solid rgba(var(--c-accent), 0.34);
   }
-  .status-done .day-num { color: #5dd4a0; }
+  .status-done .day-num { color: var(--h-d4a838); }
 
-  /* Partial: workout in progress — white outline ring */
+  /* Partial — in progress: gold ring with a hint of fill */
   .status-partial .day-circle {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1.5px solid rgba(255, 255, 255, 0.30);
+    background: rgba(var(--c-accent), 0.09);
+    border: 2px solid rgba(var(--c-accent), 0.58);
   }
-  .status-partial .day-num { color: rgba(255, 255, 255, 0.88); }
+  .status-partial .day-num { color: var(--h-d4a038); }
 
-  /* Workout planned (has-data) — subtle white outline */
+  /* Workout loaded (has-data) — faint gold outline */
   .status-has-data .day-circle {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1.5px solid rgba(255, 255, 255, 0.18);
+    background: transparent;
+    border: 1.5px solid rgba(var(--c-accent), 0.34);
   }
-  .status-has-data .day-num { color: rgba(255, 255, 255, 0.80); }
+  .status-has-data .day-num { color: var(--h-d4a038); }
 
   /* Planned by coach (Track 3) — dashed gold ring, gold number. Not yet done. */
   .status-planned .day-circle {
-    background: rgba(196, 146, 48, 0.06);
-    border: 1.5px dashed rgba(196, 146, 48, 0.70);
+    background: rgba(var(--c-accent), 0.06);
+    border: 1.5px dashed rgba(var(--c-accent), 0.68);
   }
-  .status-planned .day-num { color: #d4a342; }
+  .status-planned .day-num { color: var(--h-d4a038); }
 
-  /* Recovery — amber outline */
+  /* Recovery — soft gold outline */
   .status-active-recovery .day-circle {
-    background: rgba(196, 146, 48, 0.10);
-    border: 1.5px solid rgba(196, 146, 48, 0.52);
+    background: rgba(var(--c-accent), 0.07);
+    border: 1.5px solid rgba(var(--c-accent), 0.44);
   }
-  .status-active-recovery .day-num { color: #d4a342; }
+  .status-active-recovery .day-num { color: var(--h-d4a038); }
 
-  /* Rest — dashed circle, very dim number */
+  /* Rest — dim dashed circle */
   .status-rest .day-circle {
-    border: 1.5px dashed rgba(255, 255, 255, 0.18);
+    border: 1.5px dashed rgba(var(--c-fg), 0.16);
   }
-  .status-rest .day-num { color: rgba(255, 255, 255, 0.22); }
+  .status-rest .day-num { color: rgba(var(--c-fg), 0.24); }
 
-  /* Weekend — dashed circle, very dim number */
+  /* Weekend — dim */
   .status-weekend .day-circle {
-    border: 1.5px dashed rgba(255, 255, 255, 0.18);
+    border: 1.5px dashed rgba(var(--c-fg), 0.16);
   }
-  .status-weekend .day-num { color: rgba(255, 255, 255, 0.22); }
+  .status-weekend .day-num { color: rgba(var(--c-fg), 0.24); }
 
   /* Neutral / future — no circle */
-  .status-neutral .day-num { color: rgba(255, 255, 255, 0.28); }
-  .status-future .day-num  { color: rgba(255, 255, 255, 0.18); }
+  .status-neutral .day-num { color: rgba(var(--c-fg), 0.26); }
+  .status-future .day-num  { color: rgba(var(--c-fg), 0.16); }
 
-  /* Today — gold ring outside the circle */
+  /* Today — solid gold ring (strongest marker; status disc stays visible underneath) */
   .today .day-circle {
-    outline: 2.5px solid rgba(196, 146, 48, 0.85);
+    outline: 2.5px solid rgba(var(--c-accent), 0.95);
     outline-offset: 3px;
   }
+  .today .day-num { color: var(--h-d4a838); }
 
-  /* Selected — white ring outside the circle */
+  /* Selected — neutral ring outside the circle */
   .selected .day-circle {
-    outline: 2px solid rgba(var(--c-fg), 0.55);
+    outline: 2px solid rgba(var(--c-fg), 0.50);
     outline-offset: 2px;
   }
 
   /* Today wins over selected */
   .today .day-circle,
   .today.selected .day-circle {
-    outline: 2.5px solid rgba(196, 146, 48, 0.85);
+    outline: 2.5px solid rgba(var(--c-accent), 0.95);
     outline-offset: 3px;
   }
 
@@ -433,11 +435,11 @@
     flex-shrink: 0;
   }
 
-  .done-c { background: rgba(79, 192, 141, 0.14); border: 2px solid rgba(79, 192, 141, 0.65); }
-  .wod-c  { background: rgba(255, 255, 255, 0.04); border: 1.5px solid rgba(255, 255, 255, 0.2); }
-  .plan-c { background: rgba(196, 146, 48, 0.06); border: 1.5px dashed rgba(196, 146, 48, 0.70); }
-  .rec-c  { background: rgba(196, 146, 48, 0.10); border: 1.5px solid rgba(196, 146, 48, 0.5); }
-  .rest-c { background: transparent; border: 1.5px dashed rgba(255, 255, 255, 0.18); }
+  .done-c { background: rgba(var(--c-accent), 0.22); border: 1px solid rgba(var(--c-accent), 0.34); }
+  .wod-c  { background: transparent; border: 1.5px solid rgba(var(--c-accent), 0.34); }
+  .plan-c { background: rgba(var(--c-accent), 0.06); border: 1.5px dashed rgba(var(--c-accent), 0.68); }
+  .rec-c  { background: rgba(var(--c-accent), 0.07); border: 1.5px solid rgba(var(--c-accent), 0.44); }
+  .rest-c { background: transparent; border: 1.5px dashed rgba(var(--c-fg), 0.16); }
 
   @media (min-width: 640px) {
     .month-label { font-size: 17px; }
@@ -447,73 +449,7 @@
     .nav-btn { width: 38px; height: 38px; font-size: 20px; }
   }
 
-  /* Presentation mode — override dark-theme rgba values for white/light background */
-  :root[data-theme="presentation"] .status-done .day-circle {
-    background: rgba(79, 192, 141, 0.18);
-    border: 2px solid rgba(79, 192, 141, 0.80);
-  }
-  :root[data-theme="presentation"] .status-done .day-num {
-    color: #1a7a54;
-  }
-  :root[data-theme="presentation"] .status-has-data .day-circle {
-    background: rgba(0, 0, 0, 0.03);
-    border: 1.5px solid rgba(13, 26, 46, 0.22);
-  }
-  :root[data-theme="presentation"] .status-has-data .day-num {
-    color: rgba(13, 26, 46, 0.75);
-  }
-  :root[data-theme="presentation"] .status-planned .day-circle {
-    background: rgba(196, 146, 48, 0.10);
-    border: 1.5px dashed rgba(196, 146, 48, 0.85);
-  }
-  :root[data-theme="presentation"] .status-planned .day-num {
-    color: #7a4e08;
-  }
-  :root[data-theme="presentation"] .plan-c {
-    background: rgba(196, 146, 48, 0.10);
-    border: 1.5px dashed rgba(196, 146, 48, 0.85);
-  }
-  :root[data-theme="presentation"] .status-active-recovery .day-circle {
-    background: rgba(196, 146, 48, 0.14);
-    border: 1.5px solid rgba(196, 146, 48, 0.75);
-  }
-  :root[data-theme="presentation"] .status-active-recovery .day-num {
-    color: #7a4e08;
-  }
-  :root[data-theme="presentation"] .status-rest .day-circle,
-  :root[data-theme="presentation"] .status-weekend .day-circle {
-    border: 1.5px dashed rgba(13, 26, 46, 0.22);
-  }
-  :root[data-theme="presentation"] .status-rest .day-num,
-  :root[data-theme="presentation"] .status-neutral .day-num,
-  :root[data-theme="presentation"] .status-future .day-num,
-  :root[data-theme="presentation"] .status-weekend .day-num {
-    color: rgba(13, 26, 46, 0.32);
-  }
-  :root[data-theme="presentation"] .today .day-num {
-    color: rgba(13, 26, 46, 0.90);
-  }
-  :root[data-theme="presentation"] .wod-c {
-    background: rgba(0, 0, 0, 0.03);
-    border: 1.5px solid rgba(13, 26, 46, 0.25);
-  }
-  /* Presentation mode — legend circles */
-  :root[data-theme="presentation"] .wod-c {
-    background: rgba(0, 0, 0, 0.03);
-    border: 1.5px solid rgba(13, 26, 46, 0.25);
-  }
-  :root[data-theme="presentation"] .done-c {
-    background: rgba(79, 192, 141, 0.18);
-    border: 2px solid rgba(79, 192, 141, 0.80);
-  }
-  :root[data-theme="presentation"] .rec-c {
-    background: rgba(196, 146, 48, 0.14);
-    border: 1.5px solid rgba(196, 146, 48, 0.75);
-  }
-  :root[data-theme="presentation"] .rest-c {
-    border: 1.5px dashed rgba(13, 26, 46, 0.22);
-  }
-  :root[data-theme="presentation"] .leg-item {
-    color: rgba(13, 26, 46, 0.55);
-  }
+  /* Presentation mode: the calendar is now fully token-driven (var(--c-accent)
+     / var(--h-*) / var(--c-fg)), so the dark→presentation flip happens via the
+     token values in app.css — no calendar-scoped presentation overrides needed. */
 </style>

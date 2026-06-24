@@ -193,6 +193,7 @@
     flex-direction: column;
     height: 100dvh;
     background: radial-gradient(ellipse at 50% 0%, var(--c-bg-1) 0%, var(--c-bg-2) 52%, var(--c-bg-3) 100%);
+    font-variant-numeric: tabular-nums;
   }
 
   /* ── Scrollable content ── */
@@ -413,7 +414,8 @@
   @media (min-width: 900px) {
     .app-shell {
       background:
-        radial-gradient(110% 70% at 50% -8%, rgba(var(--c-accent), 0.05), transparent 55%),
+        radial-gradient(125% 85% at 50% -10%, rgba(var(--c-accent), 0.07), transparent 50%),
+        radial-gradient(130% 110% at 50% 42%, transparent 58%, rgba(var(--c-shadow), 0.30)),
         radial-gradient(ellipse at 50% 0%, var(--c-bg-1) 0%, var(--c-bg-2) 45%, var(--c-bg-3) 100%);
     }
     /* Desktop: the Start/Resume/Stop control moves into the session pane
