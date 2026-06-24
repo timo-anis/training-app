@@ -449,13 +449,13 @@
   .error-title {
     font-size: 18px;
     font-weight: 700;
-    color: rgba(232, 240, 255, 0.9);
+    color: rgba(var(--c-fg), 0.9);
     margin: 0;
   }
 
   .error-msg {
     font-size: 13px;
-    color: rgba(232, 240, 255, 0.45);
+    color: rgba(var(--c-fg), 0.45);
     margin: 0;
     word-break: break-word;
   }
@@ -464,9 +464,9 @@
     margin-top: 8px;
     padding: 12px 28px;
     border-radius: 14px;
-    border: 1px solid rgba(196, 146, 48, 0.45);
-    background: rgba(196, 146, 48, 0.14);
-    color: #d4a038;
+    border: 1px solid rgba(var(--c-accent), 0.45);
+    background: rgba(var(--c-accent), 0.14);
+    color: var(--c-accent-solid);
     font-size: 15px;
     font-weight: 800;
     cursor: pointer;

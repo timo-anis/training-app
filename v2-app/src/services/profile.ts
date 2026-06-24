@@ -10,8 +10,9 @@ export async function getDisplayName(userId: string): Promise<string> {
 }
 
 export async function setDisplayName(userId: string, name: string): Promise<void> {
-  await supabase
+  const { error } = await supabase
     .from('profiles')
     .update({ display_name: name || null })
     .eq('id', userId);
+  if (error) throw error;
 }

@@ -205,14 +205,23 @@ export interface CoachNote {
 
 const NOTE_COLS = 'id, week, day, exercise_id, body, updated_at';
 
-function rowToNote(r: any): CoachNote {
+interface CoachNoteRow {
+  id: string;
+  week: number;
+  day: string;
+  exercise_id: string | null;
+  body: string;
+  updated_at: string | null;
+}
+
+function rowToNote(r: CoachNoteRow): CoachNote {
   return {
-    id: r.id as string,
-    week: r.week as number,
-    day: r.day as string,
-    exerciseId: (r.exercise_id ?? null) as string | null,
-    body: r.body as string,
-    updatedAt: (r.updated_at ?? null) as string | null,
+    id: r.id,
+    week: r.week,
+    day: r.day,
+    exerciseId: r.exercise_id ?? null,
+    body: r.body,
+    updatedAt: r.updated_at ?? null,
   };
 }
 
@@ -287,14 +296,22 @@ export type { Assignment };
 
 const ASSIGN_COLS = 'id, week, day, payload, updated_at';
 
-function rowToAssignment(r: any): Assignment {
-  const exercises = Array.isArray(r?.payload?.exercises) ? (r.payload.exercises as Exercise[]) : [];
+interface AssignmentRow {
+  id: string;
+  week: number;
+  day: string;
+  payload: { exercises: unknown[] };
+  updated_at: string | null;
+}
+
+function rowToAssignment(r: AssignmentRow): Assignment {
+  const exercises = Array.isArray(r.payload?.exercises) ? (r.payload.exercises as Exercise[]) : [];
   return {
-    id: r.id as string,
-    week: r.week as number,
+    id: r.id,
+    week: r.week,
     day: r.day as Assignment['day'],
     exercises,
-    updatedAt: (r.updated_at ?? null) as string | null,
+    updatedAt: r.updated_at ?? null,
   };
 }
 
@@ -363,14 +380,23 @@ export type { ChatMessage };
 
 const MSG_COLS = 'id, link_id, sender_id, body, created_at, read_at';
 
-function rowToMessage(r: any): ChatMessage {
+interface MessageRow {
+  id: string;
+  link_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
+  read_at: string | null;
+}
+
+function rowToMessage(r: MessageRow): ChatMessage {
   return {
-    id: r.id as string,
-    linkId: r.link_id as string,
-    senderId: r.sender_id as string,
-    body: r.body as string,
-    createdAt: r.created_at as string,
-    readAt: (r.read_at ?? null) as string | null,
+    id: r.id,
+    linkId: r.link_id,
+    senderId: r.sender_id,
+    body: r.body,
+    createdAt: r.created_at,
+    readAt: r.read_at ?? null,
   };
 }
 
@@ -436,12 +462,12 @@ export function subscribeToMessages(
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'messages', filter: `link_id=eq.${linkId}` },
-      (payload) => handlers.onInsert?.(rowToMessage(payload.new))
+      (payload) => handlers.onInsert?.(rowToMessage(payload.new as MessageRow))
     )
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'messages', filter: `link_id=eq.${linkId}` },
-      (payload) => handlers.onUpdate?.(rowToMessage(payload.new))
+      (payload) => handlers.onUpdate?.(rowToMessage(payload.new as MessageRow))
     )
     .subscribe();
   return () => { void supabase.removeChannel(channel); };
@@ -459,12 +485,12 @@ export function subscribeToAllMessages(
     .on(
       'postgres_changes',
       { event: 'INSERT', schema: 'public', table: 'messages' },
-      (payload) => handlers.onInsert?.(rowToMessage(payload.new))
+      (payload) => handlers.onInsert?.(rowToMessage(payload.new as MessageRow))
     )
     .on(
       'postgres_changes',
       { event: 'UPDATE', schema: 'public', table: 'messages' },
-      (payload) => handlers.onUpdate?.(rowToMessage(payload.new))
+      (payload) => handlers.onUpdate?.(rowToMessage(payload.new as MessageRow))
     )
     .subscribe();
   return () => { void supabase.removeChannel(channel); };

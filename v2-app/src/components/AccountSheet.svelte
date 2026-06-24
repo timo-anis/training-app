@@ -103,7 +103,12 @@
     const uid = $currentUser?.id;
     if (!uid) return;
     displayName.set(trimmed);
-    try { await setDisplayName(uid, trimmed); } catch { /* silent */ }
+    try {
+      await setDisplayName(uid, trimmed);
+    } catch {
+      displayName.set($displayName); // revert optimistic update
+      showToast('Failed to save name — try again', 'error');
+    }
   }
 
   function close() { dispatch('close'); confirmClear = false; }

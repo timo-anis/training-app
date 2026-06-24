@@ -1,5 +1,6 @@
 -- Timo Training App — Supabase schema: RLS policies, triggers, functions
 -- Exported: 2026-06-04
+-- Updated: 2026-06-24 (audit fixes: RLS TO public→authenticated, (SELECT auth.uid()) perf pattern, missing FK indexes)
 -- Project: krpbqzhttgelrbhkohct (eu-west-1)
 --
 -- Use this file to recreate the security layer if the Supabase project is ever rebuilt.
@@ -25,8 +26,8 @@ ALTER TABLE public.app_state_history ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "own history read"
   ON public.app_state_history
   FOR SELECT
-  TO public
-  USING (auth.uid() = user_id);
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id);
 
 -- profiles: users can select/insert/update only their own row
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
@@ -35,20 +36,20 @@ CREATE POLICY "profiles_select_own"
   ON public.profiles
   FOR SELECT
   TO authenticated
-  USING (auth.uid() = id);
+  USING ((SELECT auth.uid()) = id);
 
 CREATE POLICY "profiles_insert_own"
   ON public.profiles
   FOR INSERT
   TO authenticated
-  WITH CHECK (auth.uid() = id);
+  WITH CHECK ((SELECT auth.uid()) = id);
 
 CREATE POLICY "profiles_update_own"
   ON public.profiles
   FOR UPDATE
   TO authenticated
-  USING      (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
+  USING      ((SELECT auth.uid()) = id)
+  WITH CHECK ((SELECT auth.uid()) = id);
 
 -- app_errors: users can only insert their own errors (no client-side read needed)
 CREATE TABLE IF NOT EXISTS public.app_errors (
@@ -194,21 +195,21 @@ create policy "coach_reads_linked_trainee_state" on public.app_state
   for select to authenticated using (public.is_accepted_coach(user_id));
 
 create policy "activity_owner_all"  on public.activity_summary
-  for all to authenticated using (auth.uid() = user_id) with check (auth.uid() = user_id);
+  for all to authenticated using ((SELECT auth.uid()) = user_id) with check ((SELECT auth.uid()) = user_id);
 create policy "activity_coach_read" on public.activity_summary
   for select to authenticated using (public.is_accepted_coach(user_id));
 
 create policy "links_coach_select" on public.coach_links
-  for select to authenticated using (coach_id = auth.uid());
+  for select to authenticated using (coach_id = (SELECT auth.uid()));
 create policy "links_coach_insert" on public.coach_links
-  for insert to authenticated with check (coach_id = auth.uid());
+  for insert to authenticated with check (coach_id = (SELECT auth.uid()));
 create policy "links_coach_delete" on public.coach_links
-  for delete to authenticated using (coach_id = auth.uid() and status <> 'accepted');
+  for delete to authenticated using (coach_id = (SELECT auth.uid()) and status <> 'accepted');
 create policy "links_invitee_select" on public.coach_links
   for select to authenticated using (
-    trainee_id = auth.uid()
+    trainee_id = (SELECT auth.uid())
     or (status = 'pending'
-        and lower(invited_email) = lower(coalesce(auth.jwt() ->> 'email', ''))));
+        and lower(invited_email) = lower(coalesce((SELECT auth.jwt()) ->> 'email', ''))));
 
 -- accept/revoke go through SECURITY DEFINER RPCs (narrow write surface; no
 -- broad UPDATE policy on coach_links). accept binds auth.uid() + JWT email.
@@ -331,23 +332,23 @@ grant  execute on function public.has_accepted_coach(uuid) to authenticated;
 -- Coach: full CRUD, but ONLY own rows AND only while the link is accepted.
 create policy "notes_coach_select" on public.coach_notes
   for select to authenticated
-  using (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+  using (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id));
 create policy "notes_coach_insert" on public.coach_notes
   for insert to authenticated
-  with check (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+  with check (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id));
 create policy "notes_coach_update" on public.coach_notes
   for update to authenticated
-  using      (coach_id = auth.uid() and public.is_accepted_coach(trainee_id))
-  with check (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+  using      (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id))
+  with check (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id));
 create policy "notes_coach_delete" on public.coach_notes
   for delete to authenticated
-  using (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+  using (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id));
 
 -- Trainee: READ-ONLY, own notes only, only via an accepted link. NO write policy
 -- => the trainee can never write a coach row; revoke flips this to invisible.
 create policy "notes_trainee_select" on public.coach_notes
   for select to authenticated
-  using (trainee_id = auth.uid() and public.has_accepted_coach(coach_id));
+  using (trainee_id = (SELECT auth.uid()) and public.has_accepted_coach(coach_id));
 
 -- ============================================================
 -- TRAINER MODE — Track 3 (program authoring / coach_assignments)
@@ -391,24 +392,24 @@ create trigger trg_touch_coach_assignments before update on public.coach_assignm
 -- Coach: full CRUD, but ONLY own rows AND only while the link is accepted.
 create policy "assign_coach_select" on public.coach_assignments
   for select to authenticated
-  using (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+  using (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id));
 create policy "assign_coach_insert" on public.coach_assignments
   for insert to authenticated
-  with check (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+  with check (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id));
 create policy "assign_coach_update" on public.coach_assignments
   for update to authenticated
-  using      (coach_id = auth.uid() and public.is_accepted_coach(trainee_id))
-  with check (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+  using      (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id))
+  with check (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id));
 create policy "assign_coach_delete" on public.coach_assignments
   for delete to authenticated
-  using (coach_id = auth.uid() and public.is_accepted_coach(trainee_id));
+  using (coach_id = (SELECT auth.uid()) and public.is_accepted_coach(trainee_id));
 
 -- Trainee: READ-ONLY, own assignments only, only via an accepted link.
 -- NO write policy => the trainee can never write a coach row; revoke flips this
 -- to invisible (the plan layer vanishes).
 create policy "assign_trainee_select" on public.coach_assignments
   for select to authenticated
-  using (trainee_id = auth.uid() and public.has_accepted_coach(coach_id));
+  using (trainee_id = (SELECT auth.uid()) and public.has_accepted_coach(coach_id));
 
 -- ============================================================
 -- TRAINER MODE — Track 4 (chat / relationship layer)
@@ -464,7 +465,7 @@ create policy "messages_participant_select" on public.messages
 -- auth.uid()) AND only while the link is accepted.
 create policy "messages_participant_insert" on public.messages
   for insert to authenticated
-  with check (sender_id = auth.uid() and public.is_link_participant(link_id));
+  with check (sender_id = (SELECT auth.uid()) and public.is_link_participant(link_id));
 
 -- Read receipts: caller may only mark messages they RECEIVED on a link they
 -- currently participate in. Revoke blocks it (is_link_participant = false).
@@ -512,8 +513,12 @@ create index if not exists push_subscriptions_user_idx on public.push_subscripti
 alter table public.push_subscriptions enable row level security;
 create policy "push_owner_all" on public.push_subscriptions
   for all to authenticated
-  using      (user_id = auth.uid())
-  with check (user_id = auth.uid());
+  using      (user_id = (SELECT auth.uid()))
+  with check (user_id = (SELECT auth.uid()));
 
 -- 2026-06-24: add display_name to profiles
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS display_name TEXT;
+
+-- 2026-06-24: missing FK indexes (P1-5 from holistic audit)
+CREATE INDEX IF NOT EXISTS app_errors_user_id_idx ON public.app_errors (user_id);
+CREATE INDEX IF NOT EXISTS messages_sender_id_idx ON public.messages (sender_id);

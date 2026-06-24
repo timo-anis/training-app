@@ -110,7 +110,7 @@
   .backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(5, 8, 20, 0.65);
+    background: rgba(var(--c-bg-3-raw, 5, 8, 20), 0.65);
     z-index: 80;
     display: flex;
     align-items: flex-end;
@@ -124,8 +124,8 @@
   }
 
   .sheet {
-    background: linear-gradient(180deg, #0f1d36 0%, #080e1e 100%);
-    border: 1px solid rgba(60, 90, 165, 0.20);
+    background: var(--c-bg-1);
+    border: 1px solid rgba(var(--c-accent), 0.20);
     border-bottom: none;
     border-radius: 20px 20px 0 0;
     width: 100%;
@@ -145,7 +145,7 @@
     width: 36px;
     height: 4px;
     border-radius: 2px;
-    background: rgba(232, 240, 255, 0.18);
+    background: rgba(var(--c-fg), 0.18);
     margin: 12px auto 0;
     flex-shrink: 0;
   }
@@ -156,13 +156,13 @@
     justify-content: space-between;
     padding: 14px 18px 10px;
     flex-shrink: 0;
-    border-bottom: 1px solid rgba(60, 90, 165, 0.14);
+    border-bottom: 1px solid rgba(var(--c-accent), 0.14);
   }
 
   .sheet-title {
     font-size: 16px;
     font-weight: 700;
-    color: #e8f0ff;
+    color: rgba(var(--c-fg), 0.92);
     letter-spacing: -0.02em;
   }
 
@@ -170,9 +170,9 @@
     width: 30px;
     height: 30px;
     border-radius: 8px;
-    border: 1px solid rgba(232, 240, 255, 0.10);
+    border: 1px solid rgba(var(--c-fg), 0.10);
     background: transparent;
-    color: rgba(232, 240, 255, 0.35);
+    color: rgba(var(--c-fg), 0.35);
     font-size: 13px;
     cursor: pointer;
     display: flex;
@@ -182,7 +182,7 @@
     transition: background 0.12s;
   }
 
-  .close-btn:active { background: rgba(232, 240, 255, 0.08); }
+  .close-btn:active { background: rgba(var(--c-fg), 0.08); }
 
   .list {
     overflow-y: auto;
@@ -205,12 +205,12 @@
   }
 
   .item:active {
-    background: rgba(100, 155, 255, 0.08);
+    background: rgba(var(--c-accent), 0.08);
   }
 
   .item.selected {
-    background: rgba(100, 155, 255, 0.10);
-    border-color: rgba(100, 155, 255, 0.30);
+    background: rgba(var(--c-accent), 0.10);
+    border-color: rgba(var(--c-accent), 0.30);
   }
 
   .item-main {
@@ -224,17 +224,17 @@
   .item-label {
     font-size: 14px;
     font-weight: 700;
-    color: #e8f0ff;
+    color: rgba(var(--c-fg), 0.92);
     letter-spacing: -0.01em;
   }
 
   .item.selected .item-label {
-    color: #9bc0ff;
+    color: var(--c-accent-solid);
   }
 
   .item-names {
     font-size: 12px;
-    color: rgba(232, 240, 255, 0.35);
+    color: rgba(var(--c-fg), 0.35);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -243,33 +243,33 @@
   .item-count {
     font-size: 12px;
     font-weight: 700;
-    color: rgba(232, 240, 255, 0.30);
-    background: rgba(232, 240, 255, 0.06);
-    border: 1px solid rgba(232, 240, 255, 0.08);
+    color: rgba(var(--c-fg), 0.30);
+    background: rgba(var(--c-fg), 0.06);
+    border: 1px solid rgba(var(--c-fg), 0.08);
     border-radius: 999px;
     padding: 2px 9px;
     flex-shrink: 0;
   }
 
   .item.selected .item-count {
-    color: #9bc0ff;
-    background: rgba(100, 155, 255, 0.12);
-    border-color: rgba(100, 155, 255, 0.25);
+    color: var(--c-accent-solid);
+    background: rgba(var(--c-accent), 0.12);
+    border-color: rgba(var(--c-accent), 0.25);
   }
 
   .sheet-footer {
     padding: 10px 14px 20px;
     flex-shrink: 0;
-    border-top: 1px solid rgba(60, 90, 165, 0.14);
+    border-top: 1px solid rgba(var(--c-accent), 0.14);
   }
 
   .confirm-btn {
     width: 100%;
     padding: 15px;
     border-radius: 14px;
-    border: 1px solid rgba(196, 146, 46, 0.45);
-    background: rgba(196, 146, 46, 0.14);
-    color: #d4a038;
+    border: 1px solid rgba(var(--c-accent), 0.45);
+    background: rgba(var(--c-accent), 0.14);
+    color: var(--c-accent-solid);
     font-size: 15px;
     font-weight: 800;
     cursor: pointer;
@@ -279,22 +279,22 @@
   }
 
   .confirm-btn:not(:disabled):active {
-    background: rgba(196, 146, 46, 0.24);
+    background: rgba(var(--c-accent), 0.24);
     transform: scale(0.98);
   }
 
   .confirm-btn:disabled {
     opacity: 0.35;
     cursor: default;
-    border-color: rgba(232, 240, 255, 0.12);
-    background: rgba(232, 240, 255, 0.04);
-    color: rgba(232, 240, 255, 0.30);
+    border-color: rgba(var(--c-fg), 0.12);
+    background: rgba(var(--c-fg), 0.04);
+    color: rgba(var(--c-fg), 0.30);
   }
 
   .empty-msg {
     padding: 32px 20px;
     text-align: center;
-    color: rgba(232, 240, 255, 0.28);
+    color: rgba(var(--c-fg), 0.28);
     font-size: 14px;
   }
 </style>

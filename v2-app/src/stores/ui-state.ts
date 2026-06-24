@@ -94,11 +94,6 @@ export const sheetOpen = writable<boolean>(false);
 // Set true from anywhere to (re)open the onboarding walkthrough
 export const requestOnboarding = writable<boolean>(false);
 
-/** Set true by any full-screen overlay (quick guide, records, search) to blur
- *  the scroll-content underneath on desktop. WorkoutMode has its own class.
- *  @deprecated — use hintsOpen/recordsOpen directly from App.svelte instead */
-export const overlayBlurred = writable<boolean>(false);
-
 /** Account sheet overlay open state — read by App.svelte to render outside scroll-content. */
 export const accountOpen = writable<boolean>(false);
 

@@ -215,7 +215,7 @@
 
   .start-btn {
     background: var(--c-accent-solid);
-    color: #000;
+    color: var(--c-bg-3);
     border: none;
     border-radius: 7px;
     padding: 6px 13px;
@@ -264,7 +264,7 @@
 
   .progress-fill {
     height: 100%;
-    background: #22c55e;
+    background: var(--c-accent-solid);
     border-radius: 2px;
     transition: width 0.3s ease;
   }
