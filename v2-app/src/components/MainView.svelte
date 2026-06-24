@@ -396,6 +396,10 @@
           <div class="hint-header"><span class="hint-num">6</span><span class="hint-title">Workout mode</span></div>
           <p class="hint-desc">Swipe left/right between exercises. Tap ○ to mark a set done</p>
         </div>
+        <div class="hint-card hint-card-wide">
+          <div class="hint-header"><span class="hint-num">7</span><span class="hint-title">RPE — rate of perceived exertion</span></div>
+          <p class="hint-desc">After each set, tap the RPE chip to rate effort on a <strong>6–10 scale</strong> (10 = absolute max). The app suggests a value based on your history — confirm or adjust. Helps track intensity over time.</p>
+        </div>
       </div>
       <button class="hints-walkthrough" on:click={() => { hintsOpen = false; requestOnboarding.set(true); }}>
         ▶ Replay walkthrough
@@ -1051,6 +1055,10 @@
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
+  }
+
+  :global(.hint-card-wide) {
+    grid-column: 1 / -1;
   }
 
   :global(.hint-card) {
