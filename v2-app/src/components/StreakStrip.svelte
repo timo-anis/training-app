@@ -11,6 +11,10 @@
     : info.thisWeekActive
       ? 'This week secured — keep it going'
       : 'Train this week to keep it alive';
+  // Compact suffix for mobile single-line layout
+  $: suffix = !hasStreak ? '' : info.thisWeekActive ? '· secured' : '· at risk';
+  // Cap dots for mobile (rendered via CSS class)
+  $: recentCapped = info.recent.slice(-5);
 </script>
 
 <div class="streak-strip" class:dormant={!hasStreak} class:risk={hasStreak && !info.thisWeekActive}>
@@ -18,12 +22,15 @@
     <span class="flame">🔥</span>
   </div>
   <div class="streak-text">
-    <span class="streak-line1">{line1}</span>
+    <span class="streak-line1">{line1}<span class="streak-suffix">&nbsp;{suffix}</span></span>
     <span class="streak-line2">{line2}</span>
   </div>
   <div class="streak-dots" aria-hidden="true">
     {#each info.recent as on}
-      <span class="dot" class:on></span>
+      <span class="dot full-only" class:on></span>
+    {/each}
+    {#each recentCapped as on}
+      <span class="dot mobile-only" class:on></span>
     {/each}
   </div>
 </div>
@@ -93,5 +100,19 @@
   .dot.on {
     background: var(--c-accent-solid);
     border-color: var(--c-accent-solid);
+  }
+
+  /* Mobile: single-line compact */
+  .streak-suffix { display: none; }
+  @media (max-width: 639px) {
+    .streak-strip { padding: 10px 12px; gap: 10px; }
+    .flame-box { width: 34px; height: 34px; font-size: 18px; border-radius: 10px; }
+    .streak-line2 { display: none; }
+    .streak-suffix { display: inline; font-size: 12px; font-weight: 600; color: var(--h-4fc08d); letter-spacing: 0; }
+    .risk .streak-suffix { color: var(--h-d4a038); }
+    .full-only { display: none !important; }
+  }
+  @media (min-width: 640px) {
+    .mobile-only { display: none !important; }
   }
 </style>
