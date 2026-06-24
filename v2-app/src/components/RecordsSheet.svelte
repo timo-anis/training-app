@@ -64,7 +64,7 @@
   .records-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.55);
+    background: rgba(0,0,0,0.72);
     z-index: 110;
     display: flex;
     align-items: flex-end;
@@ -72,7 +72,7 @@
   }
 
   .records-sheet {
-    background: var(--c-surface-b, #16181f);
+    background: var(--c-bg-1, #0d1626);
     border-radius: 20px 20px 0 0;
     width: 100%;
     max-width: 640px;
@@ -80,15 +80,15 @@
     display: flex;
     flex-direction: column;
     padding: 0 0 env(safe-area-inset-bottom, 16px);
-    box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+    border-top: 2px solid rgba(var(--c-accent), 0.55);
   }
 
   .records-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 18px 18px 12px;
-    border-bottom: 1px solid rgba(var(--c-edge-c), 0.14);
+    padding: 16px 18px 12px;
+    border-bottom: 0.5px solid rgba(var(--c-accent), 0.12);
     flex-shrink: 0;
   }
 
@@ -100,16 +100,21 @@
   }
 
   .records-close {
-    background: none;
+    background: rgba(var(--c-accent), 0.08);
     border: none;
-    color: rgba(var(--c-fg), 0.45);
-    font-size: 16px;
+    color: rgba(var(--c-accent), 0.55);
+    font-size: 14px;
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     line-height: 1;
+    padding: 0;
   }
-  .records-close:active { background: rgba(var(--c-fg), 0.08); }
+  .records-close:active { background: rgba(var(--c-accent), 0.15); }
 
   .records-empty {
     padding: 32px 18px;
@@ -121,7 +126,7 @@
   .records-list {
     overflow-y: auto;
     flex: 1;
-    padding: 8px 0 16px;
+    padding: 4px 0 12px;
   }
 
   .record-row {
@@ -129,7 +134,7 @@
     align-items: center;
     justify-content: space-between;
     padding: 11px 18px;
-    border-bottom: 1px solid rgba(var(--c-edge-c), 0.08);
+    border-bottom: 0.5px solid rgba(var(--c-accent), 0.07);
   }
   .record-row:last-child { border-bottom: none; }
 
@@ -159,5 +164,6 @@
     color: rgba(var(--c-fg), 0.22);
     padding: 8px 18px 4px;
     flex-shrink: 0;
+    border-top: 0.5px solid rgba(var(--c-accent), 0.07);
   }
 </style>
