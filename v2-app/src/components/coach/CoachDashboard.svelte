@@ -89,7 +89,7 @@
   <!-- Invite -->
   <div class="card invite-card">
     <span class="card-title">Invite a trainee</span>
-    <span class="card-sub">They accept once inside their own app — then their logged training appears here automatically.</span>
+    <span class="card-sub">They accept via their own app — their training syncs here automatically.</span>
     <form class="invite-row" on:submit|preventDefault={handleInvite}>
       <input
         class="invite-input"
@@ -173,7 +173,7 @@
   .card-title { font-size: 15px; font-weight: 900; color: var(--c-text); }
   .card-sub { font-size: 12.5px; color: rgba(var(--c-fg), 0.50); line-height: 1.5; }
 
-  .invite-row { display: flex; gap: 8px; margin-top: 8px; }
+  .invite-row { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
   .invite-input {
     flex: 1 1 auto; min-width: 0;
     background: rgba(var(--c-surface-c), 0.65);
@@ -185,7 +185,7 @@
   .invite-input:focus { border-color: rgba(var(--c-accent), 0.45); }
   .invite-input::placeholder { color: rgba(var(--c-fg), 0.28); }
   .invite-btn {
-    flex: 0 0 auto; padding: 0 12px; border-radius: 11px;
+    width: 100%; padding: 11px 12px; border-radius: 11px;
     border: 1px solid rgba(var(--c-accent), 0.50);
     background: rgba(var(--c-accent), 0.16);
     color: var(--c-accent-solid); font-size: 14px; font-weight: 800; cursor: pointer;
@@ -247,7 +247,7 @@
   }
 
   .row-action {
-    flex: 0 0 auto; padding: 0 14px; border: none; cursor: pointer;
+    flex: 0 0 auto; padding: 0 10px; font-size: 12px; border: none; cursor: pointer;
     font-size: 12.5px; font-weight: 800;
     background: transparent; color: rgba(var(--c-fg), 0.45);
     border-left: 1px solid rgba(var(--c-fg), 0.07);
