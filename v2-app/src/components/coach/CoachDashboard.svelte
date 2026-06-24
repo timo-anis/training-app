@@ -143,10 +143,7 @@
             <span class="dot" class:active={t.thisWeekActive} aria-hidden="true"></span>
             <span class="row-main">
               <span class="row-name">{t.email}</span>
-              <span class="row-meta">
-                {#if t.lastTrainedAt}Last trained {relativeAge(t.lastTrainedAt, now)}{:else}No completed sessions yet{/if}
-                {#if t.summaryUpdatedAt} · updated {relativeAge(t.summaryUpdatedAt, now)}{/if}
-              </span>
+
             </span>
             {#if unreadMap[t.linkId] > 0}<span class="row-unread">{unreadMap[t.linkId]}</span>{/if}
             <span class="row-arrow">›</span>
@@ -161,7 +158,6 @@
     {/if}
   </div>
 
-  <p class="freshness-note">Views are read-only and as fresh as each trainee's last sync — never live. You never edit a trainee's data.</p>
 </section>
 
 <style>
@@ -242,7 +238,6 @@
     font-size: 15px; font-weight: 800; color: var(--h-e8f2ff);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .row-meta { font-size: 12px; color: rgba(var(--c-fg), 0.45); }
   .row-arrow { flex: 0 0 auto; font-size: 18px; color: rgba(var(--c-fg), 0.28); }
   .row-unread {
     flex: 0 0 auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px;
@@ -271,8 +266,4 @@
   .empty-title { font-size: 15px; font-weight: 800; color: rgba(var(--c-fg), 0.40); }
   .empty-sub { font-size: 12.5px; color: rgba(var(--c-fg), 0.45); line-height: 1.5; }
 
-  .freshness-note {
-    font-size: 11.5px; color: rgba(var(--c-fg), 0.35); line-height: 1.5;
-    text-align: center; margin: 4px 8px 0; padding: 0;
-  }
 </style>
