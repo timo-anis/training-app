@@ -6,6 +6,7 @@
   // password, then drops straight into the app via onRecovered().
   export let recovery = false;
   export let onRecovered: (() => void) | null = null;
+  export let coachMode: boolean = false;
 
   type Mode = 'signin' | 'signup' | 'reset' | 'confirm' | 'set-password';
   let mode: Mode = recovery ? 'set-password' : 'signin';
@@ -115,8 +116,13 @@
 
 <div class="auth-wrap">
   <div class="auth-card">
+    {#if coachMode}
+      <div class="coach-badge-row">
+        <span class="coach-badge-pill">COACH</span>
+      </div>
+    {/if}
     <h1>Timo Training</h1>
-    <p class="sub">{title}</p>
+    <p class="sub">{coachMode ? "Sign in to view your trainees" : title}</p>
 
     {#if mode === 'confirm'}
       <!-- Dedicated post-signup state: no active sign-in form here. -->
@@ -225,8 +231,8 @@
   .auth-card {
     width: 100%;
     max-width: 380px;
-    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
-    border: 1px solid rgba(var(--c-edge-c), 0.16);
+    background: rgba(var(--c-accent), 0.055);
+    border: 0.5px solid rgba(var(--c-accent), 0.22);
     border-radius: 20px;
     padding: 32px 24px;
   }
@@ -240,21 +246,23 @@
     flex-direction: column;
     gap: 6px;
     margin-bottom: 14px;
-    font-size: 13px;
-    color: var(--h-97b8d8);
-    font-weight: 600;
+    font-size: 11px;
+    color: rgba(var(--c-accent), 0.65);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   input {
     padding: 12px 14px;
     border-radius: 10px;
-    border: 1px solid rgba(var(--c-edge-d), 0.20);
-    background: var(--c-12-22-48-0_55);
+    border: 0.5px solid rgba(var(--c-accent), 0.20);
+    background: rgba(var(--c-accent), 0.07);
     color: var(--h-f0f6ff);
     font-size: 16px;
     -webkit-tap-highlight-color: transparent;
   }
-  input:focus { outline: none; border-color: var(--c-127-178-255-0_45); }
+  input:focus { outline: none; border-color: rgba(var(--c-accent), 0.45); }
 
   button[type="submit"] {
     width: 100%;
@@ -327,4 +335,18 @@
   .link-btn:hover { color: var(--h-ffffff); }
 
   .sep { color: rgba(var(--c-fg), 0.20); font-size: 12px; }
+
+  .coach-badge-row { margin-bottom: 14px; }
+  .coach-badge-pill {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(var(--c-accent), 0.14);
+    border: 1px solid rgba(var(--c-accent), 0.32);
+    color: var(--c-accent-solid);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.14em;
+  }
+
 </style>

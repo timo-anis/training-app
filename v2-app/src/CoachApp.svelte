@@ -41,11 +41,7 @@
     <div class="coach-loading"><span class="spinner"></span></div>
   {:else if view === 'auth'}
     <div class="auth-wrap">
-      <div class="coach-brand">
-        <span class="brand-badge">COACH</span>
-        <span class="brand-sub">Sign in to view your trainees</span>
-      </div>
-      <AuthView />
+      <AuthView coachMode={true} />
     </div>
   {:else}
     <header class="coach-header">
@@ -109,8 +105,7 @@
   @keyframes spin { to { transform: rotate(360deg); } }
 
   .auth-wrap { max-width: 460px; margin: 0 auto; padding: 24px 16px; }
-  .coach-brand { text-align: center; margin-bottom: 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .brand-sub { font-size: 13px; color: rgba(var(--c-fg), 0.50); }
+
 
   .brand-badge {
     display: inline-block;
