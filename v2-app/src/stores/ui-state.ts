@@ -36,6 +36,8 @@ export function toggleTheme() {
 
 // ---- Auth store ----
 export const currentUser = writable<User | null>(null);
+/** User's chosen display name, loaded from profiles on sign-in. */
+export const displayName = writable<string>('');
 
 // ---- Presentation-mode access control (allow-list) ----
 const PRESENTATION_EMAILS = ['timo.anis@gmail.com'];

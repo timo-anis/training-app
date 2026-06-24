@@ -1,15 +1,7 @@
 <script lang="ts">
   import { appState, uiState, openWorkoutMode, currentDayExercises, currentWeekDays } from '../stores/app';
-  import { currentUser } from '../stores/ui-state';
+  import { displayName } from '../stores/ui-state';
   import { setDayLabel, streakInfo } from '../stores/workout-state';
-
-  // Derive first name from email: timo.anis@gmail.com → Timo
-  function firstName(email: string | null | undefined): string {
-    if (!email) return '';
-    const local = email.split('@')[0];
-    const part = local.split(/[._]/)[0];
-    return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
-  }
 
   function timeGreeting(): string {
     const h = new Date().getHours();
@@ -24,7 +16,7 @@
     });
   }
 
-  $: name = firstName($currentUser?.email);
+  $: name = $displayName;
   $: todayDay = $appState.weeks.find(w => w.week === $uiState.week && w.day === $uiState.day);
   $: exercises = $currentDayExercises;
 

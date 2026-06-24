@@ -514,3 +514,6 @@ create policy "push_owner_all" on public.push_subscriptions
   for all to authenticated
   using      (user_id = auth.uid())
   with check (user_id = auth.uid());
+
+-- 2026-06-24: add display_name to profiles
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS display_name TEXT;

@@ -3,6 +3,8 @@
   import { onAuthChange } from './services/auth';
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
   import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, accountOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
+  import { displayName } from './stores/ui-state';
+  import { getDisplayName } from './services/profile';
   import RecordsSheet from './components/RecordsSheet.svelte';
   import AccountSheet from './components/AccountSheet.svelte';
   import AuthView from './components/AuthView.svelte';
@@ -75,11 +77,14 @@
         // PASSWORD_RECOVERY landed between init and this event.
         if (recoveryMode || isRecoveryPending()) { recoveryMode = true; return; }
         await bootForUser(state.user);
+        // Load display name from profiles (fire-and-forget)
+        getDisplayName(state.user.id).then(n => displayName.set(n)).catch(() => {});
         // Show onboarding only for users with no training data yet
         const hasData = $appState.weeks.some(w => w.exercises.length > 0);
         showOnboarding = !hasData && checkOnboarding(state.user.id);
       } else if (state.status === 'signed_out') {
         currentUser.set(null);
+        displayName.set('');
         recoveryMode = false;
         clearRecoveryPending();
         bootStatus.set('idle');
