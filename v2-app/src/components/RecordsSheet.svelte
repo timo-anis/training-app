@@ -1,17 +1,17 @@
 <script lang="ts">
   import { appState } from '../stores/app';
+  import { epley1RM } from '../lib/rpe';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
 
   interface ExRecord {
     name: string;
-    bestKg: number;
-    bestReps: string;
+    e1rm: number;
   }
 
-  // Compute all-time best kg per exercise from the full state.
-  // Only considers weighted (non-conditioning, non-recovery) exercises with done sets.
+  // Compute estimated 1RM per exercise using the Epley formula.
+  // Best 1RM across all done weighted sets (reps > 0).
   $: records = (() => {
     const map = new Map<string, ExRecord>();
     for (const wd of $appState.weeks) {
@@ -20,11 +20,13 @@
         for (const s of ex.sets) {
           if (!s.done) continue;
           const kg = parseFloat(s.kg);
-          if (isNaN(kg) || kg <= 0) continue;
+          const reps = parseInt(s.reps, 10);
+          if (isNaN(kg) || kg <= 0 || isNaN(reps) || reps <= 0) continue;
+          const e1rm = Math.round(epley1RM(kg, reps));
           const key = ex.name.toLowerCase();
           const cur = map.get(key);
-          if (!cur || kg > cur.bestKg) {
-            map.set(key, { name: ex.name, bestKg: kg, bestReps: s.reps });
+          if (!cur || e1rm > cur.e1rm) {
+            map.set(key, { name: ex.name, e1rm });
           }
         }
       }
@@ -49,11 +51,12 @@
         {#each records as r}
           <div class="record-row">
             <span class="record-name">{r.name}</span>
-            <span class="record-best">{r.bestKg} kg <span class="record-reps">× {r.bestReps}</span></span>
+            <span class="record-best">{r.e1rm} <span class="record-unit">kg</span></span>
           </div>
         {/each}
       </div>
     {/if}
+    <p class="records-hint">est. 1-rep max · Epley formula</p>
   </div>
 </div>
 
@@ -144,9 +147,17 @@
     white-space: nowrap;
   }
 
-  .record-reps {
+  .record-unit {
     font-weight: 500;
     color: rgba(var(--c-fg), 0.50);
     font-size: 13px;
+  }
+
+  .records-hint {
+    text-align: center;
+    font-size: 11px;
+    color: rgba(var(--c-fg), 0.22);
+    padding: 8px 18px 4px;
+    flex-shrink: 0;
   }
 </style>

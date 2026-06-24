@@ -264,7 +264,7 @@
     <section class="section section-tight r-stats">
     <div class="stats-bar">
       <button class="stats-btn" on:click={() => statsOpen = !statsOpen} aria-expanded={statsOpen}>
-        <svg class="stats-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
+        <svg class="stats-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
           <rect x="17" y="3" width="4" height="18"/>
@@ -272,7 +272,8 @@
         <span class="stats-btn-label">Statistics</span>
         <span class="stats-chevron" class:open={statsOpen}>›</span>
       </button>
-      <button class="records-btn" on:click={() => recordsOpen = true} aria-label="Personal records">
+      <div class="stats-sep" aria-hidden="true"></div>
+      <button class="records-icon-btn" on:click={() => recordsOpen = true} aria-label="Personal records">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
@@ -280,7 +281,6 @@
           <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
           <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
         </svg>
-        Records
       </button>
     </div>
   </section>
@@ -538,21 +538,29 @@
   }
 
   /* ---- Statistics button ---- */
+  /* ---- Unified stats bar (Statistics + Records) ---- */
+  .stats-bar {
+    display: flex;
+    align-items: stretch;
+    border-radius: 16px;
+    border: 1px solid rgba(var(--c-accent), 0.35);
+    background: rgba(var(--c-surface-b), 0.80);
+    overflow: hidden;
+  }
+
   .stats-btn {
-    width: 100%;
+    flex: 1;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    padding: 16px 20px;
-    border-radius: 16px;
-    border: 1px solid rgba(var(--c-accent), 0.35);
-    background: rgba(var(--c-surface-b), 0.80);
+    padding: 16px 16px;
+    background: transparent;
+    border: none;
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     transition: background 0.12s;
     position: relative;
-    overflow: hidden;
   }
 
   .stats-btn::before {
@@ -563,20 +571,17 @@
     background: var(--c-accent-solid);
   }
 
-  .stats-btn:active { background: rgba(var(--c-surface-b), 0.90); }
+  .stats-btn:active { background: rgba(var(--c-fg), 0.05); }
 
   .stats-btn-icon {
     color: rgba(var(--c-accent), 0.85);
     flex-shrink: 0;
-    width: 20px;
-    height: 20px;
   }
 
   .stats-btn-label {
     font-size: 16px;
     font-weight: 700;
     color: rgba(var(--c-fg), 0.90);
-    text-align: center;
   }
 
   .stats-chevron {
@@ -591,25 +596,27 @@
 
   .stats-chevron.open { transform: rotate(-90deg); }
 
-  .records-btn {
+  .stats-sep {
+    width: 1px;
+    background: rgba(var(--c-accent), 0.18);
+    flex-shrink: 0;
+    align-self: stretch;
+  }
+
+  .records-icon-btn {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 14px 16px;
-    border-radius: 16px;
-    border: 1px solid rgba(var(--c-accent), 0.35);
-    background: rgba(var(--c-surface-b), 0.80);
-    color: rgba(var(--c-fg), 0.80);
-    font-size: 14px;
-    font-weight: 700;
+    justify-content: center;
+    padding: 0 18px;
+    background: transparent;
+    border: none;
+    color: var(--c-accent-solid);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    white-space: nowrap;
-    flex-shrink: 0;
     transition: background 0.12s;
+    flex-shrink: 0;
   }
-  .records-btn svg { color: var(--c-accent-solid); flex-shrink: 0; }
-  .records-btn:active { background: rgba(var(--c-surface-b), 0.96); }
+  .records-icon-btn:active { background: rgba(var(--c-fg), 0.05); }
 
   /* ---- Day heading toggle button ---- */
   .day-heading-row {
