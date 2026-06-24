@@ -62,7 +62,11 @@
 <div class="hero-card">
   <p class="date-line">{todayDateString()}</p>
   <p class="greeting-line">
-    {timeGreeting()},&nbsp;<span class="name-accent">{name}</span>
+    {#if name}
+      {timeGreeting()},&nbsp;<span class="name-accent">{name}</span>
+    {:else}
+      {timeGreeting()}
+    {/if}
   </p>
 
   {#if exercises.length > 0}
