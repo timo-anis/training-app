@@ -130,7 +130,7 @@
   <div class="app-shell">
 
     <!-- ── Scrollable content ── -->
-    <div class="scroll-content">
+    <div class="scroll-content" class:workout-blur={$uiState.workoutMode}>
       <MainView />
     </div>
 
@@ -412,6 +412,7 @@
      defined app panel on an ambient "desk". Mobile/PWA untouched.
      ============================================================ */
   @media (min-width: 900px) {
+    .scroll-content.workout-blur { filter: blur(12px); pointer-events: none; transition: filter 0.25s; }
     .app-shell {
       background:
         radial-gradient(125% 85% at 50% -10%, rgba(var(--c-accent), 0.07), transparent 50%),
