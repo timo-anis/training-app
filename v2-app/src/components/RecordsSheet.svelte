@@ -56,7 +56,6 @@
         {/each}
       </div>
     {/if}
-    <p class="records-hint">est. 1-rep max · Epley formula</p>
   </div>
 </div>
 
@@ -72,11 +71,11 @@
   }
 
   .records-sheet {
-    background: var(--c-bg-1, #0d1626);
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
     border-radius: 20px 20px 0 0;
     width: 100%;
     max-width: 640px;
-    max-height: 82vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     padding: 0 0 env(safe-area-inset-bottom, 16px);
@@ -158,12 +157,9 @@
     font-size: 13px;
   }
 
-  .records-hint {
-    text-align: center;
-    font-size: 11px;
-    color: rgba(var(--c-fg), 0.22);
-    padding: 8px 18px 4px;
-    flex-shrink: 0;
-    border-top: 0.5px solid rgba(var(--c-accent), 0.07);
+
+  @media (min-width: 900px) {
+    .records-backdrop { align-items: center; }
+    .records-sheet { border-radius: 20px; max-height: 80vh; }
   }
 </style>

@@ -544,7 +544,7 @@
     align-items: stretch;
     border-radius: 16px;
     border: 1px solid rgba(var(--c-accent), 0.35);
-    background: rgba(var(--c-surface-b), 0.80);
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
     overflow: hidden;
   }
 
