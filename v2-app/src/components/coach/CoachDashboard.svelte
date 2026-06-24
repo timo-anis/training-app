@@ -131,10 +131,19 @@
 
     {#if loading}
       <div class="empty">Loading…</div>
+    {:else if trainees.length === 0 && pending.length === 0}
+      <div class="empty first-time">
+        <span class="ft-title">Getting started</span>
+        <ol class="ft-steps">
+          <li>Enter a trainee's email above and tap <strong>Invite</strong></li>
+          <li>They open their training app → Account → Accept your invite</li>
+          <li>Their full training log appears here — weeks, sets, notes and chat</li>
+        </ol>
+      </div>
     {:else if trainees.length === 0}
       <div class="empty">
-        <span class="empty-title">No trainees yet</span>
-        <span class="empty-sub">Invite someone above. Once they accept, you'll see their training here.</span>
+        <span class="empty-title">Waiting for acceptance</span>
+        <span class="empty-sub">The invite is pending — they'll see it next time they open the app.</span>
       </div>
     {:else}
       {#each trainees as t (t.linkId)}
@@ -143,7 +152,9 @@
             <span class="dot" class:active={t.thisWeekActive} aria-hidden="true"></span>
             <span class="row-main">
               <span class="row-name">{t.email}</span>
-
+              {#if t.lastTrainedAt}
+                <span class="row-meta">Last trained {relativeAge(t.lastTrainedAt, now)}</span>
+              {/if}
             </span>
             {#if unreadMap[t.linkId] > 0}<span class="row-unread">{unreadMap[t.linkId]}</span>{/if}
             <span class="row-arrow">›</span>
@@ -265,5 +276,17 @@
   }
   .empty-title { font-size: 15px; font-weight: 800; color: rgba(var(--c-fg), 0.40); }
   .empty-sub { font-size: 12.5px; color: rgba(var(--c-fg), 0.45); line-height: 1.5; }
+
+  .empty.first-time { text-align: left; gap: 10px; }
+  .ft-title { font-size: 13px; font-weight: 800; color: rgba(var(--c-fg), 0.50); letter-spacing: 0.05em; text-transform: uppercase; }
+  .ft-steps {
+    margin: 0; padding-left: 18px;
+    display: flex; flex-direction: column; gap: 8px;
+    font-size: 13px; line-height: 1.55; color: rgba(var(--c-fg), 0.65);
+  }
+  .ft-steps li::marker { color: var(--c-accent-solid); font-weight: 800; }
+  .ft-steps strong { color: var(--c-accent-solid); font-weight: 800; }
+
+  .row-meta { font-size: 11.5px; color: rgba(var(--c-fg), 0.40); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 </style>
