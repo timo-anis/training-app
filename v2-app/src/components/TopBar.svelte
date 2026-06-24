@@ -110,13 +110,14 @@
 .icon-btn {
   width: 36px;
   height: 36px;
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
   border-radius: 50%;
   border: none;
-  background: rgba(var(--c-fg), 0.07);
-  color: rgba(var(--c-fg), 0.42);
+  background: rgba(var(--c-fg), 0.10);
+  color: rgba(var(--c-fg), 0.50);
   cursor: pointer;
   transition: background 0.12s, color 0.12s;
   -webkit-tap-highlight-color: transparent;
@@ -125,8 +126,8 @@
 }
 
 .icon-btn:active {
-  background: rgba(var(--c-fg), 0.14);
-  color: rgba(var(--c-fg), 0.75);
+  background: rgba(var(--c-fg), 0.18);
+  color: rgba(var(--c-fg), 0.80);
 }
 
 /* Chat button: gold tint to give it visual priority */
