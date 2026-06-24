@@ -32,9 +32,11 @@
   })();
 
   // Weekly progress: completed days vs days-with-exercises this week
+  // todayISO guards against future days that were accidentally marked completed
+  $: todayISO = new Date().toISOString().split('T')[0];
   $: realWeekDays = realToday ? $appState.weeks.filter(w => w.week === realToday!.week) : [];
-  $: weekDone = realWeekDays.filter(d => d.completed).length;
-  $: weekTotal = realWeekDays.filter(d => d.exercises.length > 0 || d.completed).length;
+  $: weekDone = realWeekDays.filter(d => d.completed && d.date <= todayISO).length;
+  $: weekTotal = realWeekDays.filter(d => d.exercises.length > 0).length;
   $: weekPct = weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0;
 
   $: streak = $streakInfo.count;
