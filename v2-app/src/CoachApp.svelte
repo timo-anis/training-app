@@ -52,7 +52,7 @@
       <div class="ch-left">
         <span class="brand-badge sm">COACH</span>
         {#if view === 'trainee'}
-          <button class="back-btn" on:click={backToDashboard} aria-label="Back to trainees">‹ Trainees</button>
+          <button class="back-btn desktop-hidden" on:click={backToDashboard} aria-label="Back to trainees">‹ Trainees</button>
         {/if}
       </div>
       <div class="ch-right">
@@ -61,13 +61,29 @@
       </div>
     </header>
 
-    <main class="coach-main">
-      {#if view === 'dashboard'}
+    <div class="coach-columns">
+      <!-- Sidebar: trainee list. On mobile hidden when a trainee is open. -->
+      <aside class="coach-sidebar" class:mobile-hidden={view === 'trainee'}>
         <CoachDashboard {user} onOpenTrainee={openTrainee} />
-      {:else if view === 'trainee' && selected}
-        <CoachTraineeView trainee={selected} />
-      {/if}
-    </main>
+      </aside>
+      <!-- Main panel: trainee detail. On mobile hidden on dashboard. -->
+      <main class="coach-panel" class:mobile-hidden={view === 'dashboard'}>
+        {#if selected}
+          <CoachTraineeView trainee={selected} />
+        {:else}
+          <div class="coach-empty-state">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            <p>Select a trainee to view their training</p>
+          </div>
+        {/if}
+      </main>
+    </div>
   {/if}
 </div>
 
@@ -139,23 +155,57 @@
   }
   .ch-signout:active { background: rgba(var(--c-fg), 0.06); }
 
-  .coach-main { max-width: 640px; margin: 0 auto; padding: 0 0 40px; }
+  /* ── Mobile layout: sequential dashboard → trainee ── */
+  .coach-columns { display: flex; flex-direction: column; min-height: calc(100dvh - 54px); }
+  .coach-sidebar, .coach-panel { min-width: 0; }
+  .mobile-hidden { display: none; }
+  .coach-panel { flex: 1; }
 
-  /* Desktop framing (>=900px): ambient desk + defined coach panel. Mobile untouched. */
+  .coach-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    min-height: 60vh;
+    color: rgba(var(--c-fg), 0.32);
+    text-align: center;
+    padding: 32px;
+  }
+  .coach-empty-state svg { opacity: 0.35; }
+  .coach-empty-state p { font-size: 14px; font-weight: 600; max-width: 200px; line-height: 1.5; }
+
+  /* ── Desktop layout (≥900px): 2-column sidebar + main panel ── */
   @media (min-width: 900px) {
     .coach-root {
       background:
         radial-gradient(110% 70% at 50% -8%, rgba(var(--c-accent), 0.05), transparent 55%),
         radial-gradient(ellipse at 50% 0%, var(--c-bg-1) 0%, var(--c-bg-2) 45%, var(--c-bg-3) 100%);
     }
-    .coach-main {
-      max-width: 720px;
-      border-left: 1px solid rgba(var(--c-edge-b), 0.16);
-      border-right: 1px solid rgba(var(--c-edge-b), 0.16);
-      background: linear-gradient(180deg, rgba(var(--c-fg), 0.018), transparent 320px);
-      box-shadow: 0 30px 80px -20px rgba(var(--c-shadow), 0.55),
-                  0 0 40px rgba(var(--c-shadow), 0.22);
+    .coach-columns {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      max-width: 1160px;
+      margin: 0 auto;
       min-height: calc(100dvh - 54px);
+      gap: 0;
+    }
+    .mobile-hidden { display: revert; }
+    .desktop-hidden { display: none; }
+    .coach-sidebar {
+      border-right: 1px solid rgba(var(--c-edge-b), 0.18);
+      background: rgba(var(--c-surface-b), 0.30);
+      overflow-y: auto;
+    }
+    .coach-panel {
+      border-left: none;
+      background: linear-gradient(180deg, rgba(var(--c-fg), 0.016), transparent 280px);
+      box-shadow: inset 1px 0 0 rgba(var(--c-edge-b), 0.10);
+      overflow-y: auto;
+    }
+    .coach-header {
+      max-width: 1160px;
+      margin: 0 auto;
     }
   }
 
