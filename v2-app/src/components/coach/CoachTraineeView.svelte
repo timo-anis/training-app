@@ -184,6 +184,10 @@
 <style>
   .trainee-view { padding-bottom: 24px; }
 
+  @media (min-width: 900px) {
+    .trainee-view { max-width: 700px; margin: 0 auto; }
+  }
+
   .tv-head {
     display: flex; align-items: center; gap: 10px;
     padding: 14px 14px 4px;

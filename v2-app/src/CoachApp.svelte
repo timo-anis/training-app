@@ -195,7 +195,7 @@
     .coach-sidebar {
       border-right: 1px solid rgba(var(--c-edge-b), 0.18);
       background: rgba(var(--c-surface-b), 0.30);
-      overflow-y: auto;
+      overflow: hidden auto;
     }
     .coach-panel {
       border-left: none;
