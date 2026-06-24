@@ -10,6 +10,7 @@
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
   import StreakStrip from './StreakStrip.svelte';
+  import HeroCard from './HeroCard.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import CoachNote from './CoachNote.svelte';
   import AddExercise from './AddExercise.svelte';
@@ -237,6 +238,12 @@
   <section class="section section-tight r-streak">
     <StreakStrip />
   </section>
+
+  {#if !isNewUser}
+    <section class="section section-tight r-hero">
+      <HeroCard />
+    </section>
+  {/if}
 
   {#if isNewUser}
     <section class="section r-welcome">
@@ -509,6 +516,7 @@
   .session-stop-x { font-size: 10px; opacity: 0.5; }
 
   .r-welcome   { order: 2; }
+  .r-hero      { order: 2; }
   .r-streak    { order: 3; }
   .r-calendar  { order: 4; }
   .r-day       { order: 5; }
@@ -1188,6 +1196,7 @@
       grid-template-areas:
         "bar     bar"
         "strip   strip"
+        "hero    hero"
         "welcome welcome"
         "planner session";
       column-gap: 18px;
@@ -1196,6 +1205,7 @@
 
     .main > :global(.topbar) { grid-area: bar; }
     .r-streak  { grid-area: strip; }
+    .r-hero    { grid-area: hero; }
     .r-welcome { grid-area: welcome; }
 
     .col-planner { display: flex; flex-direction: column; grid-area: planner; }

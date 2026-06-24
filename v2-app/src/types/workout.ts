@@ -53,6 +53,8 @@ export interface WorkoutDay {
   note?: string;
   /** User-marked day type (workout / recovery / rest). Undefined = unmarked. */
   kind?: DayKind;
+  /** Optional user-given name for this training day e.g. "Push A", "Leg day". */
+  label?: string;
 }
 
 export interface AppState {

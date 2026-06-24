@@ -387,6 +387,29 @@ export function setDayKind(week: number, day: DayOfWeek, kind: DayKind | null) {
   });
 }
 
+export function setDayLabel(week: number, day: DayOfWeek, label: string) {
+  updateState(state => {
+    const exists = state.weeks.find(w => w.week === week && w.day === day);
+    if (exists) {
+      return {
+        ...state,
+        weeks: state.weeks.map(w => {
+          if (w.week !== week || w.day !== day) return w;
+          if (!label) {
+            const { label: _l, ...rest } = w;
+            return rest as WorkoutDay;
+          }
+          return { ...w, label };
+        }),
+      };
+    }
+    if (!label) return state;
+    const date = getDateForWeekDay(week, day);
+    const newDay: WorkoutDay = { week, day, date, exercises: [], label };
+    return { ...state, weeks: [...state.weeks, newDay] };
+  });
+}
+
 export function exitWorkout() {
   uiState.update(ui => ({
     ...ui,
