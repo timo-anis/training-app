@@ -125,7 +125,9 @@
 
 <style>
   .hero-card {
-    background: var(--h-0d1a30);
+    background: rgba(var(--c-accent), 0.08);
+    border: 0.5px solid rgba(var(--c-accent), 0.20);
+    border-radius: 14px;
     padding: 14px 16px 16px;
   }
 
