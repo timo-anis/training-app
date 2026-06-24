@@ -1036,7 +1036,7 @@
   .wm-overlay {
     position: fixed;
     inset: 0;
-    background: radial-gradient(ellipse at 50% 0%, var(--c-bg-1) 0%, var(--c-bg-2) 55%, var(--c-bg-3) 100%);
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
     z-index: 100;
     display: flex;
     flex-direction: column;

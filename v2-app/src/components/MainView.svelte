@@ -1035,7 +1035,9 @@
   :global(.hints-backdrop) {
     position: fixed;
     inset: 0;
-    background: rgba(var(--c-shadow), 0.55);
+    background: rgba(0,0,0,0.55);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 80;
     display: flex;
     align-items: flex-end;
@@ -1049,7 +1051,7 @@
   }
 
   :global(.hints-sheet) {
-    background: linear-gradient(180deg, var(--c-bg-1) 0%, var(--h-080c18) 100%);
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
     border: 1px solid rgba(var(--c-edge-b), 0.25);
     border-radius: 20px 20px 0 0;
     padding: 20px 20px 36px;
@@ -1072,7 +1074,7 @@
     margin-bottom: 16px;
     position: sticky;
     top: 0;
-    background: var(--c-bg-1);
+    background: var(--h-0d1a30);
     padding-bottom: 12px;
     border-bottom: 1px solid rgba(var(--c-edge-b), 0.18);
     z-index: 10;

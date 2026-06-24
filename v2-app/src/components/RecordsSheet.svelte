@@ -63,7 +63,9 @@
   .records-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.72);
+    background: rgba(0,0,0,0.60);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     z-index: 110;
     display: flex;
     align-items: flex-end;
