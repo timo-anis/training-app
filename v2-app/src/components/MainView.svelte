@@ -4,7 +4,7 @@
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
-  import { coachUnreadTotal, startCoachUnreadWatch, stopCoachUnreadWatch, refreshCoachUnread } from '../stores/messages';
+  import { coachUnreadTotal, myCoachLinkId, startCoachUnreadWatch, stopCoachUnreadWatch, refreshCoachUnread } from '../stores/messages';
   import { assignments, assignmentKey, setAssignmentContext, loadAssignmentsFor } from '../stores/assignments';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
@@ -210,7 +210,9 @@
     onGuide={() => hintsOpen = true}
     onSearch={() => ($searchOpen = true)}
     onAccount={() => accountOpen = true}
+    onChat={() => accountOpen = true}
     {hasInvite}
+    hasCoach={!!$myCoachLinkId}
     unreadMessages={$coachUnreadTotal}
   />
 

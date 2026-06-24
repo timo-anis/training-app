@@ -83,6 +83,8 @@ export async function markChatRead(): Promise<void> {
 // badges per trainee on login. Lives independently of the open-thread store.
 // ============================================================
 export const coachUnreadTotal = writable(0);
+/** The linkId of the trainee's accepted coach (null = no coach). Set on watch start. */
+export const myCoachLinkId = writable<string | null>(null);
 let unreadWatch: (() => void) | null = null;
 
 /** Recompute the trainee's total unread-from-coach (sum across links). */
@@ -101,6 +103,7 @@ export async function startCoachUnreadWatch(userId: string): Promise<void> {
     const coach = await getMyCoach(userId);
     unreadWatch?.(); unreadWatch = null;
     if (coach) {
+      myCoachLinkId.set(coach.linkId);
       unreadWatch = subscribeToMessages(
         coach.linkId,
         { onInsert: () => void refreshCoachUnread(userId),
@@ -114,4 +117,5 @@ export async function startCoachUnreadWatch(userId: string): Promise<void> {
 export function stopCoachUnreadWatch(): void {
   unreadWatch?.(); unreadWatch = null;
   coachUnreadTotal.set(0);
+  myCoachLinkId.set(null);
 }
