@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appState, uiState, openWorkoutMode, currentDayExercises, currentWeekDays } from '../stores/app';
+  import { appState, uiState, openWorkoutMode, todayWeekDay } from '../stores/app';
   import { displayName } from '../stores/ui-state';
   import { setDayLabel, streakInfo } from '../stores/workout-state';
 
@@ -17,8 +17,10 @@
   }
 
   $: name = $displayName;
-  $: todayDay = $appState.weeks.find(w => w.week === $uiState.week && w.day === $uiState.day);
-  $: exercises = $currentDayExercises;
+  // Always use real calendar today — not the UI-selected week/day
+  $: realToday = todayWeekDay();
+  $: todayDay = realToday ? $appState.weeks.find(w => w.week === realToday!.week && w.day === realToday!.day) : undefined;
+  $: exercises = todayDay?.exercises ?? [];
 
   // Workout chip: label OR "First Exercise · +N more"
   $: savedLabel = todayDay?.label ?? '';
@@ -30,9 +32,9 @@
   })();
 
   // Weekly progress: completed days vs days-with-exercises this week
-  $: weekDays = $currentWeekDays;
-  $: weekDone = weekDays.filter(d => d.completed).length;
-  $: weekTotal = weekDays.filter(d => d.exercises.length > 0).length;
+  $: realWeekDays = realToday ? $appState.weeks.filter(w => w.week === realToday!.week) : [];
+  $: weekDone = realWeekDays.filter(d => d.completed).length;
+  $: weekTotal = realWeekDays.filter(d => d.exercises.length > 0 || d.completed).length;
   $: weekPct = weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0;
 
   $: streak = $streakInfo.count;

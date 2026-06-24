@@ -15,7 +15,9 @@
   let resetSent = false;
   let loading = false;
   let nameValue = '';
-  $: nameValue = $displayName; // sync when store loads
+  let nameEditing = false;
+  $: if (!nameEditing) nameValue = $displayName; // sync when store loads
+  function focusNameInput(el: HTMLElement) { el.focus(); }
 
 
   // Push notifications — the row is hidden unless push is configured (VAPID armed)
@@ -96,6 +98,7 @@
   }
 
   async function saveName() {
+    nameEditing = false;
     const trimmed = nameValue.trim();
     const uid = $currentUser?.id;
     if (!uid) return;
@@ -121,19 +124,31 @@
     </div>
 
     <!-- Display name -->
-    <div class="name-row">
-      <label class="name-label" for="display-name">Your name</label>
-      <input
-        id="display-name"
-        class="name-input"
-        type="text"
-        bind:value={nameValue}
-        on:blur={saveName}
-        on:keydown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
-        placeholder="Add your name…"
-        maxlength={40}
-      />
-    </div>
+    {#if nameEditing}
+      <div class="name-edit-row">
+        <span class="action-icon">👤</span>
+        <input
+          id="display-name"
+          class="name-edit-input"
+          type="text"
+          bind:value={nameValue}
+          on:blur={saveName}
+          on:keydown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
+          placeholder="Your name…"
+          maxlength={40}
+          use:focusNameInput
+        />
+      </div>
+    {:else}
+      <button class="action-row" on:click={() => { nameEditing = true; }}>
+        <span class="action-icon">👤</span>
+        <div class="action-text">
+          <span class="action-label">Your name</span>
+          <span class="action-sub">{$displayName || 'Not set — tap to add'}</span>
+        </div>
+        <span class="action-arrow">›</span>
+      </button>
+    {/if}
 
     <div class="divider"></div>
 
@@ -262,36 +277,26 @@
   .sheet-body { padding: 16px 0 8px; }
 
   /* User info */
-  .name-row {
+  .name-edit-row {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 10px 0 8px;
     gap: 12px;
+    padding: 10px 20px 14px;
   }
-  .name-label {
-    font-size: 13px;
-    color: rgba(var(--c-fg), 0.55);
-    white-space: nowrap;
-    flex-shrink: 0;
-  }
-  .name-input {
+  .name-edit-input {
     flex: 1;
     min-width: 0;
-    text-align: right;
     background: transparent;
     border: none;
-    border-bottom: 1px solid rgba(var(--c-fg), 0.12);
+    border-bottom: 1.5px solid var(--c-accent-solid);
     border-radius: 0;
-    padding: 3px 0;
-    font-size: 13px;
+    padding: 4px 0;
+    font-size: 15px;
     font-weight: 500;
-    color: rgba(var(--c-fg), 0.90);
+    color: rgba(var(--c-fg), 0.92);
     outline: none;
-    transition: border-color 0.15s;
   }
-  .name-input::placeholder { color: rgba(var(--c-fg), 0.28); font-weight: 400; }
-  .name-input:focus { border-bottom-color: var(--c-accent-solid); }
+  .name-edit-input::placeholder { color: rgba(var(--c-fg), 0.28); font-weight: 400; }
 
   .user-row {
     display: flex;
