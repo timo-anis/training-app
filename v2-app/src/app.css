@@ -50,8 +50,9 @@
   }
 }
 
-body {
+html, body {
   margin: 0;
+  background: var(--c-bg-3);
 }
 
 h1,
