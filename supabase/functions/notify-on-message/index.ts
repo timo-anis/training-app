@@ -1,4 +1,4 @@
-// notify-on-message — Web Push delivery for Track 4 chat (NOT DEPLOYED).
+// notify-on-message — Web Push delivery for Track 4 chat (DEPLOYED — webhook wired).
 //
 // Per spec §9.4 push is an ENHANCEMENT, never a dependency. This function is the
 // optional server piece: triggered by a Database Webhook on INSERT into
