@@ -92,6 +92,10 @@ export const sheetOpen = writable<boolean>(false);
 // Set true from anywhere to (re)open the onboarding walkthrough
 export const requestOnboarding = writable<boolean>(false);
 
+/** Set true by any full-screen overlay (quick guide, records, search) to blur
+ *  the scroll-content underneath on desktop. WorkoutMode has its own class. */
+export const overlayBlurred = writable<boolean>(false);
+
 // ---- Global undo ----
 export interface UndoAction { label: string; fn: () => void; }
 export const undoAction = writable<UndoAction | null>(null);

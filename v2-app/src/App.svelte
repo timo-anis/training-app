@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, overlayBlurred, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
@@ -130,7 +130,7 @@
   <div class="app-shell">
 
     <!-- ── Scrollable content ── -->
-    <div class="scroll-content" class:workout-blur={$uiState.workoutMode}>
+    <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$overlayBlurred || $searchOpen}>
       <MainView />
     </div>
 
