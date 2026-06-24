@@ -50,8 +50,9 @@
         {/if}
       </div>
       <div class="ch-right">
-        <span class="ch-email">{user?.email ?? ''}</span>
-        <button class="ch-signout" on:click={handleSignOut}>Sign out</button>
+        <button class="ch-signout" on:click={handleSignOut} aria-label="Sign out" title="Sign out">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </button>
       </div>
     </header>
 
@@ -127,10 +128,6 @@
     border-bottom: 1px solid rgba(var(--c-edge-b), 0.18);
   }
   .ch-left, .ch-right { display: flex; align-items: center; gap: 10px; min-width: 0; }
-  .ch-email {
-    font-size: 12px; color: rgba(var(--c-fg), 0.55); font-weight: 600;
-    max-width: 38vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  }
   .back-btn {
     padding: 6px 12px; border-radius: 10px;
     border: 1px solid rgba(var(--c-fg), 0.12);
@@ -140,13 +137,13 @@
   }
   .back-btn:active { background: rgba(var(--c-surface-b), 0.85); }
   .ch-signout {
-    padding: 6px 12px; border-radius: 10px;
+    width: 32px; height: 32px; border-radius: 10px;
     border: 1px solid rgba(var(--c-fg), 0.12);
-    background: transparent; color: rgba(var(--c-fg), 0.60);
-    font-size: 13px; font-weight: 700; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    background: transparent; color: rgba(var(--c-fg), 0.45);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-tap-highlight-color: transparent;
   }
-  .ch-signout:active { background: rgba(var(--c-fg), 0.06); }
+  .ch-signout:active { background: rgba(var(--c-fg), 0.06); color: rgba(var(--c-fg), 0.70); }
 
   /* ── Mobile layout: sequential dashboard → trainee ── */
   .coach-columns { display: flex; flex-direction: column; min-height: calc(100dvh - 54px); }
@@ -189,6 +186,8 @@
       border-right: 1px solid rgba(var(--c-edge-b), 0.18);
       background: rgba(var(--c-surface-b), 0.30);
       overflow: hidden auto;
+      width: 300px;
+      box-sizing: border-box;
     }
     .coach-panel {
       border-left: none;

@@ -165,7 +165,7 @@
 </section>
 
 <style>
-  .dash { padding: 16px 14px; display: grid; gap: 18px; }
+  .dash { padding: 16px 14px; display: grid; gap: 18px; box-sizing: border-box; width: 100%; overflow: hidden; }
 
   .card {
     border-radius: 16px;
@@ -189,7 +189,7 @@
   .invite-input:focus { border-color: rgba(var(--c-accent), 0.45); }
   .invite-input::placeholder { color: rgba(var(--c-fg), 0.28); }
   .invite-btn {
-    flex: 0 0 auto; padding: 0 18px; border-radius: 11px;
+    flex: 0 0 auto; padding: 0 12px; border-radius: 11px;
     border: 1px solid rgba(var(--c-accent), 0.50);
     background: rgba(var(--c-accent), 0.16);
     color: var(--c-accent-solid); font-size: 14px; font-weight: 800; cursor: pointer;

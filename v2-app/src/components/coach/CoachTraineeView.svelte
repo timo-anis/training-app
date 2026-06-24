@@ -116,6 +116,7 @@
 <div class="trainee-view">
   <div class="tv-head">
     <div class="tv-id">
+      <span class="tv-label">TRAINEE</span>
       <span class="tv-name">{trainee.email}</span>
       <span class="tv-fresh">
         {#if loading}Loading…{:else if updatedAt}Updated {relativeAge(updatedAt, now)} · read-only{:else}No cloud data yet{/if}
@@ -193,6 +194,13 @@
     padding: 14px 14px 4px;
   }
   .tv-id { display: flex; flex-direction: column; gap: 3px; min-width: 0; flex: 1 1 auto; }
+  .tv-label {
+    display: block;
+    font-size: 10px; font-weight: 800; letter-spacing: 0.08em;
+    color: rgba(var(--c-accent), 0.65);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
   .tv-name {
     font-size: 18px; font-weight: 900; color: var(--c-text); letter-spacing: -0.01em;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
