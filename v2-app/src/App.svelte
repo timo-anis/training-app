@@ -130,9 +130,14 @@
   <div class="app-shell">
 
     <!-- ── Scrollable content ── -->
-    <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$overlayBlurred || $searchOpen}>
+    <div class="scroll-content" class:workout-blur={$uiState.workoutMode}>
       <MainView />
     </div>
+
+    <!-- ── Overlay blur layer (desktop) — sits below all fixed overlays ── -->
+    {#if $overlayBlurred || $searchOpen}
+      <div class="blur-layer" aria-hidden="true"></div>
+    {/if}
 
     <!-- ── Bottom workout bar ── -->
     {#if showWorkoutBar}
@@ -413,6 +418,12 @@
      ============================================================ */
   @media (min-width: 900px) {
     .scroll-content.workout-blur { filter: blur(12px); pointer-events: none; transition: filter 0.25s; }
+    .blur-layer {
+      position: fixed; inset: 0; z-index: 70;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      pointer-events: none;
+    }
     .app-shell {
       background:
         radial-gradient(125% 85% at 50% -10%, rgba(var(--c-accent), 0.07), transparent 50%),
