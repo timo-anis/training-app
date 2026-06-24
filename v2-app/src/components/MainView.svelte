@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
@@ -40,12 +40,29 @@
     setAssignmentContext({ coachId: null, traineeId: me, canEdit: false });
     try { await loadAssignmentsFor(me); } catch { /* plan optional */ }
   }
+  // Desktop session CTA elapsed clock (mirrors App.svelte's bottom-bar timer).
+  // The bottom bar is hidden on desktop; the Start/Resume/Stop control lives in
+  // the session pane instead. Mobile keeps the bottom bar untouched.
+  let elapsed = 0;
+  let clockInterval: ReturnType<typeof setInterval>;
+  function fmtElapsed(sec: number): string {
+    const h = Math.floor(sec / 3600);
+    const m = Math.floor((sec % 3600) / 60);
+    const s2 = sec % 60;
+    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s2).padStart(2,'0')}`;
+    return `${m}:${String(s2).padStart(2,'0')}`;
+  }
+
   onMount(() => {
     refreshInvites(); refreshCoachNotes(); refreshAssignments();
     const me = $currentUser?.id;
     if (me) startCoachUnreadWatch(me);
+    clockInterval = setInterval(() => {
+      const start = $uiState.workoutStartTime;
+      elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
+    }, 1000);
   });
-  onDestroy(() => stopCoachUnreadWatch());
+  onDestroy(() => { stopCoachUnreadWatch(); clearInterval(clockInterval); });
 
   // Plan-vs-actual per current day (§3.4): a prescribed day the trainee has not
   // yet touched renders read-mostly; first touch materializes it into the blob.
@@ -178,15 +195,10 @@
     unreadMessages={$coachUnreadTotal}
   />
 
-  <div class="col-rail">
-    <!-- Streak / consistency momentum strip -->
   <section class="section section-tight r-streak">
     <StreakStrip />
   </section>
-  </div>
 
-  <div class="col-center">
-    <!-- New-user welcome (top, prominent) -->
   {#if isNewUser}
     <section class="section r-welcome">
       <div class="welcome-card">
@@ -225,13 +237,12 @@
     </section>
   {/if}
 
-    <!-- Monthly calendar -->
-  <section class="section r-calendar">
+  <div class="col-planner">
+    <section class="section r-calendar">
     <MonthCalendar />
   </section>
 
-    <!-- Statistics button -->
-  <section class="section section-tight r-stats">
+    <section class="section section-tight r-stats">
     <button class="stats-btn" on:click={() => statsOpen = !statsOpen} aria-expanded={statsOpen}>
       <svg class="stats-btn-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -242,14 +253,23 @@
       <span class="stats-chevron" class:open={statsOpen}>›</span>
     </button>
   </section>
-  {#if statsOpen}
+    {#if statsOpen}
     <div class="r-statsview"><StatsView /></div>
   {/if}
   </div>
 
-  <div class="col-context">
-    <!-- Day heading + exercise list (collapsed by default) -->
-  <section class="section r-day">
+  <div class="col-session">
+  {#if $currentDayExercises.length > 0 && !$uiState.workoutMode}
+    <div class="session-cta-wrap">
+      {#if $uiState.workoutActive}
+        <button class="session-resume" on:click={openWorkoutMode}>Resume workout →</button>
+        <button class="session-stop" on:click={exitWorkout} title="Stop workout"><span class="session-stop-dot"></span><span class="session-stop-val">{fmtElapsed(elapsed)}</span><span class="session-stop-x">■</span></button>
+      {:else}
+        <button class="session-start" on:click={openWorkoutMode}>▶ Start workout</button>
+      {/if}
+    </div>
+  {/if}
+    <section class="section r-day">
     <div class="day-heading-row">
       <button class="day-nav-arrow" on:click={() => goToAdjacentDay(-1)} aria-label="Previous day">‹</button>
       <button class="day-heading-btn" on:click={() => exercisesExpanded = !exercisesExpanded}>
@@ -413,9 +433,48 @@
      `order` values below reproduce the exact current single-column sequence:
      TopBar, welcome, streak, calendar, day, stats, statsview. Mobile is
      byte-identical; the wrappers only become real columns at >=900px. */
-  .col-rail,
-  .col-center,
-  .col-context { display: contents; }
+  .col-planner,
+  .col-session { display: contents; }
+
+  /* Desktop session CTA (Start / Resume / Stop) lives at the top of the session
+     pane on desktop; on mobile it is hidden and the bottom workout-bar handles it. */
+  .session-cta-wrap { display: none; }
+  .session-start,
+  .session-resume {
+    flex: 1 1 0;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(var(--c-accent), 0.55);
+    background: rgba(var(--c-accent), 0.16);
+    color: var(--h-d4a038);
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s, transform 0.08s;
+  }
+  .session-start { background: var(--c-accent-solid); color: var(--h-0c0c0e); border: none; }
+  .session-start:active { transform: scale(0.99); }
+  .session-resume:active { background: rgba(var(--c-accent), 0.26); transform: scale(0.99); }
+  .session-stop {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(var(--c-fg), 0.16);
+    background: rgba(var(--c-fg), 0.06);
+    color: rgba(var(--c-fg), 0.80);
+    font-size: 14px;
+    font-weight: 800;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    white-space: nowrap;
+  }
+  .session-stop-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(var(--c-fg), 0.70); flex-shrink: 0; }
+  .session-stop-val { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+  .session-stop-x { font-size: 10px; opacity: 0.5; }
 
   .r-welcome   { order: 2; }
   .r-streak    { order: 3; }
@@ -1055,26 +1114,32 @@
     .empty-title { font-size: 20px; }
   }
 
-  /* Desktop grid (>=900px): fill the width with purpose instead of a centered
-     strip. TopBar stays full-width sticky across the top; below it a three-column
-     grid (rail | center | context). Mobile/PWA untouched (single column above). */
+  /* Desktop layout (>=900px): full-width TopBar + a streak status strip, then two
+     panes — Planner (calendar + statistics) on the left, today's Session (the hero)
+     on the right with its Start/Resume CTA at the top. The bottom workout-bar is
+     hidden on desktop (App.svelte). Mobile/PWA single-column above is untouched. */
   @media (min-width: 900px) {
     .main {
       max-width: 1160px;
       display: grid;
-      grid-template-columns: 200px minmax(0, 1fr) 360px;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
       grid-template-areas:
-        "bar bar bar"
-        "rail center context";
+        "bar     bar"
+        "strip   strip"
+        "welcome welcome"
+        "planner session";
       column-gap: 18px;
       align-items: start;
     }
 
     .main > :global(.topbar) { grid-area: bar; }
+    .r-streak  { grid-area: strip; }
+    .r-welcome { grid-area: welcome; }
 
-    .col-rail    { display: flex; flex-direction: column; grid-area: rail; }
-    .col-center  { display: flex; flex-direction: column; grid-area: center; }
-    .col-context { display: flex; flex-direction: column; grid-area: context; }
+    .col-planner { display: flex; flex-direction: column; grid-area: planner; }
+    .col-session { display: flex; flex-direction: column; grid-area: session; }
+
+    .session-cta-wrap { display: flex; gap: 8px; padding: 14px 20px 0; }
   }
 
 </style>

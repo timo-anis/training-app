@@ -1,6 +1,6 @@
 # Desktop redesign — "A structure + B craft" (top-tier wide-browser trainee view)
 
-**Status:** PR1 SHIPPED 2026-06-24. PR2/PR3 not started. On-ramp for a FRESH session (track-by-track rule).
+**Status:** PR1 (3-col scaffold) + PR2 (session-first 2-pane) SHIPPED 2026-06-24. After live-screenshot review the 3-col was REWORKED into a 2-pane "session-first" layout (streak strip on top, Planner left, Session hero right, CTA in the session pane, bottom bar hidden on desktop). PR3 craft pass not started. On-ramp for a FRESH session (track-by-track rule).
 **Approved by Timo 2026-06-24** after the desktop framing shipped (`1ebe320`): the framed
 panel fixed the "floating strip" but a 672px column on a ~2000px screen still wastes ~⅔ of the
 width with purposeless dark void. Direction chosen: **A (real desktop layout that fills the

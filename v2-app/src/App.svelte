@@ -416,13 +416,9 @@
         radial-gradient(110% 70% at 50% -8%, rgba(var(--c-accent), 0.05), transparent 55%),
         radial-gradient(ellipse at 50% 0%, var(--c-bg-1) 0%, var(--c-bg-2) 45%, var(--c-bg-3) 100%);
     }
-    .workout-bar {
-      width: 100%;
-      max-width: 672px;
-      margin: 0 auto;
-      border-left: 1px solid rgba(var(--c-edge-b), 0.16);
-      border-right: 1px solid rgba(var(--c-edge-b), 0.16);
-    }
+    /* Desktop: the Start/Resume/Stop control moves into the session pane
+       (MainView). Hide the bottom workout-bar on desktop; mobile keeps it. */
+    .workout-bar { display: none; }
   }
 
 </style>
