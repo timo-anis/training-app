@@ -7,7 +7,15 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
   throw new Error('Missing Supabase env vars — check .env');
 }
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Coach and trainee surfaces share the same origin but need separate sessions
+// so both can be open simultaneously in the same browser (two-user testing).
+// Using a distinct storageKey keeps their localStorage auth tokens isolated.
+const isCoach = typeof window !== 'undefined' && window.location.pathname.includes('coach');
+export const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    storageKey: isCoach ? 'sb-coach-auth' : 'sb-trainee-auth',
+  },
+});
 
 // ---- Password-recovery intent (captured at the earliest point) ----
 // With the PKCE flow the reset link returns as `?code=...` (no `type=recovery`
