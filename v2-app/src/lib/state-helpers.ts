@@ -225,7 +225,7 @@ export function buildWorkoutBlocks(exercises: Exercise[]): WorkoutBlock[] {
       if (!seenGroups.has(groupKey)) {
         seenGroups.add(groupKey);
         const group = exercises.filter(e => e.type === 'superset' && !!e.code && e.code[0] === groupKey);
-        blocks.push({ id: `superset_${groupKey}`, exercises: group, isSuperset: true, code: groupKey });
+        blocks.push({ id: `superset_${groupKey}`, exercises: group, isSuperset: group.length > 1, code: groupKey });
       }
     }
   }

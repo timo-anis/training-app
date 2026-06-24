@@ -55,7 +55,7 @@
         <p>Your training is organised by week and day. Tap any day in the calendar to open it, then mark it <strong>Workout</strong>, <strong>Recovery</strong> or <strong>Rest</strong>. Move day to day with the <strong>‹ ›</strong> arrows.</p>
         <div class="ob-tip">
           <span class="tip-icon">💡</span>
-          <span>Each day you mark shows as a circle in the calendar — <strong>green</strong> done, <strong>white</strong> workout, <strong>amber</strong> recovery, <strong>dashed</strong> rest. Tap <strong>Today</strong> to jump back to today.</span>
+          <span>Each day you mark shows as a circle — <strong>green</strong> filled = done, <strong>gold ring</strong> = today, <strong>dashed</strong> = rest. Tap <strong>Today</strong> to jump back to today.</span>
         </div>
       </div>
 

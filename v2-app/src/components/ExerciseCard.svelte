@@ -15,6 +15,8 @@
   export let readonly = false;
   /** Coach view: allow authoring the coach-note for this exercise. */
   export let coachAuthoring = false;
+  /** Number of exercises sharing the same superset group — badge hidden if ≤ 1. */
+  export let supersetSize: number = 1;
 
   // Scroll into view + brief highlight when navigated to from search
   let cardEl: HTMLDivElement;
@@ -36,7 +38,7 @@
   $: doneCount = exercise.conditioning ? (exercise.conditioningDone ? 1 : 0) : exercise.sets.filter(s => s.done).length;
   $: totalCount = exercise.conditioning ? 1 : exercise.sets.length;
   $: allDone = exercise.conditioning ? exercise.conditioningDone === true : (doneCount === totalCount && totalCount > 0);
-  $: supersetLabel = exercise.code || '';
+  $: supersetLabel = (exercise.code && supersetSize > 1) ? exercise.code : '';
   // Position letter for conditioning (A, B, C…) — based on index in exercise list
   $: positionLetter = String.fromCharCode(65 + blockIndex);
 

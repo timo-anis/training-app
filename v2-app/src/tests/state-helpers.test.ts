@@ -390,6 +390,14 @@ describe('buildWorkoutBlocks', () => {
     expect(blocks[1].exercises).toHaveLength(2);
   });
 
+  it('lone superset-typed exercise (code A, no partner) → isSuperset false', () => {
+    // A single exercise coded 'A' must NOT show a superset badge
+    const ex = makeExercise('ex1', 'Squat', { type: 'superset', code: 'A' });
+    const blocks = buildWorkoutBlocks([ex]);
+    expect(blocks[0].isSuperset).toBe(false);
+    expect(blocks[0].exercises).toHaveLength(1);
+  });
+
   it('superset with type=single but non-empty code → treated as single (type wins)', () => {
     // type='single' always produces a non-superset block regardless of code
     const ex = makeExercise('ex1', 'Test', { type: 'single', code: 'A' });

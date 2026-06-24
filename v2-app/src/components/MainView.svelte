@@ -105,6 +105,23 @@
     return result;
   })();
 
+  // Superset group sizes — how many exercises share the same code[0]
+  // Used to suppress the code badge on lone-coded exercises.
+  $: supersetSizes = (() => {
+    const groupCount: Record<string, number> = {};
+    for (const ex of $currentDayExercises) {
+      if (ex.type === 'superset' && ex.code) {
+        const k = ex.code[0];
+        groupCount[k] = (groupCount[k] ?? 0) + 1;
+      }
+    }
+    const result: Record<string, number> = {};
+    for (const ex of $currentDayExercises) {
+      result[ex.id] = (ex.type === 'superset' && ex.code) ? (groupCount[ex.code[0]] ?? 1) : 1;
+    }
+    return result;
+  })();
+
   // Day progress — X/Y exercises done
   $: dayExDone = $currentDayExercises.filter(ex => {
     if (ex.recovery)     return ex.recoveryDone;
@@ -346,6 +363,7 @@
             day={$uiState.day}
             index={i}
             blockIndex={blockIndices[exercise.id] ?? i}
+            supersetSize={supersetSizes[exercise.id] ?? 1}
             total={$currentDayExercises.length}
           />
         {/each}

@@ -36,6 +36,22 @@
     return result;
   })();
 
+  // Superset group sizes — mirrors MainView logic; suppresses badge on lone-coded exercises.
+  $: supersetSizes = (() => {
+    const groupCount: Record<string, number> = {};
+    for (const ex of $currentDayExercises) {
+      if (ex.type === 'superset' && ex.code) {
+        const k = ex.code[0];
+        groupCount[k] = (groupCount[k] ?? 0) + 1;
+      }
+    }
+    const result: Record<string, number> = {};
+    for (const ex of $currentDayExercises) {
+      result[ex.id] = (ex.type === 'superset' && ex.code) ? (groupCount[ex.code[0]] ?? 1) : 1;
+    }
+    return result;
+  })();
+
   function pickInitialDay(state: AppState) {
     const populated = state.weeks.filter((w) => w.exercises.length > 0);
     if (populated.length === 0) return;
@@ -142,6 +158,7 @@
               day={$uiState.day}
               index={i}
               blockIndex={blockIndices[exercise.id] ?? i}
+              supersetSize={supersetSizes[exercise.id] ?? 1}
               total={$currentDayExercises.length}
               readonly={true}
               coachAuthoring={true}
