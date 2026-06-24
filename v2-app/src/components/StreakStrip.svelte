@@ -84,7 +84,7 @@
     display: block;
     font-size: 12.5px;
     font-weight: 600;
-    color: var(--c-accent-solid);
+    color: var(--h-4fc08d);
     margin-top: 2px;
   }
   .risk .streak-line2 { color: var(--h-ffb84d); }

@@ -336,12 +336,12 @@
 
   /* ---- Circle status styles ---- */
 
-  /* Done — soft gold disc (filled) */
+  /* Done — green disc (original semantic colour) */
   .status-done .day-circle {
-    background: rgba(var(--c-accent), 0.22);
-    border: 1px solid rgba(var(--c-accent), 0.34);
+    background: rgba(79, 192, 141, 0.22);
+    border: 1px solid rgba(79, 192, 141, 0.50);
   }
-  .status-done .day-num { color: var(--h-d4a838); }
+  .status-done .day-num { color: var(--h-4fc08d); }
 
   /* Partial — in progress: gold ring with a hint of fill */
   .status-partial .day-circle {
@@ -435,7 +435,7 @@
     flex-shrink: 0;
   }
 
-  .done-c { background: rgba(var(--c-accent), 0.22); border: 1px solid rgba(var(--c-accent), 0.34); }
+  .done-c { background: rgba(79, 192, 141, 0.22); border: 1px solid rgba(79, 192, 141, 0.50); }
   .wod-c  { background: transparent; border: 1.5px solid rgba(var(--c-accent), 0.34); }
   .plan-c { background: rgba(var(--c-accent), 0.06); border: 1.5px dashed rgba(var(--c-accent), 0.68); }
   .rec-c  { background: rgba(var(--c-accent), 0.07); border: 1.5px solid rgba(var(--c-accent), 0.44); }
