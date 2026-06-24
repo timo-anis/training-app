@@ -4,3 +4,6 @@
 v2-app/node_modules
 v2-app/.env
 v2-dist/
+.env.e2e
+v2-app/playwright-report/
+v2-app/test-results/
