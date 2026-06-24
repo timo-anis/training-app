@@ -2,7 +2,7 @@
   import { onMount, onDestroy } from 'svelte';
   import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, overlayBlurred, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
   import type { DayKind } from '../types/workout';
-  import { listIncomingInvites } from '../services/coach';
+  import { listIncomingInvites, getMyCoach } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
   import { coachUnreadTotal, myCoachLinkId, myCoachEmail, startCoachUnreadWatch, stopCoachUnreadWatch, refreshCoachUnread } from '../stores/messages';
   import ChatView from './ChatView.svelte';
@@ -55,10 +55,14 @@
     return `${m}:${String(s2).padStart(2,'0')}`;
   }
 
-  onMount(() => {
+  onMount(async () => {
     refreshInvites(); refreshCoachNotes(); refreshAssignments();
     const me = $currentUser?.id;
-    if (me) startCoachUnreadWatch(me);
+    if (me) {
+      // Eagerly detect coach so the chat button appears immediately
+      getMyCoach(me).then(c => { hasCoach = !!c; }).catch(() => {});
+      startCoachUnreadWatch(me).then(() => { hasCoach = !!$myCoachLinkId; }).catch(() => {});
+    }
     clockInterval = setInterval(() => {
       const start = $uiState.workoutStartTime;
       elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
@@ -143,6 +147,7 @@
   $: isNewUser = totalWeeks === 0;
   let statsOpen = false;
   let recordsOpen = false;
+  let hasCoach = false; // set eagerly on mount, updated after watch
   type TraineeChatState = 'hidden' | 'mini' | 'open';
   let traineeChatState: TraineeChatState = 'hidden';
   function openTraineeChat() { if (traineeChatState === 'open') { traineeChatState = 'mini'; } else { traineeChatState = 'open'; } }
@@ -219,7 +224,7 @@
     onAccount={() => accountOpen = true}
     onChat={openTraineeChat}
     {hasInvite}
-    hasCoach={!!$myCoachLinkId}
+    {hasCoach}
     unreadMessages={$coachUnreadTotal}
   />
 
