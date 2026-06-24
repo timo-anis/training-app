@@ -97,6 +97,9 @@ export const requestOnboarding = writable<boolean>(false);
  *  @deprecated — use hintsOpen/recordsOpen directly from App.svelte instead */
 export const overlayBlurred = writable<boolean>(false);
 
+/** Account sheet overlay open state — read by App.svelte to render outside scroll-content. */
+export const accountOpen = writable<boolean>(false);
+
 /** Quick guide overlay open state — read by App.svelte to render outside scroll-content. */
 export const hintsOpen = writable<boolean>(false);
 /** Personal records overlay open state — read by App.svelte to render outside scroll-content. */

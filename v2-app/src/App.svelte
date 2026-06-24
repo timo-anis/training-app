@@ -2,8 +2,9 @@
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, accountOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
   import RecordsSheet from './components/RecordsSheet.svelte';
+  import AccountSheet from './components/AccountSheet.svelte';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
@@ -131,7 +132,7 @@
   <div class="app-shell">
 
     <!-- ── Scrollable content ── -->
-    <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$hintsOpen || $recordsOpen || $searchOpen}>
+    <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$hintsOpen || $recordsOpen || $searchOpen || $accountOpen}>
       <MainView />
     </div>
 
@@ -208,6 +209,10 @@
 
   {#if $recordsOpen}
     <RecordsSheet on:close={() => ($recordsOpen = false)} />
+  {/if}
+
+  {#if $accountOpen}
+    <AccountSheet on:close={() => ($accountOpen = false)} />
   {/if}
 
   {#if $searchOpen}

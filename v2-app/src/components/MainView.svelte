@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, accountOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites, getMyCoach } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
@@ -15,10 +15,7 @@
   import AddExercise from './AddExercise.svelte';
   import CopyDaySheet from './CopyDaySheet.svelte';
   import StatsView from './StatsView.svelte';
-  import AccountSheet from './AccountSheet.svelte';
 
-  let accountOpen = false;
-  $: sheetOpen.set(accountOpen);
 
   // Pending coach invite -> show a marker on the account icon so the trainee
   // knows to open the sheet and accept. Optional layer; failures are silent.
@@ -146,6 +143,19 @@
   $: isNewUser = totalWeeks === 0;
   let statsOpen = false;
   let hasCoach = false; // set eagerly on mount, updated after watch
+
+  // Sync sheetOpen with accountOpen store (used by service worker / badge logic)
+  $: sheetOpen.set($accountOpen);
+
+  // When accountOpen goes false (sheet closed), refresh coach/invite state
+  let _prevAccountOpen = false;
+  $: {
+    if (_prevAccountOpen && !$accountOpen) {
+      refreshInvites(); refreshCoachNotes(); refreshAssignments();
+      const _me = $currentUser?.id; if (_me) refreshCoachUnread(_me);
+    }
+    _prevAccountOpen = $accountOpen;
+  }
   type TraineeChatState = 'hidden' | 'mini' | 'open';
   let traineeChatState: TraineeChatState = 'hidden';
   function openTraineeChat() { if (traineeChatState === 'open') { traineeChatState = 'mini'; } else { traineeChatState = 'open'; } }
@@ -217,7 +227,7 @@
     syncStatus={$syncStatus}
     onGuide={() => ($hintsOpen = true)}
     onSearch={() => ($searchOpen = true)}
-    onAccount={() => accountOpen = true}
+    onAccount={() => ($accountOpen = true)}
     onChat={openTraineeChat}
     {hasInvite}
     {hasCoach}
@@ -406,9 +416,6 @@
 </div>
 
 
-{#if accountOpen}
-  <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); refreshCoachNotes(); refreshAssignments(); const me = $currentUser?.id; if (me) refreshCoachUnread(me); }} />
-{/if}
 
 {#if traineeChatState === 'open' && $myCoachLinkId && $currentUser}
   <div class="trainee-chat-panel">
