@@ -377,28 +377,32 @@
           <p class="hint-desc">Tap any day to view or add exercises for that day</p>
         </div>
         <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">2</span><span class="hint-title">Rest timer</span></div>
+          <div class="hint-header"><span class="hint-num">2</span><span class="hint-title">Coach chat</span></div>
+          <p class="hint-desc">If you have a coach connected to the app, use the chat to communicate — ask questions, get feedback on sessions, or discuss your plan. Find it under <em>Coaching</em> in your account.</p>
+        </div>
+        <div class="hint-card">
+          <div class="hint-header"><span class="hint-num">3</span><span class="hint-title">Rest timer</span></div>
           <p class="hint-desc">Auto-starts after each set, or set it manually: ＋/－ adjusts in 15s steps, then tap Start. Presets: 1′ / 1:30 / 2′ / 3′</p>
         </div>
         <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">3</span><span class="hint-title">Session note</span></div>
+          <div class="hint-header"><span class="hint-num">4</span><span class="hint-title">RPE — rate of perceived exertion</span></div>
+          <p class="hint-desc">After each set, tap the RPE chip to rate effort on a <strong>6–10 scale</strong> (10 = absolute max). The app suggests a value based on your history — confirm or adjust. Helps track intensity over time.</p>
+        </div>
+        <div class="hint-card">
+          <div class="hint-header"><span class="hint-num">5</span><span class="hint-title">Session note</span></div>
           <p class="hint-desc">Tap <em>+ Session note</em> during workout to log how it felt</p>
         </div>
         <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">4</span><span class="hint-title">Statistics</span></div>
+          <div class="hint-header"><span class="hint-num">6</span><span class="hint-title">Statistics</span></div>
           <p class="hint-desc">Tap Statistics to see volume, weekly breakdown and progress charts</p>
         </div>
         <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">5</span><span class="hint-title">Training</span></div>
+          <div class="hint-header"><span class="hint-num">7</span><span class="hint-title">Training</span></div>
           <p class="hint-desc">Expand day → add exercises → tap <em>▶ Start Workout</em></p>
         </div>
         <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">6</span><span class="hint-title">Workout mode</span></div>
+          <div class="hint-header"><span class="hint-num">8</span><span class="hint-title">Workout mode</span></div>
           <p class="hint-desc">Swipe left/right between exercises. Tap ○ to mark a set done</p>
-        </div>
-        <div class="hint-card hint-card-wide">
-          <div class="hint-header"><span class="hint-num">7</span><span class="hint-title">RPE — rate of perceived exertion</span></div>
-          <p class="hint-desc">After each set, tap the RPE chip to rate effort on a <strong>6–10 scale</strong> (10 = absolute max). The app suggests a value based on your history — confirm or adjust. Helps track intensity over time.</p>
         </div>
       </div>
       <button class="hints-walkthrough" on:click={() => { hintsOpen = false; requestOnboarding.set(true); }}>
