@@ -1061,10 +1061,6 @@
     gap: 8px;
   }
 
-  :global(.hint-card-wide) {
-    grid-column: 1 / -1;
-  }
-
   :global(.hint-card) {
     background: rgba(var(--c-fg), 0.04);
     border: 1px solid rgba(var(--c-fg), 0.08);

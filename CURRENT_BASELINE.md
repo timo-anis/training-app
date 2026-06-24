@@ -1,6 +1,6 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-06-23
+**Last updated:** 2026-06-24
 
 ## Active App: V2
 
@@ -23,7 +23,7 @@
 - **Desktop framing shipped 2026-06-23 (premium wide-browser shell, sha 1ebe320):** on `@media (min-width:900px)` only, both surfaces stop reading as a mobile strip on a void. The centered column becomes a defined app PANEL (lit side borders `--c-edge-b`, soft elevation `--c-shadow`, faint top sheen) floating on an ambient "desk" backdrop (radial navy + subtle accent top-glow). Trainee: `.app-shell` backdrop + `.main` panel (672px) + workout-bar centred under it. Coach: `.coach-root` got the desk bg (was a flat body bg) + matching `.coach-main` panel (720px). FULLY ADDITIVE, all `--c-` tokens (presentation/light mode adapts), NO markup/logic/sticky/rounding changes → mobile/PWA byte-identical. Motivated by coach working in-browser + showing the app to people. NEXT: desktop 2-column coach console (sidebar + main panel).
 - **Desktop redesign PR1 shipped (layout scaffold, trainee, `MainView.svelte` only):** on `@media (min-width:900px)` the trainee `.main` becomes a 3-column grid — rail 200px (streak) | center minmax(0,1fr) (welcome + calendar + statistics) | context 360px (the day section / today’s session) — TopBar stays full-width sticky across the top (`grid-area: bar`), max-width 1160px, 18px gaps. Replaces the previous 672px centered panel (1ebe320). **Mobile/PWA byte-identical:** the three region wrappers are `display:contents` below 900px so their children flow directly inside `.main` (now `display:flex; column`), and per-leaf `order` (welcome2/streak3/calendar4/day5/stats6/statsview7) reproduces the exact current single-column sequence. No logic/content/component restyle; no DOM split of the day section (deferred to PR2); workout-bar still App.svelte 672px-centered (PR2 hides it on desktop). check 0/0, 206 tests, clean two-entry build. Reversible in one revert. Next: PR2 (context “Today’s session” panel + hide bottom bar), PR3 (craft pass). See DESKTOP_REDESIGN_SPEC.md.
 - **Desktop redesign v2 shipped (2-pane "session-first", trainee; `MainView.svelte` + `App.svelte`):** after live-screenshot feedback the 3-col PR1 scaffold was reworked into the approved direction — at `@media (min-width:900px)`: full-width sticky TopBar, then a **streak status strip** (the existing StreakStrip placed full-width, `grid-area: strip`), then two panes — **Planner** left (`minmax(0,2fr)`: calendar + Statistics) and **today’s Session** right (`minmax(0,3fr)`, the hero): a **Start/Resume/Stop CTA at the top of the session pane** + the day section. The bottom `.workout-bar` is now `display:none` on desktop (its control moved into the session pane; MainView mirrors `openWorkoutMode`/`exitWorkout` + a ported elapsed clock). Fixes the screenshot issues: no hierarchy, streak-as-column void, dominant floor CTA, ragged alignment. **Mobile/PWA byte-identical** (region wrappers `display:contents` + per-leaf `order`; CTA `display:none` <900px so the bottom bar still owns mobile). check 0/0, 206 tests, clean two-entry build. PR3 craft pass (B) DONE — see next bullet. See DESKTOP_REDESIGN_SPEC.md.
-- **Desktop redesign PR3 craft pass (B) shipped 2026-06-24 (`041c447`, gh-pages verified; trainee `MonthCalendar.svelte` + `StreakStrip.svelte` + `MainView.svelte` + `App.svelte`):** the tier-winning execution pass. **Pure CSS + 2 markup swaps, zero logic/data/class-hook changes.** (a) **Calendar 'ring language' → ONE tonal-gold system:** retired the competing green (done) and white (partial/has-data) hues — done = soft gold disc, today = solid gold ring (status disc stays visible underneath), partial = gold ring + hint fill, has-data/recovery = gold outline, rest/weekend = dim grey, planned = dashed-gold (kept, semantic). All via `--c-accent`/`--h-d4a038`/`--h-d4a838`/`--c-fg` tokens, so presentation mode flips to navy automatically — **removed the now-obsolete calendar presentation-scoped overrides** (they'd have re-introduced green/old-gold). `getDayStatus` + the empty-plan map are byte-identical. **StreakStrip:** emoji flame 🔥 → inline SVG flame icon (token-coloured, keeps the flick anim); dot row → segmented week meter (`.dot`→`.seg`, internal-only, Svelte-scoped so no collision); retired the green 'secured' colour (`--h-4fc08d` → `--c-accent-solid`; risk → `--h-ffb84d`). (b) **Typography:** `font-variant-numeric: tabular-nums` app-wide on `.app-shell` (inherits) + explicit on `.day-num`/`.day-progress`/streak count (`.setinput` already had it); desktop-only `.day-label` 23px/-0.04em heading refinement (mobile unchanged). (c) **Backdrop:** refined desktop vignette + faint brand glow on `.app-shell` (≥900px only); mobile base backdrop byte-identical. Mobile/PWA visual changes (tabular-nums + calendar language) are **intentional identical-or-better craft** — confirm on device. check 0/0, 206 tests, clean two-entry build. Trainee A+B now done → same grid primitives feed the 2-column coach console (next track).
+- **Desktop redesign PR3 craft pass (B) shipped 2026-06-24 (`041c447`):** pure CSS craft pass. (a) Calendar tonal-gold structure: today = solid gold ring, partial = gold ring + hint fill, has-data/recovery = gold outline, rest/weekend = dim grey, planned = dashed-gold. (b) Typography: `font-variant-numeric: tabular-nums` app-wide + desktop `.day-label` 23px refinement. (c) Backdrop: refined desktop vignette + faint brand glow ≥900px. **Partially reverted 2026-06-24 (user preference):** done days restored to green disc (`--h-4fc08d`, commits `81676b0`+`419cd1a`); StreakStrip reverted to emoji 🔥 + circular dots + green 'secured' text. Typography, backdrop, and partial/recovery/rest/planned calendar colours remain from PR3. check 0/0, 206 tests, clean two-entry build.
 - Boot merges local vs cloud by timestamp (newer wins) — `lib/state-merge.ts`
 - Cloud saves are offline-aware with retry/backoff (`stores/sync.ts`); flush on `online`
 - WorkoutMode split (2228 → 1305 lines, -41%): extracted `WmHeader`, `WmFooter`, `WmRestControls`, `WmAddExercise`, `WmSummary`, `WmSetRow` as presentational children
@@ -63,7 +63,7 @@
 
 ### Calendar — month view
 - Circle-based design (Oura-style) — no coloured cell backgrounds
-  - Done: green filled circle | Partial: white outline | Recovery: amber | Rest: dashed | Today: gold ring
+  - Done: green filled circle | Partial: gold ring + hint fill | Recovery: gold outline | Rest/Weekend: dim dashed grey | Today: solid gold ring (overlays status disc) | Planned: dashed gold ring
 - Day status is data- + `day.kind`-driven (no hardcoded weekday rules)
 - Presentation mode: all states + legend override for white background
 
@@ -147,14 +147,14 @@ WorkoutSet { kg, reps, done, rpe }   // rpe: RIR-based RPE 6–10, '' = unrated 
 
 ## Test Suite
 
-159 automated tests across 13 files — run `npm test` in `v2-app/`.
+206 automated tests across 17 files — run `npm test` in `v2-app/`.
 (Per-file counts intentionally not listed here to avoid drift; the runner is the source of truth.)
 
 ---
 
 ## CI Pipeline
 
-Push to main: install → test (159) → TypeScript check → build → deploy to GitHub Pages.
+Push to main: install → test (206) → TypeScript check → build → deploy to GitHub Pages.
 
 ---
 
@@ -165,7 +165,6 @@ Push to main: install → test (159) → TypeScript check → build → deploy t
 - No push notifications / reminders
 - No export / backup UI (data backup scheduled via automated task — Sundays)
 - Undo covers: set delete, exercise delete, set done toggle (not exercise done or all-sets-done)
-- **GitHub PAT rotated 2026-06-22** (fine-grained, repo `contents:write`) — prior token revoked
 - Recovery helpers (`isRecoveryPending`/`clearRecoveryPending`) are integration-level (sessionStorage in supabase.ts, env-dependent) — exercised via the live flow, not unit-tested
 
 ---
@@ -180,5 +179,3 @@ Push to main: install → test (159) → TypeScript check → build → deploy t
 - Superset code pairing and grouping logic
 - `immediate=true` flag on `updateState`
 - `lib/state-helpers.ts`
-- New-user welcome card now offers 3 starter templates (Full Body / Upper-Lower / Push-Pull-Legs): tap one -> scaffolds today's day via addExercise (1 empty set each), then fill weights. "Start blank" + "How it works" kept as secondary. Removes blank-slate friction. MainView.svelte, added 2026-06-10.
-- Persistent streak/consistency strip (`StreakStrip.svelte`) above the calendar in MainView: gold flame + "{n}-week streak", a "this week secured / at risk / start a streak" status line, and a 6-dot recent-weeks row. Three states (active / risk / dormant). Streak logic extracted to shared `streakInfo` derived store + `dayHasActivity` helper in `workout-state.ts` (single source of truth; WorkoutMode finish screen now consumes the shared helper). Pure read-only; no schema/date/superset changes. Added 2026-06-10.
