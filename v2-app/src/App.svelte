@@ -2,7 +2,8 @@
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, overlayBlurred, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
+  import RecordsSheet from './components/RecordsSheet.svelte';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
   import BootOverlay from './components/BootOverlay.svelte';
@@ -130,14 +131,9 @@
   <div class="app-shell">
 
     <!-- ── Scrollable content ── -->
-    <div class="scroll-content" class:workout-blur={$uiState.workoutMode}>
+    <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$hintsOpen || $recordsOpen || $searchOpen}>
       <MainView />
     </div>
-
-    <!-- ── Overlay blur layer (desktop) — sits below all fixed overlays ── -->
-    {#if $overlayBlurred || $searchOpen}
-      <div class="blur-layer" aria-hidden="true"></div>
-    {/if}
 
     <!-- ── Bottom workout bar ── -->
     {#if showWorkoutBar}
@@ -158,6 +154,60 @@
 
   {#if $uiState.workoutMode}
     <WorkoutMode />
+  {/if}
+
+  {#if $hintsOpen}
+    <!-- svelte-ignore a11y-click-events-have-key-events -->
+    <!-- svelte-ignore a11y-no-static-element-interactions -->
+    <div class="hints-backdrop" on:click={() => ($hintsOpen = false)}>
+      <div class="hints-sheet" on:click|stopPropagation>
+        <div class="hints-header">
+          <span class="hints-title">Quick guide</span>
+          <button class="hints-close" on:click={() => ($hintsOpen = false)}>✕</button>
+        </div>
+        <div class="hints-grid">
+          <div class="hint-card">
+            <div class="hint-header"><span class="hint-num">1</span><span class="hint-title">Calendar</span></div>
+            <p class="hint-desc">Tap any day to view or add exercises for that day</p>
+          </div>
+          <div class="hint-card">
+            <div class="hint-header"><span class="hint-num">2</span><span class="hint-title">Coach chat</span></div>
+            <p class="hint-desc">If you have a coach connected to the app, use the chat to communicate — ask questions, get feedback on sessions, or discuss your plan. Find it under <em>Coaching</em> in your account.</p>
+          </div>
+          <div class="hint-card">
+            <div class="hint-header"><span class="hint-num">3</span><span class="hint-title">Rest timer</span></div>
+            <p class="hint-desc">Auto-starts after each set, or set it manually: ＋/－ adjusts in 15s steps, then tap Start. Presets: 1′ / 1:30 / 2′ / 3′</p>
+          </div>
+          <div class="hint-card">
+            <div class="hint-header"><span class="hint-num">4</span><span class="hint-title">RPE — rate of perceived exertion</span></div>
+            <p class="hint-desc">After each set, tap the RPE chip to rate effort on a <strong>6–10 scale</strong> (10 = absolute max). The app suggests a value based on your history — confirm or adjust. Helps track intensity over time.</p>
+          </div>
+          <div class="hint-card">
+            <div class="hint-header"><span class="hint-num">5</span><span class="hint-title">Session note</span></div>
+            <p class="hint-desc">Tap <em>+ Session note</em> during workout to log how it felt</p>
+          </div>
+          <div class="hint-card">
+            <div class="hint-header"><span class="hint-num">6</span><span class="hint-title">Statistics</span></div>
+            <p class="hint-desc">Tap Statistics to see volume, weekly breakdown and progress charts</p>
+          </div>
+          <div class="hint-card">
+            <div class="hint-header"><span class="hint-num">7</span><span class="hint-title">Training</span></div>
+            <p class="hint-desc">Expand day → add exercises → tap <em>▶ Start Workout</em></p>
+          </div>
+          <div class="hint-card">
+            <div class="hint-header"><span class="hint-num">8</span><span class="hint-title">Workout mode</span></div>
+            <p class="hint-desc">Swipe left/right between exercises. Tap ○ to mark a set done</p>
+          </div>
+        </div>
+        <button class="hints-walkthrough" on:click={() => { $hintsOpen = false; requestOnboarding.set(true); }}>
+          ▶ Replay walkthrough
+        </button>
+      </div>
+    </div>
+  {/if}
+
+  {#if $recordsOpen}
+    <RecordsSheet on:close={() => ($recordsOpen = false)} />
   {/if}
 
   {#if $searchOpen}
@@ -418,12 +468,7 @@
      ============================================================ */
   @media (min-width: 900px) {
     .scroll-content.workout-blur { filter: blur(12px); pointer-events: none; transition: filter 0.25s; }
-    .blur-layer {
-      position: fixed; inset: 0; z-index: 70;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      pointer-events: none;
-    }
+    .scroll-content.overlay-blur { filter: blur(10px); pointer-events: none; transition: filter 0.20s; }
     .app-shell {
       background:
         radial-gradient(125% 85% at 50% -10%, rgba(var(--c-accent), 0.07), transparent 50%),

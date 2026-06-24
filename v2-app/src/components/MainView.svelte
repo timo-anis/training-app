@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, overlayBlurred, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites, getMyCoach } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
@@ -15,7 +15,6 @@
   import AddExercise from './AddExercise.svelte';
   import CopyDaySheet from './CopyDaySheet.svelte';
   import StatsView from './StatsView.svelte';
-  import RecordsSheet from './RecordsSheet.svelte';
   import AccountSheet from './AccountSheet.svelte';
 
   let accountOpen = false;
@@ -146,17 +145,14 @@
   $: totalWeeks = $appState.weeks.filter(w => w.exercises.length > 0).length;
   $: isNewUser = totalWeeks === 0;
   let statsOpen = false;
-  let recordsOpen = false;
   let hasCoach = false; // set eagerly on mount, updated after watch
   type TraineeChatState = 'hidden' | 'mini' | 'open';
   let traineeChatState: TraineeChatState = 'hidden';
   function openTraineeChat() { if (traineeChatState === 'open') { traineeChatState = 'mini'; } else { traineeChatState = 'open'; } }
   function minimiseTraineeChat() { traineeChatState = 'mini'; }
   function closeTraineeChat() { traineeChatState = 'hidden'; }
-  $: overlayBlurred.set(hintsOpen || recordsOpen);
   let copySheetOpen = false;
   let exercisesExpanded = false;
-  let hintsOpen = false;
 
   // Auto-expand exercise list when there's already progress today
   $: if (dayExDone > 0) exercisesExpanded = true;
@@ -219,7 +215,7 @@
   <!-- Header -->
   <TopBar
     syncStatus={$syncStatus}
-    onGuide={() => hintsOpen = true}
+    onGuide={() => ($hintsOpen = true)}
     onSearch={() => ($searchOpen = true)}
     onAccount={() => accountOpen = true}
     onChat={openTraineeChat}
@@ -287,7 +283,7 @@
         <span class="stats-chevron" class:open={statsOpen}>›</span>
       </button>
       <div class="stats-sep" aria-hidden="true"></div>
-      <button class="records-icon-btn" on:click={() => recordsOpen = true} aria-label="Personal records">
+      <button class="records-icon-btn" on:click={() => ($recordsOpen = true)} aria-label="Personal records">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
           stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
@@ -302,9 +298,7 @@
     <div class="r-statsview"><StatsView /></div>
   {/if}
 
-  {#if recordsOpen}
-    <RecordsSheet on:close={() => recordsOpen = false} />
-  {/if}
+  
   </div>
 
   <div class="col-session">
@@ -411,56 +405,6 @@
   </div>
 </div>
 
-<!-- Hints overlay -->
-{#if hintsOpen}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="hints-backdrop" on:click={() => hintsOpen = false}>
-    <div class="hints-sheet" on:click|stopPropagation>
-      <div class="hints-header">
-        <span class="hints-title">Quick guide</span>
-        <button class="hints-close" on:click={() => hintsOpen = false}>✕</button>
-      </div>
-      <div class="hints-grid">
-        <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">1</span><span class="hint-title">Calendar</span></div>
-          <p class="hint-desc">Tap any day to view or add exercises for that day</p>
-        </div>
-        <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">2</span><span class="hint-title">Coach chat</span></div>
-          <p class="hint-desc">If you have a coach connected to the app, use the chat to communicate — ask questions, get feedback on sessions, or discuss your plan. Find it under <em>Coaching</em> in your account.</p>
-        </div>
-        <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">3</span><span class="hint-title">Rest timer</span></div>
-          <p class="hint-desc">Auto-starts after each set, or set it manually: ＋/－ adjusts in 15s steps, then tap Start. Presets: 1′ / 1:30 / 2′ / 3′</p>
-        </div>
-        <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">4</span><span class="hint-title">RPE — rate of perceived exertion</span></div>
-          <p class="hint-desc">After each set, tap the RPE chip to rate effort on a <strong>6–10 scale</strong> (10 = absolute max). The app suggests a value based on your history — confirm or adjust. Helps track intensity over time.</p>
-        </div>
-        <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">5</span><span class="hint-title">Session note</span></div>
-          <p class="hint-desc">Tap <em>+ Session note</em> during workout to log how it felt</p>
-        </div>
-        <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">6</span><span class="hint-title">Statistics</span></div>
-          <p class="hint-desc">Tap Statistics to see volume, weekly breakdown and progress charts</p>
-        </div>
-        <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">7</span><span class="hint-title">Training</span></div>
-          <p class="hint-desc">Expand day → add exercises → tap <em>▶ Start Workout</em></p>
-        </div>
-        <div class="hint-card">
-          <div class="hint-header"><span class="hint-num">8</span><span class="hint-title">Workout mode</span></div>
-          <p class="hint-desc">Swipe left/right between exercises. Tap ○ to mark a set done</p>
-        </div>
-      </div>
-      <button class="hints-walkthrough" on:click={() => { hintsOpen = false; requestOnboarding.set(true); }}>
-        ▶ Replay walkthrough
-      </button>
-    </div>
-  </div>
-{/if}
 
 {#if accountOpen}
   <AccountSheet on:close={() => { accountOpen = false; refreshInvites(); refreshCoachNotes(); refreshAssignments(); const me = $currentUser?.id; if (me) refreshCoachUnread(me); }} />

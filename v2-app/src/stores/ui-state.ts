@@ -93,8 +93,14 @@ export const sheetOpen = writable<boolean>(false);
 export const requestOnboarding = writable<boolean>(false);
 
 /** Set true by any full-screen overlay (quick guide, records, search) to blur
- *  the scroll-content underneath on desktop. WorkoutMode has its own class. */
+ *  the scroll-content underneath on desktop. WorkoutMode has its own class.
+ *  @deprecated — use hintsOpen/recordsOpen directly from App.svelte instead */
 export const overlayBlurred = writable<boolean>(false);
+
+/** Quick guide overlay open state — read by App.svelte to render outside scroll-content. */
+export const hintsOpen = writable<boolean>(false);
+/** Personal records overlay open state — read by App.svelte to render outside scroll-content. */
+export const recordsOpen = writable<boolean>(false);
 
 // ---- Global undo ----
 export interface UndoAction { label: string; fn: () => void; }
