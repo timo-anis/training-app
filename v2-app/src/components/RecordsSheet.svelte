@@ -14,10 +14,11 @@
     bestReps: number;
   }
 
-  // Best ACTUAL set per exercise — heaviest done weighted set.
-  // e1RM (Epley) is used only as the comparator so that a 5-rep set at 85kg
-  // outranks a 1-rep set at 86kg when appropriate; but the displayed value is
-  // always the real kg × reps the user actually lifted — no formula inflation.
+  // Best ACTUAL set per exercise — ranked by e1RM (Epley) so a heavy
+  // multi-rep set correctly outranks a marginally heavier 1-rep set.
+  // Displayed value is always the estimated 1RM:
+  //   reps = 1 → weight itself (exact 1RM)
+  //   reps > 1 → Math.round(epley1RM(kg, reps))
   $: records = (() => {
     const map = new Map<string, { record: ExRecord; e1rm: number }>();
     for (const wd of $appState.weeks) {
@@ -60,7 +61,7 @@
         {#each records as r}
           <div class="record-row">
             <span class="record-name">{r.name}</span>
-            <span class="record-best">{r.bestKg} <span class="record-unit">kg</span>{#if r.bestReps > 1}<span class="record-reps"> × {r.bestReps}</span>{/if}</span>
+            <span class="record-best">{r.bestReps === 1 ? r.bestKg : Math.round(epley1RM(r.bestKg, r.bestReps))} <span class="record-unit">kg</span></span>
           </div>
         {/each}
       </div>

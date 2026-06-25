@@ -213,5 +213,7 @@ export function normalizeExerciseName(name: string): string {
   // Guard: null/undefined/empty names pass through unchanged
   if (!name || typeof name !== 'string') return name ?? '';
   const trimmed = name.trim();
-  return _ALIAS_MAP.get(trimmed.toLowerCase()) ?? trimmed;
+  const canonical = _ALIAS_MAP.get(trimmed.toLowerCase()) ?? trimmed;
+  // Sentence case: only first character uppercase, rest lowercase.
+  return canonical.charAt(0).toUpperCase() + canonical.slice(1).toLowerCase();
 }
