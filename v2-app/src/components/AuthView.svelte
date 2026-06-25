@@ -185,6 +185,7 @@
               type="password"
               bind:value={password}
               required
+              placeholder="Password"
               autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
             />
           </label>
