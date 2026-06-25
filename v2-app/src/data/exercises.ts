@@ -30,7 +30,7 @@ export const EXERCISE_LIBRARY: ExerciseEntry[] = [
   { name: 'Incline Bench Press',        aliases: ['incline bench', 'incline bench press', 'incline barbell'] },
   { name: 'Decline Bench Press',        aliases: ['decline bench', 'decline bench press'] },
   { name: 'Flat DB Bench Press',        aliases: ['flat db bench', 'dumbbell bench press', 'db bench press', 'db bench'] },
-  { name: 'Incline DB Bench Press',     aliases: ['incline db bench', 'incline dumbbell bench press', 'incline db'] },
+  { name: 'Incline DB Bench Press',     aliases: ['incline db bench', 'incline dumbbell bench press', 'incline dumbell bench press', 'incline db'] },
   { name: 'Low Incline DB Bench Press', aliases: ['low incline db bench', 'low incline dumbbell bench press', 'low incline'] },
   { name: 'Push-Up',                    aliases: ['pushup', 'push-up', 'push up', 'pushups'] },
   { name: 'Weighted Push-Up',           aliases: ['weighted pushup', 'weighted push-up', 'weighted push up'] },
@@ -47,7 +47,7 @@ export const EXERCISE_LIBRARY: ExerciseEntry[] = [
   { name: 'Seated DB Shoulder Press',   aliases: ['seated db shoulder press', 'seated dumbbell shoulder press', 'seated dumbbell press', 'seated press', 'db shoulder press'] },
   { name: 'Arnold Press',               aliases: ['arnold press', 'arnold'] },
   { name: 'Machine Shoulder Press',     aliases: ['machine shoulder press', 'shoulder press machine'] },
-  { name: 'DB Lateral Raise',           aliases: ['db lateral raise', 'lateral raise', 'dumbbell lateral raise', 'side raise'] },
+  { name: 'DB Lateral Raise',           aliases: ['db lateral raise', 'lateral raise', 'dumbbell lateral raise', 'side raise', 'lat raise'] },
   { name: 'Cable Lateral Raise',        aliases: ['cable lateral raise', 'cable side raise'] },
   { name: 'Machine Lateral Raise',      aliases: ['machine lateral raise', 'machine side raise'] },
   { name: 'Bent-Over Rear Delt Raise',  aliases: ['bent-over rear delt raise', 'rear delt raise', 'rear delt fly', 'reverse fly', 'rear delt'] },
@@ -188,4 +188,22 @@ export function searchExercises(query: string): ExerciseEntry[] {
     ...containsName.sort(byName),
     ...containsAlias.sort(byName),
   ];
+}
+
+/** Alias → canonical name lookup, built once at module load. */
+const _ALIAS_MAP = new Map<string, string>();
+for (const e of EXERCISE_LIBRARY) {
+  _ALIAS_MAP.set(e.name.toLowerCase(), e.name);
+  for (const a of e.aliases) {
+    _ALIAS_MAP.set(a.toLowerCase(), e.name);
+  }
+}
+
+/**
+ * Returns the canonical exercise name from the library, or the original
+ * string (trimmed, original casing) when no match is found.
+ * Use this whenever grouping or displaying exercise names from stored data.
+ */
+export function normalizeExerciseName(name: string): string {
+  return _ALIAS_MAP.get(name.trim().toLowerCase()) ?? name.trim();
 }

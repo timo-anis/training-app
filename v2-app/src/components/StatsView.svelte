@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState, weekOffset } from '../stores/app';
+  import { normalizeExerciseName } from '../data/exercises';
   import type { WorkoutDay } from '../types/workout';
 
   // ---- Per-week stats ----
@@ -50,8 +51,9 @@
     for (const wd of weeks) {
       for (const ex of wd.exercises) {
         if (ex.recovery) continue;
-        const key = ex.name.toLowerCase();
-        if (!map.has(key)) map.set(key, { name: ex.name, count: 0, totalSets: 0 });
+        const canonical = normalizeExerciseName(ex.name);
+        const key = canonical.toLowerCase();
+        if (!map.has(key)) map.set(key, { name: canonical, count: 0, totalSets: 0 });
         const f = map.get(key)!;
         f.count++;
         f.totalSets += ex.sets.length;
@@ -96,7 +98,7 @@
     const weekMap = new Map<number, ExSession>();
     for (const wd of allWeeks) {
       for (const ex of wd.exercises) {
-        if (ex.name.toLowerCase() !== name.toLowerCase()) continue;
+        if (normalizeExerciseName(ex.name).toLowerCase() !== name.toLowerCase()) continue;
         if (ex.recovery || ex.conditioning) continue;
         const doneSets = ex.sets.filter(s => s.done && parseFloat(s.kg) > 0);
         if (doneSets.length === 0) continue;

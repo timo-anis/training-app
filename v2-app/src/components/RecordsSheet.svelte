@@ -1,5 +1,6 @@
 <script lang="ts">
   import { appState } from '../stores/app';
+  import { normalizeExerciseName } from '../data/exercises';
   import { epley1RM } from '../lib/rpe';
   import { createEventDispatcher } from 'svelte';
 
@@ -23,10 +24,11 @@
           const reps = parseInt(s.reps, 10);
           if (isNaN(kg) || kg <= 0 || isNaN(reps) || reps <= 0) continue;
           const e1rm = Math.round(epley1RM(kg, reps));
-          const key = ex.name.toLowerCase();
+          const canonical = normalizeExerciseName(ex.name);
+          const key = canonical.toLowerCase();
           const cur = map.get(key);
           if (!cur || e1rm > cur.e1rm) {
-            map.set(key, { name: ex.name, e1rm });
+            map.set(key, { name: canonical, e1rm });
           }
         }
       }
