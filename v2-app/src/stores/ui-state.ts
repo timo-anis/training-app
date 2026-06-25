@@ -145,6 +145,8 @@ export const accountOpen = writable<boolean>(false);
 export const hintsOpen = writable<boolean>(false);
 /** Personal records overlay open state — read by App.svelte to render outside scroll-content. */
 export const recordsOpen = writable<boolean>(false);
+/** Recovery status sheet open state — read by App.svelte to render outside scroll-content. */
+export const recoveryOpen = writable<boolean>(false);
 
 // ---- Global undo ----
 export interface UndoAction { label: string; fn: () => void; }

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { appState, weekOffset } from '../stores/app';
   import type { WorkoutDay } from '../types/workout';
-  import BodyMap from './BodyMap.svelte';
+  import { recoveryOpen } from '../stores/ui-state';
 
   // ---- Per-week stats ----
   interface WeekStat {
@@ -123,12 +123,22 @@
 </script>
 
 <div class="stats-view">
-  <!-- Body map -->
-
-  <div class="section-head">Muscle groups</div>
-  <div class="bodymap-wrap">
-    <BodyMap />
-  </div>
+  <!-- Recovery entry point -->
+  <button class="recovery-btn" on:click={() => ($recoveryOpen = true)}>
+    <div class="recovery-btn-left">
+      <span class="recovery-btn-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </span>
+      <div class="recovery-btn-text">
+        <span class="recovery-btn-title">Recovery status</span>
+        <span class="recovery-btn-sub">RPE-based muscle readiness</span>
+      </div>
+    </div>
+    <span class="recovery-btn-arrow">›</span>
+  </button>
 
   <!-- Summary chips -->
   <div class="summary-row">
@@ -266,6 +276,59 @@
   }
 
   /* Body map wrapper */
+  /* ── Recovery button ── */
+  .recovery-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 16px;
+    background: rgba(196, 146, 48, 0.07);
+    border: 1px solid rgba(196, 146, 48, 0.22);
+    border-radius: 14px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+    text-align: left;
+    margin-bottom: 16px;
+  }
+  .recovery-btn:active { background: rgba(196, 146, 48, 0.14); }
+
+  .recovery-btn-left { display: flex; align-items: center; gap: 12px; }
+
+  .recovery-btn-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: rgba(196, 146, 48, 0.14);
+    border: 1px solid rgba(196, 146, 48, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--c-accent-solid, #d4a038);
+    flex-shrink: 0;
+  }
+
+  .recovery-btn-text { display: flex; flex-direction: column; gap: 2px; }
+  .recovery-btn-title {
+    font-size: 14px;
+    font-weight: 800;
+    color: rgba(232, 240, 255, 0.90);
+    letter-spacing: -0.01em;
+  }
+  .recovery-btn-sub {
+    font-size: 11.5px;
+    color: rgba(232, 240, 255, 0.40);
+    font-weight: 500;
+  }
+  .recovery-btn-arrow {
+    font-size: 20px;
+    color: rgba(232, 240, 255, 0.25);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  /* old bodymap — kept for reference, no longer rendered */
   .bodymap-wrap {
     margin-bottom: 28px;
   }

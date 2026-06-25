@@ -2,11 +2,12 @@
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, accountOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
   import { clearStoredNavSnapshot } from './stores/ui-state';
   import { displayName } from './stores/ui-state';
   import { getDisplayName } from './services/profile';
   import RecordsSheet from './components/RecordsSheet.svelte';
+  import RecoverySheet from './components/RecoverySheet.svelte';
   import AccountSheet from './components/AccountSheet.svelte';
   import AuthView from './components/AuthView.svelte';
   import MainView from './components/MainView.svelte';
@@ -139,7 +140,7 @@
   <div class="app-shell">
 
     <!-- ── Scrollable content ── -->
-    <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$hintsOpen || $recordsOpen || $searchOpen || $accountOpen}>
+    <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$hintsOpen || $recordsOpen || $recoveryOpen || $searchOpen || $accountOpen}>
       <MainView />
     </div>
 
@@ -216,6 +217,10 @@
 
   {#if $recordsOpen}
     <RecordsSheet on:close={() => ($recordsOpen = false)} />
+  {/if}
+
+  {#if $recoveryOpen}
+    <RecoverySheet on:close={() => ($recoveryOpen = false)} />
   {/if}
 
   {#if $accountOpen}
