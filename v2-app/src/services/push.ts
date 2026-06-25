@@ -50,7 +50,7 @@ export function isStandalone(): boolean {
   if (typeof window === 'undefined') return false;
   const mm = window.matchMedia?.('(display-mode: standalone)')?.matches ?? false;
   // iOS Safari exposes navigator.standalone for home-screen apps.
-  const iosStandalone = (navigator as any).standalone === true;
+  const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
   return mm || iosStandalone;
 }
 

@@ -39,8 +39,8 @@
     try {
       if (draft.length === 0) await removeAssignment(week, day);
       else await writeAssignment(week, day, draft);
-    } catch (e: any) {
-      showToast(e?.message ?? 'Could not save plan', 'error');
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Could not save plan', 'error');
     }
   }
 

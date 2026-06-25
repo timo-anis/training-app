@@ -38,8 +38,8 @@
       await acceptInvite(id);
       showToast('Coach connected', 'success');
       await refresh();
-    } catch (e: any) {
-      showToast(e?.message ?? 'Could not accept', 'error');
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Could not accept', 'error');
     } finally {
       busy = false;
     }

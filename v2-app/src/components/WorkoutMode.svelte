@@ -32,7 +32,7 @@
   async function requestWakeLock() {
     try {
       if ('wakeLock' in navigator)
-        wakeLock = await (navigator as any).wakeLock.request('screen');
+        wakeLock = await (navigator as Navigator & { wakeLock: { request(t: 'screen'): Promise<WakeLockSentinel> } }).wakeLock.request('screen');
     } catch { /* silent */ }
   }
 

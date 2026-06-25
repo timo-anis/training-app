@@ -74,7 +74,7 @@
 
   // Exercise name autocomplete — unique sorted names from all logged history
   $: allExerciseNames = [...new Set(
-    $appState.weeks.flatMap((w: any) => w.exercises.map((e: any) => e.name as string))
+    $appState.weeks.flatMap(w => w.exercises.map(e => e.name))
   )].sort((a: string, b: string) => a.localeCompare(b));
   $: nameSuggestions = editOpen
     ? allExerciseNames.filter((n: string) =>

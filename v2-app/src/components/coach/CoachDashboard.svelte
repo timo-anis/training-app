@@ -55,8 +55,8 @@
       inviteEmail = '';
       showToast('Invite sent', 'success');
       await refresh();
-    } catch (e: any) {
-      showToast(e?.message ?? 'Could not send invite', 'error');
+    } catch (e: unknown) {
+      showToast(e instanceof Error ? e.message : 'Could not send invite', 'error');
     } finally {
       inviting = false;
     }

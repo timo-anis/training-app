@@ -62,11 +62,11 @@ describe('listIncomingInvites', () => {
     await listIncomingInvites();
 
     // Should have called .eq('status', 'pending') AND .eq('invited_email', ...)
-    const eqCalls = eqSpy.mock.calls.map(([col]: [string]) => col);
+    const eqCalls = eqSpy.mock.calls.map((call) => call[0] as string);
     expect(eqCalls).toContain('status');
     expect(eqCalls).toContain('invited_email');
     // Email should be lowercased
-    const emailCall = eqSpy.mock.calls.find(([col]: [string]) => col === 'invited_email');
+    const emailCall = eqSpy.mock.calls.find((call) => call[0] === 'invited_email');
     expect(emailCall![1]).toBe('alice@example.com');
   });
 
@@ -84,7 +84,7 @@ describe('listIncomingInvites', () => {
 
     await listIncomingInvites();
 
-    const eqCalls = eqSpy.mock.calls.map(([col]: [string]) => col);
+    const eqCalls = eqSpy.mock.calls.map((call) => call[0] as string);
     expect(eqCalls).not.toContain('invited_email');
   });
 });

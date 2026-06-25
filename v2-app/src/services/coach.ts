@@ -114,7 +114,7 @@ export async function inviteTrainee(coachId: string, coachEmail: string, email: 
     status: 'pending',
   });
   if (error) {
-    if ((error as any).code === '23505') throw new Error('You already invited this email');
+    if (error.code === '23505') throw new Error('You already invited this email');
     throw error;
   }
 }
