@@ -548,10 +548,12 @@ export async function bootForUser(user: User) {
     const todayDay = DAY_ORDER[todayDayIdx];
     // Restore stored nav if the week still exists in loaded state; else fall back to today
     const _storedNav = loadStoredNav();
-    const _navWeek = _storedNav && state.weeks.some(w => w.week === _storedNav.week)
+    // Only restore week/day if saved on the same calendar day (cross-day → boot to today)
+    const _navSameDay = _storedNav?.savedAt === new Date().toDateString();
+    const _navWeek = (_navSameDay && _storedNav && state.weeks.some(w => w.week === _storedNav.week))
       ? _storedNav.week
       : todayWeek;
-    const _navDay = (_storedNav?.day ?? todayDay) as DayOfWeek;
+    const _navDay = (_navSameDay ? (_storedNav?.day ?? todayDay) : todayDay) as DayOfWeek;
     uiState.update(ui => ({ ...ui, week: _navWeek, day: _navDay }));
     bootStatus.set('ready');
   } catch {

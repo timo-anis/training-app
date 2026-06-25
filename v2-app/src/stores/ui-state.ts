@@ -60,6 +60,7 @@ export interface StoredNav {
   day: string;
   radarMode: 'day' | 'week';
   calendarCollapsed: boolean;
+  savedAt?: string; // Date.toDateString() — used to detect cross-day session
 }
 
 export function loadStoredNav(): StoredNav | null {
@@ -74,7 +75,7 @@ export function loadStoredNav(): StoredNav | null {
 
 function saveNavState(week: number, day: string, radarMode: UIState['radarMode'], calendarCollapsed: boolean) {
   try {
-    localStorage.setItem(UI_NAV_KEY, JSON.stringify({ week, day, radarMode, calendarCollapsed }));
+    localStorage.setItem(UI_NAV_KEY, JSON.stringify({ week, day, radarMode, calendarCollapsed, savedAt: new Date().toDateString() }));
   } catch { /* ignore */ }
 }
 

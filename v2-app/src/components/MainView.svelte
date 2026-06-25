@@ -8,6 +8,7 @@
   import ChatView from './ChatView.svelte';
   import { assignments, assignmentKey, setAssignmentContext, loadAssignmentsFor } from '../stores/assignments';
   import MonthCalendar from './MonthCalendar.svelte';
+  import { weekDayToUTCDate } from '../lib/dates';
   import TopBar from './TopBar.svelte';
   import HeroCard from './HeroCard.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
@@ -206,6 +207,10 @@
   // Today highlight for the day-header Today button
   $: _today = todayWeekDay();
   $: onToday = !!_today && _today.week === $uiState.week && _today.day === $uiState.day;
+  $: browsingLabel = (() => {
+    const d = weekDayToUTCDate($uiState.week, $uiState.day);
+    return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  })();
 
   function markDay(k: DayKind, label: string) {
     const turningOff = currentDayKind === k;
@@ -343,7 +348,14 @@
       <button class="day-nav-arrow" on:click={() => goToAdjacentDay(1)} aria-label="Next day">›</button>
     </div>
     {#if !onToday}
-      <button class="today-day-btn" on:click={goToToday}>Today</button>
+      <button class="browsing-banner" on:click={goToToday} aria-label="Return to today">
+        <span class="bb-icon">📅</span>
+        <span class="bb-body">
+          <span class="bb-title">Viewing {browsingLabel}</span>
+          <span class="bb-sub">Tap to return to today</span>
+        </span>
+        <span class="bb-cta">Today ›</span>
+      </button>
     {/if}
 
     {#if $currentDayExercises.length === 0}
@@ -633,23 +645,33 @@
 
   .day-nav-arrow:active { background: rgba(var(--c-surface-b), 0.85); }
 
-  .today-day-btn {
-    margin: 8px auto 0;
-    display: block;
-    padding: 6px 16px;
-    border-radius: 999px;
-    border: 1px solid rgba(var(--c-accent), 0.45);
-    background: rgba(var(--c-accent), 0.12);
-    color: var(--h-d4a038);
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
+  .browsing-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: calc(100% - 24px);
+    margin: 8px 12px 0;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 0.5px solid rgba(var(--c-accent), 0.28);
+    background: rgba(var(--c-accent), 0.10);
     cursor: pointer;
+    text-align: left;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
+    transition: background 0.15s;
   }
-
-  .today-day-btn:active { background: rgba(var(--c-accent), 0.22); }
+  .browsing-banner:active { background: rgba(var(--c-accent), 0.18); }
+  .bb-icon {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    background: rgba(var(--c-accent), 0.18);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .bb-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .bb-title { font-size: 13px; font-weight: 600; color: var(--h-d4a038); }
+  .bb-sub { font-size: 11px; color: rgba(var(--c-accent), 0.55); }
+  .bb-cta { font-size: 13px; font-weight: 700; color: var(--h-d4a038); flex-shrink: 0; }
 
   .day-heading-btn {
     width: 100%;
