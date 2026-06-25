@@ -38,10 +38,13 @@
   $: doneCount = exercise.conditioning ? (exercise.conditioningDone ? 1 : 0) : exercise.sets.filter(s => s.done).length;
   $: totalCount = exercise.conditioning ? 1 : exercise.sets.length;
   $: allDone = exercise.conditioning ? exercise.conditioningDone === true : (doneCount === totalCount && totalCount > 0);
-  // Unified position letter — every exercise shows exactly one letter badge.
-  // Superset: first char of explicit code (A1→A, B2→B).
-  // Single / conditioning: auto-derived from block index (0→A, 1→B…).
-  $: displayLetter = exercise.code
+  // Badge shows full code (A, A1, A2…) so user knows exactly which member this is.
+  // Group letter (code[0]) is used only in the subtitle to show superset context.
+  // Auto-derive from blockIndex when no explicit code is set.
+  $: displayCode = exercise.code
+    ? exercise.code.toUpperCase()
+    : String.fromCharCode(65 + blockIndex);
+  $: displayGroup = exercise.code
     ? exercise.code[0].toUpperCase()
     : String.fromCharCode(65 + blockIndex);
   $: isInSuperset = exercise.type === 'superset' && supersetSize > 1;
@@ -143,12 +146,12 @@
 
 <div class="exercise-card" class:all-done={allDone} class:highlighted bind:this={cardEl}>
   <div class="exercise-header">
-    <span class="superset-badge" class:is-superset={isInSuperset}>{displayLetter}</span>
+    <span class="superset-badge" class:is-superset={isInSuperset}>{displayCode}</span>
     <div class="exercise-meta">
       <span class="exercise-name">{exercise.name}</span>
       {#if exercise.conditioning || exercise.type === 'superset'}
         <span class="exercise-type">
-          {exercise.conditioning ? 'No weights' : `Superset · ${displayLetter}`}
+          {exercise.conditioning ? 'No weights' : `Superset · ${displayGroup}`}
         </span>
       {/if}
     </div>
