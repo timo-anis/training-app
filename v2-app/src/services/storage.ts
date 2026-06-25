@@ -3,6 +3,7 @@ import type { AppState } from '../types/workout';
 import { emptyAppState } from '../types/workout';
 import { parseAndMigrateState } from './state-parser';
 import { chooseNewer, hasData } from '../lib/state-merge';
+import { sanitizeState } from '../lib/state-sanitize';
 
 // ---- Local storage ----
 
@@ -66,26 +67,39 @@ export async function loadCloud(userId: string): Promise<AppState | null> {
   }
 }
 
-/** Cloud state plus its server updated_at timestamp (ISO), for newer-wins merge. */
+/** Cloud state plus its server updated_at timestamp (ISO), for newer-wins merge.
+ *  Retries up to 3 times with exponential backoff so a transient network hiccup
+ *  (common at PWA boot after iOS evicts the app) doesn't silently return null and
+ *  cause the user to see an empty training log. Throws on persistent failure so the
+ *  caller can surface a proper error instead of showing a blank state.
+ */
 export async function loadCloudWithMeta(
   userId: string
 ): Promise<{ state: AppState | null; updatedAt: string | null }> {
-  try {
-    const { data, error } = await supabase
-      .from('app_state')
-      .select('state_json, updated_at')
-      .eq('user_id', userId)
-      .maybeSingle();
-    if (error) throw error;
-    if (!data?.state_json) return { state: null, updatedAt: null };
-    return {
-      state: parseAndMigrateState(data.state_json),
-      updatedAt: (data.updated_at as string | null) ?? null,
-    };
-  } catch (e) {
-    console.error('Cloud load (meta) failed', e);
-    return { state: null, updatedAt: null };
+  const MAX_ATTEMPTS = 3;
+  let lastError: unknown;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
+    try {
+      const { data, error } = await supabase
+        .from('app_state')
+        .select('state_json, updated_at')
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data?.state_json) return { state: null, updatedAt: null };
+      return {
+        state: parseAndMigrateState(data.state_json),
+        updatedAt: (data.updated_at as string | null) ?? null,
+      };
+    } catch (e) {
+      lastError = e;
+      console.error(`Cloud load attempt ${attempt + 1}/${MAX_ATTEMPTS} failed`, e);
+      if (attempt < MAX_ATTEMPTS - 1) {
+        await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+      }
+    }
   }
+  throw lastError;
 }
 
 export async function saveCloud(userId: string, state: AppState): Promise<boolean> {
@@ -116,16 +130,34 @@ export async function saveCloud(userId: string, state: AppState): Promise<boolea
 // silently overwriting newer local edits (e.g. made offline) on boot.
 
 export async function bootstrapState(userId: string): Promise<AppState> {
-  const cloud = await loadCloudWithMeta(userId);
   const local = loadLocal(userId);
   const localTs = loadLocalTimestamp(userId);
 
+  // Cloud fetch with retry. If the network persistently fails we catch it here
+  // so we can distinguish "no data" (new user) from "fetch failed" (error state).
+  let cloud: { state: AppState | null; updatedAt: string | null };
+  let cloudFailed = false;
+  try {
+    cloud = await loadCloudWithMeta(userId);
+  } catch (e) {
+    console.error('Cloud load failed after all retries — falling back to local', e);
+    cloud = { state: null, updatedAt: null };
+    cloudFailed = true;
+  }
+
   const choice = chooseNewer(local, localTs, cloud.state, cloud.updatedAt);
 
-  // If newer local won over an existing (older) cloud copy, push it up so the
-  // cloud catches up — fire-and-forget; local already holds the truth.
+  // If cloud persistently failed AND we have no local fallback, throw so bootForUser
+  // sets bootStatus='error' and the UI shows "Couldn't load data / Reload" instead
+  // of silently presenting an empty training log that looks like a new user.
+  if (cloudFailed && !hasData(choice.state)) {
+    throw new Error('Failed to load training data. Check your connection and try again.');
+  }
+
+  // Local was newer → push a sanitized copy to cloud so cloud catches up.
+  // Apply sanitizeState here so dirty exercise names in local can't re-infect cloud.
   if (choice.source === 'local' && hasData(cloud.state) && choice.state) {
-    void saveCloud(userId, choice.state);
+    void saveCloud(userId, sanitizeState(choice.state));
   }
 
   return choice.state ?? emptyAppState();

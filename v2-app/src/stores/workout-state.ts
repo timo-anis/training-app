@@ -7,7 +7,8 @@ import { getStoredNavSnapshot } from './ui-state';
 import { dayFullyDone } from '../lib/day-status';
 import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
-import { bootstrapState, saveLocal, saveCloud } from '../services/storage';
+import { bootstrapState } from '../services/storage';
+import { sanitizeState } from '../lib/state-sanitize';
 import { PS_UTC } from '../lib/program';
 import { getDateForWeekDay, getWeekDayForDate } from '../lib/dates';
 import { bestE1RM, suggestRpe } from '../lib/rpe';
@@ -534,11 +535,15 @@ export async function bootForUser(user: User) {
       changed = true;
     }
 
+    // Sanitize exercise names before storing — catches any dirty names that
+    // survived migrations or arrived from a pre-sanitize local cache.
+    state = sanitizeState(state);
     appState.set(state);
 
     if (changed) {
-      saveLocal(user.id, state);
-      saveCloud(user.id, state);
+      // scheduleSave also applies sanitizeState, but we pass the already-clean
+      // state here; the key benefit is it routes through the single save path.
+      scheduleSave(user.id, state, true);
     }
 
     const todayDayIdx = (() => {
