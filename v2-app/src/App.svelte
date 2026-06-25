@@ -3,6 +3,7 @@
   import { onAuthChange } from './services/auth';
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
   import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, accountOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
+  import { clearStoredNavSnapshot } from './stores/ui-state';
   import { displayName } from './stores/ui-state';
   import { getDisplayName } from './services/profile';
   import RecordsSheet from './components/RecordsSheet.svelte';
@@ -83,6 +84,7 @@
         const hasData = $appState.weeks.some(w => w.exercises.length > 0);
         showOnboarding = !hasData && checkOnboarding(state.user.id);
       } else if (state.status === 'signed_out') {
+        clearStoredNavSnapshot(); // next login always boots to today
         currentUser.set(null);
         displayName.set('');
         recoveryMode = false;
