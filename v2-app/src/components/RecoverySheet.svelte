@@ -23,8 +23,8 @@
   }
 
   function rpeLabel(rpe: number | null): string {
-    if (rpe === null) return 'no RPE';
-    return `RPE ${rpe.toFixed(1)}`;
+    if (rpe === null) return '';
+    return `RPE ${rpe.toFixed(1)}`;
   }
 
   function agoLabel(h: number | null): string {
@@ -110,9 +110,9 @@
   .rec-backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.55);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(0, 0, 0, 0.50);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     z-index: 80;
     display: flex;
     align-items: flex-end;
@@ -122,40 +122,46 @@
   @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
   .rec-sheet {
-    background: linear-gradient(160deg, var(--h-0d1a30, #0d1a30), var(--h-080e1c, #080e1c));
-    border: 1px solid rgba(60, 90, 165, 0.25);
-    border-radius: 20px 20px 0 0;
-    padding: 0 20px 40px;
+    /* Match app card/sheet style */
+    background: linear-gradient(180deg, #0f1e38 0%, #080d1a 100%);
+    border: 1px solid rgba(60, 90, 165, 0.28);
+    border-bottom: none;
+    border-radius: 22px 22px 0 0;
+    padding: 0 20px 44px;
     width: 100%;
     max-width: 640px;
     max-height: 82dvh;
     overflow-y: auto;
-    animation: slide-up 0.22s cubic-bezier(0.22, 1, 0.36, 1);
+    animation: slide-up 0.24s cubic-bezier(0.22, 1, 0.36, 1);
+    /* Gold accent line at top */
+    box-shadow:
+      0 -1px 0 0 rgba(196, 146, 48, 0.35),
+      inset 0 1px 0 0 rgba(196, 146, 48, 0.12);
   }
   @keyframes slide-up {
-    from { transform: translateY(48px); opacity: 0.6; }
+    from { transform: translateY(52px); opacity: 0.5; }
     to   { transform: translateY(0);    opacity: 1; }
   }
 
   .handle {
-    width: 40px;
+    width: 36px;
     height: 4px;
-    background: rgba(232, 240, 255, 0.14);
+    background: rgba(232, 240, 255, 0.16);
     border-radius: 2px;
-    margin: 14px auto 18px;
+    margin: 14px auto 20px;
   }
 
   .sheet-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
   }
 
-  .sheet-title-wrap { display: flex; flex-direction: column; gap: 3px; }
+  .sheet-title-wrap { display: flex; flex-direction: column; gap: 4px; }
 
   .sheet-title {
-    font-size: 18px;
+    font-size: 19px;
     font-weight: 900;
     color: var(--c-accent-solid, #d4a038);
     letter-spacing: -0.03em;
@@ -163,41 +169,43 @@
 
   .sheet-sub {
     font-size: 11px;
-    color: rgba(232, 240, 255, 0.38);
+    color: rgba(232, 240, 255, 0.32);
     font-weight: 500;
     letter-spacing: 0.01em;
   }
 
   .close-btn {
-    width: 32px;
-    height: 32px;
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
-    border: 1px solid rgba(232, 240, 255, 0.10);
-    background: transparent;
-    color: rgba(232, 240, 255, 0.35);
-    font-size: 14px;
+    border: 1px solid rgba(232, 240, 255, 0.12);
+    background: rgba(232, 240, 255, 0.05);
+    color: rgba(232, 240, 255, 0.38);
+    font-size: 13px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    margin-top: 3px;
     -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
   }
-  .close-btn:active { background: rgba(232,240,255,0.08); }
+  .close-btn:active { background: rgba(232,240,255,0.10); }
 
   /* ── Rings grid ── */
   .rings-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 6px 4px;
-    margin-bottom: 16px;
+    gap: 18px 8px;
+    margin-bottom: 20px;
   }
 
   .ring-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
   }
 
   .ring-wrap {
@@ -215,34 +223,35 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 1px;
+    gap: 0;
   }
 
   .ring-val {
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 800;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.04em;
     line-height: 1;
   }
 
   .ring-sub {
-    font-size: 9px;
-    font-weight: 600;
-    color: rgba(232,240,255,0.35);
-    letter-spacing: 0.03em;
+    font-size: 8px;
+    font-weight: 700;
+    color: rgba(232,240,255,0.30);
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+    margin-top: 2px;
   }
 
   .ring-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 800;
-    color: rgba(232, 240, 255, 0.60);
-    letter-spacing: 0.06em;
+    color: rgba(232, 240, 255, 0.75);
+    letter-spacing: 0.05em;
   }
 
   .ring-meta {
     font-size: 10px;
-    color: rgba(232, 240, 255, 0.30);
+    color: rgba(232, 240, 255, 0.28);
     text-align: center;
     line-height: 1.3;
   }
@@ -252,30 +261,29 @@
     display: flex;
     align-items: flex-start;
     gap: 10px;
-    padding: 11px 13px;
+    padding: 12px 14px;
     background: rgba(79, 192, 141, 0.08);
-    border: 1px solid rgba(79, 192, 141, 0.22);
-    border-radius: 13px;
-    margin-top: 4px;
+    border: 1px solid rgba(79, 192, 141, 0.20);
+    border-radius: 14px;
   }
 
   .insight-rest {
-    background: rgba(245, 158, 11, 0.08);
-    border-color: rgba(245, 158, 11, 0.22);
+    background: rgba(245, 158, 11, 0.07);
+    border-color: rgba(245, 158, 11, 0.20);
   }
 
   .insight-dot {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     border-radius: 50%;
     background: #4fc08d;
     flex-shrink: 0;
-    margin-top: 3px;
+    margin-top: 4px;
   }
 
   .insight-text {
     font-size: 13px;
-    color: rgba(232, 240, 255, 0.65);
+    color: rgba(232, 240, 255, 0.60);
     line-height: 1.45;
   }
 

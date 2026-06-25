@@ -6,12 +6,12 @@
 export type MuscleGroup = 'back' | 'legs' | 'chest' | 'shoulders' | 'core' | 'biceps';
 
 export const MUSCLE_LABELS: Record<MuscleGroup, string> = {
-  back:      'Selg',
-  legs:      'Jalad',
-  chest:     'Rind',
-  shoulders: 'Õlad',
+  back:      'Back',
+  legs:      'Legs',
+  chest:     'Chest',
+  shoulders: 'Shoulders',
   core:      'Core',
-  biceps:    'Biitseps',
+  biceps:    'Biceps',
 };
 
 /** Displayed order in the rings grid */

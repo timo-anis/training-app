@@ -70,10 +70,10 @@ export function computeRecovery(weeks: WorkoutDay[]): MuscleRecovery[] {
       };
     }
 
-    // Parse ISO date as local midnight
+    // Parse ISO date as UTC midnight (dates stored as UTC in app)
     const [y, m, d] = info.date.split('-').map(Number);
-    const trainedMs = new Date(y, m - 1, d).getTime();
-    const hoursAgo = (now - trainedMs) / 3_600_000;
+    const trainedMs = Date.UTC(y, m - 1, d);
+    const hoursAgo = Math.max(0, (now - trainedMs) / 3_600_000);
     const recoveryHours = rpeWindow(info.rpe);
     const pct = Math.min(1, hoursAgo / recoveryHours);
     const hoursLeft = Math.max(0, Math.ceil(recoveryHours - hoursAgo));
