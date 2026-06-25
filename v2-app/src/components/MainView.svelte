@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, accountOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, accountOpen, statsOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites, getMyCoach } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
@@ -15,7 +15,6 @@
   import CoachNote from './CoachNote.svelte';
   import AddExercise from './AddExercise.svelte';
   import CopyDaySheet from './CopyDaySheet.svelte';
-  import StatsView from './StatsView.svelte';
 
 
   // Pending coach invite -> show a marker on the account icon so the trainee
@@ -142,7 +141,6 @@
 
   $: totalWeeks = $appState.weeks.filter(w => w.exercises.length > 0).length;
   $: isNewUser = totalWeeks === 0;
-  let statsOpen = false;
   let hasCoach = false; // set eagerly on mount, updated after watch
 
   // Sync sheetOpen with accountOpen store (used by service worker / badge logic)
@@ -289,14 +287,14 @@
 
     <section class="section section-tight r-stats">
     <div class="stats-bar">
-      <button class="stats-btn" on:click={() => statsOpen = !statsOpen} aria-expanded={statsOpen}>
+      <button class="stats-btn" on:click={() => $statsOpen = !$statsOpen} aria-expanded={$statsOpen}>
         <svg class="stats-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
           <rect x="17" y="3" width="4" height="18"/>
         </svg>
         <span class="stats-btn-label">Statistics</span>
-        <span class="stats-chevron" class:open={statsOpen}>›</span>
+        <span class="stats-chevron" class:open={$statsOpen}>›</span>
       </button>
       <div class="stats-sep" aria-hidden="true"></div>
       <button class="records-icon-btn" on:click={() => ($recordsOpen = true)} aria-label="Personal records">
@@ -310,9 +308,7 @@
       </button>
     </div>
   </section>
-    {#if statsOpen}
-    <div class="r-statsview"><StatsView /></div>
-  {/if}
+
 
   
   </div>

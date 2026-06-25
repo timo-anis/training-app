@@ -291,4 +291,16 @@
     color: #4fc08d;
     font-weight: 700;
   }
+  /* Desktop: centered modal */
+  @media (min-width: 640px) {
+    .rec-backdrop {
+      align-items: center;
+      padding: 24px;
+    }
+    .rec-sheet {
+      border-radius: 22px;
+      border: 1px solid rgba(60, 90, 165, 0.28);
+      max-height: 82dvh;
+    }
+  }
 </style>
