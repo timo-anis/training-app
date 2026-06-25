@@ -35,11 +35,11 @@ test.describe('Revoke flow', () => {
     await expect(coachPage.locator('.row.trainee').filter({ hasText: TRAINEE_EMAIL }))
       .toBeHidden({ timeout: 8_000 });
 
-    // Trainee: coach invite section should show no active coach (may require reload).
+    // Trainee: reload and confirm main app is visible (coach link gone).
     await traineePage.reload();
-    await traineePage.waitForSelector('.hero-card, [data-testid="main-view"]', { timeout: 10_000 });
-    // The coach section should not show an active coach.
-    await expect(traineePage.locator('[class*="coach-active"], .coach-connected')).toBeHidden();
+    await traineePage.waitForSelector('.month-cal', { timeout: 10_000 });
+    // The coach-active section should not be visible after revoke.
+    await expect(traineePage.locator('.coach-active, .coach-connected')).toBeHidden();
 
     await coachCtx.close();
     await traineeCtx.close();

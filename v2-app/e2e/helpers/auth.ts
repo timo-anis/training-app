@@ -11,8 +11,8 @@ export async function signInTrainee(page: Page, email = TRAINEE_EMAIL, pass = TR
   await page.getByPlaceholder(/email/i).fill(email);
   await page.getByPlaceholder(/password/i).fill(pass);
   await page.getByRole('button', { name: /sign in/i }).click();
-  // Wait until the main app is visible (not the auth card)
-  await page.waitForSelector('.hero-card, .month-cal, [data-testid="main-view"]', { timeout: 15_000 });
+  // Wait until the main app is visible — .month-cal is the calendar rendered on main view
+  await page.waitForSelector('.month-cal', { timeout: 15_000 });
 }
 
 /** Sign in on the coach surface (coach.html). */
@@ -21,6 +21,7 @@ export async function signInCoach(page: Page, email = COACH_EMAIL, pass = COACH_
   await page.getByPlaceholder(/email/i).fill(email);
   await page.getByPlaceholder(/password/i).fill(pass);
   await page.getByRole('button', { name: /sign in/i }).click();
-  // Wait until the coach dashboard is loaded
+  // Wait for the dashboard shell, then for trainee rows to finish loading
   await page.waitForSelector('.dash', { timeout: 15_000 });
+  await page.waitForSelector('.row.trainee', { timeout: 15_000 });
 }

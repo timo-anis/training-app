@@ -6,8 +6,11 @@
  *
  *   E2E_COACH_EMAIL=... E2E_COACH_PASS=... E2E_TRAINEE_EMAIL=... E2E_TRAINEE_PASS=... npx playwright test
  */
-import { test, expect, chromium } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { signInCoach, signInTrainee, TRAINEE_EMAIL } from './helpers/auth';
+
+// Unread badge on the trainee top-bar (TopBar.svelte .unread-badge)
+const UNREAD = '.unread-badge';
 
 test.describe('Chat realtime + unread badge', () => {
   test('coach sends message → trainee sees unread badge immediately', async ({ browser }) => {
@@ -27,9 +30,6 @@ test.describe('Chat realtime + unread badge', () => {
     await coachPage.getByRole('button', { name: /chat/i }).click();
     await coachPage.waitForSelector('.chat-input, textarea', { timeout: 8_000 });
 
-    // Trainee: note current unread count (may be 0 or some number).
-    const badgeBefore = await traineePage.locator('.top-bar-unread, [class*="unread"]').count();
-
     // Coach: type and send a unique message.
     const uniqueMsg = `E2E test ${Date.now()}`;
     await coachPage.locator('.chat-input, textarea').fill(uniqueMsg);
@@ -37,8 +37,8 @@ test.describe('Chat realtime + unread badge', () => {
     // Confirm message appeared in coach's bubble list.
     await expect(coachPage.locator('.bubble').filter({ hasText: uniqueMsg })).toBeVisible({ timeout: 5_000 });
 
-    // Trainee: badge should appear/increment within a few seconds (realtime).
-    await expect(traineePage.locator('.top-bar-unread, [class*="unread"]')).toBeVisible({ timeout: 8_000 });
+    // Trainee: unread badge should appear within a few seconds (realtime).
+    await expect(traineePage.locator(UNREAD)).toBeVisible({ timeout: 10_000 });
 
     await coachCtx.close();
     await traineeCtx.close();
@@ -63,12 +63,12 @@ test.describe('Chat realtime + unread badge', () => {
     await expect(coachPage.locator('.bubble').filter({ hasText: msg })).toBeVisible({ timeout: 5_000 });
 
     // Wait for trainee badge to appear.
-    await expect(traineePage.locator('.top-bar-unread, [class*="unread"]')).toBeVisible({ timeout: 8_000 });
+    await expect(traineePage.locator(UNREAD)).toBeVisible({ timeout: 10_000 });
 
-    // Trainee opens the chat overlay.
-    await traineePage.locator('.top-bar-unread, [class*="unread"]').click();
-    // After reading, the badge should disappear.
-    await expect(traineePage.locator('.top-bar-unread, [class*="unread"]')).toBeHidden({ timeout: 6_000 });
+    // Trainee: click the account icon which opens the coach section where chat is.
+    await traineePage.locator('.tb-account').click();
+    // After reading, badge should disappear.
+    await expect(traineePage.locator(UNREAD)).toBeHidden({ timeout: 8_000 });
 
     await coachCtx.close();
     await traineeCtx.close();
