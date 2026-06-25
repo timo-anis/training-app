@@ -1152,7 +1152,7 @@
 
   :global(.hint-header) {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
   }
 

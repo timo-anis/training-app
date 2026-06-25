@@ -123,7 +123,7 @@
   <!-- Single progress row: streak + day rings -->
   <div class="meta-row">
     <div class="streak-pill" class:at-risk={atRisk} class:dormant={!hasStreak}>
-      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c0 6-6 8-6 14a6 6 0 0 0 12 0c0-6-6-8-6-14z"/></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c0 6-6 8-6 14a6 6 0 0 0 12 0c0-6-6-8-6-14z"/></svg>
       {#if hasStreak}
         {streak}w{#if atRisk}&nbsp;<span class="risk-label">at risk</span>{/if}
       {:else}
@@ -260,9 +260,9 @@
     display: flex;
     align-items: center;
     gap: 4px;
-    font-size: 11px;
-    font-weight: 600;
-    color: rgba(var(--c-fg), 0.48);
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(var(--c-fg), 0.65);
     white-space: nowrap;
     flex-shrink: 0;
   }
