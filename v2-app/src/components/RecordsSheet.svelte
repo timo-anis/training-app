@@ -8,13 +8,18 @@
 
   interface ExRecord {
     name: string;
-    e1rm: number;
+    /** Heaviest weight actually lifted (done set). */
+    bestKg: number;
+    /** Rep count of that best set. */
+    bestReps: number;
   }
 
-  // Compute estimated 1RM per exercise using the Epley formula.
-  // Best 1RM across all done weighted sets (reps > 0).
+  // Best ACTUAL set per exercise — heaviest done weighted set.
+  // e1RM (Epley) is used only as the comparator so that a 5-rep set at 85kg
+  // outranks a 1-rep set at 86kg when appropriate; but the displayed value is
+  // always the real kg × reps the user actually lifted — no formula inflation.
   $: records = (() => {
-    const map = new Map<string, ExRecord>();
+    const map = new Map<string, { record: ExRecord; e1rm: number }>();
     for (const wd of $appState.weeks) {
       for (const ex of wd.exercises) {
         if (ex.recovery || ex.conditioning) continue;
@@ -23,17 +28,19 @@
           const kg = parseFloat(s.kg);
           const reps = parseInt(s.reps, 10);
           if (isNaN(kg) || kg <= 0 || isNaN(reps) || reps <= 0) continue;
-          const e1rm = Math.round(epley1RM(kg, reps));
+          const e1rm = epley1RM(kg, reps);
           const canonical = normalizeExerciseName(ex.name);
           const key = canonical.toLowerCase();
           const cur = map.get(key);
           if (!cur || e1rm > cur.e1rm) {
-            map.set(key, { name: canonical, e1rm });
+            map.set(key, { record: { name: canonical, bestKg: kg, bestReps: reps }, e1rm });
           }
         }
       }
     }
-    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+    return [...map.values()]
+      .map(v => v.record)
+      .sort((a, b) => a.name.localeCompare(b.name));
   })();
 </script>
 
@@ -53,7 +60,7 @@
         {#each records as r}
           <div class="record-row">
             <span class="record-name">{r.name}</span>
-            <span class="record-best">{r.e1rm} <span class="record-unit">kg</span></span>
+            <span class="record-best">{r.bestKg} <span class="record-unit">kg</span>{#if r.bestReps > 1}<span class="record-reps"> × {r.bestReps}</span>{/if}</span>
           </div>
         {/each}
       </div>
@@ -159,6 +166,12 @@
     font-weight: 500;
     color: rgba(var(--c-fg), 0.50);
     font-size: 13px;
+  }
+  .record-reps {
+    font-weight: 500;
+    color: rgba(var(--c-fg), 0.38);
+    font-size: 12px;
+    margin-left: 1px;
   }
 
 

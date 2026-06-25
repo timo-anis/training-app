@@ -5,6 +5,7 @@
  */
 import { writable } from 'svelte/store';
 import type { AppState } from '../types/workout';
+import { sanitizeState } from '../lib/state-sanitize';
 import { saveLocal, saveCloud } from '../services/storage';
 import { showToast } from './ui-state';
 
@@ -68,9 +69,12 @@ if (typeof window !== 'undefined') {
 }
 
 export function scheduleSave(userId: string, state: AppState, immediate = false) {
-  const localOk = saveLocal(userId, state);
+  // Normalize exercise names before every write — prevents dirty names from
+  // re-entering the blob via the newer-wins boot merge.
+  const clean = sanitizeState(state);
+  const localOk = saveLocal(userId, clean);
   if (!localOk) showToast('Storage full — local save failed. Free up device storage.', 'error');
-  pendingCloud = { userId, state };
+  pendingCloud = { userId, state: clean };
   if (saveTimer) clearTimeout(saveTimer);
   setSyncStatus('saving');
   if (immediate) {
