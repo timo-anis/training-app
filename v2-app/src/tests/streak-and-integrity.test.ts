@@ -24,7 +24,7 @@ vi.mock('../services/supabase', () => ({
   clearRecoveryPending: vi.fn(),
 }));
 
-import { appState, uiState, streakInfo, dayHasActivity, copyDayFrom } from '../stores/app';
+import { appState, uiState, streakInfo, dayHasActivity, dayFullyDone, copyDayFrom } from '../stores/app';
 import { emptyDay, emptyExercise, emptySet } from '../types/workout';
 import type { WorkoutDay, DayOfWeek, Exercise } from '../types/workout';
 
@@ -61,6 +61,60 @@ describe('dayHasActivity — counts real logged work only (Bug 2)', () => {
   it('is true when a conditioning block is done', () => {
     const ex: Exercise = { ...emptyExercise('c1', 'Bike'), conditioning: true, conditioningDone: true, sets: [] };
     expect(dayHasActivity(day(1, 'Monday', { exercises: [ex] }))).toBe(true);
+  });
+});
+
+
+describe('dayFullyDone — all exercises must be fully completed', () => {
+  it('false for empty day', () => {
+    expect(dayFullyDone(day(1, 'Monday', { exercises: [] }))).toBe(false);
+  });
+  it('false when one set is done but others are not', () => {
+    const ex: Exercise = { ...emptyExercise('e1', 'Squat'), sets: [
+      { kg: '80', reps: '5', done: true, rpe: '' },
+      { kg: '80', reps: '5', done: false, rpe: '' },
+    ]};
+    expect(dayFullyDone(day(1, 'Monday', { exercises: [ex] }))).toBe(false);
+  });
+  it('true when all sets in all exercises are done', () => {
+    const ex1: Exercise = { ...emptyExercise('e1', 'Squat'), sets: [
+      { kg: '80', reps: '5', done: true, rpe: '' },
+      { kg: '80', reps: '5', done: true, rpe: '' },
+    ]};
+    const ex2: Exercise = { ...emptyExercise('e2', 'Press'), sets: [
+      { kg: '60', reps: '8', done: true, rpe: '' },
+    ]};
+    expect(dayFullyDone(day(1, 'Monday', { exercises: [ex1, ex2] }))).toBe(true);
+  });
+  it('false when one exercise is fully done but another is not', () => {
+    const done: Exercise = { ...emptyExercise('e1', 'Squat'), sets: [{ kg: '80', reps: '5', done: true, rpe: '' }] };
+    const notDone: Exercise = { ...emptyExercise('e2', 'Press'), sets: [{ kg: '60', reps: '8', done: false, rpe: '' }] };
+    expect(dayFullyDone(day(1, 'Monday', { exercises: [done, notDone] }))).toBe(false);
+  });
+  it('true when recovery exercise is marked recoveryDone', () => {
+    const ex: Exercise = { ...emptyExercise('r1', 'Mobility'), recovery: true, recoveryDone: true, sets: [] };
+    expect(dayFullyDone(day(1, 'Monday', { exercises: [ex] }))).toBe(true);
+  });
+  it('false when recovery exercise is NOT done', () => {
+    const ex: Exercise = { ...emptyExercise('r1', 'Mobility'), recovery: true, recoveryDone: false, sets: [] };
+    expect(dayFullyDone(day(1, 'Monday', { exercises: [ex] }))).toBe(false);
+  });
+  it('true when conditioning exercise is marked conditioningDone', () => {
+    const ex: Exercise = { ...emptyExercise('c1', 'Bike'), conditioning: true, conditioningDone: true, sets: [] };
+    expect(dayFullyDone(day(1, 'Monday', { exercises: [ex] }))).toBe(true);
+  });
+  it('false if exercise has no sets (not recovery/conditioning)', () => {
+    const ex: Exercise = { ...emptyExercise('e1', 'Squat'), sets: [] };
+    expect(dayFullyDone(day(1, 'Monday', { exercises: [ex] }))).toBe(false);
+  });
+  it('dayHasActivity can be true while dayFullyDone is false (partial workout)', () => {
+    const ex: Exercise = { ...emptyExercise('e1', 'Squat'), sets: [
+      { kg: '80', reps: '5', done: true, rpe: '' },
+      { kg: '80', reps: '5', done: false, rpe: '' },
+    ]};
+    const d = day(1, 'Monday', { exercises: [ex] });
+    expect(dayHasActivity(d)).toBe(true);
+    expect(dayFullyDone(d)).toBe(false);
   });
 });
 

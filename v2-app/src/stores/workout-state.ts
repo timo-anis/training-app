@@ -75,6 +75,21 @@ export function dayHasActivity(wd: WorkoutDay): boolean {
     ex.sets.some(s => s.done) || ex.conditioningDone || ex.recoveryDone);
 }
 
+// A day is "fully done" when every exercise is fully completed:
+// - strength exercise: ALL sets have done:true
+// - recovery exercise: recoveryDone:true
+// - conditioning exercise: conditioningDone:true
+// Used by the HeroCard day-rings (stricter than dayHasActivity).
+export function dayFullyDone(wd: WorkoutDay): boolean {
+  if (wd.exercises.length === 0) return false;
+  return wd.exercises.every(ex => {
+    if (ex.recovery) return ex.recoveryDone === true;
+    if (ex.conditioning) return ex.conditioningDone === true;
+    if (ex.sets.length === 0) return false;
+    return ex.sets.every(s => s.done);
+  });
+}
+
 export interface StreakInfo {
   /** Consecutive weeks with activity, ending at the current week (if trained)
    *  or the last trained week before it (streak standing, current week at risk). */

@@ -1,7 +1,9 @@
 <script lang="ts">
-  import { appState, uiState, openWorkoutMode, todayWeekDay } from '../stores/app';
+  import { appState, uiState, openWorkoutMode, todayWeekDay, streakInfo, dayFullyDone } from '../stores/app';
   import { displayName } from '../stores/ui-state';
-  import { setDayLabel, streakInfo } from '../stores/workout-state';
+  import { setDayLabel } from '../stores/workout-state';
+  import { DAY_ORDER } from '../types/workout';
+  import type { WorkoutDay, DayOfWeek } from '../types/workout';
 
   function timeGreeting(): string {
     const h = new Date().getHours();
@@ -17,12 +19,11 @@
   }
 
   $: name = $displayName;
-  // Always use real calendar today — not the UI-selected week/day
   $: realToday = todayWeekDay();
+  $: todayISO = new Date().toISOString().split('T')[0];
   $: todayDay = realToday ? $appState.weeks.find(w => w.week === realToday!.week && w.day === realToday!.day) : undefined;
   $: exercises = todayDay?.exercises ?? [];
 
-  // Workout chip: label OR "First Exercise · +N more"
   $: savedLabel = todayDay?.label ?? '';
   $: chipLine = (() => {
     if (exercises.length === 0) return null;
@@ -31,15 +32,29 @@
     return rest > 0 ? `${first} · +${rest} more` : first;
   })();
 
-  // Weekly progress — only 'workout' kind days count; future completed days are guarded by date
-  $: todayISO = new Date().toISOString().split('T')[0];
-  $: realWeekDays = realToday ? $appState.weeks.filter(w => w.week === realToday!.week) : [];
-  $: workoutDays = realWeekDays.filter(d => !d.kind || d.kind === 'workout');
-  $: weekTotal = workoutDays.filter(d => d.exercises.length > 0).length;
-  $: weekDone = workoutDays.filter(d => d.completed && d.date <= todayISO).length;
-  $: weekPct = weekTotal > 0 ? Math.round((weekDone / weekTotal) * 100) : 0;
+  // Day rings — planned workout days this week, sorted Mon→Sun
+  $: realWeekDays = realToday
+    ? $appState.weeks.filter(w => w.week === realToday!.week && (!w.kind || w.kind === 'workout') && w.exercises.length > 0)
+    : [];
+  $: ringDays = [...realWeekDays].sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day));
 
+  // Ring state per day
+  function ringState(d: WorkoutDay): 'done' | 'today' | 'past' | 'future' {
+    if (dayFullyDone(d)) return 'done';
+    if (d.date === todayISO) return 'today';
+    if (d.date < todayISO) return 'past';
+    return 'future';
+  }
+
+  // Single letter label: Mon→M, Tue→T, Wed→W, Thu→T, Fri→F, Sat→S, Sun→S
+  function dayLetter(d: DayOfWeek): string {
+    return d[0];
+  }
+
+  // Streak
   $: streak = $streakInfo.count;
+  $: atRisk = streak > 0 && !$streakInfo.thisWeekActive;
+  $: hasStreak = streak > 0;
 
   // Inline label editing
   let editing = false;
@@ -105,19 +120,26 @@
     </div>
   {/if}
 
+  <!-- Single progress row: streak + day rings -->
   <div class="meta-row">
-    {#if streak > 0}
-      <span class="meta-pill">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c0 6-6 8-6 14a6 6 0 0 0 12 0c0-6-6-8-6-14z"/></svg>
-        {streak}-week streak
-      </span>
-    {/if}
-    {#if weekTotal > 0}
-      <div class="progress-wrap">
-        <div class="progress-bar">
-          <div class="progress-fill" style="width:{weekPct}%"></div>
-        </div>
-        <span class="progress-label">{weekDone} / {weekTotal} this week</span>
+    <div class="streak-pill" class:at-risk={atRisk} class:dormant={!hasStreak}>
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2c0 6-6 8-6 14a6 6 0 0 0 12 0c0-6-6-8-6-14z"/></svg>
+      {#if hasStreak}
+        {streak}w{#if atRisk}&nbsp;<span class="risk-label">at risk</span>{/if}
+      {:else}
+        Start a streak
+      {/if}
+    </div>
+
+    {#if ringDays.length > 0}
+      <div class="day-rings" aria-label="This week's workouts">
+        {#each ringDays as d (d.day)}
+          {@const state = ringState(d)}
+          <div class="ring-wrap">
+            <span class="ring-label">{dayLetter(d.day)}</span>
+            <div class="ring ring--{state}" aria-label="{d.day}: {state}"></div>
+          </div>
+        {/each}
       </div>
     {/if}
   </div>
@@ -146,9 +168,7 @@
     letter-spacing: -0.01em;
   }
 
-  .name-accent {
-    color: var(--c-accent-solid);
-  }
+  .name-accent { color: var(--c-accent-solid); }
 
   /* Workout chip */
   .workout-chip {
@@ -231,48 +251,87 @@
   .meta-row {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 10px;
   }
 
-  .meta-pill {
+  /* Streak pill */
+  .streak-pill {
     display: flex;
     align-items: center;
     gap: 4px;
     font-size: 11px;
+    font-weight: 600;
     color: rgba(var(--c-fg), 0.48);
     white-space: nowrap;
     flex-shrink: 0;
   }
+  .streak-pill svg { color: var(--c-accent-solid); }
+  .streak-pill.at-risk svg { color: var(--h-d4a038); }
+  .streak-pill.at-risk { color: var(--h-d4a038); }
+  .streak-pill.dormant svg { color: rgba(var(--c-fg), 0.25); }
 
-  .meta-pill svg { color: var(--c-accent-solid); }
+  .risk-label {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--h-d4a038);
+    letter-spacing: 0.02em;
+  }
 
-  .progress-wrap {
+  /* Day rings */
+  .day-rings {
     display: flex;
-    align-items: center;
     gap: 7px;
-    flex: 1;
-    min-width: 0;
-  }
-
-  .progress-bar {
-    flex: 1;
-    height: 3px;
-    background: rgba(var(--c-fg), 0.12);
-    border-radius: 2px;
-    overflow: hidden;
-  }
-
-  .progress-fill {
-    height: 100%;
-    background: var(--c-accent-solid);
-    border-radius: 2px;
-    transition: width 0.3s ease;
-  }
-
-  .progress-label {
-    font-size: 11px;
-    color: rgba(var(--c-fg), 0.42);
-    white-space: nowrap;
+    align-items: center;
     flex-shrink: 0;
+  }
+
+  .ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .ring-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: rgba(var(--c-fg), 0.22);
+    letter-spacing: 0.02em;
+  }
+
+  .ring {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+  }
+
+  /* done = fully completed → green fill */
+  .ring--done {
+    background: var(--h-4fc08d);
+    border: 1.5px solid var(--h-4fc08d);
+  }
+
+  /* today = current day, not yet done → gold outline */
+  .ring--today {
+    background: transparent;
+    border: 1.5px solid var(--c-accent-solid);
+  }
+
+  /* past = missed → very dim outline */
+  .ring--past {
+    background: transparent;
+    border: 1.5px solid rgba(var(--c-fg), 0.18);
+  }
+
+  /* future = upcoming → barely visible outline */
+  .ring--future {
+    background: transparent;
+    border: 1.5px solid rgba(var(--c-fg), 0.10);
+  }
+
+  /* today ring label gets gold accent */
+  .ring-wrap:has(.ring--today) .ring-label {
+    color: var(--c-accent-solid);
   }
 </style>

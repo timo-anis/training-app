@@ -9,7 +9,6 @@
   import { assignments, assignmentKey, setAssignmentContext, loadAssignmentsFor } from '../stores/assignments';
   import MonthCalendar from './MonthCalendar.svelte';
   import TopBar from './TopBar.svelte';
-  import StreakStrip from './StreakStrip.svelte';
   import HeroCard from './HeroCard.svelte';
   import ExerciseCard from './ExerciseCard.svelte';
   import CoachNote from './CoachNote.svelte';
@@ -234,10 +233,6 @@
     {hasCoach}
     unreadMessages={$coachUnreadTotal}
   />
-
-  <section class="section section-tight r-streak">
-    <StreakStrip />
-  </section>
 
   {#if !isNewUser}
     <section class="section section-tight r-hero">
