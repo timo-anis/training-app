@@ -17,7 +17,7 @@
   import WmSetRow from './WmSetRow.svelte';
   import type { DayOfWeek, WorkoutSet, Exercise, WorkoutDay } from '../types/workout';
   import { DAY_ORDER } from '../types/workout';
-  import { searchExercises } from '../data/exercises';
+  import { searchExercises, normalizeExerciseName } from '../data/exercises';
   import RestTimer from './RestTimer.svelte';
   import { nextSupersetIndex, firstUndoneIndex } from '../lib/state-helpers';
 
@@ -222,16 +222,19 @@
     try { if ('vibrate' in navigator) navigator.vibrate(pattern); } catch { /* ignore */ }
   }
 
-  // PR detection: returns true if current kg > all previous sets for this exercise
+  // PR detection: returns true if current kg > all previous DONE sets for this exercise.
+  // Uses normalizeExerciseName so name variants map to the same canonical exercise.
   function isPR(exName: string, currentKg: string): boolean {
     const kg = parseFloat(currentKg.replace(',', '.'));
     if (isNaN(kg) || kg <= 0) return false;
+    const canonical = normalizeExerciseName(exName);
     let max = 0;
     for (const wd of $appState.weeks) {
       if (wd.week === $uiState.week && wd.day === $uiState.day) continue;
       for (const ex of wd.exercises) {
-        if (ex.name.toLowerCase() !== exName.toLowerCase()) continue;
+        if (normalizeExerciseName(ex.name) !== canonical) continue;
         for (const s of ex.sets) {
+          if (!s.done) continue;  // only real logged sets count
           const v = parseFloat(s.kg);
           if (!isNaN(v) && v > max) max = v;
         }
@@ -428,12 +431,14 @@
         if (!isNaN(v) && v > newKg) newKg = v;
       }
       if (newKg <= 0) continue;
+      const exCanonical = normalizeExerciseName(ex.name);
       let prevMax = 0;
       for (const wd of $appState.weeks) {
         if (wd.week === $uiState.week && wd.day === $uiState.day) continue;
         for (const e of wd.exercises) {
-          if (e.name.toLowerCase() !== ex.name.toLowerCase()) continue;
+          if (normalizeExerciseName(e.name) !== exCanonical) continue;
           for (const s of e.sets) {
+            if (!s.done) continue;  // only real logged sets count
             const v = parseFloat(s.kg);
             if (!isNaN(v) && v > prevMax) prevMax = v;
           }
