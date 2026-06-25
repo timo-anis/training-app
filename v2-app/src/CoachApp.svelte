@@ -16,30 +16,48 @@
     return u?.email ? COACH_EMAILS.includes(u.email.toLowerCase()) : false;
   }
 
+  /** sessionStorage key for restoring selected trainee across refreshes. */
+  const RESTORE_KEY = 'coach_sel_trainee_id';
+
   type View = 'loading' | 'auth' | 'dashboard' | 'trainee' | 'denied';
   let view: View = 'loading';
   let user: User | null = null;
   let selected: TraineeRow | null = null;
   let unsub: (() => void) | null = null;
+  /** ID to restore after trainee list loads; set on auth, consumed by CoachDashboard. */
+  let restoreTraineeId: string | null = null;
 
   onMount(() => {
     unsub = onAuthChange((state) => {
       if (state.status === 'signed_in' || state.status === 'recovery') {
         user = state.user;
         currentUser.set(state.user);
-        if (view === 'loading' || view === 'auth') view = 'dashboard';
+        if (view === 'loading' || view === 'auth') {
+          restoreTraineeId = sessionStorage.getItem(RESTORE_KEY);
+          view = 'dashboard';
+        }
       } else if (state.status === 'signed_out') {
         user = null;
         currentUser.set(null);
         selected = null;
+        restoreTraineeId = null;
+        sessionStorage.removeItem(RESTORE_KEY);
         view = 'auth';
       }
     });
     return () => unsub?.();
   });
 
-  function openTrainee(t: TraineeRow) { selected = t; view = 'trainee'; }
-  function backToDashboard() { selected = null; view = 'dashboard'; }
+  function openTrainee(t: TraineeRow) {
+    selected = t;
+    view = 'trainee';
+    sessionStorage.setItem(RESTORE_KEY, t.traineeId);
+  }
+  function backToDashboard() {
+    selected = null;
+    view = 'dashboard';
+    sessionStorage.removeItem(RESTORE_KEY);
+  }
   async function handleSignOut() { await signOut(); }
 </script>
 
@@ -75,7 +93,7 @@
     <div class="coach-columns">
       <!-- Sidebar: trainee list. On mobile hidden when a trainee is open. -->
       <aside class="coach-sidebar" class:mobile-hidden={view === 'trainee'}>
-        <CoachDashboard {user} onOpenTrainee={openTrainee} />
+        <CoachDashboard {user} onOpenTrainee={openTrainee} {restoreTraineeId} />
       </aside>
       <!-- Main panel: trainee detail. On mobile hidden on dashboard. -->
       <main class="coach-panel" class:mobile-hidden={view === 'dashboard'}>

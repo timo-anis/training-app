@@ -9,6 +9,8 @@
 
   export let user: User | null = null;
   export let onOpenTrainee: (t: TraineeRow) => void = () => {};
+  /** If set, auto-open this trainee ID after the list loads (restores state across refreshes). */
+  export let restoreTraineeId: string | null = null;
 
   let loading = true;
   let trainees: TraineeRow[] = [];
@@ -34,6 +36,12 @@
       showToast('Could not load trainees', 'error');
     } finally {
       loading = false;
+    }
+    // Restore selected trainee after a page refresh if an ID was stored.
+    if (restoreTraineeId) {
+      const match = trainees.find(t => t.traineeId === restoreTraineeId);
+      if (match) onOpenTrainee(match);
+      restoreTraineeId = null;  // consume once
     }
   }
 
