@@ -129,7 +129,10 @@ WorkoutSet {
 }
 ```
 
-### Non-negotiable data rules
+### Non-negotiable rules
+
+- **App language is English only.** No Estonian (or any other language) in UI strings, labels, button text, or component copy. This applies to all components including new features, tooltips, chip labels, and insight text.
+
 
 - Never mix weekdays and dates
 - Never break superset structure (type + code must stay paired)
