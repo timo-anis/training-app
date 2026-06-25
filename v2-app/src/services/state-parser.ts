@@ -21,19 +21,28 @@ export function parseAndMigrateState(raw: unknown): AppState | null {
   if (Array.isArray(state.weeks)) {
     // Backfill fields added after the initial schema — existing value wins via ??.
     // Everything else (kg, reps, done, superset codes, order, notes) is preserved.
+    // Null-element guards: null/undefined entries in weeks[], exercises[], or sets[]
+    // can appear from historical blob corruption — filter them out so
+    // parseAndMigrateState never throws on a valid 200 response from Supabase.
     return {
       ...state,
       schema: '4.1',
-      weeks: state.weeks.map(wd => ({
-        ...wd,
-        exercises: wd.exercises.map(ex => ({
-          ...ex,
-          conditioning: ex.conditioning ?? false,
-          conditioningNote: ex.conditioningNote ?? '',
-          conditioningDone: ex.conditioningDone ?? false,
-          sets: ex.sets.map(s => ({ ...s, rpe: s.rpe ?? '' })),
+      weeks: state.weeks
+        .filter(wd => wd != null)
+        .map(wd => ({
+          ...wd,
+          exercises: (wd.exercises ?? [])
+            .filter(ex => ex != null)
+            .map(ex => ({
+              ...ex,
+              conditioning: ex.conditioning ?? false,
+              conditioningNote: ex.conditioningNote ?? '',
+              conditioningDone: ex.conditioningDone ?? false,
+              sets: (ex.sets ?? [])
+                .filter(s => s != null)
+                .map(s => ({ ...s, rpe: s.rpe ?? '' })),
+            })),
         })),
-      })),
     };
   }
 

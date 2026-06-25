@@ -17,12 +17,18 @@ export function sanitizeState(state: AppState): AppState {
   if (!state) return state;
   return {
     ...state,
-    weeks: (state.weeks ?? []).map(wd => ({
-      ...wd,
-      exercises: (wd.exercises ?? []).map(ex => ({
-        ...ex,
-        name: normalizeExerciseName(ex.name),
+    // Null-element guards: filter null weeks/exercises that can appear from
+    // historical blob corruption or older app versions.
+    weeks: (state.weeks ?? [])
+      .filter(wd => wd != null)
+      .map(wd => ({
+        ...wd,
+        exercises: (wd.exercises ?? [])
+          .filter(ex => ex != null)
+          .map(ex => ({
+            ...ex,
+            name: normalizeExerciseName(ex.name),
+          })),
       })),
-    })),
   };
 }
