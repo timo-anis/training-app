@@ -14,11 +14,12 @@ import { normalizeExerciseName } from '../data/exercises';
 import type { AppState } from '../types/workout';
 
 export function sanitizeState(state: AppState): AppState {
+  if (!state) return state;
   return {
     ...state,
-    weeks: state.weeks.map(wd => ({
+    weeks: (state.weeks ?? []).map(wd => ({
       ...wd,
-      exercises: wd.exercises.map(ex => ({
+      exercises: (wd.exercises ?? []).map(ex => ({
         ...ex,
         name: normalizeExerciseName(ex.name),
       })),

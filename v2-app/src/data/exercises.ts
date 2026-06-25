@@ -210,5 +210,8 @@ for (const e of EXERCISE_LIBRARY) {
  * Use this whenever grouping or displaying exercise names from stored data.
  */
 export function normalizeExerciseName(name: string): string {
-  return _ALIAS_MAP.get(name.trim().toLowerCase()) ?? name.trim();
+  // Guard: null/undefined/empty names pass through unchanged
+  if (!name || typeof name !== 'string') return name ?? '';
+  const trimmed = name.trim();
+  return _ALIAS_MAP.get(trimmed.toLowerCase()) ?? trimmed;
 }
