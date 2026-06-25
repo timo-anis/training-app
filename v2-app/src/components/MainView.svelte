@@ -214,7 +214,6 @@
   }
 
   const DAY_KINDS: { k: DayKind; label: string }[] = [
-    { k: 'workout', label: 'Workout' },
     { k: 'recovery', label: 'Recovery' },
     { k: 'rest', label: 'Rest' },
   ];
@@ -347,6 +346,7 @@
       <button class="today-day-btn" on:click={goToToday}>Today</button>
     {/if}
 
+    {#if $currentDayExercises.length === 0}
     <div class="day-kind-seg" role="group" aria-label="Day type">
       {#each DAY_KINDS as { k, label }}
         <button
@@ -356,6 +356,7 @@
         >{label}</button>
       {/each}
     </div>
+    {/if}
 
     <CoachNote week={$uiState.week} day={$uiState.day} exerciseId={null} authoring={false} />
 

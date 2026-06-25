@@ -4,6 +4,7 @@
  */
 import { writable, derived, get } from 'svelte/store';
 import { loadStoredNav } from './ui-state';
+import { dayFullyDone } from '../lib/day-status';
 import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud } from '../services/storage';
@@ -81,15 +82,8 @@ export function dayHasActivity(wd: WorkoutDay): boolean {
 // - recovery exercise: recoveryDone:true
 // - conditioning exercise: conditioningDone:true
 // Used by the HeroCard day-rings (stricter than dayHasActivity).
-export function dayFullyDone(wd: WorkoutDay): boolean {
-  if (wd.exercises.length === 0) return false;
-  return wd.exercises.every(ex => {
-    if (ex.recovery) return ex.recoveryDone === true;
-    if (ex.conditioning) return ex.conditioningDone === true;
-    if (ex.sets.length === 0) return false;
-    return ex.sets.every(s => s.done);
-  });
-}
+// dayFullyDone is defined in lib/day-status.ts (single source of truth)
+export { dayFullyDone };
 
 export interface StreakInfo {
   /** Consecutive weeks with activity, ending at the current week (if trained)

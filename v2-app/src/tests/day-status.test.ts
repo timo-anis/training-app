@@ -40,6 +40,6 @@ describe('computeDayStatus', () => {
   it('no exercises but kind set -> mapped status', () => {
     expect(computeDayStatus(day({ exercises: [], kind: 'rest' }))).toBe('rest');
     expect(computeDayStatus(day({ exercises: [], kind: 'recovery' }))).toBe('active-recovery');
-    expect(computeDayStatus(day({ exercises: [], kind: 'workout' }))).toBe('has-data');
+    expect(computeDayStatus(day({ exercises: [], kind: 'workout' }))).toBe('neutral'); // 'workout' kind removed from UI; legacy data → neutral
   });
 });
