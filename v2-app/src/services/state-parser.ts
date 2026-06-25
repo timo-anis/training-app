@@ -13,11 +13,22 @@
 import type { AppState } from '../types/workout';
 import { emptyAppState } from '../types/workout';
 
+const KNOWN_SCHEMAS = new Set<string>(['4.0', '4.1']);
+
 /** Parse and normalise stored state. Returns null for non-object input. */
 export function parseAndMigrateState(raw: unknown): AppState | null {
   if (!raw || typeof raw !== 'object') return null;
 
   const state = raw as AppState;
+
+  // Future-schema guard: if a newer client wrote this blob we can still parse
+  // it (spread preserves unknown fields) but we log so it's detectable.
+  if (state.schema && !KNOWN_SCHEMAS.has(state.schema as string)) {
+    console.warn(
+      `[state-parser] Unknown schema version "${state.schema}" — proceeding with best-effort parse. Update the app if issues occur.`
+    );
+  }
+
   if (Array.isArray(state.weeks)) {
     // Backfill fields added after the initial schema — existing value wins via ??.
     // Everything else (kg, reps, done, superset codes, order, notes) is preserved.

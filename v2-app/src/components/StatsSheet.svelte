@@ -4,10 +4,13 @@
   const dispatch = createEventDispatcher();
 </script>
 
-<!-- svelte-ignore a11y-click-events-have-key-events -->
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="stats-backdrop" on:click={() => dispatch('close')}>
-  <div class="stats-sheet" on:click|stopPropagation>
+<div
+  class="stats-backdrop"
+  role="presentation"
+  on:click={() => dispatch('close')}
+  on:keydown={(e) => e.key === 'Escape' && dispatch('close')}
+>
+  <div class="stats-sheet" role="dialog" aria-label="Statistics" tabindex="-1" on:click|stopPropagation on:keydown|stopPropagation>
     <div class="handle"></div>
     <div class="stats-header">
       <div class="stats-title-row">

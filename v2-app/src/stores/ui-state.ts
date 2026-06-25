@@ -40,7 +40,7 @@ export const currentUser = writable<User | null>(null);
 export const displayName = writable<string>('');
 
 // ---- Presentation-mode access control (allow-list) ----
-const PRESENTATION_EMAILS = ['timo.anis@gmail.com'];
+import { PRESENTATION_EMAILS } from '../data/config';
 function presentationAllowed(u: User | null): boolean {
   return !!u && PRESENTATION_EMAILS.includes((u.email ?? '').toLowerCase());
 }

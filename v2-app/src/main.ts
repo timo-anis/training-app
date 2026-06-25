@@ -1,8 +1,10 @@
 import { mount } from 'svelte'
+import { get } from 'svelte/store'
 import { registerSW } from 'virtual:pwa-register'
 import './app.css'
 import App from './App.svelte'
 import { initErrorTracking } from './services/errorTracker'
+import { uiState } from './stores/ui-state'
 
 initErrorTracking();
 
@@ -19,6 +21,9 @@ registerSW({
     if (!registration) return;
     const checkForUpdate = () => {
       if (document.visibilityState === 'visible') {
+        // Never trigger a SW reload mid-workout — it would interrupt the
+        // user's session. Defer until they return to the home screen.
+        if (get(uiState).workoutActive) return;
         registration.update().catch(() => {});
       }
     };

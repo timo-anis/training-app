@@ -9,8 +9,7 @@
   import ToastNotification from './components/ToastNotification.svelte';
   import type { TraineeRow } from './services/coach';
 
-  /** Allowlist — only these emails may use the coach surface. */
-  const COACH_EMAILS = ['timo.anis@gmail.com', 'kreete.suvi@gmail.com'];
+  import { COACH_EMAILS } from './data/config';
 
   function isCoachAllowed(u: User | null): boolean {
     return u?.email ? COACH_EMAILS.includes(u.email.toLowerCase()) : false;

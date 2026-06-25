@@ -522,3 +522,104 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS display_name TEXT;
 -- 2026-06-24: missing FK indexes (P1-5 from holistic audit)
 CREATE INDEX IF NOT EXISTS app_errors_user_id_idx ON public.app_errors (user_id);
 CREATE INDEX IF NOT EXISTS messages_sender_id_idx ON public.messages (sender_id);
+
+-- ============================================================
+-- 2026-06-25: History pruning (migration: prune_app_state_history)
+-- ============================================================
+
+-- Index to make the pruning trigger sub-ms on large history tables.
+CREATE INDEX IF NOT EXISTS app_state_history_user_captured_idx
+  ON public.app_state_history (user_id, captured_at DESC, id DESC);
+
+-- One-time backfill: cap all existing users to 30 rows.
+-- (Already applied to live DB on 2026-06-25; idempotent if re-run.)
+DELETE FROM public.app_state_history
+WHERE id NOT IN (
+  SELECT id FROM (
+    SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY captured_at DESC, id DESC) AS rn
+    FROM public.app_state_history
+  ) ranked WHERE rn <= 30
+);
+
+-- Trigger function: after each INSERT, prune so user never has >30 rows.
+CREATE OR REPLACE FUNCTION public.prune_app_state_history()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  DELETE FROM public.app_state_history
+  WHERE user_id = NEW.user_id
+    AND id NOT IN (
+      SELECT id FROM public.app_state_history
+      WHERE user_id = NEW.user_id
+      ORDER BY captured_at DESC, id DESC LIMIT 30
+    );
+  RETURN NEW;
+END;
+$$;
+REVOKE EXECUTE ON FUNCTION public.prune_app_state_history() FROM public, anon, authenticated;
+
+CREATE TRIGGER trg_prune_app_state_history
+  AFTER INSERT ON public.app_state_history
+  FOR EACH ROW EXECUTE FUNCTION public.prune_app_state_history();
+
+-- ============================================================
+-- 2026-06-25: is_coach flag + server-side coach RLS hardening
+--             (migration: is_coach_rls_hardening + fix_timo_is_coach_by_uuid)
+-- ============================================================
+
+-- Flag on profiles — server-side source of truth for coach identity.
+-- Client-side COACH_EMAILS list (src/data/config.ts) must stay in sync.
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_coach boolean NOT NULL DEFAULT false;
+
+-- Set existing coaches (identified by UUID to handle null-email profiles).
+UPDATE public.profiles SET is_coach = true
+  WHERE id = '3547b537-a6bf-4fa2-996a-ef8542e6b714';  -- timo.anis@gmail.com
+UPDATE public.profiles SET is_coach = true
+  WHERE email IN ('kreete.suvi@gmail.com');
+
+-- Helper callable by authenticated users (used in RLS policies below).
+CREATE OR REPLACE FUNCTION public.caller_is_coach()
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT COALESCE((SELECT is_coach FROM public.profiles WHERE id = auth.uid()), false);
+$$;
+REVOKE EXECUTE ON FUNCTION public.caller_is_coach() FROM public, anon;
+GRANT EXECUTE ON FUNCTION public.caller_is_coach() TO authenticated;
+
+-- coach_links: only is_coach=true users may insert as coach
+DROP POLICY IF EXISTS "links_coach_insert" ON public.coach_links;
+CREATE POLICY "links_coach_insert" ON public.coach_links
+  FOR INSERT TO authenticated
+  WITH CHECK (coach_id = (SELECT auth.uid()) AND public.caller_is_coach());
+
+-- coach_notes: only is_coach=true users may write
+DROP POLICY IF EXISTS "notes_coach_insert" ON public.coach_notes;
+CREATE POLICY "notes_coach_insert" ON public.coach_notes
+  FOR INSERT TO authenticated
+  WITH CHECK (coach_id = (SELECT auth.uid()) AND public.caller_is_coach());
+
+DROP POLICY IF EXISTS "notes_coach_update" ON public.coach_notes;
+CREATE POLICY "notes_coach_update" ON public.coach_notes
+  FOR UPDATE TO authenticated
+  USING  (coach_id = (SELECT auth.uid()) AND public.caller_is_coach())
+  WITH CHECK (coach_id = (SELECT auth.uid()) AND public.caller_is_coach());
+
+DROP POLICY IF EXISTS "notes_coach_delete" ON public.coach_notes;
+CREATE POLICY "notes_coach_delete" ON public.coach_notes
+  FOR DELETE TO authenticated
+  USING (coach_id = (SELECT auth.uid()) AND public.caller_is_coach());
+
+-- coach_assignments: only is_coach=true users may write
+DROP POLICY IF EXISTS "assign_coach_insert" ON public.coach_assignments;
+CREATE POLICY "assign_coach_insert" ON public.coach_assignments
+  FOR INSERT TO authenticated
+  WITH CHECK (coach_id = (SELECT auth.uid()) AND public.caller_is_coach());
+
+DROP POLICY IF EXISTS "assign_coach_update" ON public.coach_assignments;
+CREATE POLICY "assign_coach_update" ON public.coach_assignments
+  FOR UPDATE TO authenticated
+  USING  (coach_id = (SELECT auth.uid()) AND public.caller_is_coach())
+  WITH CHECK (coach_id = (SELECT auth.uid()) AND public.caller_is_coach());
+
+DROP POLICY IF EXISTS "assign_coach_delete" ON public.coach_assignments;
+CREATE POLICY "assign_coach_delete" ON public.coach_assignments
+  FOR DELETE TO authenticated
+  USING (coach_id = (SELECT auth.uid()) AND public.caller_is_coach());

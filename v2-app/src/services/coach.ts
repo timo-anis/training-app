@@ -142,13 +142,23 @@ export async function loadTraineeState(
 // TRAINEE SIDE (consumed by the trainee app's Account sheet)
 // ============================================================
 
-/** Pending invites addressed to the signed-in trainee's email. */
+/** Pending invites addressed to the signed-in trainee's email.
+ *  RLS (links_invitee_select) is the authoritative filter; the
+ *  email clause here is defence-in-depth so even a misconfigured
+ *  policy can never leak another user's invites to the client. */
 export async function listIncomingInvites(): Promise<IncomingInvite[]> {
-  const { data, error } = await supabase
+  // Fetch caller identity for the client-side defence-in-depth filter.
+  const { data: { user } } = await supabase.auth.getUser();
+  const myEmail = (user?.email ?? '').toLowerCase();
+
+  let q = supabase
     .from('coach_links')
     .select('id, coach_email, created_at')
     .eq('status', 'pending')
     .order('created_at', { ascending: false });
+  if (myEmail) q = q.eq('invited_email', myEmail);
+
+  const { data, error } = await q;
   if (error) throw error;
   return (data ?? []).map((r) => ({
     id: r.id as string,
@@ -437,10 +447,13 @@ export async function markMessagesRead(linkId: string): Promise<number> {
 /** Unread-from-peer counts per link for the signed-in user (dashboard badges).
  *  RLS scopes the rows to the caller's links; we tally what isn't ours. */
 export async function listUnreadCounts(myUserId: string): Promise<Record<string, number>> {
+  // limit: prevents unbounded fetches on accounts with many messages.
+  // 500 unread messages across all links is already an extreme edge case.
   const { data, error } = await supabase
     .from('messages')
     .select('link_id, sender_id, read_at')
-    .is('read_at', null);
+    .is('read_at', null)
+    .limit(500);
   if (error) throw error;
   const rows = (data ?? []).map((r) => ({
     linkId: r.link_id as string,

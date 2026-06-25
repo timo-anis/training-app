@@ -28,6 +28,9 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 // log in once.  For daily PWA use this is negligible; session loss from
 // memory pressure happens at most monthly.
 // ─────────────────────────────────────────────────────────────────────────────
+// Exposed at module level so the SIGNED_OUT listener can sweep orphaned keys.
+let _perTabAuthPrefix: string | null = null;
+
 function makePerTabStorage(storageKey: string): Storage {
   if (typeof window === 'undefined') return localStorage;
 
@@ -50,6 +53,8 @@ function makePerTabStorage(storageKey: string): Storage {
   }
 
   const prefix = (key: string) => `${key}_${tabId}`;
+  // Expose for SIGNED_OUT sweep (only trainee client calls makePerTabStorage).
+  _perTabAuthPrefix = `${storageKey}_`;
 
   return {
     // Implement the Storage interface Supabase expects.
@@ -98,5 +103,19 @@ export function clearRecoveryPending(): void {
 supabase.auth.onAuthStateChange((event) => {
   if (event === 'PASSWORD_RECOVERY') {
     try { sessionStorage.setItem(RECOVERY_KEY, '1'); } catch { /* ignore */ }
+  }
+  if (event === 'SIGNED_OUT' && _perTabAuthPrefix) {
+    // On sign-out, sweep localStorage for orphaned per-tab auth keys from
+    // tabs that were closed without signing out (iOS PWA memory eviction etc).
+    // Safe at SIGNED_OUT because all tabs share the same origin session.
+    try {
+      const prefix = _perTabAuthPrefix;
+      const stale: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && k.startsWith(prefix)) stale.push(k);
+      }
+      stale.forEach(k => localStorage.removeItem(k));
+    } catch { /* ignore — storage may be unavailable */ }
   }
 });

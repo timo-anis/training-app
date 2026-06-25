@@ -496,7 +496,11 @@ export async function bootForUser(user: User) {
     const _navDay = (_navSameDay ? (_snap?.day ?? todayDay) : todayDay) as DayOfWeek;
     uiState.update(ui => ({ ...ui, week: _navWeek, day: _navDay }));
     bootStatus.set('ready');
-  } catch {
+  } catch (err) {
+    // Log boot failures so they appear in browser devtools AND in app_errors
+    // (cloud error tracker). Without this, boot failures are silent and
+    // impossible to diagnose remotely.
+    console.error('[bootForUser] Failed to load training data:', err);
     bootStatus.set('error');
   }
 }
