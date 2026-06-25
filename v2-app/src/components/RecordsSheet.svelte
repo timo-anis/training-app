@@ -1,7 +1,6 @@
 <script lang="ts">
   import { appState } from '../stores/app';
   import { normalizeExerciseName } from '../data/exercises';
-  import { epley1RM } from '../lib/rpe';
   import { createEventDispatcher } from 'svelte';
 
   const dispatch = createEventDispatcher();
@@ -14,33 +13,28 @@
     bestReps: number;
   }
 
-  // Best ACTUAL set per exercise — ranked by e1RM (Epley) so a heavy
-  // multi-rep set correctly outranks a marginally heavier 1-rep set.
-  // Displayed value is always the estimated 1RM:
-  //   reps = 1 → weight itself (exact 1RM)
-  //   reps > 1 → Math.round(epley1RM(kg, reps))
+  // Best set per exercise = heaviest done set (max kg).
+  // This is what the user means by "1RM" — the heaviest weight they have
+  // actually lifted, not a theoretical Epley estimate.
   $: records = (() => {
-    const map = new Map<string, { record: ExRecord; e1rm: number }>();
+    const map = new Map<string, ExRecord>();
     for (const wd of $appState.weeks) {
       for (const ex of wd.exercises) {
         if (ex.recovery || ex.conditioning) continue;
         for (const s of ex.sets) {
           if (!s.done) continue;
-          const kg = parseFloat(s.kg);
-          const reps = parseInt(s.reps, 10);
-          if (isNaN(kg) || kg <= 0 || isNaN(reps) || reps <= 0) continue;
-          const e1rm = epley1RM(kg, reps);
+          const kg = parseFloat(String(s.kg).replace(',', '.'));
+          if (isNaN(kg) || kg <= 0) continue;
           const canonical = normalizeExerciseName(ex.name);
           const key = canonical.toLowerCase();
           const cur = map.get(key);
-          if (!cur || e1rm > cur.e1rm) {
-            map.set(key, { record: { name: canonical, bestKg: kg, bestReps: reps }, e1rm });
+          if (!cur || kg > cur.bestKg) {
+            map.set(key, { name: canonical, bestKg: kg, bestReps: 0 });
           }
         }
       }
     }
     return [...map.values()]
-      .map(v => v.record)
       .sort((a, b) => a.name.localeCompare(b.name));
   })();
 </script>
@@ -61,7 +55,7 @@
         {#each records as r}
           <div class="record-row">
             <span class="record-name">{r.name}</span>
-            <span class="record-best">{r.bestReps === 1 ? r.bestKg : Math.round(epley1RM(r.bestKg, r.bestReps))} <span class="record-unit">kg</span></span>
+            <span class="record-best">{r.bestKg} <span class="record-unit">kg</span></span>
           </div>
         {/each}
       </div>
