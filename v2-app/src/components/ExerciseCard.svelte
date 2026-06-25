@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import type { Exercise, DayOfWeek } from '../types/workout';
-  import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone, toggleConditioningDone, updateConditioningNote, uiState, updateUI } from '../stores/app';
+  import { addSet, deleteExercise, updateExerciseMeta, moveExercise, toggleRecoveryDone, toggleConditioningDone, updateConditioningNote, uiState, updateUI, appState } from '../stores/app';
   import SetRow from './SetRow.svelte';
   import CoachNote from './CoachNote.svelte';
 
@@ -68,6 +68,20 @@
   let editType: 'single' | 'superset' = 'single';
   let editCode = '';
   let editConditioning = false;
+
+  // Exercise name autocomplete — unique sorted names from all logged history
+  $: allExerciseNames = [...new Set(
+    $appState.weeks.flatMap((w: any) => w.exercises.map((e: any) => e.name as string))
+  )].sort((a: string, b: string) => a.localeCompare(b));
+  $: nameSuggestions = editOpen
+    ? allExerciseNames.filter((n: string) =>
+        editName.length === 0
+          ? true
+          : n.toLowerCase().includes(editName.toLowerCase()) && n.toLowerCase() !== editName.toLowerCase()
+      )
+    : [];
+  let showNameSuggestions = false;
+  function pickName(name: string) { editName = name; showNameSuggestions = false; }
 
   // Local conditioning note (editable directly in card, not in edit panel)
   let localCondNote = exercise.conditioningNote;
@@ -266,14 +280,29 @@
 
       <div class="edit-field">
         <label class="edit-label" for="edit-name-{exercise.id}">Name</label>
-        <input
-          id="edit-name-{exercise.id}"
-          class="edit-input"
-          type="text"
-          bind:value={editName}
-          on:keydown={e => e.key === 'Enter' && saveEdit()}
-          autocomplete="off"
-        />
+        <div class="name-autocomplete">
+          <input
+            id="edit-name-{exercise.id}"
+            class="edit-input"
+            type="text"
+            bind:value={editName}
+            on:focus={() => (showNameSuggestions = true)}
+            on:blur={() => setTimeout(() => (showNameSuggestions = false), 160)}
+            on:keydown={e => e.key === 'Enter' && saveEdit()}
+            autocomplete="off"
+          />
+          {#if showNameSuggestions && nameSuggestions.length > 0}
+            <ul class="name-suggestions">
+              {#each nameSuggestions as name (name)}
+                <li>
+                  <button type="button" class="name-suggestion-btn" on:mousedown|preventDefault={() => pickName(name)}>
+                    {name}
+                  </button>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+        </div>
       </div>
 
       <div class="edit-field">
@@ -657,6 +686,37 @@
 
   .edit-input:focus { border-color: rgba(var(--c-fg), 0.25); }
   .edit-input::placeholder { color: rgba(var(--c-fg), 0.20); }
+
+  .name-autocomplete { position: relative; }
+  .name-suggestions {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0; right: 0;
+    background: rgb(22, 30, 46);
+    border: 1px solid rgba(var(--c-edge-d), 0.28);
+    border-radius: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    list-style: none;
+    margin: 0; padding: 4px 0;
+    z-index: 200;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+  }
+  .name-suggestion-btn {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 10px 14px;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--h-e8f2ff);
+    cursor: pointer;
+  }
+  .name-suggestion-btn:hover, .name-suggestion-btn:focus {
+    background: rgba(var(--c-gold), 0.12);
+    outline: none;
+  }
 
   .edit-textarea {
     resize: none;
