@@ -282,17 +282,17 @@
           <button
             class="type-btn"
             class:active={!editConditioning && editType === 'single'}
-            on:click={() => { editConditioning = false; editType = 'single'; editCode = ''; }}
+            on:click={() => { editConditioning = false; editType = 'single'; editCode = editCode.replace(/\d+$/, '').trim(); }}
           >Weighted</button>
           <button
             class="type-btn"
             class:active={!editConditioning && editType === 'superset'}
-            on:click={() => { editConditioning = false; editType = 'superset'; }}
+            on:click={() => { editConditioning = false; editType = 'superset'; if (editCode && /^[A-Za-z]$/.test(editCode.trim())) editCode = editCode.trim().toUpperCase() + '1'; }}
           >Superset</button>
           <button
             class="type-btn"
             class:active={editConditioning}
-            on:click={() => { editConditioning = true; editType = 'single'; }}
+            on:click={() => { editConditioning = true; editType = 'single'; editCode = editCode.replace(/\d+$/, '').trim(); }}
           >No weights</button>
         </div>
         <span class="type-hint">
