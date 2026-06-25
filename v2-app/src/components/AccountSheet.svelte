@@ -16,14 +16,17 @@
   let loading = false;
   let nameValue = '';
   let nameEditing = false;
-  $: if (!nameEditing) nameValue = $displayName; // sync when store loads
+  $: if (!nameEditing) nameValue = $displayName;
   function focusNameInput(el: HTMLElement) { el.focus(); }
 
+  $: initial = ($currentUser?.email?.[0] ?? '?').toUpperCase();
 
-  // Push notifications — the row is hidden unless push is configured (VAPID armed)
-  // AND supported, so the default build is visually unchanged. See runbook.
-  let pushReady = false;       // configured + supported
-  let pushOn = false;          // OS permission already granted
+  function startEdit() { nameEditing = true; nameValue = $displayName; }
+  function cancelName() { nameEditing = false; nameValue = $displayName; }
+
+  // Push notifications
+  let pushReady = false;
+  let pushOn = false;
   let pushBusy = false;
   function refreshPushState() {
     const st = getPushState();
@@ -33,7 +36,7 @@
   const PUSH_MSG: Record<PushReason, string> = {
     'ok': 'Notifications on',
     'not-configured': 'Notifications not set up yet',
-    'unsupported': 'This browser can’t do notifications',
+    'unsupported': "This browser can't do notifications",
     'not-standalone': 'Add the app to your Home Screen first',
     'denied': 'Notifications were blocked — enable them in Settings',
     'error': 'Could not enable notifications',
@@ -98,15 +101,15 @@
   }
 
   async function saveName() {
-    nameEditing = false;
     const trimmed = nameValue.trim();
     const uid = $currentUser?.id;
+    nameEditing = false;
     if (!uid) return;
     displayName.set(trimmed);
     try {
       await setDisplayName(uid, trimmed);
     } catch {
-      displayName.set($displayName); // revert optimistic update
+      displayName.set($displayName);
       showToast('Failed to save name — try again', 'error');
     }
   }
@@ -119,43 +122,45 @@
   <div class="sheet-handle"></div>
 
   <div class="sheet-body">
-    <!-- User info -->
-    <div class="user-row">
-      <div class="avatar">{($currentUser?.email?.[0] ?? '?').toUpperCase()}</div>
-      <div class="user-info">
-        <span class="user-email">{$currentUser?.email ?? ''}</span>
-        <span class="user-sub">Signed in</span>
-      </div>
-    </div>
 
-    <!-- Display name -->
-    {#if nameEditing}
-      <div class="name-edit-row">
-        <span class="action-icon">👤</span>
+    <!-- Identity card -->
+    <div class="identity-card" class:editing={nameEditing}>
+      <div class="id-avatar">{initial}</div>
+
+      {#if !nameEditing}
+        <button class="id-edit-btn" on:click={startEdit} aria-label="Edit name">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
+      {/if}
+
+      {#if nameEditing}
+        <div class="id-name-label">YOUR NAME</div>
         <input
-          id="display-name"
-          class="name-edit-input"
+          class="id-name-input"
           type="text"
           bind:value={nameValue}
-          on:blur={saveName}
-          on:keydown={(e) => e.key === 'Enter' && (e.currentTarget as HTMLInputElement).blur()}
+          on:keydown={(e) => { if (e.key === 'Enter') saveName(); if (e.key === 'Escape') cancelName(); }}
           placeholder="Your name…"
           maxlength={40}
           use:focusNameInput
         />
-      </div>
-    {:else}
-      <button class="action-row" on:click={() => { nameEditing = true; }}>
-        <span class="action-icon">👤</span>
-        <div class="action-text">
-          <span class="action-label">Your name</span>
-          <span class="action-sub">{$displayName || 'Not set — tap to add'}</span>
+        <div class="id-email">{$currentUser?.email ?? ''}</div>
+        <div class="id-btn-row">
+          <button class="id-btn-cancel" on:click={cancelName}>Cancel</button>
+          <button class="id-btn-save" on:click={saveName}>Save</button>
         </div>
-        <span class="action-arrow">›</span>
-      </button>
-    {/if}
+      {:else}
+        <div class="id-name">{$displayName || 'Add your name'}</div>
+        <div class="id-email">{$currentUser?.email ?? ''}</div>
+        <div class="id-status">
+          <span class="id-dot"></span>
+          Signed in
+        </div>
+      {/if}
+    </div>
 
-    <div class="divider"></div>
+    <div class="section-gap"></div>
 
     <!-- Change password -->
     <button class="action-row" on:click={handlePasswordReset} disabled={loading || resetSent}>
@@ -201,7 +206,6 @@
     <div class="divider"></div>
 
     {#if pushReady}
-    <!-- Push notifications — only rendered once push is configured (hidden otherwise) -->
     <button class="action-row" on:click={togglePush} disabled={pushBusy} aria-pressed={pushOn}>
       <span class="action-icon">🔔</span>
       <div class="action-text">
@@ -212,7 +216,7 @@
     </button>
     {/if}
 
-    <!-- Coaching (invites + current coach) — optional layer, hidden when none -->
+    <!-- Coaching -->
     <CoachInviteSection />
 
     <!-- Sign out -->
@@ -281,55 +285,129 @@
 
   .sheet-body { padding: 16px 0 8px; }
 
-  /* User info */
-  .name-edit-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 20px 14px;
+  /* ── Identity card ── */
+  .identity-card {
+    position: relative;
+    margin: 0 14px;
+    padding: 18px 16px 20px;
+    background: linear-gradient(160deg, rgba(var(--c-edge-d), 0.18) 0%, rgba(var(--c-edge-d), 0.06) 100%);
+    border: 1px solid rgba(var(--c-accent), 0.18);
+    border-radius: 16px;
+    transition: border-color 0.15s;
   }
-  .name-edit-input {
-    flex: 1;
-    min-width: 0;
-    background: transparent;
-    border: none;
-    border-bottom: 1.5px solid var(--c-accent-solid);
-    border-radius: 0;
-    padding: 4px 0;
-    font-size: 15px;
-    font-weight: 500;
-    color: rgba(var(--c-fg), 0.92);
-    outline: none;
-  }
-  .name-edit-input::placeholder { color: rgba(var(--c-fg), 0.28); font-weight: 400; }
-
-  .user-row {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 10px 20px 16px;
+  .identity-card.editing {
+    border-color: rgba(var(--c-accent), 0.45);
   }
 
-  .avatar {
-    width: 40px; height: 40px;
-    border-radius: 12px;
-    background: rgba(var(--c-accent), 0.15);
-    border: 1px solid rgba(var(--c-accent), 0.30);
+  .id-avatar {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: rgba(var(--c-accent), 0.10);
+    border: 1.5px solid rgba(var(--c-accent), 0.45);
     display: flex; align-items: center; justify-content: center;
-    font-size: 17px; font-weight: 900;
+    font-size: 22px; font-weight: 600;
     color: var(--c-accent-solid);
+    margin-bottom: 14px;
+  }
+
+  .id-edit-btn {
+    position: absolute;
+    top: 14px; right: 14px;
+    display: flex; align-items: center; gap: 5px;
+    background: rgba(var(--c-accent), 0.08);
+    border: 1px solid rgba(var(--c-accent), 0.25);
+    border-radius: 20px;
+    padding: 5px 12px;
+    font-size: 12px;
+    color: var(--c-accent-solid);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+  }
+  .id-edit-btn:active { background: rgba(var(--c-accent), 0.16); }
+
+  .id-name {
+    font-size: 22px; font-weight: 600;
+    color: var(--h-e0ecff);
+    letter-spacing: -0.01em;
+    margin-bottom: 4px;
+  }
+
+  .id-email {
+    font-size: 13px;
+    color: rgba(var(--c-fg), 0.35);
+    margin-bottom: 0;
+  }
+
+  .id-status {
+    margin-top: 12px;
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px;
+    color: rgba(79, 192, 141, 0.8);
+  }
+
+  .id-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--h-4fc08d);
     flex-shrink: 0;
   }
 
-  .user-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-
-  .user-email {
-    font-size: 14px; font-weight: 700;
-    color: var(--h-e0ecff);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  /* Edit state */
+  .id-name-label {
+    font-size: 10px;
+    color: rgba(var(--c-accent), 0.60);
+    letter-spacing: 0.08em;
+    margin-bottom: 6px;
+    font-weight: 600;
   }
 
-  .user-sub { font-size: 12px; color: rgba(var(--c-fg), 0.30); font-weight: 500; }
+  .id-name-input {
+    width: 100%;
+    background: rgba(13, 26, 52, 0.85);
+    border: 1px solid rgba(var(--c-accent), 0.50);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--h-e0ecff);
+    outline: none;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+    caret-color: var(--c-accent-solid);
+  }
+  .id-name-input::placeholder { color: rgba(var(--c-fg), 0.25); font-weight: 400; }
+
+  .id-btn-row {
+    display: flex; gap: 8px;
+    margin-top: 14px;
+  }
+
+  .id-btn-cancel, .id-btn-save {
+    flex: 1;
+    padding: 8px 0;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: opacity 0.1s;
+  }
+  .id-btn-cancel:active, .id-btn-save:active { opacity: 0.7; }
+
+  .id-btn-cancel {
+    background: transparent;
+    border: 1px solid rgba(var(--c-fg), 0.12);
+    color: rgba(var(--c-fg), 0.45);
+  }
+
+  .id-btn-save {
+    background: rgba(var(--c-accent), 0.15);
+    border: 1px solid rgba(var(--c-accent), 0.40);
+    color: var(--c-accent-solid);
+  }
+
+  .section-gap { height: 12px; }
 
   .divider { height: 1px; background: rgba(var(--c-fg), 0.07); margin: 4px 0; }
 
@@ -366,11 +444,10 @@
 
   .action-row.signout .action-label { color: rgba(var(--c-fg), 0.55); }
 
-  /* Presentation-mode toggle switch */
+  /* Toggle switch */
   .switch {
     flex-shrink: 0;
-    width: 44px;
-    height: 26px;
+    width: 44px; height: 26px;
     border-radius: 13px;
     background: rgba(var(--c-fg), 0.12);
     border: 1px solid rgba(var(--c-fg), 0.14);
@@ -383,10 +460,8 @@
   }
   .knob {
     position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 20px;
-    height: 20px;
+    top: 2px; left: 2px;
+    width: 20px; height: 20px;
     border-radius: 50%;
     background: var(--c-text);
     transition: transform 0.15s;
