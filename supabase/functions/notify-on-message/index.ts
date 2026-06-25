@@ -41,11 +41,11 @@ Deno.serve(async (req) => {
   // Supabase Database Webhooks send `Authorization: Bearer <secret>` when a
   // webhook secret is configured. Without this check ANY caller on the internet
   // could trigger push notifications by hitting the function URL directly.
-  // Set SUPABASE_WEBHOOK_SECRET in the function's secrets:
-  //   supabase secrets set SUPABASE_WEBHOOK_SECRET=<your-random-secret>
+  // Set WEBHOOK_SECRET in the function's secrets:
+  //   supabase secrets set WEBHOOK_SECRET=<your-random-secret>
   // Then configure the same value in the Supabase dashboard webhook settings.
   // If the secret env var is absent (e.g. local dev) the check is skipped.
-  const webhookSecret = Deno.env.get('SUPABASE_WEBHOOK_SECRET');
+  const webhookSecret = Deno.env.get('WEBHOOK_SECRET');
   if (webhookSecret) {
     const authHeader = req.headers.get('authorization') ?? '';
     if (authHeader !== `Bearer ${webhookSecret}`) {
