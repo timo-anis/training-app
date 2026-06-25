@@ -3,7 +3,7 @@
  * Imports from ui-state.ts and sync.ts; no circular deps.
  */
 import { writable, derived, get } from 'svelte/store';
-import { loadStoredNav } from './ui-state';
+import { storedNavSnapshot } from './ui-state';
 import { dayFullyDone } from '../lib/day-status';
 import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
@@ -547,13 +547,15 @@ export async function bootForUser(user: User) {
     })();
     const todayDay = DAY_ORDER[todayDayIdx];
     // Restore stored nav if the week still exists in loaded state; else fall back to today
-    const _storedNav = loadStoredNav();
-    // Only restore week/day if saved on the same calendar day (cross-day → boot to today)
-    const _navSameDay = _storedNav?.savedAt === new Date().toDateString();
-    const _navWeek = (_navSameDay && _storedNav && state.weeks.some(w => w.week === _storedNav.week))
-      ? _storedNav.week
+    // Use the snapshot captured at module init — before uiState.subscribe overwrites
+    // localStorage with today's date. Calling loadStoredNav() here would return the
+    // already-overwritten value and make the same-day check always pass (the bug).
+    const _snap = storedNavSnapshot;
+    const _navSameDay = _snap?.savedAt === new Date().toDateString();
+    const _navWeek = (_navSameDay && _snap && state.weeks.some(w => w.week === _snap.week))
+      ? _snap.week
       : todayWeek;
-    const _navDay = (_navSameDay ? (_storedNav?.day ?? todayDay) : todayDay) as DayOfWeek;
+    const _navDay = (_navSameDay ? (_snap?.day ?? todayDay) : todayDay) as DayOfWeek;
     uiState.update(ui => ({ ...ui, week: _navWeek, day: _navDay }));
     bootStatus.set('ready');
   } catch {

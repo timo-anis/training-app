@@ -83,6 +83,9 @@ function saveNavState(week: number, day: string, radarMode: UIState['radarMode']
 const today = new Date();
 const defaultDay = DAY_ORDER[today.getDay() === 0 ? 6 : today.getDay() - 1];
 const _storedNav = loadStoredNav();
+// Snapshot captured at module init — before the subscribe fires and overwrites localStorage.
+// bootForUser MUST use this instead of calling loadStoredNav() again.
+export const storedNavSnapshot: StoredNav | null = _storedNav;
 export const uiState = writable<UIState>({
   week: _storedNav?.week ?? 1,
   day: (_storedNav?.day ?? defaultDay) as UIState['day'],
