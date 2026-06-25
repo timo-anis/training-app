@@ -445,59 +445,6 @@ export function updateState(updater: (s: AppState) => AppState, immediate = fals
   });
 }
 
-// ---- One-time migrations ----
-const MIGRATION_PS_UTC = PS_UTC;
-
-function cleanupBackfilledRecovery(state: AppState): { state: AppState; changed: boolean } {
-  let changed = false;
-  const weeks = state.weeks
-    .map(wd => {
-      if (wd.day !== 'Wednesday') return wd;
-      const filtered = wd.exercises.filter(ex => !ex.id.startsWith('active_recovery_w'));
-      if (filtered.length === wd.exercises.length) return wd;
-      changed = true;
-      return { ...wd, exercises: filtered };
-    })
-    .filter(wd => {
-      if (wd.day !== 'Wednesday') return true;
-      if (wd.exercises.length > 0) return true;
-      if (wd.completed) return true;
-      if (wd.kind) return true;
-      return false;
-    });
-  return { state: changed ? { ...state, weeks } : state, changed };
-}
-
-const WEDNESDAY_RECOVERY_WEEKS = new Set([2, 3, 4, 5, 6, 7]);
-
-function clearWednesdayRecoveryDays(state: AppState): { state: AppState; changed: boolean } {
-  let changed = false;
-  const weeks = state.weeks.map(wd => {
-    if (wd.day !== 'Wednesday') return wd;
-    if (!WEDNESDAY_RECOVERY_WEEKS.has(wd.week)) return wd;
-    if (wd.exercises.length === 0 && !wd.completed) return wd;
-    changed = true;
-    const { completed: _c, ...rest } = wd;
-    return { ...rest, exercises: [] };
-  });
-  return { state: changed ? { ...state, weeks } : state, changed };
-}
-
-const MIGRATIONS_KEY = (uid: string) => `timo_training_v4_migrations__${uid}`;
-
-function getAppliedMigrations(uid: string): Set<string> {
-  try {
-    const raw = localStorage.getItem(MIGRATIONS_KEY(uid));
-    return new Set(raw ? JSON.parse(raw) : []);
-  } catch { return new Set(); }
-}
-
-function markMigrationApplied(uid: string, id: string) {
-  const applied = getAppliedMigrations(uid);
-  applied.add(id);
-  try { localStorage.setItem(MIGRATIONS_KEY(uid), JSON.stringify([...applied])); } catch { /* ignore */ }
-}
-
 // ---- Boot ----
 import type { User } from '@supabase/supabase-js';
 
@@ -505,28 +452,15 @@ export async function bootForUser(user: User) {
   bootStatus.set('loading');
   try {
     const raw = await bootstrapState(user.id);
-    const applied = getAppliedMigrations(user.id);
 
     let state = raw;
     let changed = false;
-
-    if (!applied.has('clear_wednesday_w2_w7')) {
-      const { state: s, changed: c } = clearWednesdayRecoveryDays(state);
-      state = s; changed = changed || c;
-      markMigrationApplied(user.id, 'clear_wednesday_w2_w7');
-    }
-
-    if (!applied.has('cleanup_backfilled_recovery')) {
-      const { state: s, changed: c } = cleanupBackfilledRecovery(state);
-      state = s; changed = changed || c;
-      markMigrationApplied(user.id, 'cleanup_backfilled_recovery');
-    }
 
     const todayUTC2 = (() => {
       const t = new Date();
       return Date.UTC(t.getFullYear(), t.getMonth(), t.getDate());
     })();
-    const todayWeek = Math.max(1, Math.floor((todayUTC2 - MIGRATION_PS_UTC) / 86400000 / 7) + 1);
+    const todayWeek = Math.max(1, Math.floor((todayUTC2 - PS_UTC) / 86400000 / 7) + 1);
 
     if (!state.userStartWeek) {
       const hasExistingData = state.weeks.some(w => w.exercises.length > 0);
