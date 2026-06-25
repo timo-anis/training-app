@@ -5,6 +5,14 @@ export const COACH_PASS    = process.env.E2E_COACH_PASS    ?? '';
 export const TRAINEE_EMAIL = process.env.E2E_TRAINEE_EMAIL ?? 'timoanis+test6@gmail.com';
 export const TRAINEE_PASS  = process.env.E2E_TRAINEE_PASS  ?? '';
 
+/** Dismiss the onboarding overlay if it appears (first-login flow). */
+async function dismissOnboarding(page: Page) {
+  const closeBtn = page.locator('.ob-close');
+  // Wait briefly — if it doesn't appear, skip silently.
+  const visible = await closeBtn.isVisible().catch(() => false);
+  if (visible) await closeBtn.click();
+}
+
 /** Sign in on the trainee PWA (index.html). */
 export async function signInTrainee(page: Page, email = TRAINEE_EMAIL, pass = TRAINEE_PASS) {
   await page.goto('/');
@@ -13,6 +21,8 @@ export async function signInTrainee(page: Page, email = TRAINEE_EMAIL, pass = TR
   await page.getByRole('button', { name: /sign in/i }).click();
   // Wait until the main app is visible — .month-cal is the calendar rendered on main view
   await page.waitForSelector('.month-cal', { timeout: 15_000 });
+  // Dismiss onboarding overlay if it appeared (blocks further interactions)
+  await dismissOnboarding(page);
 }
 
 /** Sign in on the coach surface (coach.html). */
