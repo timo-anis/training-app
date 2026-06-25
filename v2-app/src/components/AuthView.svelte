@@ -175,7 +175,7 @@
       <form on:submit|preventDefault={handleSubmit}>
         <label>
           Email
-          <input type="email" bind:value={email} required autocomplete="email" />
+          <input type="email" bind:value={email} required autocomplete="email" placeholder="Email" />
         </label>
 
         {#if mode !== 'reset'}
