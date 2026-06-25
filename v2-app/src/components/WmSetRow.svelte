@@ -1,14 +1,13 @@
 <script lang="ts">
   import type { WorkoutSet } from '../types/workout';
-  import RpeControl from './RpeControl.svelte';
-  // Presentational set-row editor (kg / reps inputs + step buttons, done toggle,
-  // RPE chip, delete). The parent owns the kg/reps values (bound) and all actions.
+  import InlineRpeBar from './InlineRpeBar.svelte';
+
   export let set: WorkoutSet;
-  export let index: number;        // 0-based set index
-  export let idBase: string;       // unique id base for input ids, e.g. `${exId}-${i}`
-  export let kg: string;           // two-way bound to parent's local kg map
-  export let reps: string;         // two-way bound to parent's local reps map
-  export let flash = false;        // done-button flash highlight
+  export let index: number;
+  export let idBase: string;
+  export let kg: string;
+  export let reps: string;
+  export let flash = false;
   export let onCommitKg: () => void;
   export let onCommitReps: () => void;
   export let onAdjustKg: (delta: number) => void;
@@ -18,73 +17,96 @@
   export let rpeSuggestion: number | null = null;
   export let onPickRpe: (v: string) => void = () => {};
   export let onClearRpe: () => void = () => {};
+
+  let rpeBarOpen = false;
+
+  $: showRpeBar = set.done && (set.rpe === '' || rpeBarOpen);
+
+  function handleRpePick(v: string) { onPickRpe(v); rpeBarOpen = false; }
+  function handleRpeClear() { onClearRpe(); }
 </script>
 
-<div class="set-row" class:done={set.done}>
-  <span class="set-n">{index + 1}</span>
+<div class="set-wrap">
+  <div class="set-row" class:done={set.done}>
+    <span class="set-n">{index + 1}</span>
 
-  <div class="set-col">
-    <label class="set-lbl" for="wm-kg-{idBase}">kg</label>
-    <input
-      id="wm-kg-{idBase}"
-      class="set-inp"
-      type="text"
-      inputmode="decimal"
-      bind:value={kg}
-      on:blur={onCommitKg}
-      on:keydown={(e) => e.key === 'Enter' && (e.target as HTMLElement).blur()}
-      placeholder="—"
-      autocomplete="off"
-    />
-    <div class="kg-adj">
-      <button class="kg-adj-btn" on:click|stopPropagation={() => onAdjustKg(-2.5)}>−</button>
-      <button class="kg-adj-btn" on:click|stopPropagation={() => onAdjustKg(2.5)}>+</button>
+    <div class="set-col">
+      <label class="set-lbl" for="wm-kg-{idBase}">kg</label>
+      <input
+        id="wm-kg-{idBase}"
+        class="set-inp"
+        type="text"
+        inputmode="decimal"
+        bind:value={kg}
+        on:blur={onCommitKg}
+        on:keydown={(e) => e.key === 'Enter' && (e.target as HTMLElement).blur()}
+        placeholder="—"
+        autocomplete="off"
+      />
+      <div class="kg-adj">
+        <button class="kg-adj-btn" on:click|stopPropagation={() => onAdjustKg(-2.5)}>−</button>
+        <button class="kg-adj-btn" on:click|stopPropagation={() => onAdjustKg(2.5)}>+</button>
+      </div>
     </div>
-  </div>
 
-  <div class="set-col">
-    <label class="set-lbl" for="wm-reps-{idBase}">reps</label>
-    <input
-      id="wm-reps-{idBase}"
-      class="set-inp"
-      type="text"
-      inputmode="numeric"
-      bind:value={reps}
-      on:blur={onCommitReps}
-      on:keydown={(e) => e.key === 'Enter' && (e.target as HTMLElement).blur()}
-      placeholder="—"
-      autocomplete="off"
-    />
-    <div class="kg-adj">
-      <button class="kg-adj-btn" on:click|stopPropagation={() => onAdjustReps(-1)}>−</button>
-      <button class="kg-adj-btn" on:click|stopPropagation={() => onAdjustReps(1)}>+</button>
+    <div class="set-col">
+      <label class="set-lbl" for="wm-reps-{idBase}">reps</label>
+      <input
+        id="wm-reps-{idBase}"
+        class="set-inp"
+        type="text"
+        inputmode="numeric"
+        bind:value={reps}
+        on:blur={onCommitReps}
+        on:keydown={(e) => e.key === 'Enter' && (e.target as HTMLElement).blur()}
+        placeholder="—"
+        autocomplete="off"
+      />
+      <div class="kg-adj">
+        <button class="kg-adj-btn" on:click|stopPropagation={() => onAdjustReps(-1)}>−</button>
+        <button class="kg-adj-btn" on:click|stopPropagation={() => onAdjustReps(1)}>+</button>
+      </div>
     </div>
+
+    <div class="done-cell">
+      <button
+        class="done-btn"
+        class:on={set.done}
+        class:flash={flash}
+        on:click={onDone}
+        aria-pressed={set.done}
+        aria-label={set.done ? 'Undo set' : 'Mark set done'}
+      >
+        {set.done ? '✓' : '○'}
+      </button>
+      {#if set.done && set.rpe !== ''}
+        <button
+          class="rpe-badge"
+          on:click={() => rpeBarOpen = !rpeBarOpen}
+          aria-label="RPE {set.rpe} — tap to edit"
+        >RPE {set.rpe}</button>
+      {/if}
+    </div>
+
+    <button class="del-btn" on:click={onDelete} aria-label="Delete set">×</button>
   </div>
 
-  <div class="done-cell">
-    <button
-      class="done-btn"
-      class:on={set.done}
-      class:flash={flash}
-      on:click={onDone}
-      aria-pressed={set.done}
-      aria-label={set.done ? 'Undo set' : 'Mark set done'}
-    >
-      {set.done ? '✓' : '○'}
-    </button>
-    <RpeControl
-      big
-      value={set.rpe}
-      suggestion={rpeSuggestion}
-      onPick={onPickRpe}
-      onClear={onClearRpe}
-    />
-  </div>
-
-  <button class="del-btn" on:click={onDelete} aria-label="Delete set">×</button>
+  {#if showRpeBar}
+    <div class="rpe-bar-slot">
+      <InlineRpeBar
+        big
+        value={set.rpe}
+        suggestion={rpeSuggestion}
+        onPick={handleRpePick}
+        onClear={handleRpeClear}
+      />
+    </div>
+  {/if}
 </div>
 
 <style>
+.set-wrap { display: flex; flex-direction: column; gap: 6px; }
+
 .set-row {
   display: grid;
   grid-template-columns: 32px 1fr 1fr 62px 34px;
@@ -190,6 +212,22 @@
   transition: background 0.05s, transform 0.05s;
 }
 
+.rpe-badge {
+  width: 100%;
+  padding: 3px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--c-accent), 0.30);
+  background: rgba(var(--c-accent), 0.10);
+  color: var(--c-accent-solid);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  text-align: center;
+  transition: background 0.10s;
+}
+.rpe-badge:active { background: rgba(var(--c-accent), 0.20); }
+
 .del-btn {
   height: 32px;
   width: 32px;
@@ -234,4 +272,6 @@
 }
 
 .kg-adj-btn:active { background: rgba(var(--c-accent), 0.18); color: var(--c-accent-solid); }
+
+.rpe-bar-slot { padding: 0 34px 0 39px; }
 </style>

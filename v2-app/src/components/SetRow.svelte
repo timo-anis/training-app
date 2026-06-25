@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { WorkoutSet, DayOfWeek } from '../types/workout';
   import { toggleSetDone, updateSetField, updateSetRpe, deleteSet, suggestRpeForSet, appState } from '../stores/app';
-  import RpeControl from './RpeControl.svelte';
+  import InlineRpeBar from './InlineRpeBar.svelte';
 
   export let set: WorkoutSet;
   export let index: number;
@@ -14,16 +14,18 @@
 
   $: displayIndex = index + 1;
 
-  // Faint RPE pre-fill from this exercise's history (null = no suggestion).
   $: rpeSuggestion = suggestRpeForSet($appState, exName, week, day, set.kg, set.reps);
 
-  // Local input values — sync from prop, commit on blur
   let kgLocal = set.kg;
   let repsLocal = set.reps;
   let flashing = false;
+  let rpeBarOpen = false;
 
   $: kgLocal = set.kg;
   $: repsLocal = set.reps;
+
+  // Auto-open bar when set is marked done with no RPE yet
+  $: showRpeBar = !readonly && set.done && (set.rpe === '' || rpeBarOpen);
 
   function flashCommit() {
     flashing = true;
@@ -53,75 +55,103 @@
   function onRepsKeydown(e: KeyboardEvent) {
     if (e.key === 'Enter') (e.target as HTMLElement).blur();
   }
+
+  function handleRpePick(v: string) {
+    updateSetRpe(week, day, exId, index, v);
+    rpeBarOpen = false;
+  }
+
+  function handleRpeClear() {
+    updateSetRpe(week, day, exId, index, '');
+    // bar will auto-open since rpe becomes ''
+  }
 </script>
 
-<div class="setrow" class:is-done={set.done}>
-  <span class="setn">{displayIndex}</span>
+<div class="setrow-wrap">
+  <div class="setrow" class:is-done={set.done}>
+    <span class="setn">{displayIndex}</span>
 
-  <div class="setcol" class:flash={flashing}>
-    <label class="k" for="kg-{exId}-{index}">kg</label>
-    <input
-      id="kg-{exId}-{index}"
-      class="setinput"
-      type="text"
-      inputmode="decimal"
-      bind:value={kgLocal}
-      on:blur={onKgBlur}
-      on:keydown={onKgKeydown}
-      placeholder="—"
-      autocomplete="off"
-      readonly={readonly}
-    />
+    <div class="setcol" class:flash={flashing}>
+      <label class="k" for="kg-{exId}-{index}">kg</label>
+      <input
+        id="kg-{exId}-{index}"
+        class="setinput"
+        type="text"
+        inputmode="decimal"
+        bind:value={kgLocal}
+        on:blur={onKgBlur}
+        on:keydown={onKgKeydown}
+        placeholder="—"
+        autocomplete="off"
+        readonly={readonly}
+      />
+    </div>
+
+    <div class="setcol" class:flash={flashing}>
+      <label class="k" for="reps-{exId}-{index}">reps</label>
+      <input
+        id="reps-{exId}-{index}"
+        class="setinput"
+        type="text"
+        inputmode="numeric"
+        bind:value={repsLocal}
+        on:blur={onRepsBlur}
+        on:keydown={onRepsKeydown}
+        placeholder="—"
+        autocomplete="off"
+        readonly={readonly}
+      />
+    </div>
+
+    <div class="donecell">
+      <button
+        class="donebtn"
+        class:on={set.done}
+        on:click={() => toggleSetDone(week, day, exId, index)}
+        disabled={readonly}
+        aria-label={set.done ? 'Mark set undone' : 'Mark set done'}
+        aria-pressed={set.done}
+      >
+        {set.done ? '✓' : '○'}
+      </button>
+      {#if set.done && set.rpe !== '' && !readonly}
+        <button
+          class="rpe-badge"
+          on:click={() => rpeBarOpen = !rpeBarOpen}
+          aria-label="RPE {set.rpe} — tap to edit"
+          title="RPE rating — tap to edit"
+        >RPE {set.rpe}</button>
+      {:else if readonly && set.rpe !== ''}
+        <InlineRpeBar value={set.rpe} {readonly} />
+      {/if}
+    </div>
+
+    {#if !readonly}
+      <button
+        class="delbtn"
+        on:click={() => deleteSet(week, day, exId, index)}
+        aria-label="Delete set"
+      >
+        ×
+      </button>
+    {/if}
   </div>
 
-  <div class="setcol" class:flash={flashing}>
-    <label class="k" for="reps-{exId}-{index}">reps</label>
-    <input
-      id="reps-{exId}-{index}"
-      class="setinput"
-      type="text"
-      inputmode="numeric"
-      bind:value={repsLocal}
-      on:blur={onRepsBlur}
-      on:keydown={onRepsKeydown}
-      placeholder="—"
-      autocomplete="off"
-      readonly={readonly}
-    />
-  </div>
-
-  <div class="donecell">
-    <button
-      class="donebtn"
-      class:on={set.done}
-      on:click={() => toggleSetDone(week, day, exId, index)}
-      disabled={readonly}
-      aria-label={set.done ? 'Mark set undone' : 'Mark set done'}
-      aria-pressed={set.done}
-    >
-      {set.done ? '✓' : '○'}
-    </button>
-    <RpeControl
-      value={set.rpe}
-      suggestion={rpeSuggestion}
-      onPick={(v) => updateSetRpe(week, day, exId, index, v)}
-      onClear={() => updateSetRpe(week, day, exId, index, '')}
-      {readonly}
-    />
-  </div>
-
-  {#if !readonly}
-    <button
-      class="delbtn"
-      on:click={() => deleteSet(week, day, exId, index)}
-      aria-label="Delete set"
-    >
-      ×
-    </button>
+  {#if showRpeBar}
+    <div class="rpe-bar-slot">
+      <InlineRpeBar
+        value={set.rpe}
+        suggestion={rpeSuggestion}
+        onPick={handleRpePick}
+        onClear={handleRpeClear}
+      />
+    </div>
   {/if}
 </div>
 
 <style>
+  .setrow-wrap { display: flex; flex-direction: column; gap: 5px; }
+
   .setrow {
     display: grid;
     grid-template-columns: 30px 1fr 1fr 46px 30px;
@@ -190,9 +220,7 @@
   }
 
   .setrow.is-done .setinput { color: rgba(var(--c-fg), 0.90); }
-
   .setinput::placeholder { color: rgba(var(--c-fg), 0.20); }
-
   .setinput:focus { color: var(--h-ffffff); }
 
   .donecell {
@@ -226,6 +254,22 @@
 
   .donebtn:active { transform: scale(0.96); }
 
+  .rpe-badge {
+    width: 100%;
+    padding: 3px 0;
+    border-radius: 7px;
+    border: 1px solid rgba(var(--c-accent), 0.30);
+    background: rgba(var(--c-accent), 0.10);
+    color: var(--c-accent-solid);
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    text-align: center;
+    transition: background 0.10s;
+  }
+  .rpe-badge:active { background: rgba(var(--c-accent), 0.20); }
+
   .delbtn {
     height: 30px;
     width: 30px;
@@ -247,4 +291,6 @@
     background: var(--c-255-80-80-0_12);
     color: var(--h-ff6060);
   }
+
+  .rpe-bar-slot { padding: 0 30px 0 37px; }
 </style>
