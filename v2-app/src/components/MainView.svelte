@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, accountOpen, statsOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites, getMyCoach } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
@@ -286,25 +286,32 @@
   </section>
 
     <section class="section section-tight r-stats">
-    <div class="stats-bar">
-      <button class="stats-btn" on:click={() => $statsOpen = !$statsOpen} aria-expanded={$statsOpen}>
-        <svg class="stats-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+    <div class="nav-bar">
+      <button class="nav-btn" on:click={() => ($recordsOpen = true)} aria-label="Personal records">
+        <svg class="nav-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
-          <rect x="17" y="3" width="4" height="18"/>
-        </svg>
-        <span class="stats-btn-label">Statistics</span>
-        <span class="stats-chevron" class:open={$statsOpen}>›</span>
-      </button>
-      <div class="stats-sep" aria-hidden="true"></div>
-      <button class="records-icon-btn" on:click={() => ($recordsOpen = true)} aria-label="Personal records">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/>
           <path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/>
           <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/>
           <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/>
         </svg>
+        <span class="nav-btn-label">Records</span>
+      </button>
+      <button class="nav-btn" on:click={() => ($recoveryOpen = true)} aria-label="Recovery status">
+        <svg class="nav-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+        <span class="nav-btn-label">Recovery</span>
+      </button>
+      <button class="nav-btn" on:click={() => ($statsOpen = true)} aria-label="Statistics">
+        <svg class="nav-btn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="12" width="4" height="9"/><rect x="10" y="7" width="4" height="14"/>
+          <rect x="17" y="3" width="4" height="18"/>
+        </svg>
+        <span class="nav-btn-label">Statistics</span>
       </button>
     </div>
   </section>
@@ -537,86 +544,42 @@
     padding-top: 8px;
   }
 
-  /* ---- Statistics button ---- */
-  /* ---- Unified stats bar (Statistics + Records) ---- */
-  .stats-bar {
+  /* ---- Nav bar (Records | Recovery | Statistics) ---- */
+  .nav-bar {
     display: flex;
-    align-items: stretch;
-    border-radius: 16px;
-    border: 1px solid rgba(var(--c-accent), 0.35);
-    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
-    overflow: hidden;
+    gap: 8px;
   }
 
-  .stats-btn {
+  .nav-btn {
     flex: 1;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    padding: 16px 16px;
-    background: transparent;
-    border: none;
+    gap: 6px;
+    padding: 14px 8px;
+    border-radius: 16px;
+    border: 1px solid rgba(var(--c-accent), 0.30);
+    background: linear-gradient(160deg, var(--h-0d1a30), var(--h-080e1c));
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
-    position: relative;
+    transition: background 0.12s, transform 0.08s;
   }
 
-  .stats-btn::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: var(--c-accent-solid);
-  }
+  .nav-btn:active { background: rgba(var(--c-accent), 0.10); transform: scale(0.97); }
 
-  .stats-btn:active { background: rgba(var(--c-fg), 0.05); }
-
-  .stats-btn-icon {
-    color: rgba(var(--c-accent), 0.85);
+  .nav-btn-icon {
+    color: rgba(var(--c-accent), 0.80);
     flex-shrink: 0;
   }
 
-  .stats-btn-label {
-    font-size: 16px;
-    font-weight: 700;
-    color: rgba(var(--c-fg), 0.90);
+  .nav-btn-label {
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(var(--c-fg), 0.60);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
-
-  .stats-chevron {
-    display: inline-block;
-    transform: rotate(90deg);
-    transition: transform 0.2s;
-    font-size: 18px;
-    color: rgba(var(--c-accent), 0.60);
-    line-height: 1;
-    flex-shrink: 0;
-  }
-
-  .stats-chevron.open { transform: rotate(-90deg); }
-
-  .stats-sep {
-    width: 1px;
-    background: rgba(var(--c-accent), 0.18);
-    flex-shrink: 0;
-    align-self: stretch;
-  }
-
-  .records-icon-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0 18px;
-    background: transparent;
-    border: none;
-    color: var(--c-accent-solid);
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
-    flex-shrink: 0;
-  }
-  .records-icon-btn:active { background: rgba(var(--c-fg), 0.05); }
 
   /* ---- Day heading toggle button ---- */
   .day-heading-row {
@@ -1192,9 +1155,6 @@
     .day-label { font-size: 26px; }
     .day-week-num { font-size: 13px; }
     .day-progress { font-size: 13px; padding: 5px 12px; }
-    .stats-btn { padding: 18px 24px; }
-    .stats-btn-label { font-size: 18px; }
-    .stats-btn-icon { width: 22px; height: 22px; }
     .empty-title { font-size: 20px; }
   }
 
