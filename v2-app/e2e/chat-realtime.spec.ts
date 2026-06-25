@@ -65,8 +65,9 @@ test.describe('Chat realtime + unread badge', () => {
     // Wait for trainee badge to appear.
     await expect(traineePage.locator(UNREAD)).toBeVisible({ timeout: 10_000 });
 
-    // Trainee: click the account icon which opens the coach section where chat is.
-    await traineePage.locator('.tb-account').click();
+    // Trainee: click the chat button (TopBar.svelte .chat-btn) — this opens the coach
+    // chat overlay and triggers markMessagesRead, which clears the badge.
+    await traineePage.locator('.chat-btn').click();
     // After reading, badge should disappear.
     await expect(traineePage.locator(UNREAD)).toBeHidden({ timeout: 8_000 });
 
