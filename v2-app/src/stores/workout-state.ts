@@ -3,6 +3,7 @@
  * Imports from ui-state.ts and sync.ts; no circular deps.
  */
 import { writable, derived, get } from 'svelte/store';
+import { loadStoredNav } from './ui-state';
 import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { bootstrapState, saveLocal, saveCloud } from '../services/storage';
@@ -551,7 +552,13 @@ export async function bootForUser(user: User) {
       return d === 0 ? 6 : d - 1;
     })();
     const todayDay = DAY_ORDER[todayDayIdx];
-    uiState.update(ui => ({ ...ui, week: todayWeek, day: todayDay }));
+    // Restore stored nav if the week still exists in loaded state; else fall back to today
+    const _storedNav = loadStoredNav();
+    const _navWeek = _storedNav && state.weeks.some(w => w.week === _storedNav.week)
+      ? _storedNav.week
+      : todayWeek;
+    const _navDay = (_storedNav?.day ?? todayDay) as DayOfWeek;
+    uiState.update(ui => ({ ...ui, week: _navWeek, day: _navDay }));
     bootStatus.set('ready');
   } catch {
     bootStatus.set('error');

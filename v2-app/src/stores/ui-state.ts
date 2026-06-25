@@ -52,22 +52,56 @@ currentUser.subscribe(($u) => {
   }
 });
 
+// ---- UI nav persistence ----
+const UI_NAV_KEY = 'timo_ui_nav';
+
+export interface StoredNav {
+  week: number;
+  day: string;
+  radarMode: 'day' | 'week';
+  calendarCollapsed: boolean;
+}
+
+export function loadStoredNav(): StoredNav | null {
+  try {
+    const raw = localStorage.getItem(UI_NAV_KEY);
+    if (!raw) return null;
+    const p = JSON.parse(raw);
+    if (typeof p.week === 'number' && typeof p.day === 'string') return p as StoredNav;
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveNavState(week: number, day: string, radarMode: UIState['radarMode'], calendarCollapsed: boolean) {
+  try {
+    localStorage.setItem(UI_NAV_KEY, JSON.stringify({ week, day, radarMode, calendarCollapsed }));
+  } catch { /* ignore */ }
+}
+
 // ---- UI state store ----
 const today = new Date();
 const defaultDay = DAY_ORDER[today.getDay() === 0 ? 6 : today.getDay() - 1];
+const _storedNav = loadStoredNav();
 export const uiState = writable<UIState>({
-  week: 1,
-  day: defaultDay,
+  week: _storedNav?.week ?? 1,
+  day: (_storedNav?.day ?? defaultDay) as UIState['day'],
   search: '',
   workoutActive: false,
   workoutMode: false,
   activeExerciseIndex: 0,
-  radarMode: 'day',
-  calendarCollapsed: false,
+  radarMode: (_storedNav?.radarMode ?? 'day') as UIState['radarMode'],
+  calendarCollapsed: _storedNav?.calendarCollapsed ?? false,
   workoutStartTime: null,
   restStartTime: null,
   restTotal: null,
   highlightExercise: null,
+});
+
+// Persist nav position on every change (week, day, radarMode, calendarCollapsed)
+uiState.subscribe(ui => {
+  if (ui.week && ui.day) {
+    saveNavState(ui.week, ui.day, ui.radarMode, ui.calendarCollapsed);
+  }
 });
 
 // ---- Boot status ----
