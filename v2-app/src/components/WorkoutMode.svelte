@@ -39,10 +39,14 @@
   function releaseWakeLock() { wakeLock?.release().catch(() => {}); wakeLock = null; }
 
   function onVisibilityChange() {
-    if (document.visibilityState === 'visible') requestWakeLock();
+    if (document.visibilityState === 'visible') {
+      requestWakeLock();
+      maybeRestoreRestTimer();
+    }
   }
 
   onMount(() => {
+    maybeRestoreRestTimer();
     requestWakeLock();
     document.addEventListener('visibilitychange', onVisibilityChange);
   });
@@ -128,6 +132,36 @@
   $: restActive = $uiState.restStartTime !== null && $uiState.restTotal !== null && $uiState.restTotal > 0;
   // armed but not yet counting down: a duration is set but no start time
   $: restPending = $uiState.restStartTime === null && $uiState.restTotal !== null && $uiState.restTotal > 0;
+
+  // ---- Rest timer persistence (survives Android screen-off / tab-kill) ----
+  const REST_PERSIST_KEY = 'timo_training_v4_rest_timer';
+
+  // Reactively persist timer whenever it's running; clear when stopped.
+  $: {
+    if ($uiState.restStartTime !== null && $uiState.restTotal !== null && $uiState.restTotal > 0) {
+      try { localStorage.setItem(REST_PERSIST_KEY, JSON.stringify({ s: $uiState.restStartTime, t: $uiState.restTotal })); } catch { /* ignore */ }
+    } else {
+      try { localStorage.removeItem(REST_PERSIST_KEY); } catch { /* ignore */ }
+    }
+  }
+
+  // Restore timer from localStorage (called on mount and on screen wake).
+  // Only restores if no timer is currently active in the store.
+  function maybeRestoreRestTimer() {
+    if ($uiState.restStartTime !== null) return; // already active
+    try {
+      const raw = localStorage.getItem(REST_PERSIST_KEY);
+      if (!raw) return;
+      const { s, t } = JSON.parse(raw) as { s: number; t: number };
+      const elapsedSecs = (Date.now() - s) / 1000;
+      if (elapsedSecs < t + 120) {
+        // Restore: still running OR expired within last 2 minutes (show GO!)
+        updateUI(ui => ({ ...ui, restStartTime: s, restTotal: t }));
+      } else {
+        localStorage.removeItem(REST_PERSIST_KEY);
+      }
+    } catch { /* ignore */ }
+  }
 
   function startRest(restString: string) {
     const secs = parseRestToSeconds(restString);

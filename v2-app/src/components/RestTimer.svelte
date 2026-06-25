@@ -74,6 +74,25 @@
   let didPlayDone = false;
   let lastCountdownAt = -1;
   let interval: ReturnType<typeof setInterval> | null = null;
+  let doneTimer: ReturnType<typeof setTimeout> | null = null;
+
+  // Schedule the done dispatch. If screen is currently hidden (Android screen-off),
+  // we don't auto-dismiss — we wait for visibilitychange and give 6s then.
+  function scheduleDone() {
+    if (document.hidden) return; // will be scheduled in handleVisibility
+    if (doneTimer) return;
+    doneTimer = setTimeout(() => dispatch('done'), 800);
+  }
+
+  function handleVisibility() {
+    if (document.visibilityState !== 'visible') return;
+    if (didPlayDone && doneTimer === null) {
+      // Screen came back after timer had already expired — re-alert and give 6s
+      try { navigator.vibrate?.([200, 80, 200]); } catch { /* ignore */ }
+      doneTimer = setTimeout(() => dispatch('done'), 6000);
+    }
+  }
+  document.addEventListener('visibilitychange', handleVisibility);
 
   function tick() {
     remaining = Math.max(0, totalSeconds - Math.floor((Date.now() - startTime) / 1000));
@@ -91,7 +110,7 @@
       if (!didPlayDone) {
         didPlayDone = true;
         playDoneSound();
-        setTimeout(() => dispatch('done'), 800);
+        scheduleDone();
       }
     }
   }
@@ -99,15 +118,18 @@
   if (remaining > 0) {
     interval = setInterval(tick, 500);
   } else {
+    // Timer already expired on mount (restored from localStorage after screen-off/tab-kill).
+    // Show GO! — don't auto-dismiss. User must tap Skip to continue.
     if (!didPlayDone) {
       didPlayDone = true;
-      playDoneSound();
-      setTimeout(() => dispatch('done'), 400);
+      // No sound on restore: would be confusing out of context
     }
   }
 
   onDestroy(() => {
     if (interval) clearInterval(interval);
+    if (doneTimer) clearTimeout(doneTimer);
+    document.removeEventListener('visibilitychange', handleVisibility);
   });
 
   function skip() {
