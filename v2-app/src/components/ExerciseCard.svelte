@@ -38,9 +38,13 @@
   $: doneCount = exercise.conditioning ? (exercise.conditioningDone ? 1 : 0) : exercise.sets.filter(s => s.done).length;
   $: totalCount = exercise.conditioning ? 1 : exercise.sets.length;
   $: allDone = exercise.conditioning ? exercise.conditioningDone === true : (doneCount === totalCount && totalCount > 0);
-  $: supersetLabel = (exercise.code && supersetSize > 1) ? exercise.code : '';
-  // Position letter for conditioning (A, B, C…) — based on index in exercise list
-  $: positionLetter = String.fromCharCode(65 + blockIndex);
+  // Unified position letter — every exercise shows exactly one letter badge.
+  // Superset: first char of explicit code (A1→A, B2→B).
+  // Single / conditioning: auto-derived from block index (0→A, 1→B…).
+  $: displayLetter = exercise.code
+    ? exercise.code[0].toUpperCase()
+    : String.fromCharCode(65 + blockIndex);
+  $: isInSuperset = exercise.type === 'superset' && supersetSize > 1;
 
   // 2-tap delete confirm
   let confirmDelete = false;
@@ -125,16 +129,12 @@
 
 <div class="exercise-card" class:all-done={allDone} class:highlighted bind:this={cardEl}>
   <div class="exercise-header">
-    {#if supersetLabel}
-      <span class="superset-badge">{supersetLabel}</span>
-    {:else if exercise.conditioning}
-      <span class="superset-badge cond-letter">{positionLetter}</span>
-    {/if}
+    <span class="superset-badge" class:is-superset={isInSuperset}>{displayLetter}</span>
     <div class="exercise-meta">
       <span class="exercise-name">{exercise.name}</span>
       {#if exercise.conditioning || exercise.type === 'superset'}
         <span class="exercise-type">
-          {exercise.conditioning ? 'No weights' : `Superset${exercise.code ? ' · ' + exercise.code : ''}`}
+          {exercise.conditioning ? 'No weights' : `Superset · ${displayLetter}`}
         </span>
       {/if}
     </div>
@@ -301,7 +301,7 @@
       </div>
 
       <div class="edit-field">
-        <label class="edit-label" for="edit-code-{exercise.id}">Group code (A, B, C…)</label>
+        <label class="edit-label" for="edit-code-{exercise.id}">Code — single: A · superset: A1, A2, A3…</label>
         <input
           id="edit-code-{exercise.id}"
           class="edit-input edit-code"
