@@ -19,7 +19,7 @@
   $: if (!nameEditing) nameValue = $displayName;
   function focusNameInput(el: HTMLElement) { el.focus(); }
 
-  $: initial = ($currentUser?.email?.[0] ?? '?').toUpperCase();
+  $: initial = ($displayName?.[0] ?? $currentUser?.email?.[0] ?? '?').toUpperCase();
 
   function startEdit() { nameEditing = true; nameValue = $displayName; }
   function cancelName() { nameEditing = false; nameValue = $displayName; }
