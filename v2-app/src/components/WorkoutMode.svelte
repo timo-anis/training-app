@@ -281,8 +281,27 @@
     }
   }
 
-  function prev() { if (!isFirst) { clearRest(); setActiveBlock(activeIndex - 1); } }
-  function next() { if (!isLast) { clearRest(); setActiveBlock(activeIndex + 1); } }
+  function prev() {
+    clearRest();
+    // Inside an incomplete superset: cycle backwards (B2→B1), don't leave the block.
+    // Once all superset exercises are done, Prev exits to the previous block.
+    if (block?.isSuperset && !block.exercises.every(exDone)) {
+      const n = block.exercises.length;
+      subGoto(((activeSubIndex - 1) % n + n) % n);
+      return;
+    }
+    if (!isFirst) setActiveBlock(activeIndex - 1);
+  }
+  function next() {
+    clearRest();
+    // Inside an incomplete superset: cycle forwards (B1→B2→B1…), don't skip to next block.
+    // Once all superset exercises are done, Next advances to the next block.
+    if (block?.isSuperset && !block.exercises.every(exDone)) {
+      subGoto((activeSubIndex + 1) % block.exercises.length);
+      return;
+    }
+    if (!isLast) setActiveBlock(activeIndex + 1);
+  }
   function backToNormal() { closeWorkoutMode(); }
 
   // ---- Workout summary ----
