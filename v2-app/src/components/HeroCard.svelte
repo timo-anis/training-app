@@ -18,25 +18,25 @@
     });
   }
 
-  $: name = $displayName;
-  $: realToday = todayWeekDay();
-  $: todayISO = new Date().toISOString().split('T')[0];
-  $: todayDay = realToday ? $appState.weeks.find(w => w.week === realToday?.week && w.day === realToday?.day) : undefined;
-  $: exercises = todayDay?.exercises ?? [];
+  const name = $derived($displayName);
+  const realToday = $derived(todayWeekDay());
+  const todayISO = $derived(new Date().toISOString().split('T')[0]);
+  const todayDay = $derived(realToday ? $appState.weeks.find(w => w.week === realToday?.week && w.day === realToday?.day) : undefined);
+  const exercises = $derived(todayDay?.exercises ?? []);
 
-  $: savedLabel = todayDay?.label ?? '';
-  $: chipLine = (() => {
+  const savedLabel = $derived(todayDay?.label ?? '');
+  const chipLine = $derived((() => {
     if (exercises.length === 0) return null;
     const first = exercises[0].name;
     const rest = exercises.length - 1;
     return rest > 0 ? `${first} · +${rest} more` : first;
-  })();
+  })());
 
   // Day rings — planned workout days this week, sorted Mon→Sun
-  $: realWeekDays = realToday
+  const realWeekDays = $derived(realToday
     ? $appState.weeks.filter(w => w.week === realToday?.week && (!w.kind || w.kind === 'workout') && w.exercises.length > 0)
-    : [];
-  $: ringDays = [...realWeekDays].sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day));
+    : []);
+  const ringDays = $derived([...realWeekDays].sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day)));
 
   // Ring state per day
   function ringState(d: WorkoutDay): 'done' | 'today' | 'past' | 'future' {
@@ -52,13 +52,13 @@
   }
 
   // Streak
-  $: streak = $streakInfo.count;
-  $: atRisk = streak > 0 && !$streakInfo.thisWeekActive;
-  $: hasStreak = streak > 0;
+  const streak = $derived($streakInfo.count);
+  const atRisk = $derived(streak > 0 && !$streakInfo.thisWeekActive);
+  const hasStreak = $derived(streak > 0);
 
   // Inline label editing
-  let editing = false;
-  let editValue = '';
+  let editing = $state(false);
+  let editValue = $state('');
 
   function startEdit() {
     editValue = savedLabel;

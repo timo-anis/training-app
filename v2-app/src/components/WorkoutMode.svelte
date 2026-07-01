@@ -59,7 +59,7 @@
   });
 
   // ---- Elapsed timer ----
-  let elapsed = 0;
+  let elapsed = $state(0);
   const clockInterval = setInterval(() => {
     const start = $uiState.workoutStartTime;
     elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
@@ -74,18 +74,18 @@
   }
 
   // ---- Blocks ----
-  $: blocks = $workoutBlocks;
-  $: activeIndex = $uiState.activeExerciseIndex;
-  $: block = blocks[activeIndex] ?? null;
-  $: isFirst = activeIndex === 0;
-  $: isLast = activeIndex === blocks.length - 1;
+  const blocks = $derived($workoutBlocks);
+  const activeIndex = $derived($uiState.activeExerciseIndex);
+  const block = $derived(blocks[activeIndex] ?? null);
+  const isFirst = $derived(activeIndex === 0);
+  const isLast = $derived(activeIndex === blocks.length - 1);
 
   // ---- Superset: show ONE exercise at a time + auto-advance on rest end ----
-  let activeSubIndex = 0;
-  let advanceAfterRest = false;
-  $: visibleExercises = block
+  let activeSubIndex = $state(0);
+  let advanceAfterRest = $state(false);
+  const visibleExercises = $derived(block
     ? (block.isSuperset ? [block.exercises[Math.min(activeSubIndex, block.exercises.length - 1)]] : block.exercises)
-    : [];
+    : []);
   function advanceSuperset() {
     if (!block || !block.isSuperset) return;
     const nxt = nextSupersetIndex(block.exercises.map(exDone), activeSubIndex);
@@ -123,27 +123,27 @@
   }
 
   // Inline per-exercise rest editing inside workout mode (no need to exit).
-  let restEditId: string | null = null;
+  let restEditId = $state<string | null>(null);
   function adjustExRest(week: number, day: DayOfWeek, ex: Exercise, delta: number) {
     const next = Math.max(0, parseRestToSeconds(ex.rest) + delta);
     updateExerciseMeta(week, day, ex.id, { rest: secsToRest(next) });
   }
 
-  $: restActive = $uiState.restStartTime !== null && $uiState.restTotal !== null && $uiState.restTotal > 0;
+  const restActive = $derived($uiState.restStartTime !== null && $uiState.restTotal !== null && $uiState.restTotal > 0);
   // armed but not yet counting down: a duration is set but no start time
-  $: restPending = $uiState.restStartTime === null && $uiState.restTotal !== null && $uiState.restTotal > 0;
+  const restPending = $derived($uiState.restStartTime === null && $uiState.restTotal !== null && $uiState.restTotal > 0);
 
   // ---- Rest timer persistence (survives Android screen-off / tab-kill) ----
   const REST_PERSIST_KEY = 'timo_training_v4_rest_timer';
 
   // Reactively persist timer whenever it's running; clear when stopped.
-  $: {
+  $effect(() => {
     if ($uiState.restStartTime !== null && $uiState.restTotal !== null && $uiState.restTotal > 0) {
       try { localStorage.setItem(REST_PERSIST_KEY, JSON.stringify({ s: $uiState.restStartTime, t: $uiState.restTotal })); } catch { /* ignore */ }
     } else {
       try { localStorage.removeItem(REST_PERSIST_KEY); } catch { /* ignore */ }
     }
-  }
+  });
 
   // Restore timer from localStorage (called on mount and on screen wake).
   // Only restores if no timer is currently active in the store.
@@ -184,10 +184,10 @@
     return ex.sets.length > 0 && ex.sets.every(s => s.done);
   }
 
-  $: allDone = blocks.every(b => b.exercises.every(exDone));
+  const allDone = $derived(blocks.every(b => b.exercises.every(exDone)));
 
   // Letter for conditioning block — groups by first letter of code (A1+A2+A3 = one A group)
-  $: condLetterIndex = (() => {
+  const condLetterIndex = $derived((() => {
     const seen = new Set<string>();
     for (let i = 0; i < activeIndex; i++) {
       const b = blocks[i];
@@ -196,22 +196,22 @@
       seen.add(key);
     }
     return seen.size;
-  })();
+  })());
 
-  $: totalSetsAll = blocks.reduce((sum, b) => {
+  const totalSetsAll = $derived(blocks.reduce((sum, b) => {
     return sum + b.exercises.reduce((s, ex) => {
       if (ex.recovery || ex.conditioning) return s + 1;
       return s + ex.sets.length;
     }, 0);
-  }, 0);
+  }, 0));
 
-  $: totalSetsDone = blocks.reduce((sum, b) => {
+  const totalSetsDone = $derived(blocks.reduce((sum, b) => {
     return sum + b.exercises.reduce((s, ex) => {
       if (ex.recovery) return s + (ex.recoveryDone ? 1 : 0);
       if (ex.conditioning) return s + (ex.conditioningDone ? 1 : 0);
       return s + ex.sets.filter(set => set.done).length;
     }, 0);
-  }, 0);
+  }, 0));
 
   function blockDone(b: WorkoutBlock): boolean {
     return b.exercises.every(exDone);
@@ -243,11 +243,11 @@
     return max > 0 && kg > max;
   }
 
-  let prFlashExId: string | null = null;
+  let prFlashExId = $state<string | null>(null);
   let prFlashTimer: ReturnType<typeof setTimeout> | null = null;
 
   // Visual flash for set-done (iOS vibration substitute)
-  let setDoneFlashKey: string | null = null;
+  let setDoneFlashKey = $state<string | null>(null);
   let setDoneFlashTimer: ReturnType<typeof setTimeout> | null = null;
 
   function handleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string, exName: string, kgVal: string) {
@@ -305,28 +305,28 @@
   function backToNormal() { closeWorkoutMode(); }
 
   // ---- Workout summary ----
-  let showSummary = false;
+  let showSummary = $state(false);
 
   function openSummary() {
     summaryElapsed = elapsed; // capture at tap time
     showSummary = true;
   }
 
-  let summaryElapsed = 0;
+  let summaryElapsed = $state(0);
 
   // confirmFinish is defined below (after swipe/flash helpers)
 
   // Summary stats computed from the current workout day
-  $: summaryDay = $appState.weeks.find(w => w.week === $uiState.week && w.day === $uiState.day);
+  const summaryDay = $derived($appState.weeks.find(w => w.week === $uiState.week && w.day === $uiState.day));
 
-  $: summarySetsDone = summaryDay
+  const summarySetsDone = $derived(summaryDay
     ? summaryDay.exercises
         .filter(ex => !ex.recovery && !ex.conditioning)
         .flatMap(ex => ex.sets)
         .filter(s => s.done).length
-    : 0;
+    : 0);
 
-  $: summaryVolume = (() => {
+  const summaryVolume = $derived((() => {
     if (!summaryDay) return 0;
     let v = 0;
     for (const ex of summaryDay.exercises) {
@@ -339,14 +339,14 @@
       }
     }
     return v;
-  })();
+  })());
 
   function fmtVolume(v: number): string {
     if (v >= 1000) return `${(v / 1000).toFixed(1)}t`;
     return `${Math.round(v)}kg`;
   }
 
-  $: summaryExercises = summaryDay
+  const summaryExercises = $derived(summaryDay
     ? summaryDay.exercises.map(ex => ({
         name: ex.name,
         done: exDone(ex),
@@ -355,7 +355,7 @@
         setsDone: ex.conditioning || ex.recovery ? 0 : ex.sets.filter(s => s.done).length,
         setsTotal: ex.conditioning || ex.recovery ? 0 : ex.sets.length,
       }))
-    : [];
+    : []);
 
   // ---- Premium summary extras (streak, volume delta, best set, PRs, next) ----
   // Pure read-only derivations from existing state — no mutation, no new schema.
@@ -376,10 +376,10 @@
   }
 
   // Display week number (absolute -> user-facing).
-  $: summaryWeekDisplay = $uiState.week - $weekOffset;
+  const summaryWeekDisplay = $derived($uiState.week - $weekOffset);
 
   // Streak: consecutive weeks (this week going back) with logged activity.
-  $: summaryStreak = (() => {
+  const summaryStreak = $derived((() => {
     const active = new Set<number>();
     for (const wd of $appState.weeks) if (dayHasActivity(wd)) active.add(wd.week);
     active.add($uiState.week); // current session counts even before "completed" is set
@@ -387,10 +387,10 @@
     let w = $uiState.week;
     while (active.has(w)) { streak++; w--; }
     return streak;
-  })();
+  })());
 
   // Volume of the most recent prior session that had strength volume.
-  $: summaryPrevVolume = (() => {
+  const summaryPrevVolume = $derived((() => {
     if (!summaryDay) return null;
     const curIdx = DAY_ORDER.indexOf($uiState.day);
     let best: { week: number; dayIdx: number; vol: number } | null = null;
@@ -405,9 +405,9 @@
       if (better) best = { week: wd.week, dayIdx: dIdx, vol };
     }
     return best ? best.vol : null;
-  })();
+  })());
 
-  $: summaryVolumeDelta = (() => {
+  const summaryVolumeDelta = $derived((() => {
     if (summaryPrevVolume === null || summaryPrevVolume <= 0) return null;
     const abs = summaryVolume - summaryPrevVolume;
     if (Math.round(abs) === 0) return null;
@@ -415,10 +415,10 @@
     const sign = abs >= 0 ? '+' : '-';
     const dir: 'up' | 'down' = abs >= 0 ? 'up' : 'down';
     return { pct, dir, label: `${sign}${fmtVolume(Math.abs(abs))}` };
-  })();
+  })());
 
   // Best (heaviest) done set of the session.
-  $: summaryBestSet = (() => {
+  const summaryBestSet = $derived((() => {
     if (!summaryDay) return null;
     let best: { name: string; kg: number; reps: string } | null = null;
     for (const ex of summaryDay.exercises) {
@@ -435,10 +435,10 @@
       }
     }
     return best ? `${best.name} ${best.kg} × ${best.reps}` : null;
-  })();
+  })());
 
   // PRs hit this session: exercise whose top done kg beats its prior all-time max.
-  $: summaryPRs = (() => {
+  const summaryPRs = $derived((() => {
     if (!summaryDay) return [] as { name: string; oldKg: number; newKg: number }[];
     const out: { name: string; oldKg: number; newKg: number }[] = [];
     for (const ex of summaryDay.exercises) {
@@ -466,10 +466,10 @@
       if (prevMax > 0 && newKg > prevMax) out.push({ name: ex.name, oldKg: prevMax, newKg });
     }
     return out;
-  })();
+  })());
 
   // Next planned session (soonest day after the current one that has exercises).
-  $: summaryNext = (() => {
+  const summaryNext = $derived((() => {
     const curIdx = DAY_ORDER.indexOf($uiState.day);
     let best: { week: number; dayIdx: number; day: DayOfWeek; count: number } | null = null;
     for (const wd of $appState.weeks) {
@@ -483,11 +483,11 @@
     }
     if (!best) return null;
     return { day: best.day, count: best.count, nextWeek: best.week > $uiState.week };
-  })();
+  })());
 
   // ---- Inline exercise rename ----
-  let editingNameId: string | null = null;
-  let editingNameValue = '';
+  let editingNameId = $state<string | null>(null);
+  let editingNameValue = $state('');
 
   function startRename(exId: string, currentName: string) {
     editingNameId = exId;
@@ -567,12 +567,12 @@
   // ---- #3 day-level session note ----
   // Lock week/day at the moment the note is opened — prevents saving to wrong
   // day if $uiState changes between open and blur.
-  let noteWeek = $uiState.week;
-  let noteDay  = $uiState.day;
-  let localDayNote: string = $appState.weeks.find(
+  let noteWeek = $state($uiState.week);
+  let noteDay  = $state($uiState.day);
+  let localDayNote = $state($appState.weeks.find(
     w => w.week === noteWeek && w.day === noteDay
-  )?.note ?? '';
-  let showDayNote = !!localDayNote;
+  )?.note ?? '');
+  let showDayNote = $state(!!localDayNote);
 
   function openDayNote() {
     // Re-read week/day and fresh note content every time the note is opened
@@ -589,18 +589,18 @@
   }
 
   // ---- #5 add exercise within workout mode ----
-  let showAddEx = false;
-  let addExName = '';
+  let showAddEx = $state(false);
+  let addExName = $state('');
 
   const WM_PAGE_SIZE = 3;
-  let addExPage = 0;
-  $: addExTrimmed = addExName.trim();
-  $: addExMatches = addExTrimmed.length >= 1 ? searchExercises(addExTrimmed) : [];
-  $: addExPages = Math.ceil(addExMatches.length / WM_PAGE_SIZE);
-  $: addExSuggestions = addExMatches.slice(addExPage * WM_PAGE_SIZE, addExPage * WM_PAGE_SIZE + WM_PAGE_SIZE);
-  $: if (addExTrimmed) addExPage = 0;
+  let addExPage = $state(0);
+  const addExTrimmed = $derived(addExName.trim());
+  const addExMatches = $derived(addExTrimmed.length >= 1 ? searchExercises(addExTrimmed) : []);
+  const addExPages = $derived(Math.ceil(addExMatches.length / WM_PAGE_SIZE));
+  const addExSuggestions = $derived(addExMatches.slice(addExPage * WM_PAGE_SIZE, addExPage * WM_PAGE_SIZE + WM_PAGE_SIZE));
+  $effect(() => { if (addExTrimmed) addExPage = 0; });
 
-  $: addExHistory = addExTrimmed.length >= 2 ? (() => {
+  const addExHistory = $derived(addExTrimmed.length >= 2 ? (() => {
     const lower = addExTrimmed.toLowerCase();
     let found: { kg: string; reps: string; sets: number } | null = null;
     for (const wd of $appState.weeks) {
@@ -615,7 +615,7 @@
       }
     }
     return found;
-  })() : null;
+  })() : null);
 
   function addExOpen() { showAddEx = true; addExPage = 0; }
   function addExCancel() { showAddEx = false; addExName = ''; }
@@ -642,14 +642,14 @@
   // ---- #8 undo — uses global undoAction store ----
 
   // ---- Local editable inputs (sets) ----
-  let localKg: Record<string, string> = {};
-  let localReps: Record<string, string> = {};
-  let localCondNote: Record<string, string> = {};
-  let localNote: Record<string, string> = {};
-  let noteEditingId: string | null = null;
+  let localKg = $state<Record<string, string>>({});
+  let localReps = $state<Record<string, string>>({});
+  let localCondNote = $state<Record<string, string>>({});
+  let localNote = $state<Record<string, string>>({});
+  let noteEditingId = $state<string | null>(null);
 
   // Sync locals when block changes — prefill from last session when set is empty
-  $: {
+  $effect(() => {
     if (block) {
       for (const ex of block.exercises) {
         const lastSess = ex.conditioning ? null : findLastSession($appState, ex.name, $uiState.week, $uiState.day);
@@ -667,39 +667,43 @@
         if (localNote[ex.id] === undefined) localNote[ex.id] = ex.note ?? '';
       }
     }
-  }
+  });
 
   // Commit + reset locals on block navigation
   let prevActiveIndex = -1;
-  $: if (activeIndex !== prevActiveIndex) {
-    // Commit any uncommitted inputs from the previous block before navigating
-    if (prevActiveIndex >= 0 && blocks[prevActiveIndex]) {
-      const prevBlock = blocks[prevActiveIndex];
-      const week = $uiState.week;
-      const day = $uiState.day;
-      for (const ex of prevBlock.exercises) {
-        ex.sets.forEach((_s, i) => {
-          const k = `${ex.id}-${i}`;
-          if (localKg[k] !== undefined) commitKg(week, day, ex.id, i);
-          if (localReps[k] !== undefined) commitReps(week, day, ex.id, i);
-        });
-        if (ex.conditioning && localCondNote[ex.id] !== undefined) {
-          commitCondNote(week, day, ex.id);
+  // prevActiveIndex is plain let (not $state) — reads inside $effect are
+  // untracked, so this effect only re-runs when activeIndex (a $derived) changes.
+  $effect(() => {
+    if (activeIndex !== prevActiveIndex) {
+      // Commit any uncommitted inputs from the previous block before navigating
+      if (prevActiveIndex >= 0 && blocks[prevActiveIndex]) {
+        const prevBlock = blocks[prevActiveIndex];
+        const week = $uiState.week;
+        const day = $uiState.day;
+        for (const ex of prevBlock.exercises) {
+          ex.sets.forEach((_s, i) => {
+            const k = `${ex.id}-${i}`;
+            if (localKg[k] !== undefined) commitKg(week, day, ex.id, i);
+            if (localReps[k] !== undefined) commitReps(week, day, ex.id, i);
+          });
+          if (ex.conditioning && localCondNote[ex.id] !== undefined) {
+            commitCondNote(week, day, ex.id);
+          }
+          if (localNote[ex.id] !== undefined) commitNote(week, day, ex.id);
         }
-        if (localNote[ex.id] !== undefined) commitNote(week, day, ex.id);
       }
+      prevActiveIndex = activeIndex;
+      const nb = blocks[activeIndex];
+      activeSubIndex = nb?.isSuperset ? firstUndoneIndex(nb.exercises.map(exDone)) : 0;
+      advanceAfterRest = false;
+      localKg = {};
+      localReps = {};
+      localCondNote = {};
+      localNote = {};
+      noteEditingId = null;
+      editingNameId = null;
     }
-    prevActiveIndex = activeIndex;
-    const nb = blocks[activeIndex];
-    activeSubIndex = nb?.isSuperset ? firstUndoneIndex(nb.exercises.map(exDone)) : 0;
-    advanceAfterRest = false;
-    localKg = {};
-    localReps = {};
-    localCondNote = {};
-    localNote = {};
-    noteEditingId = null;
-    editingNameId = null;
-  }
+  });
 
   function commitKg(week: number, day: DayOfWeek, exId: string, i: number) {
     const k = `${exId}-${i}`;
@@ -779,7 +783,7 @@
   }
 
   // ---- Completion flash ----
-  let showCompletionFlash = false;
+  let showCompletionFlash = $state(false);
 
   function confirmFinish() {
     markWorkoutComplete($uiState.week, $uiState.day);
