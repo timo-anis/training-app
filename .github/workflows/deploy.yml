@@ -9,6 +9,35 @@ permissions:
   contents: write
 
 jobs:
+  # ----------------------------------------------------------------
+  # RLS adversarial matrix — runs only when SUPABASE_DB_URL is set.
+  # Add the secret in GitHub → Settings → Secrets & variables →
+  # Actions → New repository secret (name: SUPABASE_DB_URL).
+  # The value is your Supabase direct postgres connection string:
+  #   postgresql://postgres:[password]@db.[ref].supabase.co:5432/postgres
+  # ----------------------------------------------------------------
+  rls-tests:
+    runs-on: ubuntu-latest
+    if: ${{ vars.RLS_TESTS_ENABLED == 'true' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install psql client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Run messages RLS adversarial matrix
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          psql \
+            --host="${{ secrets.SUPABASE_DB_HOST }}" \
+            --port=5432 \
+            --username=postgres \
+            --dbname=postgres \
+            -v ON_ERROR_STOP=1 \
+            -f supabase/rls-tests/messages-adversarial.sql
+
   deploy:
     runs-on: ubuntu-latest
 
