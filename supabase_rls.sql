@@ -256,13 +256,32 @@ grant  execute on function public.revoke_coach_link(uuid) to authenticated;
 -- swallows every error so a malformed blob can NEVER break a trainee's save.
 create or replace function public.refresh_activity_summary()
 returns trigger language plpgsql security definer set search_path = public as $$
+-- D2 fix: detect done sets (any set.done=true) instead of the completed flag.
+-- The trainee app awards streak credit whenever any set is done, regardless of
+-- whether the user presses "Finish Training". The old completed=true check meant
+-- the coach's activity view silently diverged from the trainee's streak.
+-- Q5 fix: raise warning on exception so failures surface in Supabase log explorer.
 declare _cur int; _last timestamptz; _active boolean;
 begin
   begin
     select max((e->>'week')::int),
-           max((e->>'date')::date) filter (where (e->>'completed') = 'true'),
-           coalesce(bool_or((e->>'completed')='true'
-             and (e->>'date')::date >= date_trunc('week', now())::date), false)
+           -- last_trained_at: most recent day that has at least one done set
+           max((e->>'date')::date) filter (
+             where jsonb_typeof(e->'sets') = 'array'
+               and exists (
+                 select 1 from jsonb_array_elements(e->'sets') s
+                 where (s->>'done')::boolean
+               )
+           ),
+           -- this_week_active: any done set on a day in the current ISO week
+           coalesce(bool_or(
+             jsonb_typeof(e->'sets') = 'array'
+             and exists (
+               select 1 from jsonb_array_elements(e->'sets') s
+               where (s->>'done')::boolean
+             )
+             and (e->>'date')::date >= date_trunc('week', now())::date
+           ), false)
       into _cur, _last, _active
       from jsonb_array_elements(coalesce(new.state_json->'weeks','[]'::jsonb)) e
       where jsonb_typeof(new.state_json->'weeks') = 'array';
@@ -271,7 +290,9 @@ begin
     on conflict (user_id) do update
       set last_trained_at=excluded.last_trained_at, current_week=excluded.current_week,
           this_week_active=excluded.this_week_active, updated_at=now();
-  exception when others then null; -- never break the trainee's save
+  exception when others then
+    -- Log but never break the trainee's save — coach sees stale data, trainee is unaffected.
+    raise warning 'refresh_activity_summary error for user %: %', new.user_id, sqlerrm;
   end;
   return new;
 end; $$;
