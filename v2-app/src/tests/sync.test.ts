@@ -15,6 +15,8 @@ const mockShowToast = vi.fn();
 vi.mock('../services/storage', () => ({
   saveLocal: (...a: any[]) => mockSaveLocal(...a),
   saveCloud: (...a: any[]) => mockSaveCloud(...a),
+  wasOccConflict: () => false,   // D1: OCC — not a conflict in generic failure tests
+  clearOccConflict: () => {},
 }));
 vi.mock('./ui-state', () => ({
   showToast: (...a: any[]) => mockShowToast(...a),

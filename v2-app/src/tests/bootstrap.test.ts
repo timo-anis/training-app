@@ -17,7 +17,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 const { mockFrom } = vi.hoisted(() => ({ mockFrom: vi.fn() }));
 vi.mock('../services/supabase', () => ({ supabase: { from: mockFrom } }));
 
-import { bootstrapState } from '../services/storage';
+import { bootstrapState, setBootCloudTs } from '../services/storage';
 import type { AppState } from '../types/workout';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -49,15 +49,25 @@ function makeSelectChain(value: { data: any; error: any }) {
   return c;
 }
 
-/** Chain where upsert() resolves to `value`. */
-function makeUpsertChain(value: { error: any }) {
-  const c: any = { upsert: vi.fn().mockResolvedValue(value) };
+/** Chain that supports both first-save (upsert().select()) and
+ *  OCC write-back (update().eq().eq().select()) paths in saveCloud. */
+function makeWriteChain(value: { data?: any; error: any }) {
+  const c: any = {};
+  // First-save path
+  c.upsert = vi.fn().mockReturnValue(c);
+  // OCC path
+  c.update = vi.fn().mockReturnValue(c);
+  c.eq    = vi.fn().mockReturnValue(c);
+  c.select = vi.fn().mockResolvedValue(value);
   return c;
 }
 
 beforeEach(() => {
   localStorage.clear();
   vi.resetAllMocks(); // resets implementations AND call counts
+  // D1: reset the OCC cursor so each test starts from the first-save state.
+  // Tests that call bootstrapState will set it themselves via setBootCloudTs.
+  setBootCloudTs(null);
 });
 
 afterEach(() => {
@@ -102,11 +112,11 @@ describe('Scenario 2: local state is newer than cloud', () => {
       data: { state_json: cloudState, updated_at: '2026-01-01T08:00:00.000Z' }, // older
       error: null,
     });
-    const upsertChain = makeUpsertChain({ error: null });
+    const writeChain = makeWriteChain({ data: [{ updated_at: '2026-01-01T11:00:00.000Z' }], error: null });
 
     mockFrom.mockImplementation(() => {
       callCount++;
-      return callCount === 1 ? selectChain : upsertChain;
+      return callCount === 1 ? selectChain : writeChain;
     });
 
     const result = await bootstrapState(UID);
@@ -116,10 +126,11 @@ describe('Scenario 2: local state is newer than cloud', () => {
     // Allow the fire-and-forget saveCloud to settle
     await new Promise(r => setTimeout(r, 0));
 
-    // write-back must have been triggered
-    expect(upsertChain.upsert).toHaveBeenCalledTimes(1);
-    const upsertArg = upsertChain.upsert.mock.calls[0][0];
-    expect(upsertArg.user_id).toBe(UID);
+    // D1 OCC path: bootstrapState set _bootCloudTs to cloud's updated_at, so
+    // saveCloud uses the conditional update path (.update().eq().eq().select())
+    expect(writeChain.update).toHaveBeenCalledTimes(1);
+    const updateArg = writeChain.update.mock.calls[0][0];
+    expect(updateArg).toHaveProperty('state_json');
   });
 });
 

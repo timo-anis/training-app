@@ -6,7 +6,7 @@
 import { writable } from 'svelte/store';
 import type { AppState } from '../types/workout';
 import { sanitizeState } from '../lib/state-sanitize';
-import { saveLocal, saveCloud } from '../services/storage';
+import { saveLocal, saveCloud, wasOccConflict, clearOccConflict } from '../services/storage';
 import { showToast } from './ui-state';
 
 // ---- Cloud sync status ----
@@ -47,6 +47,17 @@ function flushCloud() {
       failureNotified = false;
       if (retryTimer) { clearTimeout(retryTimer); retryTimer = null; }
       setSyncStatus('saved');
+    } else if (wasOccConflict()) {
+      // OCC conflict: another device modified the cloud row since we last synced.
+      // Don't retry automatically — the user needs to reload to see the latest data.
+      clearOccConflict();
+      pendingCloud = null;
+      failureNotified = false;
+      setSyncStatus('error');
+      showToast(
+        'Training data was updated on another device — reload to sync before your changes are saved.',
+        'error'
+      );
     } else {
       scheduleRetry();
     }

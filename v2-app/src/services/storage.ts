@@ -32,6 +32,21 @@ function localTsKey(userId: string): string {
 let _localQuotaExceeded = false;
 export function isLocalQuotaExceeded(): boolean { return _localQuotaExceeded; }
 
+// D1: OCC (Optimistic Concurrency Control) for saveCloud.
+// We track the server-side updated_at from the last successful cloud load/save.
+// saveCloud uses this as a WHERE clause so it refuses to overwrite a cloud row
+// that was modified by another device/session since we last synced. After a
+// successful save the cursor advances to the new server timestamp so subsequent
+// saves continue to work normally.
+// _occConflictDetected is a session flag read by sync.ts to show the user a
+// "modified on another device — reload to sync" toast without coupling storage
+// to UI code.
+let _bootCloudTs: string | null = null;
+let _occConflictDetected = false;
+export function setBootCloudTs(ts: string | null): void { _bootCloudTs = ts; }
+export function wasOccConflict(): boolean { return _occConflictDetected; }
+export function clearOccConflict(): void { _occConflictDetected = false; }
+
 export function saveLocal(userId: string, state: AppState): boolean {
   try {
     localStorage.setItem(localKey(userId), JSON.stringify(state));
@@ -113,21 +128,43 @@ export async function loadCloudWithMeta(
 
 export async function saveCloud(userId: string, state: AppState): Promise<boolean> {
   // Safety guard: never overwrite cloud with an empty state.
-  // Uses hasData() — the canonical check — rather than weeks.length so that if
-  // hasData() is ever strengthened the guard automatically benefits.
   if (!hasData(state)) {
     console.warn('saveCloud blocked: refusing to overwrite cloud with empty state');
     return false;
   }
   try {
-    const { error } = await supabase
-      .from('app_state')
-      .upsert(
-        { user_id: userId, state_json: state, updated_at: new Date().toISOString() },
-        { onConflict: 'user_id' }
-      );
-    if (error) throw error;
-    return true;
+    if (_bootCloudTs !== null) {
+      // OCC path: only update the row if updated_at still matches what we loaded.
+      // The BEFORE UPDATE trigger (set_updated_at) sets updated_at = now() on the
+      // server side; we select it back so the cursor stays current for the next save.
+      const { data, error } = await supabase
+        .from('app_state')
+        .update({ state_json: state })
+        .eq('user_id', userId)
+        .eq('updated_at', _bootCloudTs)
+        .select('updated_at');
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        // 0 rows matched: another session updated the row since our last sync.
+        console.warn('OCC conflict: cloud row was modified since last sync — save blocked');
+        _occConflictDetected = true;
+        return false;
+      }
+      // Advance the cursor to the new server-generated timestamp.
+      _bootCloudTs = (data[0] as { updated_at: string }).updated_at;
+      return true;
+    } else {
+      // First-save path: no cloud row existed at boot (new user or first sync).
+      // Upsert is safe here because we never loaded a competing cloud version.
+      const { data, error } = await supabase
+        .from('app_state')
+        .upsert({ user_id: userId, state_json: state }, { onConflict: 'user_id' })
+        .select('updated_at');
+      if (error) throw error;
+      // Capture the server-generated timestamp so subsequent saves use the OCC path.
+      _bootCloudTs = (data?.[0] as { updated_at: string } | undefined)?.updated_at ?? null;
+      return true;
+    }
   } catch (e) {
     console.error('Cloud save failed', e);
     return false;
@@ -153,6 +190,9 @@ export async function bootstrapState(userId: string): Promise<AppState> {
     cloud = { state: null, updatedAt: null };
     cloudFailed = true;
   }
+
+  // Record the cloud timestamp so saveCloud can use OCC on subsequent saves.
+  setBootCloudTs(cloud.updatedAt);
 
   const choice = chooseNewer(local, localTs, cloud.state, cloud.updatedAt);
 

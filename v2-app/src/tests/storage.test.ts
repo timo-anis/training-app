@@ -21,6 +21,7 @@ import {
   saveLocal,
   loadLocalTimestamp,
   saveCloud,
+  setBootCloudTs,
 } from '../services/storage';
 import type { AppState } from '../types/workout';
 import { emptyAppState } from '../types/workout';
@@ -48,6 +49,8 @@ function userId() { return 'test-user-abc'; }
 beforeEach(() => {
   localStorage.clear();
   vi.clearAllMocks();
+  // D1: reset OCC cursor so saveCloud tests always exercise the first-save path.
+  setBootCloudTs(null);
 });
 
 afterEach(() => vi.restoreAllMocks());
@@ -96,10 +99,14 @@ describe('loadLocalTimestamp', () => {
 
 // ── saveCloud ─────────────────────────────────────────────────────────────────
 describe('saveCloud', () => {
-  function mockUpsert(error: any = null) {
-    const upsertFn = vi.fn().mockResolvedValue({ error });
-    mockFrom.mockReturnValue({ upsert: upsertFn });
-    return upsertFn;
+  function mockUpsert(error: any = null, data: any = null) {
+    // D1: saveCloud now chains .upsert({}).select('updated_at')
+    // Build a chain: from() -> { upsert() -> chain } -> { select() -> Promise }
+    const chain: any = {};
+    chain.upsert = vi.fn().mockReturnValue(chain);
+    chain.select = vi.fn().mockResolvedValue({ data, error });
+    mockFrom.mockReturnValue(chain);
+    return chain;
   }
 
   it('returns false and does NOT call supabase when state has no weeks', async () => {
@@ -127,8 +134,11 @@ describe('saveCloud', () => {
 
   it('returns false and logs on supabase error', async () => {
     const errSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    const upsert = vi.fn().mockResolvedValue({ error: new Error('network fail') });
-    mockFrom.mockReturnValue({ upsert });
+    // D1: first-save path uses .upsert().select() — both must be in the chain
+    const chain: any = {};
+    chain.upsert = vi.fn().mockReturnValue(chain);
+    chain.select = vi.fn().mockResolvedValue({ data: null, error: new Error('network fail') });
+    mockFrom.mockReturnValue(chain);
     const result = await saveCloud(userId(), stateWithWeeks());
     expect(result).toBe(false);
     expect(errSpy).toHaveBeenCalled();
