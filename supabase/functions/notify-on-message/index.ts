@@ -45,12 +45,19 @@ Deno.serve(async (req) => {
   //   supabase secrets set WEBHOOK_SECRET=<your-random-secret>
   // Then configure the same value in the Supabase dashboard webhook settings.
   // If the secret env var is absent (e.g. local dev) the check is skipped.
+  // Fail-closed: if WEBHOOK_SECRET is not set the function refuses all requests.
+  // This prevents unauthenticated callers from triggering push notifications
+  // by hitting the function URL directly. Set it via:
+  //   supabase secrets set WEBHOOK_SECRET=<random-secret>
+  // and mirror the same value in the Supabase dashboard webhook configuration.
   const webhookSecret = Deno.env.get('WEBHOOK_SECRET');
-  if (webhookSecret) {
-    const authHeader = req.headers.get('authorization') ?? '';
-    if (authHeader !== `Bearer ${webhookSecret}`) {
-      return new Response('Unauthorized', { status: 401 });
-    }
+  if (!webhookSecret) {
+    console.error('notify-on-message: WEBHOOK_SECRET is not configured — refusing request');
+    return new Response('Service misconfigured', { status: 503 });
+  }
+  const authHeader = req.headers.get('authorization') ?? '';
+  if (authHeader !== `Bearer ${webhookSecret}`) {
+    return new Response('Unauthorized', { status: 401 });
   }
   // ─────────────────────────────────────────────────────────────────────────
   try {

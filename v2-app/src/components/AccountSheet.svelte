@@ -4,7 +4,7 @@
   import { displayName } from '../stores/ui-state';
   import { signOut, sendPasswordReset } from '../services/auth';
   import { setDisplayName } from '../services/profile';
-  import { saveLocal, saveCloud } from '../services/storage';
+  import { saveLocal } from '../services/storage';
   import { emptyAppState } from '../types/workout';
   import CoachInviteSection from './CoachInviteSection.svelte';
   import { getPushState, enablePush, disablePush, type PushReason } from '../services/push';
@@ -83,8 +83,11 @@
     try {
       const empty = emptyAppState();
       updateState(() => empty);
+      // saveLocal is called synchronously by updateState → scheduleSave.
+      // We do NOT call saveCloud here: hasData() guards it (empty state has no
+      // exercises), so the cloud intentionally retains the last blob as a
+      // recovery net. A reinstall will restore data — this is by design.
       saveLocal(user.id, empty);
-      await saveCloud(user.id, empty);
       showToast('All training data cleared', 'info');
       dispatch('close');
     } catch {

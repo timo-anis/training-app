@@ -32,6 +32,10 @@
         user = state.user;
         currentUser.set(state.user);
         if (view === 'loading' || view === 'auth') {
+          if (!isCoachAllowed(state.user)) {
+            view = 'denied';
+            return;
+          }
           restoreTraineeId = sessionStorage.getItem(RESTORE_KEY);
           view = 'dashboard';
         }
@@ -69,9 +73,9 @@
     <div class="coach-denied">
       <div class="denied-card">
         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-        <span class="denied-title">Juurdepääs puudub</span>
-        <span class="denied-sub">{user?.email} ei ole lisatud treeneri kontode nimekirja.</span>
-        <button class="denied-signout" on:click={handleSignOut}>Logi välja</button>
+        <span class="denied-title">Access denied</span>
+        <span class="denied-sub">{user?.email} is not an authorised coach account.</span>
+        <button class="denied-signout" on:click={handleSignOut}>Sign out</button>
       </div>
     </div>
   {:else}

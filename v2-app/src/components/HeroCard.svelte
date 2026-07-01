@@ -21,7 +21,7 @@
   $: name = $displayName;
   $: realToday = todayWeekDay();
   $: todayISO = new Date().toISOString().split('T')[0];
-  $: todayDay = realToday ? $appState.weeks.find(w => w.week === realToday!.week && w.day === realToday!.day) : undefined;
+  $: todayDay = realToday ? $appState.weeks.find(w => w.week === realToday?.week && w.day === realToday?.day) : undefined;
   $: exercises = todayDay?.exercises ?? [];
 
   $: savedLabel = todayDay?.label ?? '';
@@ -34,7 +34,7 @@
 
   // Day rings — planned workout days this week, sorted Mon→Sun
   $: realWeekDays = realToday
-    ? $appState.weeks.filter(w => w.week === realToday!.week && (!w.kind || w.kind === 'workout') && w.exercises.length > 0)
+    ? $appState.weeks.filter(w => w.week === realToday?.week && (!w.kind || w.kind === 'workout') && w.exercises.length > 0)
     : [];
   $: ringDays = [...realWeekDays].sort((a, b) => DAY_ORDER.indexOf(a.day) - DAY_ORDER.indexOf(b.day));
 
