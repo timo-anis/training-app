@@ -23,20 +23,37 @@
   async function refreshInvites() {
     try { hasInvite = (await listIncomingInvites()).length > 0; } catch { /* ignore */ }
   }
-  // Coach notes (Track 2): read-only for the trainee. Empty when no accepted
-  // coach or after revoke (RLS). Optional layer; failures are silent.
+  // Coach notes (Track 2): read-only for the trainee. Tracks load failures so
+  // the UI can show a retry affordance instead of silently rendering empty.
+  let notesLoadFailed = false;
   async function refreshCoachNotes() {
     const me = $currentUser?.id;
     if (!me) return;
-    try { await loadCoachNotesFor(me); } catch { /* notes optional */ }
+    try {
+      await loadCoachNotesFor(me);
+      notesLoadFailed = false;
+    } catch {
+      notesLoadFailed = true;
+    }
   }
-  // Coach program (Track 3): the trainee READS prescribed future days. Empty when
-  // no accepted coach or after revoke (RLS). Optional layer; failures are silent.
+  // Coach program (Track 3): the trainee READS prescribed future days. Tracks
+  // load failures so the UI can show a retry affordance.
+  let planLoadFailed = false;
   async function refreshAssignments() {
     const me = $currentUser?.id;
     if (!me) return;
     setAssignmentContext({ coachId: null, traineeId: me, canEdit: false });
-    try { await loadAssignmentsFor(me); } catch { /* plan optional */ }
+    try {
+      await loadAssignmentsFor(me);
+      planLoadFailed = false;
+    } catch {
+      planLoadFailed = true;
+    }
+  }
+  async function retryCoachData() {
+    notesLoadFailed = false;
+    planLoadFailed = false;
+    await Promise.allSettled([refreshCoachNotes(), refreshAssignments()]);
   }
   // Desktop session CTA elapsed clock (mirrors App.svelte's bottom-bar timer).
   // The bottom bar is hidden on desktop; the Start/Resume/Stop control lives in
@@ -374,6 +391,13 @@
     {/if}
 
     <CoachNote week={$uiState.week} day={$uiState.day} exerciseId={null} authoring={false} />
+
+    {#if notesLoadFailed || planLoadFailed}
+      <div class="coach-load-err" role="alert">
+        <span>Could not load coach data</span>
+        <button class="coach-load-retry" on:click={retryCoachData}>Retry</button>
+      </div>
+    {/if}
 
     {#if isPlanOnly && plannedDay}
       <div class="planned-panel">
@@ -1234,5 +1258,31 @@
       box-shadow: 0 -4px 32px rgba(0,0,0,0.40);
     }
   }
+
+  .coach-load-err {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 13px;
+    border-radius: 10px;
+    background: rgba(255, 80, 80, 0.10);
+    border: 1px solid rgba(255, 80, 80, 0.25);
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(var(--c-fg), 0.70);
+    margin-top: 8px;
+  }
+  .coach-load-retry {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--c-accent-solid);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .coach-load-retry:hover { background: rgba(var(--c-accent), 0.12); }
 
 </style>

@@ -25,13 +25,22 @@ function localTsKey(userId: string): string {
   return `timo_training_v4__user__${userId}__savedAt`;
 }
 
+// D6: session-scoped flag — set when localStorage quota is exhausted.
+// bootstrapState reads this to skip the local-wins cloud write-back, so a stale
+// local blob (old data, quota prevents updating) is never pushed over a newer
+// cloud copy. Cleared when a local save succeeds (user freed up storage).
+let _localQuotaExceeded = false;
+export function isLocalQuotaExceeded(): boolean { return _localQuotaExceeded; }
+
 export function saveLocal(userId: string, state: AppState): boolean {
   try {
     localStorage.setItem(localKey(userId), JSON.stringify(state));
     localStorage.setItem(localTsKey(userId), new Date().toISOString());
+    _localQuotaExceeded = false; // storage freed — clear the flag
     return true;
   } catch (e) {
     if (e instanceof DOMException && e.name === 'QuotaExceededError') {
+      _localQuotaExceeded = true;
       console.error('localStorage quota exceeded — local save failed', e);
     } else {
       console.error('Local save failed', e);
@@ -155,8 +164,9 @@ export async function bootstrapState(userId: string): Promise<AppState> {
   }
 
   // Local was newer → push a sanitized copy to cloud so cloud catches up.
-  // Apply sanitizeState here so dirty exercise names in local can't re-infect cloud.
-  if (choice.source === 'local' && hasData(cloud.state) && choice.state) {
+  // Skip if quota was exceeded this session: local may be stale (couldn't be updated)
+  // and we must not push that stale blob over a cloud copy that IS up-to-date.
+  if (choice.source === 'local' && hasData(cloud.state) && choice.state && !isLocalQuotaExceeded()) {
     void saveCloud(userId, sanitizeState(choice.state));
   }
 

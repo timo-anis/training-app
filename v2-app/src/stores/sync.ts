@@ -73,7 +73,12 @@ export function scheduleSave(userId: string, state: AppState, immediate = false)
   // re-entering the blob via the newer-wins boot merge.
   const clean = sanitizeState(state);
   const localOk = saveLocal(userId, clean);
-  if (!localOk) showToast('Storage full — local save failed. Free up device storage.', 'error');
+  if (!localOk) {
+    // Quota exceeded: cloud save continues so data is not lost, but local is stale.
+    // Show a persistent-style error toast. The user must free up device storage —
+    // until they do, offline sessions may use older data.
+    showToast('Storage full — saving to cloud only. Free up device storage to re-enable local backup.', 'error');
+  }
   pendingCloud = { userId, state: clean };
   if (saveTimer) clearTimeout(saveTimer);
   setSyncStatus('saving');
