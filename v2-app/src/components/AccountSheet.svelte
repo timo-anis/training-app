@@ -6,6 +6,8 @@
   import { setDisplayName } from '../services/profile';
   import { saveLocal } from '../services/storage';
   import { emptyAppState } from '../types/workout';
+  import type { AppState } from '../types/workout';
+  import { supabase } from '../services/supabase';
   import CoachInviteSection from './CoachInviteSection.svelte';
   import { getPushState, enablePush, disablePush, type PushReason } from '../services/push';
 
@@ -118,6 +120,70 @@
   }
 
   function close() { dispatch('close'); confirmClear = false; }
+
+  // ── Restore from backup ──
+  type BackupRow = { id: string; captured_at: string; reason: string; state_json: unknown };
+  let showBackups = false;
+  let loadingBackups = false;
+  let backups: BackupRow[] = [];
+  let confirmRestoreId: string | null = null;
+  let backupsLoaded = false;
+
+  function formatBackupTime(iso: string): string {
+    const diffMs = Date.now() - new Date(iso).getTime();
+    const mins = Math.floor(diffMs / 60_000);
+    if (mins < 1) return 'Just now';
+    if (mins < 60) return `${mins}m ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    const days = Math.floor(hrs / 24);
+    if (days === 1) return 'Yesterday';
+    if (days < 7) return `${days} days ago`;
+    return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  }
+
+  async function toggleBackups() {
+    showBackups = !showBackups;
+    confirmRestoreId = null;
+    if (showBackups && !backupsLoaded) {
+      loadingBackups = true;
+      try {
+        const uid = $currentUser?.id;
+        if (!uid) return;
+        const { data, error } = await supabase
+          .from('app_state_history')
+          .select('id, captured_at, reason, state_json')
+          .eq('user_id', uid)
+          .order('captured_at', { ascending: false })
+          .limit(5);
+        if (error) throw error;
+        backups = (data ?? []) as BackupRow[];
+        backupsLoaded = true;
+      } catch {
+        showToast('Could not load backups', 'error');
+        showBackups = false;
+      } finally {
+        loadingBackups = false;
+      }
+    }
+  }
+
+  async function restoreBackup(snap: BackupRow) {
+    if (confirmRestoreId !== snap.id) {
+      confirmRestoreId = snap.id;
+      return;
+    }
+    // Second tap — confirmed
+    confirmRestoreId = null;
+    try {
+      updateState(() => snap.state_json as AppState, true);
+      showToast('Training data restored', 'success');
+      showBackups = false;
+      dispatch('close');
+    } catch {
+      showToast('Restore failed — try again', 'error');
+    }
+  }
 </script>
 
 <div class="account-backdrop" on:click={close} aria-hidden="true"></div>
@@ -205,6 +271,40 @@
       </div>
       <span class="action-arrow">›</span>
     </button>
+
+    <!-- Restore from backup -->
+    <button class="action-row" on:click={toggleBackups} aria-expanded={showBackups}>
+      <span class="action-icon">🔄</span>
+      <div class="action-text">
+        <span class="action-label">Restore from backup</span>
+        <span class="action-sub">View recent auto-saved snapshots</span>
+      </div>
+      <span class="action-arrow" class:backup-arrow-open={showBackups}>›</span>
+    </button>
+    {#if showBackups}
+      <div class="backup-panel">
+        {#if loadingBackups}
+          <div class="backup-empty">Loading…</div>
+        {:else if backups.length === 0}
+          <div class="backup-empty">No backups found</div>
+        {:else}
+          {#each backups as snap (snap.id)}
+            {@const isConfirm = confirmRestoreId === snap.id}
+            <button
+              class="backup-row"
+              class:backup-confirm={isConfirm}
+              on:click={() => restoreBackup(snap)}
+            >
+              <div class="backup-info">
+                <span class="backup-time">{formatBackupTime(snap.captured_at)}</span>
+                <span class="backup-reason">{snap.reason}</span>
+              </div>
+              <span class="backup-cta">{isConfirm ? 'Confirm?' : 'Restore'}</span>
+            </button>
+          {/each}
+        {/if}
+      </div>
+    {/if}
 
     <div class="divider"></div>
 
@@ -473,4 +573,79 @@
     transform: translateX(18px);
     background: var(--c-accent-solid);
   }
+
+  /* Backup arrow rotation */
+  .backup-arrow-open {
+    display: inline-block;
+    transform: rotate(90deg);
+    transition: transform 0.15s;
+  }
+
+  /* Backup panel */
+  .backup-panel {
+    margin: 0 16px 4px;
+    border: 1px solid rgba(var(--c-accent), 0.12);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .backup-empty {
+    padding: 14px 16px;
+    font-size: 13px;
+    color: rgba(var(--c-fg), 0.35);
+    text-align: center;
+  }
+
+  .backup-row {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 14px;
+    background: transparent;
+    border: none;
+    border-top: 1px solid rgba(var(--c-fg), 0.06);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.1s;
+    text-align: left;
+    gap: 10px;
+  }
+  .backup-row:first-child { border-top: none; }
+  .backup-row:active { background: rgba(var(--c-fg), 0.05); }
+  .backup-row.backup-confirm { background: rgba(var(--c-accent), 0.07); }
+
+  .backup-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .backup-time {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(var(--c-fg), 0.75);
+    white-space: nowrap;
+  }
+
+  .backup-reason {
+    font-size: 11px;
+    color: rgba(var(--c-fg), 0.35);
+    background: rgba(var(--c-fg), 0.06);
+    border-radius: 4px;
+    padding: 1px 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+  }
+
+  .backup-cta {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--c-accent-solid);
+    flex-shrink: 0;
+  }
+  .backup-confirm .backup-cta { color: var(--h-ff6b6b); }
 </style>
