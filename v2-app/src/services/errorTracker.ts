@@ -66,6 +66,22 @@ async function logError(c: Captured): Promise<void> {
   }
 }
 
+/**
+ * Log an error that was CAUGHT by a svelte:boundary. Boundary-caught errors
+ * never reach window.onerror, so without this hook they are invisible in
+ * app_errors — the user sees the fallback card and we see nothing.
+ */
+export function logCaughtError(error: unknown, context: string): void {
+  const err = error instanceof Error ? error : null;
+  logError({
+    kind: 'error',
+    name: err?.name ?? 'BoundaryError',
+    message: `boundary(${context}): ${err?.message ?? String(error)}`,
+    stack: err?.stack,
+    external: false,
+  });
+}
+
 export function initErrorTracking(): void {
   window.addEventListener('error', (e: ErrorEvent) => {
     const external = !sameOriginScript(e.filename);

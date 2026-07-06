@@ -19,7 +19,8 @@
   import { DAY_ORDER } from '../types/workout';
   import { searchExercises, normalizeExerciseName } from '../data/exercises';
   import RestTimer from './RestTimer.svelte';
-  import { nextSupersetIndex, firstUndoneIndex } from '../lib/state-helpers';
+  import { nextSupersetIndex, firstUndoneIndex, clampBlockIndex } from '../lib/state-helpers';
+  import { decodeRestBlob, restBlobUsable, encodeRestBlob } from '../lib/rest-persist';
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -75,7 +76,9 @@
 
   // ---- Blocks ----
   const blocks = $derived($workoutBlocks);
-  const activeIndex = $derived($uiState.activeExerciseIndex);
+  // Clamped: a stale index after the block list shrinks (delete mid-workout,
+  // cloud refresh) must never select "no block" and blank the screen.
+  const activeIndex = $derived(clampBlockIndex($uiState.activeExerciseIndex, blocks.length));
   const block = $derived(blocks[activeIndex] ?? null);
   const isFirst = $derived(activeIndex === 0);
   const isLast = $derived(activeIndex === blocks.length - 1);
@@ -139,7 +142,7 @@
   // Reactively persist timer whenever it's running; clear when stopped.
   $effect(() => {
     if ($uiState.restStartTime !== null && $uiState.restTotal !== null && $uiState.restTotal > 0) {
-      try { localStorage.setItem(REST_PERSIST_KEY, JSON.stringify({ s: $uiState.restStartTime, t: $uiState.restTotal })); } catch { /* ignore */ }
+      try { localStorage.setItem(REST_PERSIST_KEY, encodeRestBlob($uiState.restStartTime, $uiState.restTotal, advanceAfterRest)); } catch { /* ignore */ }
     } else {
       try { localStorage.removeItem(REST_PERSIST_KEY); } catch { /* ignore */ }
     }
@@ -148,15 +151,20 @@
   // Restore timer from localStorage (called on mount and on screen wake).
   // Only restores if no timer is currently active in the store.
   function maybeRestoreRestTimer() {
-    if ($uiState.restStartTime !== null) return; // already active
     try {
-      const raw = localStorage.getItem(REST_PERSIST_KEY);
-      if (!raw) return;
-      const { s, t } = JSON.parse(raw) as { s: number; t: number };
-      const elapsedSecs = (Date.now() - s) / 1000;
-      if (elapsedSecs < t + 120) {
+      const blob = decodeRestBlob(localStorage.getItem(REST_PERSIST_KEY));
+      if (!blob) return;
+      if ($uiState.restStartTime !== null) {
+        // Timer already active in the store (overlay remount while resting).
+        // The advance flag is component-local and died with the old instance —
+        // recover it so the superset still auto-advances when rest ends.
+        if ($uiState.restStartTime === blob.s && blob.adv) advanceAfterRest = true;
+        return;
+      }
+      if (restBlobUsable(blob, Date.now())) {
         // Restore: still running OR expired within last 2 minutes (show GO!)
-        updateUI(ui => ({ ...ui, restStartTime: s, restTotal: t }));
+        updateUI(ui => ({ ...ui, restStartTime: blob.s, restTotal: blob.t }));
+        if (blob.adv) advanceAfterRest = true;
       } else {
         localStorage.removeItem(REST_PERSIST_KEY);
       }

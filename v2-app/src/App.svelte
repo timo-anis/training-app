@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { onAuthChange } from './services/auth';
+  import { logCaughtError } from './services/errorTracker';
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
   import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
   import { clearStoredNavSnapshot } from './stores/ui-state';
@@ -121,7 +122,7 @@
 
 <ToastNotification />
 
-<svelte:boundary>
+<svelte:boundary onerror={(e) => logCaughtError(e, 'app-root')}>
   {#snippet failed(error: unknown)}
     <div class="error-boundary">
       <div class="error-card">

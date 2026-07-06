@@ -25,6 +25,7 @@ import {
   moveExerciseInState,
   buildWorkoutBlocks,
   nextSupersetIndex,
+  clampBlockIndex,
   firstUndoneIndex,
 } from '../lib/state-helpers';
 import type { AppState, Exercise } from '../types/workout';
@@ -449,5 +450,27 @@ describe('firstUndoneIndex — where a superset starts', () => {
   it('returns 0 when all done or empty', () => {
     expect(firstUndoneIndex([true, true])).toBe(0);
     expect(firstUndoneIndex([])).toBe(0);
+  });
+});
+
+// ── clampBlockIndex (blank-workout-screen guard) ──────────────────────────────
+describe('clampBlockIndex — stale active index after block list shrinks', () => {
+  it('keeps a valid index unchanged', () => {
+    expect(clampBlockIndex(0, 3)).toBe(0);
+    expect(clampBlockIndex(2, 3)).toBe(2);
+  });
+  it('clamps an out-of-range index to the last block (delete mid-workout)', () => {
+    expect(clampBlockIndex(3, 3)).toBe(2);
+    expect(clampBlockIndex(7, 2)).toBe(1);
+  });
+  it('clamps to the only block when the list shrinks to one', () => {
+    expect(clampBlockIndex(4, 1)).toBe(0);
+  });
+  it('returns 0 for an empty block list (never negative)', () => {
+    expect(clampBlockIndex(0, 0)).toBe(0);
+    expect(clampBlockIndex(5, 0)).toBe(0);
+  });
+  it('returns 0 for a negative index', () => {
+    expect(clampBlockIndex(-1, 3)).toBe(0);
   });
 });

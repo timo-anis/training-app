@@ -253,3 +253,16 @@ export function firstUndoneIndex(doneFlags: boolean[]): number {
   const i = doneFlags.findIndex(f => !f);
   return i === -1 ? 0 : i;
 }
+
+/**
+ * Clamp the active block index into the valid range for the current block
+ * list. Guards workout mode against a stale activeExerciseIndex after the
+ * block list shrinks (exercise deleted mid-workout, cloud refresh rewrites
+ * the day, OCC conflict reload) — a stale index otherwise selects no block
+ * and the workout content area renders empty.
+ */
+export function clampBlockIndex(index: number, blockCount: number): number {
+  if (blockCount <= 0) return 0;
+  if (index < 0) return 0;
+  return Math.min(index, blockCount - 1);
+}
