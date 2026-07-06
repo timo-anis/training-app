@@ -27,6 +27,12 @@ Ask only when (a) blocked, (b) the decision changes user-visible behavior in a w
 by the DoD, or (c) it touches a protected flow. Everything else: decide, note the decision in
 the commit message, move on.
 
+**Plan gate (L-tier only):** before building anything L-tier, Claude presents a short plan —
+approach, files touched, DoD, risks, loop budget — and gets Timo's approval. **After approval,
+the plan is the contract:** Claude executes it end-to-end without check-in questions, using the
+autonomy rule above. Questions after approval are limited to genuine blockers. S/M work needs
+no plan gate.
+
 ---
 
 ## 2. Boundaries (standing rules — apply to every task)
@@ -142,9 +148,17 @@ For L-tier work (and M-tier when the checker fails something):
 Cap: if 3 full loops don't converge, stop and escalate to Timo with the remaining gap — that
 signals a wrong-sized task or a wrong bar, not a need for loop 4.
 
-**Multiple attempts (optional, for hard/creative problems):** run 2–3 independent builder
-attempts with the same DoD, let the checker rank them, carry the winner (or the best parts)
-into the next loop. Use for visual/UX work where the first solution is rarely the best one.
+**Multiple attempts (default for visual/UX and hard problems):** when the DoD has a
+subjective-quality component (layout, visual design, interaction feel) or the first solution
+is unlikely to be the best, run 2–3 independent builder attempts with the same DoD, let the
+checker rank them, and carry the winner (or the best parts) into the next loop. Skipping this
+for such work requires a stated reason in the plan.
+
+**Split creative work by aspect (standing rule for creative/visual L-tier):** decompose into
+independent aspects and give each to its own sub-agent — e.g. for a screen redesign: one agent
+on layout/spacing, one on color/tokens (against `THEME_SYSTEM.md`), one on interaction states,
+one on responsive behavior. Each gets only its aspect's DoD; an integrator session merges and
+the checker verifies the whole against the full DoD.
 
 **Parallel sessions:** split big work across sessions — one builds, one tests, one integrates
 and walks the app as a user. Each session gets this file + the DoD as its contract. One session
