@@ -1,5 +1,7 @@
 # AGENT.md — Timo Training App
 
+> **Process:** how work is given, verified, and accepted is defined in `WORKFLOW.md` (goal-not-steps, measurable DoD, tiered checker/adversarial verification loop). This file stays the architecture reference.
+
 ## Active App
 
 **V2 is the active production app.**
