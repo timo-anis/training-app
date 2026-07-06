@@ -57,6 +57,8 @@ trainee's client writes `app_state`).
 - No renaming store fields, IDs, classes, or JS hooks without explicit reason.
 - Every patch built from latest `origin/main`, narrow, reversible.
 - App UI is **English-only**. No Estonian in any component.
+- **Delivery statement with every change:** what changed, what was intentionally left
+  untouched, what risk was avoided.
 
 **Stability beats elegance:** no uncontrolled rewrites. Runtime extraction follows
 audit → readonly helper extraction → DI boundary → checkpoint → ownership migration, and the
