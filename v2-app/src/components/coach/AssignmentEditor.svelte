@@ -1,9 +1,17 @@
+<script context="module" lang="ts">
+  // Copy-week in-flight guard. Module-level on purpose: the editor unmounts
+  // when the coach taps to a logged day, and an instance-local flag would
+  // reset on remount while the first async write loop is still draining.
+  let copyInFlight = false;
+</script>
+
 <script lang="ts">
   import type { Exercise, DayOfWeek } from '../../types/workout';
-  import { emptyExercise, emptySet, DAY_ORDER } from '../../types/workout';
+  import { emptyExercise, DAY_ORDER } from '../../types/workout';
   import { appState, weekOffset, showToast } from '../../stores/app';
-  import { assignments, assignmentKey, writeAssignment, removeAssignment } from '../../stores/assignments';
+  import { assignments, assignmentKey, assignmentCtxId, writeAssignment, removeAssignment } from '../../stores/assignments';
   import { searchExercises } from '../../data/exercises';
+  import { cleanForPlan, listWeekCopySources, buildWeekCopyPlan, type WeekCopySource, type WeekCopyPlan } from '../../lib/assignments';
 
   // Coach authors a FUTURE prescribed day. Writes ONLY to coach_assignments
   // (never a blob). The trainee materializes it on first touch.
@@ -24,16 +32,6 @@
   const SUPER_CODES = ['', 'A', 'B', 'C', 'D'];
 
   function clone<T>(v: T): T { return JSON.parse(JSON.stringify(v)) as T; }
-
-  function cleanForPlan(ex: Exercise): Exercise {
-    return {
-      ...clone(ex),
-      id: `${ex.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`,
-      sets: (ex.sets.length ? ex.sets : [emptySet()]).map((s) => ({ kg: s.kg, reps: s.reps, done: false, rpe: '' })),
-      recoveryDone: false,
-      conditioningDone: false,
-    };
-  }
 
   async function persist() {
     try {
@@ -75,6 +73,86 @@
     copying = false;
   }
 
+  // copy an ENTIRE week into the currently selected week (trainer feedback
+  // 2026-07-06). Per source day the coach plan wins over the trainee log.
+  // Target days the trainee already started are NEVER touched (single-writer +
+  // ownership rule); target days holding only an old plan are replaced.
+  let copyingWeek = false;
+  let copyBusy = false; // instance UI state: disables buttons while a copy runs
+  // Days the trainee already owns in the TARGET week. Snapshot of the loaded
+  // trainee state — if the trainee logs a day while this view is open, the
+  // guard can be stale (TOCTOU); materializeAssignment refuses to clobber an
+  // actual day, so the worst case is an inert assignment row, never data loss.
+  $: targetActualDays = new Set(
+    $appState.weeks.filter((w) => w.week === week && w.exercises.length > 0).map((w) => w.day)
+  );
+  $: weekOptions = copyingWeek
+    ? listWeekCopySources($appState.weeks, $assignments, week, DAY_ORDER).map((src) => ({
+        ...src,
+        copyable: src.days.filter((d) => !targetActualDays.has(d.day)).length,
+      }))
+    : [];
+  async function copyWeekFrom(src: WeekCopySource) {
+    if (copyBusy || copyInFlight) return;
+    copyBusy = true;
+    copyInFlight = true;
+    // Freeze the copy target NOW: `week` is a live prop and the store context
+    // follows the open trainee — mid-loop navigation (other week OR other
+    // trainee) must never redirect the remaining writes.
+    const targetWeek = week;
+    const targetCtx = assignmentCtxId();
+    let plan: WeekCopyPlan = { writes: [], skippedActual: [] };
+    let written = 0;
+    let failedAt: string | null = null;
+    let unexpected = false;
+    try {
+      plan = buildWeekCopyPlan(src.days, targetActualDays);
+      for (const w of plan.writes) {
+        // Trainee switched or view closed mid-flight -> stop, report, never
+        // write another trainee's assignments. A no-op write (context lost
+        // between check and call) counts as failure, not success.
+        if (targetCtx === null || assignmentCtxId() !== targetCtx) {
+          failedAt = w.day;
+          break;
+        }
+        try {
+          const ok = await writeAssignment(targetWeek, w.day, w.exercises);
+          if (!ok) { failedAt = w.day; break; }
+          written++;
+        } catch {
+          failedAt = w.day;
+          break; // stop at first failure; report exactly what landed
+        }
+      }
+    } catch {
+      // plan-build threw (malformed source exercise) — report, don't brick
+      unexpected = true;
+    } finally {
+      // Released on EVERY exit — a stuck flag would disable copy-week (module
+      // flag) or freeze this panel's buttons (instance flag) until remount.
+      copyInFlight = false;
+      copyBusy = false;
+    }
+    if (written > 0) loadedKey = ''; // reseed draft if the open day was replaced
+    const skipped = plan.skippedActual.length;
+    if (unexpected) {
+      // Keep the panel open; the coach can pick another source week.
+      showToast('Could not copy week — a source exercise is malformed', 'error');
+    } else if (failedAt) {
+      // Keep the panel open so the coach can retry (writes are idempotent upserts).
+      showToast(`Copy stopped at ${failedAt} — copied ${written} of ${plan.writes.length} days`, 'error');
+    } else if (written > 0 || skipped > 0) {
+      showToast(
+        `Copied ${written} day${written === 1 ? '' : 's'}` +
+        (skipped ? ` · ${skipped} skipped (already logged)` : ''),
+        written > 0 ? 'success' : 'info'
+      );
+      copyingWeek = false;
+    } else {
+      copyingWeek = false;
+    }
+  }
+
   function removeExercise(i: number) { commit(draft.filter((_, idx) => idx !== i)); }
   function moveExercise(i: number, dir: -1 | 1) {
     const j = i + dir;
@@ -114,9 +192,23 @@
   async function clearPlan() {
     commit([]);
   }
+
+  // Enter / mobile "next" walks the numeric inputs: kg -> reps -> next set's
+  // kg -> next exercise. DOM order of [data-adv] inputs IS the fill order.
+  let rootEl: HTMLElement;
+  function advanceFocus(e: KeyboardEvent) {
+    if (e.key !== 'Enter') return;
+    e.preventDefault();
+    const current = e.currentTarget as HTMLInputElement;
+    persist();
+    const inputs = Array.from(rootEl?.querySelectorAll<HTMLInputElement>('input[data-adv]') ?? []);
+    const i = inputs.indexOf(current);
+    const next = i >= 0 ? inputs[i + 1] : undefined;
+    if (next) { next.focus(); next.select(); } else { current.blur(); }
+  }
 </script>
 
-<div class="ae">
+<div class="ae" bind:this={rootEl}>
   <div class="ae-head">
     <span class="ae-badge">PLAN · {day}, Week {week - $weekOffset}</span>
     {#if draft.length > 0}
@@ -146,11 +238,11 @@
             {#each ex.sets as s, si (si)}
               <div class="ae-set">
                 <span class="ae-set-n">{si + 1}</span>
-                <input class="ae-num" type="text" inputmode="decimal" placeholder="kg"
-                  value={s.kg} on:input={(e) => setField(i, si, 'kg', (e.target as HTMLInputElement).value)} on:change={persist} />
+                <input class="ae-num" type="text" inputmode="decimal" placeholder="kg" enterkeyhint="next" data-adv
+                  value={s.kg} on:input={(e) => setField(i, si, 'kg', (e.target as HTMLInputElement).value)} on:change={persist} on:keydown={advanceFocus} />
                 <span class="ae-x">×</span>
-                <input class="ae-num" type="text" inputmode="numeric" placeholder="reps"
-                  value={s.reps} on:input={(e) => setField(i, si, 'reps', (e.target as HTMLInputElement).value)} on:change={persist} />
+                <input class="ae-num" type="text" inputmode="numeric" placeholder="reps" enterkeyhint="next" data-adv
+                  value={s.reps} on:input={(e) => setField(i, si, 'reps', (e.target as HTMLInputElement).value)} on:change={persist} on:keydown={advanceFocus} />
                 <button class="ae-mini danger" on:click={() => removeSet(i, si)} disabled={ex.sets.length <= 1} aria-label="Remove set">−</button>
               </div>
             {/each}
@@ -200,10 +292,27 @@
         {/if}
         <button class="ae-btn ghost full" on:click={() => copying = false}>Done</button>
       </div>
+    {:else if copyingWeek}
+      <div class="ae-copy">
+        {#if weekOptions.length === 0}
+          <p class="ae-empty">No other weeks to copy from yet.</p>
+        {:else}
+          <div class="ae-copy-list">
+            {#each weekOptions as opt (opt.week)}
+              <button class="ae-copy-item" on:click={() => copyWeekFrom(opt)} disabled={copyBusy || opt.copyable === 0}>
+                <span class="ae-copy-label">Week {opt.week - $weekOffset} → Week {week - $weekOffset}</span>
+                <span class="ae-copy-count">{opt.copyable === 0 ? 'all logged' : `${opt.copyable} day${opt.copyable === 1 ? '' : 's'}`}</span>
+              </button>
+            {/each}
+          </div>
+        {/if}
+        <button class="ae-btn ghost full" disabled={copyBusy} on:click={() => copyingWeek = false}>Done</button>
+      </div>
     {:else}
       <div class="ae-tool-row">
         <button class="ae-btn ghost" on:click={() => { adding = true; addName=''; }}>+ Add exercise</button>
         <button class="ae-btn ghost" on:click={() => copying = true}>Copy a day →</button>
+        <button class="ae-btn ghost" on:click={() => copyingWeek = true}>Copy week →</button>
       </div>
     {/if}
   </div>
@@ -297,6 +406,7 @@
   }
   .ae-add-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
   .ae-copy-list { display: grid; gap: 5px; max-height: 240px; overflow-y: auto; }
+  .ae-copy-item:disabled { opacity: 0.35; cursor: default; }
   .ae-copy-item {
     display: flex; align-items: center; justify-content: space-between; gap: 8px;
     padding: 11px 13px; border-radius: 10px;

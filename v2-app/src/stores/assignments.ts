@@ -36,13 +36,27 @@ export async function loadAssignmentsFor(traineeId: string): Promise<void> {
   assignments.set(toMap(list));
 }
 
+/** Identity of the trainee context currently receiving writes, or null.
+ *  Lets long-running flows (copy-week) detect a mid-flight trainee switch. */
+export function assignmentCtxId(): string | null {
+  return ctx.canEdit && ctx.coachId && ctx.traineeId ? `${ctx.coachId}|${ctx.traineeId}` : null;
+}
+
 /** Coach-only: upsert a prescribed day. Optimistic; reverts on failure.
- *  No-op if the context can't edit. Empty exercises => remove the plan. */
+ *  Returns false when the context can't edit (silent no-op) — callers that
+ *  must not miscount a no-op as success (copy-week) check the result.
+ *  Empty exercises => remove the plan. */
 export async function writeAssignment(
   week: number, day: DayOfWeek, exercises: Exercise[]
-): Promise<void> {
-  if (!ctx.canEdit || !ctx.coachId || !ctx.traineeId) return;
-  if (exercises.length === 0) { await removeAssignment(week, day); return; }
+): Promise<boolean> {
+  // Fence: setAssignmentContext/clearAssignments replace the ctx object, so a
+  // mid-flight trainee switch changes identity. A straddling write must never
+  // mutate the NEW trainee's map (success) or restore the OLD trainee's
+  // snapshot over it (failure).
+  const dispatchCtx = ctx;
+  const { coachId, traineeId } = dispatchCtx;
+  if (!dispatchCtx.canEdit || !coachId || !traineeId) return false;
+  if (exercises.length === 0) { await removeAssignment(week, day); return true; }
   const key = assignmentKey(week, day);
   const prev = get(assignments);
 
@@ -52,10 +66,12 @@ export async function writeAssignment(
   }));
 
   try {
-    const saved = await saveAssignment(ctx.coachId, ctx.traineeId, week, day, exercises);
+    const saved = await saveAssignment(coachId, traineeId, week, day, exercises);
+    if (ctx !== dispatchCtx) return false; // view moved on; server row saved, map untouched
     assignments.update((m) => ({ ...m, [key]: saved }));
+    return true;
   } catch (e) {
-    assignments.set(prev);
+    if (ctx === dispatchCtx) assignments.set(prev);
     throw e;
   }
 }
@@ -72,10 +88,11 @@ export async function removeAssignment(week: number, day: DayOfWeek): Promise<vo
     return next;
   });
 
+  const dispatchCtx = ctx;
   try {
     await deleteAssignment(ctx.coachId, ctx.traineeId, week, day);
   } catch (e) {
-    assignments.set(prev);
+    if (ctx === dispatchCtx) assignments.set(prev);
     throw e;
   }
 }

@@ -12,7 +12,8 @@
   import { setCoachNotesContext, clearCoachNotes, loadCoachNotesFor } from '../../stores/coachNotes';
   import AssignmentEditor from './AssignmentEditor.svelte';
   import ChatView from '../ChatView.svelte';
-  import { setAssignmentContext, clearAssignments, loadAssignmentsFor } from '../../stores/assignments';
+  import { assignments, setAssignmentContext, clearAssignments, loadAssignmentsFor } from '../../stores/assignments';
+  import { weekDayStates } from '../../lib/assignments';
 
   export let trainee: TraineeRow;
 
@@ -52,6 +53,11 @@
     }
     return result;
   })();
+
+  // Week strip (trainer feedback 2026-07-06): one button per weekday of the
+  // selected week. green = trainee logged (actual), gold dot = plan exists,
+  // dim = empty. One tap selects the day for planning/commenting.
+  $: dayStates = weekDayStates($appState.weeks, $assignments, $uiState.week, DAY_ORDER);
 
   function pickInitialDay(state: AppState) {
     const populated = state.weeks.filter((w) => w.exercises.length > 0);
@@ -141,6 +147,23 @@
     </section>
 
     <section class="section">
+      <div class="week-strip" role="tablist" aria-label="Days of week {$uiState.week - $weekOffset}">
+        {#each DAY_ORDER as d (d)}
+          <button
+            class="ws-day"
+            class:selected={$uiState.day === d}
+            class:actual={dayStates[d] === 'actual'}
+            class:planned={dayStates[d] === 'planned'}
+            role="tab"
+            aria-selected={$uiState.day === d}
+            on:click={() => updateUI((u) => ({ ...u, day: d }))}
+          >
+            <span class="ws-lbl">{d.slice(0, 3)}</span>
+            <span class="ws-dot" aria-hidden="true"></span>
+          </button>
+        {/each}
+      </div>
+
       <div class="day-heading-row">
         <button class="day-nav-arrow" on:click={() => goToAdjacentDay(-1)} aria-label="Previous day">‹</button>
         <div class="day-heading">
@@ -341,4 +364,28 @@
   }
   .chat-mini-close:hover { color: rgba(var(--c-fg), 0.70); background: rgba(var(--c-fg), 0.08); }
 
-  </style>
+  
+  /* Week strip — Mon..Sun day buttons for the selected week */
+  .week-strip {
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px;
+    padding: 0 14px; margin: 10px 0 4px;
+  }
+  .ws-day {
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+    padding: 8px 0 7px; border-radius: 11px; cursor: pointer;
+    border: 1px solid rgba(var(--c-fg), 0.10); background: rgba(var(--c-fg), 0.03);
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ws-lbl { font-size: 11px; font-weight: 800; letter-spacing: 0.04em; color: rgba(var(--c-fg), 0.45); }
+  .ws-dot { width: 7px; height: 7px; border-radius: 50%; background: transparent; }
+  .ws-day.planned .ws-dot { background: rgba(var(--c-accent), 0.85); }
+  .ws-day.actual .ws-dot { background: var(--h-4fc08d, #4fc08d); }
+  .ws-day.actual .ws-lbl { color: var(--h-4fc08d, #4fc08d); }
+  .ws-day.planned .ws-lbl { color: var(--c-accent-solid); }
+  .ws-day.selected {
+    border-color: rgba(var(--c-accent), 0.55);
+    background: rgba(var(--c-accent), 0.10);
+  }
+  .ws-day.selected .ws-lbl { color: var(--c-text); }
+
+</style>

@@ -70,3 +70,119 @@ export function materializedDay(
 export function isActualDay(day: WorkoutDay | undefined): boolean {
   return !!day && day.exercises.length > 0;
 }
+
+// ---------------------------------------------------------------------------
+// Coach planning helpers (trainer-feedback 2026-07-06): week day-strip states,
+// plan-exercise cleaning, and whole-week copy. Pure — no store/Supabase access.
+// ---------------------------------------------------------------------------
+
+/** How a (week, day) reads on the coach's week strip. */
+export type PlanDayState = 'actual' | 'planned' | 'empty';
+
+/**
+ * State of every weekday in one week, for the coach week strip.
+ * 'actual' wins over 'planned' (trainee-owned day; coach comments only).
+ */
+export function weekDayStates(
+  weeks: WorkoutDay[],
+  assignments: Record<string, Assignment>,
+  week: number,
+  dayOrder: readonly DayOfWeek[]
+): Record<DayOfWeek, PlanDayState> {
+  const out = {} as Record<DayOfWeek, PlanDayState>;
+  for (const day of dayOrder) {
+    const actual = weeks.some((w) => w.week === week && w.day === day && w.exercises.length > 0);
+    const planned = (assignments[assignmentKey(week, day)]?.exercises.length ?? 0) > 0;
+    out[day] = actual ? 'actual' : planned ? 'planned' : 'empty';
+  }
+  return out;
+}
+
+/**
+ * Prepare an exercise for a coach plan: deep-clone, fresh id (keeps coach-note
+ * anchors of OTHER days untouched — two days must never share exercise ids),
+ * completion fields reset. kg/reps/rest/note/code/order preserved.
+ */
+export function cleanForPlan(ex: Exercise): Exercise {
+  const c = JSON.parse(JSON.stringify(ex)) as Exercise;
+  return {
+    ...c,
+    id: `${ex.name.toLowerCase().replace(/\s+/g, '_')}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`,
+    sets: (c.sets.length ? c.sets : [{ kg: '', reps: '', done: false, rpe: '' }])
+      .map((s) => ({ kg: s.kg, reps: s.reps, done: false, rpe: '' })),
+    recoveryDone: false,
+    conditioningDone: false,
+  };
+}
+
+/** One copyable source day: the coach plan if present, else the trainee log. */
+export interface WeekCopyDay {
+  day: DayOfWeek;
+  exercises: Exercise[];
+  from: 'plan' | 'log';
+}
+
+/** A source week the coach can copy from. */
+export interface WeekCopySource {
+  week: number;
+  days: WeekCopyDay[];
+}
+
+/**
+ * Every week (except excludeWeek) that has at least one plannable day.
+ * Per day the coach plan wins over the trainee log. Sorted newest first.
+ */
+export function listWeekCopySources(
+  weeks: WorkoutDay[],
+  assignments: Record<string, Assignment>,
+  excludeWeek: number,
+  dayOrder: readonly DayOfWeek[]
+): WeekCopySource[] {
+  const weekNums = new Set<number>();
+  for (const w of weeks) if (w.exercises.length > 0) weekNums.add(w.week);
+  for (const a of Object.values(assignments)) if (a.exercises.length > 0) weekNums.add(a.week);
+  weekNums.delete(excludeWeek);
+
+  const sources: WeekCopySource[] = [];
+  for (const week of [...weekNums].sort((a, b) => b - a)) {
+    const days: WeekCopyDay[] = [];
+    for (const day of dayOrder) {
+      const plan = assignments[assignmentKey(week, day)];
+      if (plan && plan.exercises.length > 0) {
+        days.push({ day, exercises: plan.exercises, from: 'plan' });
+        continue;
+      }
+      const log = weeks.find((w) => w.week === week && w.day === day && w.exercises.length > 0);
+      if (log) days.push({ day, exercises: log.exercises, from: 'log' });
+    }
+    if (days.length > 0) sources.push({ week, days });
+  }
+  return sources;
+}
+
+/** Result of planning a week copy: what to write, what was protected. */
+export interface WeekCopyPlan {
+  /** Per target day, cleaned exercises ready for writeAssignment. */
+  writes: { day: DayOfWeek; exercises: Exercise[] }[];
+  /** Target days skipped because the trainee already owns them (actual). */
+  skippedActual: DayOfWeek[];
+}
+
+/**
+ * Copy a whole source week into a target week. NEVER writes a target day the
+ * trainee has started (actual) — those are skipped and reported. Target days
+ * that only hold an old plan are replaced. Exercises are cleaned via
+ * cleanForPlan (fresh ids, completion reset, structure/order/codes preserved).
+ */
+export function buildWeekCopyPlan(
+  sourceDays: WeekCopyDay[],
+  targetActualDays: ReadonlySet<DayOfWeek>
+): WeekCopyPlan {
+  const writes: WeekCopyPlan['writes'] = [];
+  const skippedActual: DayOfWeek[] = [];
+  for (const d of sourceDays) {
+    if (targetActualDays.has(d.day)) { skippedActual.push(d.day); continue; }
+    writes.push({ day: d.day, exercises: d.exercises.map(cleanForPlan) });
+  }
+  return { writes, skippedActual };
+}
