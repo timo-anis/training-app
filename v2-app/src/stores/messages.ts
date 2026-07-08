@@ -32,11 +32,16 @@ export function clearChat(): void {
 
 /** Load the thread and attach realtime. Safe to call once per view open. */
 export async function loadChat(): Promise<void> {
-  if (!ctx.linkId) return;
-  const list = await listMessages(ctx.linkId);
+  // Fence: pin the link at entry. A stale load resolving after the view moved
+  // on must neither seed the new thread nor attach a subscription to it.
+  const dispatchCtx = ctx;
+  const linkId = dispatchCtx.linkId;
+  if (!linkId) return;
+  const list = await listMessages(linkId);
+  if (ctx !== dispatchCtx) return; // view moved on; discard + don't subscribe
   chatMessages.set(sortMessages(list));
   unsub?.();
-  unsub = subscribeToMessages(ctx.linkId, {
+  unsub = subscribeToMessages(linkId, {
     onInsert: (m) => chatMessages.update((cur) => mergeMessage(cur, m)),
     onUpdate: (m) => chatMessages.update((cur) => mergeMessage(cur, m)),
   });

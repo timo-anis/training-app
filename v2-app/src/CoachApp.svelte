@@ -101,7 +101,11 @@
       <!-- Main panel: trainee detail. On mobile hidden on dashboard. -->
       <main class="coach-panel" class:mobile-hidden={view === 'dashboard'}>
         {#if selected}
-          <CoachTraineeView trainee={selected} />
+          <!-- key: switching trainees must remount the view (fresh load + ctx +
+               realtime channels); a bare prop update would keep A's data under B's name. -->
+          {#key selected.traineeId}
+            <CoachTraineeView trainee={selected} />
+          {/key}
         {:else}
           <div class="coach-empty-state">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor"

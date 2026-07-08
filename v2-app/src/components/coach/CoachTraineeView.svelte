@@ -73,6 +73,7 @@
     loading = true;
     try {
       const res = await loadTraineeState(trainee.traineeId);
+      if (destroyed) return; // A->B switch remounted the view; a stale resolve must not write shared stores or re-arm store contexts
       const state = res.state ?? emptyAppState();
       appState.set(state);
       updatedAt = res.updatedAt;
@@ -81,13 +82,17 @@
       const coachId = $currentUser?.id ?? null;
       setCoachNotesContext({ coachId, traineeId: trainee.traineeId, canEdit: !!coachId });
       try { await loadCoachNotesFor(trainee.traineeId); } catch { /* notes are optional */ }
+      if (destroyed) return;
       setAssignmentContext({ coachId, traineeId: trainee.traineeId, canEdit: !!coachId });
       try { await loadAssignmentsFor(trainee.traineeId); } catch { /* plan is optional */ }
+      if (destroyed) return;
       try {
         const counts = await listUnreadCounts(coachId ?? '');
+        if (destroyed) return;
         unreadCount = counts[trainee.linkId] ?? 0;
       } catch { /* badge is optional */ }
     } catch {
+      if (destroyed) return;
       showToast('Could not load trainee data', 'error');
       appState.set(emptyAppState());
     } finally {
@@ -120,8 +125,10 @@
     );
   });
 
-  // Leave the shared store clean when the coach navigates away.
-  onDestroy(() => { unreadUnsub?.(); appState.set(emptyAppState()); clearCoachNotes(); clearAssignments(); });
+  // Leave the shared store clean when the coach navigates away. `destroyed`
+  // also disarms any in-flight load() so it can't repopulate the stores.
+  let destroyed = false;
+  onDestroy(() => { destroyed = true; unreadUnsub?.(); appState.set(emptyAppState()); clearCoachNotes(); clearAssignments(); });
 </script>
 
 <div class="trainee-view">

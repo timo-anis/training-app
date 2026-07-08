@@ -32,7 +32,11 @@ function toMap(list: Assignment[]): AssignmentsMap {
 /** Load every assignment for a trainee. RLS narrows the rows to what the caller
  *  may read (coach: their own; trainee: theirs via an accepted link). */
 export async function loadAssignmentsFor(traineeId: string): Promise<void> {
+  // Fence: set…Context/clear… replace the ctx object, so a mid-flight trainee
+  // switch changes identity. A stale load must never land in the NEW view's map.
+  const dispatchCtx = ctx;
   const list = await listAssignments(traineeId);
+  if (ctx !== dispatchCtx) return; // view moved on; discard stale rows
   assignments.set(toMap(list));
 }
 

@@ -24,7 +24,10 @@ export function clearCoachNotes(): void {
 /** Load every note anchored to a trainee. RLS narrows the rows to what the
  *  caller may read (coach: their own; trainee: theirs via an accepted link). */
 export async function loadCoachNotesFor(traineeId: string): Promise<void> {
+  // Fence: a stale load resolving after a trainee switch must not land.
+  const dispatchCtx = ctx;
   const list = await listCoachNotes(traineeId);
+  if (ctx !== dispatchCtx) return; // view moved on; discard stale rows
   coachNotes.set(indexNotes(list));
 }
 
