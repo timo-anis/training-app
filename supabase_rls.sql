@@ -254,42 +254,53 @@ grant  execute on function public.revoke_coach_link(uuid) to authenticated;
 
 -- activity_summary maintainer. TRIGGER-ONLY (no EXECUTE grants). Fully guarded:
 -- swallows every error so a malformed blob can NEVER break a trainee's save.
+-- Track 1: triage source column — must exist before the function below
+-- references it (idempotent; also present in the Track 1 appendix).
+alter table public.activity_summary
+  add column if not exists trained_dates jsonb not null default '[]'::jsonb;
+
 create or replace function public.refresh_activity_summary()
 returns trigger language plpgsql security definer set search_path = public as $$
--- D2 fix: detect done sets (any set.done=true) instead of the completed flag.
--- The trainee app awards streak credit whenever any set is done, regardless of
--- whether the user presses "Finish Training". The old completed=true check meant
--- the coach's activity view silently diverged from the trainee's streak.
--- Q5 fix: raise warning on exception so failures surface in Supabase log explorer.
-declare _cur int; _last timestamptz; _active boolean;
+-- DEPLOYED VERSION (migration fix_activity_summary_done_detection, 2026-07-08).
+-- Walks the REAL blob shape weeks[] -> exercises[] -> sets[] (an earlier version
+-- read e->'sets' on the weeks element and always produced NULL last_trained_at).
+-- "Trained" mirrors the app's own definition (lib/day-status.ts): any done set
+-- OR recoveryDone OR conditioningDone. Computes last_trained_at, current_week,
+-- this_week_active and trained_dates (28-day window, feeds coach triage) in one
+-- pass. Q5: raise warning on exception so failures surface in the log explorer.
+declare _cur int; _last timestamptz; _active boolean; _dates jsonb;
 begin
   begin
-    select max((e->>'week')::int),
-           -- last_trained_at: most recent day that has at least one done set
-           max((e->>'date')::date) filter (
-             where jsonb_typeof(e->'sets') = 'array'
-               and exists (
-                 select 1 from jsonb_array_elements(e->'sets') s
-                 where (s->>'done')::boolean
-               )
-           ),
-           -- this_week_active: any done set on a day in the current ISO week
-           coalesce(bool_or(
-             jsonb_typeof(e->'sets') = 'array'
-             and exists (
-               select 1 from jsonb_array_elements(e->'sets') s
-               where (s->>'done')::boolean
-             )
-             and (e->>'date')::date >= date_trunc('week', now())::date
-           ), false)
-      into _cur, _last, _active
+    with days as (
+      select e,
+        (e->>'date')::date as d,
+        (e->>'week')::int  as w,
+        exists (
+          select 1
+          from jsonb_array_elements(
+            case when jsonb_typeof(e->'exercises') = 'array'
+                 then e->'exercises' else '[]'::jsonb end) ex
+          where coalesce((ex->>'recoveryDone')::boolean, false)
+             or coalesce((ex->>'conditioningDone')::boolean, false)
+             or (jsonb_typeof(ex->'sets') = 'array' and exists (
+                   select 1 from jsonb_array_elements(ex->'sets') s
+                   where coalesce((s->>'done')::boolean, false)))
+        ) as trained
       from jsonb_array_elements(coalesce(new.state_json->'weeks','[]'::jsonb)) e
-      where jsonb_typeof(new.state_json->'weeks') = 'array';
-    insert into public.activity_summary(user_id,last_trained_at,current_week,this_week_active,updated_at)
-      values (new.user_id, _last, _cur, coalesce(_active,false), now())
+      where jsonb_typeof(new.state_json->'weeks') = 'array'
+    )
+    select max(w),
+           max(d) filter (where trained),
+           coalesce(bool_or(trained and d >= date_trunc('week', now())::date), false),
+           coalesce(jsonb_agg(distinct to_char(d,'YYYY-MM-DD')) filter (
+             where trained and d >= now()::date - 28), '[]'::jsonb)
+      into _cur, _last, _active, _dates
+      from days;
+    insert into public.activity_summary(user_id,last_trained_at,current_week,this_week_active,trained_dates,updated_at)
+      values (new.user_id, _last, _cur, coalesce(_active,false), coalesce(_dates,'[]'::jsonb), now())
     on conflict (user_id) do update
       set last_trained_at=excluded.last_trained_at, current_week=excluded.current_week,
-          this_week_active=excluded.this_week_active, updated_at=now();
+          this_week_active=excluded.this_week_active, trained_dates=excluded.trained_dates, updated_at=now();
   exception when others then
     -- Log but never break the trainee's save — coach sees stale data, trainee is unaffected.
     raise warning 'refresh_activity_summary error for user %: %', new.user_id, sqlerrm;
@@ -644,3 +655,35 @@ DROP POLICY IF EXISTS "assign_coach_delete" ON public.coach_assignments;
 CREATE POLICY "assign_coach_delete" ON public.coach_assignments
   FOR DELETE TO authenticated
   USING (coach_id = (SELECT auth.uid()) AND public.caller_is_coach());
+
+-- ============================================================
+-- Track 1 (2026-07-08): coach triage dashboard
+-- ============================================================
+-- 1. activity_summary.trained_dates — ISO dates (28-day window) with >=1 done
+--    set OR recoveryDone OR conditioningDone (mirrors lib/day-status.ts
+--    "has done work"). Maintained ONLY by the guarded trigger below.
+alter table public.activity_summary
+  add column if not exists trained_dates jsonb not null default '[]'::jsonb;
+
+-- 2. FIX shipped with Track 1: the previous done-set filter read e->'sets' on
+--    a weeks[] element, but the blob shape is weeks[] -> exercises[] -> sets[].
+--    In prod last_trained_at stayed NULL despite real done days. The rewritten
+--    refresh_activity_summary (see migration fix_activity_summary_done_detection)
+--    walks exercises[] and also counts recoveryDone/conditioningDone; computes
+--    last_trained_at, current_week, this_week_active, trained_dates in one pass.
+--    Error-swallow pattern kept: a trigger failure can never break a trainee save.
+
+-- 3. Hardening found by the Track 1 RLS matrix: activity_owner_all (FOR ALL)
+--    let a trainee falsify their own summary (the coach triages on it).
+--    Writes are trigger-only (SECURITY DEFINER bypasses RLS), so the owner
+--    needs SELECT only. Verified client code never writes this table.
+drop policy if exists activity_owner_all on public.activity_summary;
+create policy activity_owner_read on public.activity_summary
+  for select to authenticated
+  using ((select auth.uid()) = user_id);
+
+-- RLS matrix (rolled back, re-runnable): 7 assertions — coach reads accepted-
+-- linked summary incl. trained_dates; revoked link exposes nothing; stranger
+-- sees 0 rows; owner reads own row; owner UPDATE = 0 rows; owner INSERT/upsert
+-- denied; coach UPDATE of linked trainee = 0 rows. Sentinels:
+-- TRIAGE_MATRIX_PASSED_ALL_5 + TRIAGE_MATRIX_A6_A7_PASSED.

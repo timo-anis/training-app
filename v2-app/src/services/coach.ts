@@ -22,6 +22,8 @@ export interface TraineeRow {
   currentWeek: number | null;
   thisWeekActive: boolean;
   summaryUpdatedAt: string | null;
+  /** ISO dates (28-day window) with at least one done set / recovery / conditioning — trigger-maintained. */
+  trainedDates: string[];
 }
 
 export interface PendingInvite {
@@ -64,7 +66,7 @@ export async function listTrainees(coachId: string): Promise<TraineeRow[]> {
   if (ids.length) {
     const { data: sums, error: sumErr } = await supabase
       .from('activity_summary')
-      .select('user_id, last_trained_at, current_week, this_week_active, updated_at')
+      .select('user_id, last_trained_at, current_week, this_week_active, trained_dates, updated_at')
       .in('user_id', ids);
     // Non-fatal: dashboard still lists trainees, just without freshness (L2 audit fix).
     if (sumErr) console.warn('activity_summary load failed; showing trainees without freshness', sumErr);
@@ -81,8 +83,28 @@ export async function listTrainees(coachId: string): Promise<TraineeRow[]> {
       currentWeek: s?.current_week ?? null,
       thisWeekActive: !!s?.this_week_active,
       summaryUpdatedAt: s?.updated_at ?? null,
+      trainedDates: Array.isArray(s?.trained_dates) ? (s.trained_dates as string[]) : [],
     };
   });
+}
+
+/** Plan anchors (week+day only, no payloads) for a set of trainees in ONE query —
+ *  feeds the dashboard triage. RLS scopes rows to the caller's own assignments. */
+export async function listAssignmentAnchors(
+  traineeIds: string[]
+): Promise<Record<string, { week: number; day: string }[]>> {
+  const out: Record<string, { week: number; day: string }[]> = {};
+  if (traineeIds.length === 0) return out;
+  const { data, error } = await supabase
+    .from('coach_assignments')
+    .select('trainee_id, week, day')
+    .in('trainee_id', traineeIds);
+  if (error) throw error;
+  for (const r of data ?? []) {
+    const id = r.trainee_id as string;
+    (out[id] ??= []).push({ week: r.week as number, day: r.day as string });
+  }
+  return out;
 }
 
 export async function listPendingInvites(coachId: string): Promise<PendingInvite[]> {

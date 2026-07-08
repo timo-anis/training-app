@@ -4,8 +4,10 @@
   import { showToast } from '../../stores/app';
   import {
     listTrainees, listPendingInvites, inviteTrainee, cancelInvite, revokeLink,
-    listUnreadCounts, subscribeToAllMessages, relativeAge, type TraineeRow, type PendingInvite,
+    listUnreadCounts, subscribeToAllMessages, relativeAge, listAssignmentAnchors,
+    type TraineeRow, type PendingInvite,
   } from '../../services/coach';
+  import { triageFlags, triageOrder, type TriageFlags, type PlanAnchor } from '../../lib/triage';
 
   export let user: User | null = null;
   export let onOpenTrainee: (t: TraineeRow) => void = () => {};
@@ -21,6 +23,7 @@
   let confirmRevoke: string | null = null;
   let unreadMap: Record<string, number> = {};
   let unreadUnsub: (() => void) | null = null;
+  let anchorsMap: Record<string, PlanAnchor[]> = {};
 
   async function refresh() {
     if (!user) return;
@@ -32,6 +35,9 @@
       ]);
       now = Date.now();
       try { unreadMap = await listUnreadCounts(user.id); } catch { unreadMap = {}; }
+      // Non-fatal: triage still works on freshness alone without plan anchors.
+      try { anchorsMap = await listAssignmentAnchors(trainees.map((t) => t.traineeId)); }
+      catch { anchorsMap = {}; }
     } catch (e) {
       showToast('Could not load trainees', 'error');
     } finally {
@@ -91,6 +97,23 @@
     );
   });
   onDestroy(() => unreadUnsub?.());
+
+  // ---- Triage: who needs attention (pure derivation in lib/triage.ts) ----
+  function localTodayISO(ms: number): string {
+    const d = new Date(ms);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  $: todayISO = localTodayISO(now);
+  // NOTE: unreadMap is deliberately NOT an input — a realtime unread bump
+  // must repaint the badge in place, never re-sort the list mid-interaction.
+  $: flagsMap = Object.fromEntries(trainees.map((t) => [t.linkId, triageFlags({
+    anchors: anchorsMap[t.traineeId] ?? [],
+    trainedDates: t.trainedDates,
+    lastTrainedAt: t.lastTrainedAt,
+    todayISO,
+  })])) as Record<string, TriageFlags>;
+  $: orderedTrainees = triageOrder(trainees, (t) => flagsMap[t.linkId], (t) => t.lastTrainedAt);
+  $: flaggedCount = orderedTrainees.filter((t) => flagsMap[t.linkId].score > 0).length;
 </script>
 
 <section class="dash">
@@ -154,7 +177,13 @@
         <span class="empty-sub">The invite is pending — they'll see it next time they open the app.</span>
       </div>
     {:else}
-      {#each trainees as t (t.linkId)}
+      {#each orderedTrainees as t, i (t.linkId)}
+        {#if flaggedCount > 0 && flaggedCount < orderedTrainees.length && i === 0}
+          <span class="triage-label attention">Needs attention</span>
+        {/if}
+        {#if flaggedCount > 0 && flaggedCount < orderedTrainees.length && i === flaggedCount}
+          <span class="triage-label">On track</span>
+        {/if}
         <div class="row trainee">
           <button class="row-open" on:click={() => onOpenTrainee(t)}>
             <span class="dot" class:active={t.thisWeekActive} aria-hidden="true"></span>
@@ -162,6 +191,19 @@
               <span class="row-name">{t.email}</span>
               {#if t.lastTrainedAt}
                 <span class="row-meta">Last trained {relativeAge(t.lastTrainedAt, now)}</span>
+              {/if}
+              {#if flagsMap[t.linkId]?.score > 0}
+                <span class="row-flags">
+                  {#if flagsMap[t.linkId].missed.length > 0}
+                    <span class="row-flag missed">{flagsMap[t.linkId].missed.length} missed</span>
+                  {/if}
+                  {#if flagsMap[t.linkId].quietDays !== null}
+                    <span class="row-flag quiet">Quiet {flagsMap[t.linkId].quietDays}d</span>
+                  {/if}
+                  {#if flagsMap[t.linkId].noSessions}
+                    <span class="row-flag nodata">No sessions yet</span>
+                  {/if}
+                </span>
               {/if}
             </span>
             {#if unreadMap[t.linkId] > 0}<span class="row-unread">{unreadMap[t.linkId]}</span>{/if}
@@ -276,6 +318,33 @@
   .row-action.danger { color: var(--h-ff8585, #ff8585); }
   .row-action.danger.confirm { background: var(--c-255-80-80-0_12); color: var(--h-ff6060); }
   .row-action:active { background: rgba(var(--c-fg), 0.06); }
+
+  /* Triage */
+  .triage-label {
+    display: block; font-size: 11px; font-weight: 900; letter-spacing: 0.08em;
+    text-transform: uppercase; color: rgba(var(--c-fg), 0.38); margin: 6px 2px 2px;
+  }
+  .triage-label.attention { color: var(--h-ff8585, #ff8585); }
+  .row-flags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 3px; }
+  .row-flag {
+    font-size: 10.5px; font-weight: 800; line-height: 1; padding: 3px 7px;
+    border-radius: 8px; white-space: nowrap;
+  }
+  .row-flag.missed {
+    color: var(--h-ff8585, #ff8585);
+    background: var(--c-255-80-80-0_12, rgba(255, 96, 96, 0.12));
+    border: 1px solid var(--c-255-80-80-0_12, rgba(255, 96, 96, 0.25));
+  }
+  .row-flag.quiet {
+    color: var(--c-accent-solid);
+    background: rgba(var(--c-accent), 0.14);
+    border: 1px solid rgba(var(--c-accent), 0.32);
+  }
+  .row-flag.nodata {
+    color: rgba(var(--c-fg), 0.55);
+    background: rgba(var(--c-fg), 0.07);
+    border: 1px solid rgba(var(--c-fg), 0.12);
+  }
 
   .empty {
     border: 1px dashed rgba(var(--c-fg), 0.10);
