@@ -13,7 +13,8 @@
   import AssignmentEditor from './AssignmentEditor.svelte';
   import ChatView from '../ChatView.svelte';
   import { assignments, setAssignmentContext, clearAssignments, loadAssignmentsFor } from '../../stores/assignments';
-  import { weekDayStates } from '../../lib/assignments';
+  import { weekDayStates, assignmentKey } from '../../lib/assignments';
+  import PlanVsActual from './PlanVsActual.svelte';
 
   export let trainee: TraineeRow;
 
@@ -58,6 +59,10 @@
   // selected week. green = trainee logged (actual), gold dot = plan exists,
   // dim = empty. One tap selects the day for planning/commenting.
   $: dayStates = weekDayStates($appState.weeks, $assignments, $uiState.week, DAY_ORDER);
+
+  // Track 2: the coach plan for the selected day, if any. Drives the read-only
+  // "vs plan" panel on started days; assignment-less days render untouched.
+  $: dayPlan = $assignments[assignmentKey($uiState.week, $uiState.day)] ?? null;
 
   function pickInitialDay(state: AppState) {
     const populated = state.weeks.filter((w) => w.exercises.length > 0);
@@ -187,6 +192,9 @@
         <AssignmentEditor week={$uiState.week} day={$uiState.day} />
       {:else}
         <p class="actual-hint">Started by the trainee — this is their actual log. You comment only; you can’t overwrite it.</p>
+        {#if dayPlan && dayPlan.exercises.length > 0}
+          <PlanVsActual planned={dayPlan.exercises} actual={$currentDayExercises} />
+        {/if}
         <div class="exercise-list">
           {#each $currentDayExercises as exercise, i (exercise.id)}
             <ExerciseCard
