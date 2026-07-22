@@ -21,6 +21,7 @@
   import RestTimer from './RestTimer.svelte';
   import { nextSupersetIndex, firstUndoneIndex, clampBlockIndex } from '../lib/state-helpers';
   import { decodeRestBlob, restBlobUsable, encodeRestBlob } from '../lib/rest-persist';
+  import { formatElapsed, parseRestToSeconds, secsToRest, fmtVolume, dayVolume } from '../lib/workout-metrics';
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -66,13 +67,6 @@
     elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
   }, 1000);
 
-  function formatElapsed(s: number): string {
-    const h = Math.floor(s / 3600);
-    const m = Math.floor((s % 3600) / 60);
-    const sec = s % 60;
-    if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
-    return `${m}:${String(sec).padStart(2,'0')}`;
-  }
 
   // ---- Blocks ----
   const blocks = $derived($workoutBlocks);
@@ -108,22 +102,7 @@
   }
 
   // ---- Rest timer (state in uiState — survives overlay close/reopen) ----
-  function parseRestToSeconds(s: string): number {
-    if (!s) return 0;
-    s = s.trim().toLowerCase();
-    if (/^\d+:\d+$/.test(s)) { const [m, sec] = s.split(':').map(Number); return m * 60 + sec; }
-    const minMatch = s.match(/^(\d+(?:\.\d+)?)\s*min?/);
-    if (minMatch) return Math.round(parseFloat(minMatch[1]) * 60);
-    const secMatch = s.match(/^(\d+(?:\.\d+)?)/);
-    if (secMatch) return Math.round(parseFloat(secMatch[1]));
-    return 0;
-  }
 
-  // Format seconds back to "M:SS" (empty when zero → "no rest").
-  function secsToRest(sec: number): string {
-    if (sec <= 0) return '';
-    return `${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
-  }
 
   // Inline per-exercise rest editing inside workout mode (no need to exit).
   let restEditId = $state<string | null>(null);
@@ -334,25 +313,8 @@
         .filter(s => s.done).length
     : 0);
 
-  const summaryVolume = $derived((() => {
-    if (!summaryDay) return 0;
-    let v = 0;
-    for (const ex of summaryDay.exercises) {
-      if (ex.recovery || ex.conditioning) continue;
-      for (const s of ex.sets) {
-        if (!s.done) continue;
-        const kg = parseFloat(s.kg);
-        const reps = parseInt(s.reps);
-        if (!isNaN(kg) && !isNaN(reps)) v += kg * reps;
-      }
-    }
-    return v;
-  })());
+  const summaryVolume = $derived(summaryDay ? dayVolume(summaryDay) : 0);
 
-  function fmtVolume(v: number): string {
-    if (v >= 1000) return `${(v / 1000).toFixed(1)}t`;
-    return `${Math.round(v)}kg`;
-  }
 
   const summaryExercises = $derived(summaryDay
     ? summaryDay.exercises.map(ex => ({
@@ -368,20 +330,6 @@
   // ---- Premium summary extras (streak, volume delta, best set, PRs, next) ----
   // Pure read-only derivations from existing state — no mutation, no new schema.
 
-  // Strength volume of a day (done sets only).
-  function dayVolume(wd: WorkoutDay): number {
-    let v = 0;
-    for (const ex of wd.exercises) {
-      if (ex.recovery || ex.conditioning) continue;
-      for (const s of ex.sets) {
-        if (!s.done) continue;
-        const kg = parseFloat(s.kg);
-        const reps = parseInt(s.reps);
-        if (!isNaN(kg) && !isNaN(reps)) v += kg * reps;
-      }
-    }
-    return v;
-  }
 
   // Display week number (absolute -> user-facing).
   const summaryWeekDisplay = $derived($uiState.week - $weekOffset);
