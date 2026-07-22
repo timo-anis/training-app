@@ -123,7 +123,13 @@ export async function registerBiometric(userId: string, label: string): Promise<
         authenticatorSelection: {
           authenticatorAttachment: 'platform',
           userVerification: 'required',
-          residentKey: 'preferred',
+          // Device-bound, NON-discoverable credential (not an iCloud passkey).
+          // With a matching allowCredentials on verify, iOS goes straight to
+          // Face ID instead of showing the "pick a passkey" account sheet —
+          // the native-style re-auth prompt. (LocalAuthentication/LAContext,
+          // the fully sheet-less native path, is not available to a PWA.)
+          residentKey: 'discouraged',
+          requireResidentKey: false,
         },
         timeout: 60_000,
       },
