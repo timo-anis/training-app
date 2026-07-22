@@ -50,6 +50,16 @@ export interface MyCoach {
 // COACH SIDE
 // ============================================================
 
+/** Shape of the activity_summary columns selected below — replaces an untyped `any` map. */
+interface ActivitySummaryRow {
+  user_id: string;
+  last_trained_at: string | null;
+  current_week: number | null;
+  this_week_active: boolean;
+  trained_dates: unknown; // jsonb; validated with Array.isArray at the read site
+  updated_at: string;
+}
+
 /** Accepted trainees + their cheap activity projection (no full blobs loaded). */
 export async function listTrainees(coachId: string): Promise<TraineeRow[]> {
   const { data: links, error } = await supabase
@@ -62,7 +72,7 @@ export async function listTrainees(coachId: string): Promise<TraineeRow[]> {
   const rows = links ?? [];
   const ids = rows.map((l) => l.trainee_id).filter(Boolean) as string[];
 
-  const summaries: Record<string, any> = {};
+  const summaries: Record<string, ActivitySummaryRow> = {};
   if (ids.length) {
     const { data: sums, error: sumErr } = await supabase
       .from('activity_summary')
