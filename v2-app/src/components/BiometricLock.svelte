@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { verifyBiometric, biometricSupported, type BioReason } from '../services/biometric';
   import { unlockOk, unlockFail } from '../stores/app';
 
@@ -16,25 +17,34 @@
     'error': 'Could not verify — try again',
   };
 
-  async function unlock() {
+  // `auto` = fired on mount without a tap. Some iOS versions reject a gesture-less
+  // WebAuthn get() with NotAllowedError; in that case we stay silent and let the
+  // user tap the button. Explicit taps show the real failure reason.
+  async function unlock(auto = false) {
     if (busy) return;
     busy = true;
-    message = '';
+    if (!auto) message = '';
     try {
       const reason = await verifyBiometric(userId);
       if (reason === 'ok') {
         unlockOk();
       } else {
         unlockFail();
-        message = FAIL_MSG[reason] ?? 'Could not verify — try again';
+        if (!auto) message = FAIL_MSG[reason] ?? 'Could not verify — try again';
       }
     } finally {
       busy = false;
     }
   }
 
-  // No auto-trigger: WebAuthn requires a user gesture, so the first tap is the button.
   const supported = biometricSupported();
+
+  // Try Face ID immediately on open — no tap needed when the browser allows a
+  // gesture-less prompt (iPhone Face ID). The button below is the fallback for
+  // when the auto-attempt is blocked or dismissed.
+  onMount(() => {
+    if (supported) void unlock(true);
+  });
 </script>
 
 <div class="lock-screen" role="dialog" aria-modal="true" aria-label="App locked">
@@ -56,7 +66,7 @@
     <p class="lock-title">Locked</p>
     <p class="lock-sub">Unlock to continue your training</p>
 
-    <button class="lock-unlock" on:click={unlock} disabled={busy || !supported}>
+    <button class="lock-unlock" on:click={() => unlock(false)} disabled={busy || !supported}>
       {busy ? 'Verifying…' : 'Unlock with Face ID'}
     </button>
 
