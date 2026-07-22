@@ -162,12 +162,6 @@
     color: rgba(var(--c-fg), 0.50);
     font-size: 13px;
   }
-  .record-reps {
-    font-weight: 500;
-    color: rgba(var(--c-fg), 0.38);
-    font-size: 12px;
-    margin-left: 1px;
-  }
 
 
   @media (min-width: 900px) {

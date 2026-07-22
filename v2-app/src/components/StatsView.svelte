@@ -261,10 +261,6 @@
 
   /* Body map wrapper */
 
-  /* old bodymap — kept for reference, no longer rendered */
-  .bodymap-wrap {
-    margin-bottom: 28px;
-  }
 
   /* Summary chips */
   .summary-row {

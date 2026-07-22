@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, onDestroy, tick } from 'svelte';
+  import { onMount, onDestroy, tick, untrack } from 'svelte';
   import {
     uiState, appState, workoutBlocks, exitWorkout, closeWorkoutMode, weekOffset,
     setActiveBlock, toggleSetDone, updateSetField, updateSetRpe, suggestRpeForSet, findLastSession,
@@ -580,7 +580,7 @@
   let localDayNote = $state($appState.weeks.find(
     w => w.week === noteWeek && w.day === noteDay
   )?.note ?? '');
-  let showDayNote = $state(!!localDayNote);
+  let showDayNote = $state(untrack(() => !!localDayNote));
 
   function openDayNote() {
     // Re-read week/day and fresh note content every time the note is opened
@@ -818,7 +818,7 @@
 
   <!-- Block content -->
   {#if block}
-    <div class="wm-content" role="group" aria-label="Current workout block (swipe to change)" on:touchstart={onTouchStart} on:touchend={onTouchEnd}>
+    <div class="wm-content" role="group" aria-label="Current workout block (swipe to change)" ontouchstart={onTouchStart} ontouchend={onTouchEnd}>
       <!-- Block badge — only for supersets and conditioning blocks -->
       {#if block.isSuperset || block.exercises[0]?.conditioning}
         <div class="block-title">
@@ -833,13 +833,13 @@
       <!-- Superset stepper: one exercise at a time; auto-advances on rest end -->
       {#if block.isSuperset && block.exercises.length > 1}
         <div class="ss-stepper">
-          <button class="ss-arrow" on:click={() => subGoto(activeSubIndex - 1)} aria-label="Previous superset exercise">‹</button>
+          <button class="ss-arrow" onclick={() => subGoto(activeSubIndex - 1)} aria-label="Previous superset exercise">‹</button>
           <div class="ss-dots">
             {#each block.exercises as e, i}
-              <button class="ss-dot" class:active={i === activeSubIndex} class:done={exDone(e)} on:click={() => subGoto(i)}>{e.code || (i + 1)}</button>
+              <button class="ss-dot" class:active={i === activeSubIndex} class:done={exDone(e)} onclick={() => subGoto(i)}>{e.code || (i + 1)}</button>
             {/each}
           </div>
-          <button class="ss-arrow" on:click={() => subGoto(activeSubIndex + 1)} aria-label="Next superset exercise">›</button>
+          <button class="ss-arrow" onclick={() => subGoto(activeSubIndex + 1)} aria-label="Next superset exercise">›</button>
         </div>
       {/if}
 
@@ -860,8 +860,8 @@
                   type="text"
                   bind:value={editingNameValue}
                   use:focusOnMount
-                  on:blur={() => commitRename(week, day, ex.id)}
-                  on:keydown={e => {
+                  onblur={() => commitRename(week, day, ex.id)}
+                  onkeydown={e => {
                     if (e.key === 'Enter') (e.target as HTMLElement).blur();
                     if (e.key === 'Escape') { editingNameId = null; }
                   }}
@@ -874,7 +874,7 @@
                 {/if}
                 <button
                   class="ex-rename-btn"
-                  on:click={() => startRename(ex.id, ex.name)}
+                  onclick={() => startRename(ex.id, ex.name)}
                   aria-label="Rename exercise"
                   title="Rename exercise"
                 >✎</button>
@@ -882,13 +882,13 @@
               {#if !ex.conditioning}
                 {#if restEditId === ex.id}
                   <span class="ex-rest-edit">
-                    <button class="ex-rest-step" on:click|stopPropagation={() => adjustExRest(week, day, ex, -15)} aria-label="Decrease rest 15 seconds">−</button>
+                    <button class="ex-rest-step" onclick={(e) => { e.stopPropagation(); adjustExRest(week, day, ex, -15); }} aria-label="Decrease rest 15 seconds">−</button>
                     <span class="ex-rest-val">{ex.rest || 'none'}</span>
-                    <button class="ex-rest-step" on:click|stopPropagation={() => adjustExRest(week, day, ex, 15)} aria-label="Increase rest 15 seconds">＋</button>
-                    <button class="ex-rest-ok" on:click|stopPropagation={() => (restEditId = null)} aria-label="Done editing rest">✓</button>
+                    <button class="ex-rest-step" onclick={(e) => { e.stopPropagation(); adjustExRest(week, day, ex, 15); }} aria-label="Increase rest 15 seconds">＋</button>
+                    <button class="ex-rest-ok" onclick={(e) => { e.stopPropagation(); restEditId = null; }} aria-label="Done editing rest">✓</button>
                   </span>
                 {:else}
-                  <button class="ex-rest ex-rest-btn" on:click|stopPropagation={() => (restEditId = ex.id)} aria-label="Edit rest time">
+                  <button class="ex-rest ex-rest-btn" onclick={(e) => { e.stopPropagation(); restEditId = ex.id; }} aria-label="Edit rest time">
                     {ex.rest ? `Rest ${ex.rest}` : '+ Rest'}<span class="ex-rest-pencil">✎</span>
                   </button>
                 {/if}
@@ -919,18 +919,18 @@
                 <textarea
                   class="ex-note-input"
                   bind:value={localNote[ex.id]}
-                  on:blur={() => { commitNote(week, day, ex.id); noteEditingId = null; }}
+                  onblur={() => { commitNote(week, day, ex.id); noteEditingId = null; }}
                   use:focusEl
                   placeholder="Add a note…"
                   rows="2"
                 ></textarea>
               {:else if ex.note}
-                <button class="ex-note filled" on:click={() => startNote(ex.id)} aria-label="Edit note">
+                <button class="ex-note filled" onclick={() => startNote(ex.id)} aria-label="Edit note">
                   <span class="ex-note-text">{ex.note}</span>
                   <span class="ex-note-hint">✎</span>
                 </button>
               {:else}
-                <button class="ex-note empty" on:click={() => startNote(ex.id)} aria-label="Add note">+ Note</button>
+                <button class="ex-note empty" onclick={() => startNote(ex.id)} aria-label="Add note">+ Note</button>
               {/if}
             </div>
 
@@ -939,7 +939,7 @@
               <button
                 class="recovery-toggle"
                 class:recovery-done={ex.conditioningDone}
-                on:click={() => toggleConditioningDone(week, day, ex.id)}
+                onclick={() => toggleConditioningDone(week, day, ex.id)}
               >
                 {ex.conditioningDone ? '✓ Done' : 'Tap to mark done'}
               </button>
@@ -953,7 +953,7 @@
               <textarea
                 class="cond-textarea"
                 bind:value={localCondNote[ex.id]}
-                on:blur={() => commitCondNote(week, day, ex.id)}
+                onblur={() => commitCondNote(week, day, ex.id)}
                 placeholder="Log this session — e.g. 12 min @ 160W, RPE 7"
                 rows="4"
               ></textarea>
@@ -962,7 +962,7 @@
               <button
                 class="recovery-toggle"
                 class:recovery-done={ex.recoveryDone}
-                on:click={() => toggleRecoveryDone(week, day, ex.id)}
+                onclick={() => toggleRecoveryDone(week, day, ex.id)}
               >
                 {ex.recoveryDone ? '✓ Done' : 'Tap to mark done'}
               </button>
@@ -992,7 +992,7 @@
                 {/each}
               </div>
 
-              <button class="add-set-btn" on:click={() => handleAddSet(week, day, ex.id)}>
+              <button class="add-set-btn" onclick={() => handleAddSet(week, day, ex.id)}>
                 + Add set
               </button>
             {/if}
@@ -1037,13 +1037,13 @@
           <textarea
             class="day-note-area"
             bind:value={localDayNote}
-            on:blur={commitDayNote}
+            onblur={commitDayNote}
             placeholder="Session notes — how it felt, new PRs, observations…"
             rows="3"
           ></textarea>
-          <button class="day-note-close" on:click={() => { commitDayNote(); showDayNote = false; }}>✓ Done</button>
+          <button class="day-note-close" onclick={() => { commitDayNote(); showDayNote = false; }}>✓ Done</button>
         {:else}
-          <button class="day-note-toggle" on:click={openDayNote}>
+          <button class="day-note-toggle" onclick={openDayNote}>
             {localDayNote ? '📝 ' + localDayNote.slice(0, 48) + (localDayNote.length > 48 ? '…' : '') : '+ Session note'}
           </button>
         {/if}
@@ -1068,7 +1068,7 @@
   {#if $undoAction}
     <div class="undo-toast">
       <span class="undo-label">{$undoAction.label}</span>
-      <button class="undo-btn" on:click={execUndo}>Undo</button>
+      <button class="undo-btn" onclick={execUndo}>Undo</button>
     </div>
   {/if}
 
