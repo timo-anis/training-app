@@ -10,6 +10,8 @@
   import { supabase } from '../services/supabase';
   import CoachInviteSection from './CoachInviteSection.svelte';
   import { getPushState, enablePush, disablePush, type PushReason } from '../services/push';
+  import { biometricSupported, registerBiometric } from '../services/biometric';
+  import { lockEnabled, setLockEnabledForUser, readLockEnabled } from '../stores/app';
 
   const dispatch = createEventDispatcher<{ close: void }>();
 
@@ -61,6 +63,44 @@
     }
   }
   onMount(refreshPushState);
+
+  // ── Biometric app-open lock ──
+  const bioSupported = biometricSupported();
+  let bioBusy = false;
+  // Reflects the persisted per-user pref; kept in sync with the store.
+  $: bioOn = $lockEnabled;
+  onMount(() => {
+    const uid = $currentUser?.id;
+    // Seed the store's enabled flag from storage in case this sheet opens before boot seeded it.
+    if (uid && $lockEnabled !== readLockEnabled(uid)) {
+      setLockEnabledForUser(uid, readLockEnabled(uid));
+    }
+  });
+  async function toggleBioLock() {
+    const uid = $currentUser?.id;
+    if (!uid || bioBusy) return;
+    bioBusy = true;
+    try {
+      if (bioOn) {
+        setLockEnabledForUser(uid, false);
+        showToast('Face ID lock off', 'info');
+      } else {
+        const reason = await registerBiometric(uid, $currentUser?.email ?? 'Training App');
+        if (reason === 'ok') {
+          setLockEnabledForUser(uid, true);
+          showToast('Face ID lock on', 'success');
+        } else if (reason === 'cancelled') {
+          showToast('Cancelled', 'info');
+        } else if (reason === 'unsupported') {
+          showToast("Face ID isn't available on this device", 'error');
+        } else {
+          showToast('Could not set up Face ID lock', 'error');
+        }
+      }
+    } finally {
+      bioBusy = false;
+    }
+  }
 
   async function handlePasswordReset() {
     const email = $currentUser?.email;
@@ -316,6 +356,17 @@
         <span class="action-sub">{pushOn ? 'New messages will ping this device' : 'Get pinged when your coach messages you'}</span>
       </div>
       <span class="switch" class:on={pushOn}><span class="knob"></span></span>
+    </button>
+    {/if}
+
+    {#if bioSupported}
+    <button class="action-row" on:click={toggleBioLock} disabled={bioBusy} aria-pressed={bioOn}>
+      <span class="action-icon">🔒</span>
+      <div class="action-text">
+        <span class="action-label">{bioOn ? 'Face ID lock on' : 'Face ID lock'}</span>
+        <span class="action-sub">{bioOn ? 'Unlock with Face ID each time you open the app' : 'Require Face ID to open the app'}</span>
+      </div>
+      <span class="switch" class:on={bioOn}><span class="knob"></span></span>
     </button>
     {/if}
 

@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { onAuthChange } from './services/auth';
+  import { onAuthChange, signOut } from './services/auth';
   import { logCaughtError } from './services/errorTracker';
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding, appLocked, initLockForUser, resetLock, noteHidden, noteResumed, setLockEnabledForUser } from './stores/app';
   import { clearStoredNavSnapshot } from './stores/ui-state';
   import { displayName } from './stores/ui-state';
   import { getDisplayName } from './services/profile';
@@ -18,6 +18,7 @@
   import SearchOverlay from './components/SearchOverlay.svelte';
   import OnboardingOverlay from './components/OnboardingOverlay.svelte';
   import ToastNotification from './components/ToastNotification.svelte';
+  import BiometricLock from './components/BiometricLock.svelte';
 
   let unsubscribeAuth: (() => void) | null = null;
 
@@ -86,12 +87,15 @@
         // Show onboarding only for users with no training data yet
         const hasData = $appState.weeks.some(w => w.exercises.length > 0);
         showOnboarding = !hasData && checkOnboarding(state.user.id);
+        // App-open biometric lock: lock now iff the user enabled it (cold start).
+        initLockForUser(state.user.id);
       } else if (state.status === 'signed_out') {
         clearStoredNavSnapshot(); // next login always boots to today
         currentUser.set(null);
         displayName.set('');
         recoveryMode = false;
         clearRecoveryPending();
+        resetLock();
         bootStatus.set('idle');
       }
     });
@@ -109,7 +113,27 @@
       await bootForUser(user);
       const hasData = $appState.weeks.some(w => w.exercises.length > 0);
       showOnboarding = !hasData && checkOnboarding(user.id);
+      initLockForUser(user.id);
     }
+  }
+
+  // ── Biometric lock: re-lock after a long background, and password fallback ──
+  function onVisibility() {
+    if (document.visibilityState === 'hidden') noteHidden();
+    else noteResumed();
+  }
+  onMount(() => {
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  });
+
+  // "Use password instead": disable the lock for this user (so re-login isn't
+  // re-locked with a Face ID they can't use) and sign out to the password screen.
+  // Honest fallback — the app can never become un-openable.
+  async function handleLockFallback() {
+    const uid = $currentUser?.id;
+    if (uid) setLockEnabledForUser(uid, false);
+    await signOut();
   }
 
   onDestroy(() => {
@@ -139,7 +163,7 @@
 {:else if $bootStatus === 'loading'}
   <BootOverlay />
 {:else if $currentUser && $bootStatus === 'ready'}
-  <div class="app-shell">
+  <div class="app-shell" inert={$appLocked}>
 
     <!-- ── Scrollable content ── -->
     <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$hintsOpen || $recordsOpen || $recoveryOpen || $searchOpen || $accountOpen || $statsOpen}>
@@ -245,6 +269,10 @@
 
   {#if showOnboarding}
     <OnboardingOverlay on:done={dismissOnboarding} />
+  {/if}
+
+  {#if $appLocked}
+    <BiometricLock userId={$currentUser.id} onFallback={handleLockFallback} />
   {/if}
 
 {:else if $currentUser && $bootStatus === 'error'}

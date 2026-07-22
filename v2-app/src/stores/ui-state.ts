@@ -149,6 +149,67 @@ export const recordsOpen = writable<boolean>(false);
 export const recoveryOpen = writable<boolean>(false);
 export const statsOpen    = writable<boolean>(false);
 
+// ---- Biometric app-open lock ----
+import { initLock, reduceLock, unlockedModel, type LockModel } from '../lib/lock';
+import { clearCredentialId } from '../services/biometric';
+
+const LOCK_ENABLED_PREFIX = 'timo_biolock_enabled__';
+function lockEnabledKey(userId: string): string {
+  return `${LOCK_ENABLED_PREFIX}${userId}`;
+}
+/** Read the per-user lock preference from localStorage. */
+export function readLockEnabled(userId: string): boolean {
+  try {
+    return localStorage.getItem(lockEnabledKey(userId)) === '1';
+  } catch {
+    return false;
+  }
+}
+function writeLockEnabled(userId: string, on: boolean): void {
+  try {
+    if (on) localStorage.setItem(lockEnabledKey(userId), '1');
+    else localStorage.removeItem(lockEnabledKey(userId));
+  } catch { /* ignore */ }
+}
+
+/** Full lock state machine model (see lib/lock.ts). Starts fully open. */
+export const lockModel = writable<LockModel>(unlockedModel());
+/** True => the app must show the biometric lock screen. */
+export const appLocked = derived(lockModel, (m) => m.phase === 'locked');
+/** True => the lock feature is enabled for the current user. */
+export const lockEnabled = derived(lockModel, (m) => m.enabled);
+
+/** Boot the lock for a signed-in user: locks immediately iff the pref is on. */
+export function initLockForUser(userId: string): void {
+  lockModel.set(reduceLock(initLock(readLockEnabled(userId)), { t: 'boot' }));
+}
+/** Sign-out reset: never gate the auth screen. */
+export function resetLock(): void {
+  lockModel.set(unlockedModel());
+}
+/** Biometric verify succeeded — open the gate. */
+export function unlockOk(): void {
+  lockModel.update((m) => reduceLock(m, { t: 'unlock-ok' }));
+}
+/** Biometric verify failed/cancelled — stay locked, allow retry. */
+export function unlockFail(): void {
+  lockModel.update((m) => reduceLock(m, { t: 'unlock-fail' }));
+}
+/** App backgrounded. */
+export function noteHidden(now: number = Date.now()): void {
+  lockModel.update((m) => reduceLock(m, { t: 'hide', now }));
+}
+/** App foregrounded — re-locks if it was away longer than the threshold. */
+export function noteResumed(now: number = Date.now()): void {
+  lockModel.update((m) => reduceLock(m, { t: 'resume', now }));
+}
+/** Toggle the feature for a user. Turning off clears the stored credential handle. */
+export function setLockEnabledForUser(userId: string, on: boolean): void {
+  writeLockEnabled(userId, on);
+  if (!on) clearCredentialId(userId);
+  lockModel.update((m) => reduceLock(m, { t: 'set-enabled', enabled: on }));
+}
+
 // ---- Global undo ----
 export interface UndoAction { label: string; fn: () => void; }
 export const undoAction = writable<UndoAction | null>(null);
