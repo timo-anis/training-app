@@ -6,7 +6,7 @@
     findLastConditioningNote, toggleRecoveryDone, toggleConditioningDone, updateUI,
     addSet, deleteSet, insertSet, updateConditioningNote, markWorkoutComplete,
     renameExercise, updateDayNote, addExercise, deleteExercise, updateExerciseMeta,
-    pushUndo, execUndo, undoAction, dayHasActivity,
+    pushUndo, execUndo, undoAction,
   } from '../stores/app';
   import type { WorkoutBlock } from '../stores/app';
   import WmFooter from './WmFooter.svelte';
@@ -15,13 +15,14 @@
   import WmRestControls from './WmRestControls.svelte';
   import WmAddExercise from './WmAddExercise.svelte';
   import WmSetRow from './WmSetRow.svelte';
-  import type { DayOfWeek, WorkoutSet, Exercise, WorkoutDay } from '../types/workout';
-  import { DAY_ORDER } from '../types/workout';
-  import { searchExercises, normalizeExerciseName } from '../data/exercises';
+  import type { DayOfWeek, WorkoutSet, Exercise } from '../types/workout';
+  import { searchExercises } from '../data/exercises';
   import RestTimer from './RestTimer.svelte';
   import { nextSupersetIndex, firstUndoneIndex, clampBlockIndex } from '../lib/state-helpers';
   import { decodeRestBlob, restBlobUsable, encodeRestBlob } from '../lib/rest-persist';
-  import { formatElapsed, parseRestToSeconds, secsToRest, fmtVolume, dayVolume } from '../lib/workout-metrics';
+  import { formatElapsed, parseRestToSeconds, secsToRest, dayVolume } from '../lib/workout-metrics';
+  import { exDone } from '../lib/day-status';
+  import { isPersonalRecord, sessionStreak, prevSessionVolume, volumeDelta, bestSet, sessionPRs, nextPlannedSession } from '../lib/workout-summary';
 
   const DAY_SHORT: Record<string, string> = {
     Monday: 'Mon', Tuesday: 'Tue', Wednesday: 'Wed',
@@ -165,11 +166,7 @@
   }
 
   // ---- Exercise/block done helpers ----
-  function exDone(ex: import('../types/workout').Exercise): boolean {
-    if (ex.recovery) return ex.recoveryDone;
-    if (ex.conditioning) return ex.conditioningDone === true;
-    return ex.sets.length > 0 && ex.sets.every(s => s.done);
-  }
+  // exDone(ex) is imported from lib/day-status.ts (pure, unit-tested).
 
   const allDone = $derived(blocks.every(b => b.exercises.every(exDone)));
 
@@ -209,26 +206,7 @@
     try { if ('vibrate' in navigator) navigator.vibrate(pattern); } catch { /* ignore */ }
   }
 
-  // PR detection: returns true if current kg > all previous DONE sets for this exercise.
-  // Uses normalizeExerciseName so name variants map to the same canonical exercise.
-  function isPR(exName: string, currentKg: string): boolean {
-    const kg = parseFloat(currentKg.replace(',', '.'));
-    if (isNaN(kg) || kg <= 0) return false;
-    const canonical = normalizeExerciseName(exName);
-    let max = 0;
-    for (const wd of $appState.weeks) {
-      if (wd.week === $uiState.week && wd.day === $uiState.day) continue;
-      for (const ex of wd.exercises) {
-        if (normalizeExerciseName(ex.name) !== canonical) continue;
-        for (const s of ex.sets) {
-          if (!s.done) continue;  // only real logged sets count
-          const v = parseFloat(s.kg);
-          if (!isNaN(v) && v > max) max = v;
-        }
-      }
-    }
-    return max > 0 && kg > max;
-  }
+  // PR detection lives in lib/workout-summary.ts (isPersonalRecord — pure + tested).
 
   let prFlashExId = $state<string | null>(null);
   let prFlashTimer: ReturnType<typeof setTimeout> | null = null;
@@ -259,7 +237,7 @@
         label: `Set ${setIndex + 1} marked done`,
         fn: () => toggleSetDone(week, day, exId, setIndex),
       });
-      if (isPR(exName, kgVal)) {
+      if (isPersonalRecord($appState.weeks, $uiState.week, $uiState.day, exName, kgVal)) {
         prFlashExId = exId;
         if (prFlashTimer) clearTimeout(prFlashTimer);
         prFlashTimer = setTimeout(() => { prFlashExId = null; }, 3000);
@@ -335,111 +313,21 @@
   const summaryWeekDisplay = $derived($uiState.week - $weekOffset);
 
   // Streak: consecutive weeks (this week going back) with logged activity.
-  const summaryStreak = $derived((() => {
-    const active = new Set<number>();
-    for (const wd of $appState.weeks) if (dayHasActivity(wd)) active.add(wd.week);
-    active.add($uiState.week); // current session counts even before "completed" is set
-    let streak = 0;
-    let w = $uiState.week;
-    while (active.has(w)) { streak++; w--; }
-    return streak;
-  })());
+  const summaryStreak = $derived(sessionStreak($appState.weeks, $uiState.week));
 
   // Volume of the most recent prior session that had strength volume.
-  const summaryPrevVolume = $derived((() => {
-    if (!summaryDay) return null;
-    const curIdx = DAY_ORDER.indexOf($uiState.day);
-    let best: { week: number; dayIdx: number; vol: number } | null = null;
-    for (const wd of $appState.weeks) {
-      if (wd.week === $uiState.week && wd.day === $uiState.day) continue;
-      const dIdx = DAY_ORDER.indexOf(wd.day);
-      const isBefore = wd.week < $uiState.week || (wd.week === $uiState.week && dIdx < curIdx);
-      if (!isBefore) continue;
-      const vol = dayVolume(wd);
-      if (vol <= 0) continue;
-      const better = !best || wd.week > best.week || (wd.week === best.week && dIdx > best.dayIdx);
-      if (better) best = { week: wd.week, dayIdx: dIdx, vol };
-    }
-    return best ? best.vol : null;
-  })());
+  const summaryPrevVolume = $derived(prevSessionVolume($appState.weeks, $uiState.week, $uiState.day));
 
-  const summaryVolumeDelta = $derived((() => {
-    if (summaryPrevVolume === null || summaryPrevVolume <= 0) return null;
-    const abs = summaryVolume - summaryPrevVolume;
-    if (Math.round(abs) === 0) return null;
-    const pct = Math.round((abs / summaryPrevVolume) * 100);
-    const sign = abs >= 0 ? '+' : '-';
-    const dir: 'up' | 'down' = abs >= 0 ? 'up' : 'down';
-    return { pct, dir, label: `${sign}${fmtVolume(Math.abs(abs))}` };
-  })());
+  const summaryVolumeDelta = $derived(volumeDelta(summaryVolume, summaryPrevVolume));
 
   // Best (heaviest) done set of the session.
-  const summaryBestSet = $derived((() => {
-    if (!summaryDay) return null;
-    let best: { name: string; kg: number; reps: string } | null = null;
-    for (const ex of summaryDay.exercises) {
-      if (ex.recovery || ex.conditioning) continue;
-      for (const s of ex.sets) {
-        if (!s.done) continue;
-        const kg = parseFloat(s.kg);
-        if (isNaN(kg) || kg <= 0) continue;
-        const reps = parseInt(s.reps) || 0;
-        const bestReps = best ? (parseInt(best.reps) || 0) : -1;
-        if (!best || kg > best.kg || (kg === best.kg && reps > bestReps)) {
-          best = { name: ex.name, kg, reps: s.reps };
-        }
-      }
-    }
-    return best ? `${best.name} ${best.kg} × ${best.reps}` : null;
-  })());
+  const summaryBestSet = $derived(bestSet(summaryDay));
 
   // PRs hit this session: exercise whose top done kg beats its prior all-time max.
-  const summaryPRs = $derived((() => {
-    if (!summaryDay) return [] as { name: string; oldKg: number; newKg: number }[];
-    const out: { name: string; oldKg: number; newKg: number }[] = [];
-    for (const ex of summaryDay.exercises) {
-      if (ex.recovery || ex.conditioning) continue;
-      let newKg = 0;
-      for (const s of ex.sets) {
-        if (!s.done) continue;
-        const v = parseFloat(s.kg);
-        if (!isNaN(v) && v > newKg) newKg = v;
-      }
-      if (newKg <= 0) continue;
-      const exCanonical = normalizeExerciseName(ex.name);
-      let prevMax = 0;
-      for (const wd of $appState.weeks) {
-        if (wd.week === $uiState.week && wd.day === $uiState.day) continue;
-        for (const e of wd.exercises) {
-          if (normalizeExerciseName(e.name) !== exCanonical) continue;
-          for (const s of e.sets) {
-            if (!s.done) continue;  // only real logged sets count
-            const v = parseFloat(s.kg);
-            if (!isNaN(v) && v > prevMax) prevMax = v;
-          }
-        }
-      }
-      if (prevMax > 0 && newKg > prevMax) out.push({ name: ex.name, oldKg: prevMax, newKg });
-    }
-    return out;
-  })());
+  const summaryPRs = $derived(sessionPRs($appState.weeks, $uiState.week, $uiState.day));
 
   // Next planned session (soonest day after the current one that has exercises).
-  const summaryNext = $derived((() => {
-    const curIdx = DAY_ORDER.indexOf($uiState.day);
-    let best: { week: number; dayIdx: number; day: DayOfWeek; count: number } | null = null;
-    for (const wd of $appState.weeks) {
-      const dIdx = DAY_ORDER.indexOf(wd.day);
-      const isAfter = wd.week > $uiState.week || (wd.week === $uiState.week && dIdx > curIdx);
-      if (!isAfter) continue;
-      const count = wd.exercises.filter(e => !e.recovery).length;
-      if (count === 0) continue;
-      const earlier = !best || wd.week < best.week || (wd.week === best.week && dIdx < best.dayIdx);
-      if (earlier) best = { week: wd.week, dayIdx: dIdx, day: wd.day, count };
-    }
-    if (!best) return null;
-    return { day: best.day, count: best.count, nextWeek: best.week > $uiState.week };
-  })());
+  const summaryNext = $derived(nextPlannedSession($appState.weeks, $uiState.week, $uiState.day));
 
   // ---- Inline exercise rename ----
   let editingNameId = $state<string | null>(null);

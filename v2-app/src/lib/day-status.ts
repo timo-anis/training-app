@@ -3,7 +3,7 @@
  * Single source of truth: dayFullyDone() is used by BOTH the calendar and
  * the HeroCard day-rings so they always agree.
  */
-import type { WorkoutDay } from '../types/workout';
+import type { WorkoutDay, Exercise } from '../types/workout';
 
 export type DayStatus =
   | 'done' | 'partial' | 'active-recovery' | 'has-data'
@@ -66,4 +66,23 @@ export function computeDayStatus(workoutDay: WorkoutDay | undefined): DayStatus 
     case 'rest':     return 'rest';
     default:         return 'neutral';
   }
+}
+
+/**
+ * Whether a single exercise counts as "done" — the per-exercise predicate used
+ * throughout workout mode (block navigation, superset advance, summary rows).
+ * Extracted verbatim from WorkoutMode.svelte (P1-1 step 2, audit-first order per
+ * WORKFLOW §2: read-only helper extraction only — no runtime orchestration, no
+ * store/DOM/$state access). Behavior is byte-identical to the in-component
+ * original:
+ *   - recovery block:      its recoveryDone flag
+ *   - conditioning block:  conditioningDone === true
+ *   - strength exercise:   has at least one set AND every set is done
+ * Kept distinct from dayFullyDone (which folds a similar idea over a whole day
+ * with a slightly stricter recovery check) so prior behavior is preserved exactly.
+ */
+export function exDone(ex: Exercise): boolean {
+  if (ex.recovery) return ex.recoveryDone;
+  if (ex.conditioning) return ex.conditioningDone === true;
+  return ex.sets.length > 0 && ex.sets.every(s => s.done);
 }

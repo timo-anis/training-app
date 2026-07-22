@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { computeDayStatus } from '../lib/day-status';
+import { computeDayStatus, exDone } from '../lib/day-status';
 import { emptyDay, emptyExercise } from '../types/workout';
 import type { WorkoutDay, Exercise } from '../types/workout';
 
@@ -41,5 +41,26 @@ describe('computeDayStatus', () => {
     expect(computeDayStatus(day({ exercises: [], kind: 'rest' }))).toBe('rest');
     expect(computeDayStatus(day({ exercises: [], kind: 'recovery' }))).toBe('active-recovery');
     expect(computeDayStatus(day({ exercises: [], kind: 'workout' }))).toBe('neutral'); // 'workout' kind removed from UI; legacy data → neutral
+  });
+});
+
+describe('exDone', () => {
+  it('strength: done only when there is >=1 set and every set is done', () => {
+    expect(exDone(ex('a', [true, true]))).toBe(true);
+    expect(exDone(ex('a', [true, false]))).toBe(false);
+    expect(exDone(ex('a', [false]))).toBe(false);
+  });
+  it('strength with zero sets is NOT done', () => {
+    expect(exDone({ ...emptyExercise('a', 'a'), sets: [] })).toBe(false);
+  });
+  it('recovery block: follows recoveryDone flag', () => {
+    const base = { ...emptyExercise('r', 'Mobility'), recovery: true, sets: [] };
+    expect(exDone({ ...base, recoveryDone: true })).toBe(true);
+    expect(exDone({ ...base, recoveryDone: false })).toBe(false);
+  });
+  it('conditioning block: done only when conditioningDone === true', () => {
+    const base = { ...emptyExercise('c', 'Row'), conditioning: true, sets: [] };
+    expect(exDone({ ...base, conditioningDone: true })).toBe(true);
+    expect(exDone({ ...base, conditioningDone: false })).toBe(false);
   });
 });
