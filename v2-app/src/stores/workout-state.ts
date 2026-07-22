@@ -26,6 +26,7 @@ import {
   moveExerciseInState,
   buildWorkoutBlocks as _buildWorkoutBlocks,
 } from '../lib/state-helpers';
+import { sortByExerciseCode } from '../lib/exercise-sort';
 import { materializedDay } from '../lib/assignments';
 import {
   uiState, bootStatus, currentUser, updateUI, pushUndo,
@@ -278,18 +279,7 @@ export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
         conditioningNote: '',
       }));
       // Sort by code to guarantee A1 < A2 < B1 < B2 order regardless of source order
-      return [...mapped].sort((a, b) => {
-        const aC = a.code.match(/^([A-Z])(\d+)?$/);
-        const bC = b.code.match(/^([A-Z])(\d+)?$/);
-        if (a.recovery !== b.recovery) return a.recovery ? 1 : -1;
-        if (aC && bC) {
-          if (aC[1] !== bC[1]) return aC[1].localeCompare(bC[1]);
-          return (Number(aC[2]) || 0) - (Number(bC[2]) || 0);
-        }
-        if (aC && !bC) return -1;
-        if (!aC && bC) return 1;
-        return 0;
-      });
+      return sortByExerciseCode(mapped);
     })(),
   };
   updateState(() => ({ ...state, weeks: [...filtered, cloned] }));
@@ -311,18 +301,7 @@ export function copyDayFrom(srcWeek: number, srcDay: DayOfWeek, tgtWeek: number,
   }));
 
   // Preserve superset order: A1 < A2 < B1 < B2, recovery last
-  const sorted = [...cloned].sort((a, b) => {
-    const aC = a.code.match(/^([A-Z])(\d+)?$/);
-    const bC = b.code.match(/^([A-Z])(\d+)?$/);
-    if (a.recovery !== b.recovery) return a.recovery ? 1 : -1;
-    if (aC && bC) {
-      if (aC[1] !== bC[1]) return aC[1].localeCompare(bC[1]);
-      return (Number(aC[2]) || 0) - (Number(bC[2]) || 0);
-    }
-    if (aC && !bC) return -1;
-    if (!aC && bC) return 1;
-    return 0;
-  });
+  const sorted = sortByExerciseCode(cloned);
 
   const date = getDateForWeekDay(tgtWeek, tgtDay);
 
@@ -521,18 +500,7 @@ export function updateExerciseMeta(
           if (w.week !== week || w.day !== day) return w;
           return {
             ...w,
-            exercises: [...w.exercises].sort((a, b) => {
-              const aC = a.code.match(/^([A-Z])(\d+)?$/);
-              const bC = b.code.match(/^([A-Z])(\d+)?$/);
-              if (a.recovery !== b.recovery) return a.recovery ? 1 : -1;
-              if (aC && bC) {
-                if (aC[1] !== bC[1]) return aC[1].localeCompare(bC[1]);
-                return (Number(aC[2]) || 0) - (Number(bC[2]) || 0);
-              }
-              if (aC && !bC) return -1;
-              if (!aC && bC) return 1;
-              return 0;
-            }),
+            exercises: sortByExerciseCode(w.exercises),
           };
         }),
       };
