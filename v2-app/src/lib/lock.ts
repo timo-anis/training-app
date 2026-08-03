@@ -13,8 +13,13 @@
  * BIOMETRIC_LOCK_SPEC_2026-07-22.md.
  */
 
-/** Re-lock threshold: how long the app may sit backgrounded before it re-locks. */
-export const BG_RELOCK_MS = 2 * 60 * 1000; // ~2 min
+/**
+ * Grace window: how long the app may be away (backgrounded OR fully reloaded)
+ * before it re-locks. Used by both the soft resume path and the cold-boot path,
+ * so an iOS PWA that gets suspended-and-reloaded on an app-switch is treated the
+ * same as a page that merely lost visibility. ~15 min.
+ */
+export const BG_RELOCK_MS = 15 * 60 * 1000; // ~15 min
 
 export type LockPhase = 'locked' | 'unlocked';
 
@@ -28,7 +33,7 @@ export interface LockModel {
 }
 
 export type LockEvent =
-  | { t: 'boot' }                                    // cold start / fresh boot for a user
+  | { t: 'boot'; now?: number; lastActiveAt?: number | null; thresholdMs?: number } // cold start / fresh boot
   | { t: 'unlock-ok' }                               // biometric verify succeeded
   | { t: 'unlock-fail' }                             // verify failed/cancelled — stay locked, allow retry
   | { t: 'hide'; now: number }                       // app went to background
@@ -54,9 +59,19 @@ export function unlockedModel(): LockModel {
  */
 export function reduceLock(m: LockModel, e: LockEvent): LockModel {
   switch (e.t) {
-    case 'boot':
-      // Fresh boot: lock iff the feature is on. Clear any stale background marker.
-      return { enabled: m.enabled, phase: m.enabled ? 'locked' : 'unlocked', hiddenAt: null };
+    case 'boot': {
+      // Fresh boot (incl. an iOS PWA that was suspended and reloaded). If the
+      // feature is off, stay open. If it is on, honour a grace window: when we
+      // know how long ago the app was last active and that gap is within the
+      // threshold, start UNLOCKED — a quick trip to another app must not demand
+      // Face ID again. Otherwise lock. Always clears any stale background marker.
+      if (!m.enabled) return { enabled: false, phase: 'unlocked', hiddenAt: null };
+      const threshold = e.thresholdMs ?? BG_RELOCK_MS;
+      const elapsed =
+        e.now != null && e.lastActiveAt != null ? e.now - e.lastActiveAt : null;
+      const withinGrace = elapsed !== null && elapsed >= 0 && elapsed <= threshold;
+      return { enabled: true, phase: withinGrace ? 'unlocked' : 'locked', hiddenAt: null };
+    }
 
     case 'unlock-ok':
       // Successful biometric check opens the gate. hiddenAt is irrelevant now.

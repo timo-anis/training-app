@@ -172,6 +172,34 @@ function writeLockEnabled(userId: string, on: boolean): void {
   } catch { /* ignore */ }
 }
 
+// Per-user "last active" timestamp. Written when the app backgrounds or unlocks
+// so a cold boot (e.g. an iOS PWA that iOS suspended and reloaded on an
+// app-switch) can tell how long the user was really away and skip the Face ID
+// prompt inside the grace window. See lib/lock.ts BG_RELOCK_MS.
+const LOCK_LASTACTIVE_PREFIX = 'timo_biolock_lastactive__';
+function lastActiveKey(userId: string): string {
+  return `${LOCK_LASTACTIVE_PREFIX}${userId}`;
+}
+function readLastActive(userId: string): number | null {
+  try {
+    const raw = localStorage.getItem(lastActiveKey(userId));
+    if (raw === null) return null;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : null;
+  } catch {
+    return null;
+  }
+}
+function writeLastActive(userId: string, now: number): void {
+  try {
+    localStorage.setItem(lastActiveKey(userId), String(now));
+  } catch { /* ignore */ }
+}
+
+// The user the lock model currently belongs to, so background/unlock events know
+// whose timestamp to stamp. Set on boot, cleared on sign-out.
+let lockUserId: string | null = null;
+
 /** Full lock state machine model (see lib/lock.ts). Starts fully open. */
 export const lockModel = writable<LockModel>(unlockedModel());
 /** True => the app must show the biometric lock screen. */
@@ -180,15 +208,21 @@ export const appLocked = derived(lockModel, (m) => m.phase === 'locked');
 export const lockEnabled = derived(lockModel, (m) => m.enabled);
 
 /** Boot the lock for a signed-in user: locks immediately iff the pref is on. */
-export function initLockForUser(userId: string): void {
-  lockModel.set(reduceLock(initLock(readLockEnabled(userId)), { t: 'boot' }));
+export function initLockForUser(userId: string, now: number = Date.now()): void {
+  lockUserId = userId;
+  const enabled = readLockEnabled(userId);
+  lockModel.set(
+    reduceLock(initLock(enabled), { t: 'boot', now, lastActiveAt: readLastActive(userId) })
+  );
 }
 /** Sign-out reset: never gate the auth screen. */
 export function resetLock(): void {
+  lockUserId = null;
   lockModel.set(unlockedModel());
 }
 /** Biometric verify succeeded — open the gate. */
-export function unlockOk(): void {
+export function unlockOk(now: number = Date.now()): void {
+  if (lockUserId) writeLastActive(lockUserId, now);
   lockModel.update((m) => reduceLock(m, { t: 'unlock-ok' }));
 }
 /** Biometric verify failed/cancelled — stay locked, allow retry. */
@@ -197,6 +231,7 @@ export function unlockFail(): void {
 }
 /** App backgrounded. */
 export function noteHidden(now: number = Date.now()): void {
+  if (lockUserId) writeLastActive(lockUserId, now);
   lockModel.update((m) => reduceLock(m, { t: 'hide', now }));
 }
 /** App foregrounded — re-locks if it was away longer than the threshold. */

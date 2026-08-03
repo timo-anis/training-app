@@ -4,7 +4,7 @@
  * Covers the spec's required transitions:
  *   locked -> unlock ok -> unlocked
  *   unlock fail -> stays locked (retry)
- *   background > 2 min -> re-lock on resume; <= 2 min -> stays unlocked
+ *   background/reload > grace window (BG_RELOCK_MS) -> re-lock; within window -> stays unlocked
  *   toggle off -> unlocks; toggle on mid-session -> does NOT lock immediately
  */
 import { describe, it, expect } from 'vitest';
@@ -34,6 +34,49 @@ describe('boot', () => {
   it('leaves a disabled user unlocked', () => {
     expect(reduceLock(initLock(false), { t: 'boot' }).phase).toBe('unlocked');
   });
+
+  // Cold-boot grace: an iOS PWA that iOS suspended and reloaded on a quick
+  // app-switch must NOT demand Face ID again if the trip was within the window.
+  it('starts UNLOCKED when the last-active timestamp is within the grace window', () => {
+    const now = 10_000_000;
+    const m = reduceLock(initLock(true), {
+      t: 'boot', now, lastActiveAt: now - (BG_RELOCK_MS - 1),
+    });
+    expect(m).toEqual({ enabled: true, phase: 'unlocked', hiddenAt: null });
+  });
+  it('starts UNLOCKED at exactly the grace boundary', () => {
+    const now = 10_000_000;
+    const m = reduceLock(initLock(true), { t: 'boot', now, lastActiveAt: now - BG_RELOCK_MS });
+    expect(m.phase).toBe('unlocked');
+  });
+  it('starts LOCKED when the last-active timestamp is older than the grace window', () => {
+    const now = 10_000_000;
+    const m = reduceLock(initLock(true), {
+      t: 'boot', now, lastActiveAt: now - (BG_RELOCK_MS + 1),
+    });
+    expect(m.phase).toBe('locked');
+  });
+  it('starts LOCKED when there is no last-active timestamp (first ever boot)', () => {
+    const m = reduceLock(initLock(true), { t: 'boot', now: 10_000_000, lastActiveAt: null });
+    expect(m.phase).toBe('locked');
+  });
+  it('ignores a future last-active timestamp (clock skew) and locks', () => {
+    const now = 10_000_000;
+    const m = reduceLock(initLock(true), { t: 'boot', now, lastActiveAt: now + 60_000 });
+    expect(m.phase).toBe('locked');
+  });
+  it('a disabled user boots unlocked even within the grace window', () => {
+    const now = 10_000_000;
+    const m = reduceLock(initLock(false), { t: 'boot', now, lastActiveAt: now - 1 });
+    expect(m.phase).toBe('unlocked');
+  });
+  it('honours a custom boot threshold', () => {
+    const now = 10_000_000;
+    const within = reduceLock(initLock(true), { t: 'boot', now, lastActiveAt: now - 50, thresholdMs: 100 });
+    const beyond = reduceLock(initLock(true), { t: 'boot', now, lastActiveAt: now - 200, thresholdMs: 100 });
+    expect(within.phase).toBe('unlocked');
+    expect(beyond.phase).toBe('locked');
+  });
 });
 
 describe('unlock success / failure', () => {
@@ -56,7 +99,7 @@ describe('unlock success / failure', () => {
 });
 
 describe('background / resume re-lock', () => {
-  it('re-locks when away longer than the 2-min threshold', () => {
+  it('re-locks when away longer than the grace threshold', () => {
     let m = reduceLock(initLock(true), { t: 'unlock-ok' }); // unlocked, enabled
     m = reduceLock(m, { t: 'hide', now: 0 });
     m = reduceLock(m, { t: 'resume', now: BG_RELOCK_MS + 1 });
