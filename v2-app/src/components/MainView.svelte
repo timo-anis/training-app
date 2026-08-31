@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, copyDayOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites, getMyCoach } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
@@ -14,7 +14,6 @@
   import ExerciseCard from './ExerciseCard.svelte';
   import CoachNote from './CoachNote.svelte';
   import AddExercise from './AddExercise.svelte';
-  import CopyDaySheet from './CopyDaySheet.svelte';
 
 
   // Pending coach invite -> show a marker on the account icon so the trainee
@@ -177,7 +176,6 @@
   function openTraineeChat() { if (traineeChatState === 'open') { traineeChatState = 'mini'; } else { traineeChatState = 'open'; } }
   function minimiseTraineeChat() { traineeChatState = 'mini'; }
   function closeTraineeChat() { traineeChatState = 'hidden'; }
-  let copySheetOpen = false;
   let exercisesExpanded = false;
 
   // Auto-expand exercise list when there's already progress today
@@ -428,7 +426,7 @@
             + Add first exercise
           </button>
         {/if}
-        <button class="copy-day-btn" on:click|stopPropagation={() => copySheetOpen = true}>
+        <button class="copy-day-btn" on:click|stopPropagation={() => copyDayOpen.set(true)}>
           Copy from another day →
         </button>
       </div>
@@ -480,14 +478,6 @@
       on:keydown={(e) => e.key === 'Enter' && closeTraineeChat()}
       aria-label="Dismiss">✕</span>
   </button>
-{/if}
-
-{#if copySheetOpen}
-  <CopyDaySheet
-    week={$uiState.week}
-    day={$uiState.day}
-    on:close={() => copySheetOpen = false}
-  />
 {/if}
 
 <style>

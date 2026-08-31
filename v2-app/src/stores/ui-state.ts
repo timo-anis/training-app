@@ -148,6 +148,10 @@ export const recordsOpen = writable<boolean>(false);
 /** Recovery status sheet open state — read by App.svelte to render outside scroll-content. */
 export const recoveryOpen = writable<boolean>(false);
 export const statsOpen    = writable<boolean>(false);
+/** Copy-from-another-day sheet open state — read by App.svelte to render outside
+ *  scroll-content (a position:fixed sheet trapped inside a -webkit-overflow-scrolling
+ *  container is non-interactive on iOS Safari: list won't scroll, rows won't tap). */
+export const copyDayOpen = writable<boolean>(false);
 
 // ---- Biometric app-open lock ----
 import { initLock, reduceLock, unlockedModel, type LockModel } from '../lib/lock';

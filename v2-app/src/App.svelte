@@ -3,11 +3,12 @@
   import { onAuthChange, signOut } from './services/auth';
   import { logCaughtError } from './services/errorTracker';
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
-  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding, appLocked, initLockForUser, resetLock, noteHidden, noteResumed, setLockEnabledForUser } from './stores/app';
+  import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, copyDayOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding, appLocked, initLockForUser, resetLock, noteHidden, noteResumed, setLockEnabledForUser } from './stores/app';
   import { clearStoredNavSnapshot } from './stores/ui-state';
   import { displayName } from './stores/ui-state';
   import { getDisplayName } from './services/profile';
   import RecordsSheet from './components/RecordsSheet.svelte';
+  import CopyDaySheet from './components/CopyDaySheet.svelte';
   import StatsSheet   from './components/StatsSheet.svelte';
   import RecoverySheet from './components/RecoverySheet.svelte';
   import AccountSheet from './components/AccountSheet.svelte';
@@ -166,7 +167,7 @@
   <div class="app-shell" inert={$appLocked}>
 
     <!-- ── Scrollable content ── -->
-    <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$hintsOpen || $recordsOpen || $recoveryOpen || $searchOpen || $accountOpen || $statsOpen}>
+    <div class="scroll-content" class:workout-blur={$uiState.workoutMode} class:overlay-blur={$hintsOpen || $recordsOpen || $recoveryOpen || $searchOpen || $accountOpen || $statsOpen || $copyDayOpen}>
       <MainView />
     </div>
 
@@ -258,6 +259,14 @@
 
   {#if $searchOpen}
     <SearchOverlay />
+  {/if}
+
+  {#if $copyDayOpen}
+    <CopyDaySheet
+      week={$uiState.week}
+      day={$uiState.day}
+      on:close={() => copyDayOpen.set(false)}
+    />
   {/if}
 
   {#if $undoAction && !$uiState.workoutMode}
