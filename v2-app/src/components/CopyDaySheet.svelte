@@ -14,12 +14,26 @@
     srcWeek: number;
     srcDay: DayOfWeek;
     label: string;
+    dateLabel: string;
     count: number;
     names: string[];
+    haystack: string;
   }
 
   let selected: Option | null = null;
+  let query = '';
 
+  /** "15 Feb 2026" — empty string for a missing/invalid date. */
+  function fmtDate(iso: string): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  // Every PAST day that has exercises — no cap, so the full training history is
+  // reachable (older weeks used to fall off a 30-item slice). The list scrolls;
+  // the search box below narrows it by week number, weekday, month, or exercise.
   $: options = (() => {
     const wo = $weekOffset;
     const result: Option[] = [];
@@ -28,21 +42,27 @@
       const isFuture = wd.week > week ||
         (wd.week === week && DAY_ORDER.indexOf(wd.day) >= DAY_ORDER.indexOf(day));
       if (isFuture) continue;
+      const label = `Week ${wd.week - wo} — ${wd.day}`;
+      const dateLabel = fmtDate(wd.date);
+      const names = wd.exercises.map(e => e.name);
       result.push({
         srcWeek: wd.week,
         srcDay: wd.day,
-        label: `Week ${wd.week - wo} — ${wd.day}`,
+        label,
+        dateLabel,
         count: wd.exercises.length,
-        names: wd.exercises.map(e => e.name),
+        names,
+        haystack: `${label} ${dateLabel} ${names.join(' ')}`.toLowerCase(),
       });
     }
-    return result
-      .sort((a, b) => {
-        if (b.srcWeek !== a.srcWeek) return b.srcWeek - a.srcWeek;
-        return DAY_ORDER.indexOf(b.srcDay) - DAY_ORDER.indexOf(a.srcDay);
-      })
-      .slice(0, 30);
+    return result.sort((a, b) => {
+      if (b.srcWeek !== a.srcWeek) return b.srcWeek - a.srcWeek;
+      return DAY_ORDER.indexOf(b.srcDay) - DAY_ORDER.indexOf(a.srcDay);
+    });
   })();
+
+  $: q = query.trim().toLowerCase();
+  $: filtered = q ? options.filter(o => o.haystack.includes(q)) : options;
 
   function confirm() {
     if (!selected) return;
@@ -72,26 +92,42 @@
     {#if options.length === 0}
       <div class="empty-msg">No past days with exercises found.</div>
     {:else}
-      <div class="list" role="listbox" aria-label="Select a day to copy">
-        {#each options as opt}
-          <!-- svelte-ignore a11y-click-events-have-key-events -->
-          <div
-            class="item"
-            class:selected={selected?.srcWeek === opt.srcWeek && selected?.srcDay === opt.srcDay}
-            on:click={() => selected = opt}
-            role="option"
-            aria-selected={selected?.srcWeek === opt.srcWeek && selected?.srcDay === opt.srcDay}
-            tabindex="0"
-            on:keydown={(e) => e.key === 'Enter' && (selected = opt)}
-          >
-            <div class="item-main">
-              <span class="item-label">{opt.label}</span>
-              <span class="item-names">{opt.names.slice(0, 3).join(' · ')}{opt.names.length > 3 ? ` +${opt.names.length - 3}` : ''}</span>
-            </div>
-            <span class="item-count">{opt.count}</span>
-          </div>
-        {/each}
+      <div class="search-row">
+        <input
+          class="search-input"
+          type="search"
+          bind:value={query}
+          placeholder="Search week, day, month or exercise…"
+          aria-label="Search days to copy"
+          autocomplete="off"
+          autocorrect="off"
+          spellcheck="false"
+        />
       </div>
+      {#if filtered.length === 0}
+        <div class="empty-msg">No days match “{query.trim()}”.</div>
+      {:else}
+        <div class="list" role="listbox" aria-label="Select a day to copy">
+          {#each filtered as opt (opt.srcWeek + '-' + opt.srcDay)}
+            <!-- svelte-ignore a11y-click-events-have-key-events -->
+            <div
+              class="item"
+              class:selected={selected?.srcWeek === opt.srcWeek && selected?.srcDay === opt.srcDay}
+              on:click={() => selected = opt}
+              role="option"
+              aria-selected={selected?.srcWeek === opt.srcWeek && selected?.srcDay === opt.srcDay}
+              tabindex="0"
+              on:keydown={(e) => e.key === 'Enter' && (selected = opt)}
+            >
+              <div class="item-main">
+                <span class="item-label">{opt.label}{#if opt.dateLabel}<span class="item-date"> · {opt.dateLabel}</span>{/if}</span>
+                <span class="item-names">{opt.names.slice(0, 3).join(' · ')}{opt.names.length > 3 ? ` +${opt.names.length - 3}` : ''}</span>
+              </div>
+              <span class="item-count">{opt.count}</span>
+            </div>
+          {/each}
+        </div>
+      {/if}
     {/if}
 
     <div class="sheet-footer">
@@ -184,11 +220,49 @@
 
   .close-btn:active { background: rgba(var(--c-fg), 0.08); }
 
+  .search-row {
+    padding: 10px 14px 4px;
+    flex-shrink: 0;
+  }
+
+  .search-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 11px 13px;
+    border-radius: 11px;
+    border: 1px solid rgba(var(--c-fg), 0.12);
+    background: rgba(var(--c-fg), 0.05);
+    color: rgba(var(--c-fg), 0.92);
+    font-size: 16px; /* >=16px: prevents iOS focus auto-zoom */
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: transparent;
+    transition: border-color 0.12s, background 0.12s;
+  }
+
+  .search-input::placeholder {
+    color: rgba(var(--c-fg), 0.32);
+    font-weight: 500;
+  }
+
+  .search-input:focus {
+    outline: none;
+    border-color: rgba(var(--c-accent), 0.45);
+    background: rgba(var(--c-accent), 0.06);
+  }
+
   .list {
     overflow-y: auto;
     flex: 1 1 auto;
     padding: 8px 12px;
     -webkit-overflow-scrolling: touch;
+  }
+
+  .item-date {
+    font-weight: 600;
+    color: rgba(var(--c-fg), 0.38);
   }
 
   .item {
