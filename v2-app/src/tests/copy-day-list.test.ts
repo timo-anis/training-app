@@ -118,6 +118,15 @@ describe('CopyDaySheet week accordion', () => {
     expect(screen.getByRole('button', { name: /copy \d+ exercise/i })).toBeEnabled();
   });
 
+  it('tapping a header while searching does not leave it open after clearing', async () => {
+    render(CopyDaySheet, { props });
+    const box = screen.getByRole('searchbox');
+    await fireEvent.input(box, { target: { value: 'feb' } });   // weeks 5-8 force-open
+    await fireEvent.click(screen.getByText('Week 5'));           // tap a header mid-search
+    await fireEvent.input(box, { target: { value: '' } });       // clear the search
+    expect(screen.queryAllByRole('option').length).toBe(0);      // back to fully collapsed
+  });
+
   it('shows a no-match message when nothing matches', async () => {
     render(CopyDaySheet, { props });
     await fireEvent.input(screen.getByRole('searchbox'), { target: { value: 'zzzznope' } });

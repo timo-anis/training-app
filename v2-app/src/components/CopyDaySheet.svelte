@@ -116,6 +116,9 @@
     : groups;
 
   function toggle(w: number) {
+    // While searching every shown week is force-open, so a header tap must not
+    // quietly flip the remembered expand state (it would surface after clearing).
+    if (searching) return;
     expanded = { ...expanded, [w]: !expanded[w] };
   }
 
