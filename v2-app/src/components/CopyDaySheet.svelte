@@ -13,15 +13,25 @@
   interface Option {
     srcWeek: number;
     srcDay: DayOfWeek;
-    label: string;
+    dayLabel: string;
     dateLabel: string;
+    dateISO: string;
     count: number;
     names: string[];
     haystack: string;
   }
 
+  interface WeekGroup {
+    week: number;        // absolute week number
+    displayWeek: number; // week as shown to the user
+    dateRange: string;
+    days: Option[];
+  }
+
   let selected: Option | null = null;
   let query = '';
+  // Which weeks are expanded. Default: all collapsed (one row per week).
+  let expanded: Record<number, boolean> = {};
 
   /** "15 Feb 2026" — empty string for a missing/invalid date. */
   function fmtDate(iso: string): string {
@@ -31,9 +41,24 @@
     return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
-  // Every PAST day that has exercises — no cap, so the full training history is
-  // reachable (older weeks used to fall off a 30-item slice). The list scrolls;
-  // the search box below narrows it by week number, weekday, month, or exercise.
+  /** "24 Aug" — day + short month, no year, for compact week ranges. */
+  function fmtShort(iso: string): string {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+  }
+
+  function rangeLabel(days: Option[]): string {
+    const iso = days.map(d => d.dateISO).filter(Boolean).sort();
+    if (iso.length === 0) return '';
+    const lo = fmtShort(iso[0]);
+    const hi = fmtShort(iso[iso.length - 1]);
+    return lo === hi ? lo : `${lo} – ${hi}`;
+  }
+
+  // Every PAST day that has exercises (no cap), grouped by week. The current /
+  // future days and empty days are excluded, matching the previous behaviour.
   $: options = (() => {
     const wo = $weekOffset;
     const result: Option[] = [];
@@ -42,27 +67,57 @@
       const isFuture = wd.week > week ||
         (wd.week === week && DAY_ORDER.indexOf(wd.day) >= DAY_ORDER.indexOf(day));
       if (isFuture) continue;
-      const label = `Week ${wd.week - wo} — ${wd.day}`;
       const dateLabel = fmtDate(wd.date);
       const names = wd.exercises.map(e => e.name);
       result.push({
         srcWeek: wd.week,
         srcDay: wd.day,
-        label,
+        dayLabel: wd.day,
         dateLabel,
+        dateISO: wd.date ?? '',
         count: wd.exercises.length,
         names,
-        haystack: `${label} ${dateLabel} ${names.join(' ')}`.toLowerCase(),
+        haystack: `week ${wd.week - wo} ${wd.day} ${dateLabel} ${names.join(' ')}`.toLowerCase(),
       });
     }
-    return result.sort((a, b) => {
-      if (b.srcWeek !== a.srcWeek) return b.srcWeek - a.srcWeek;
-      return DAY_ORDER.indexOf(b.srcDay) - DAY_ORDER.indexOf(a.srcDay);
-    });
+    return result;
+  })();
+
+  // Group into weeks (newest first); days inside a week run Monday → Sunday.
+  $: groups = (() => {
+    const wo = $weekOffset;
+    const map = new Map<number, WeekGroup>();
+    for (const o of options) {
+      let g = map.get(o.srcWeek);
+      if (!g) {
+        g = { week: o.srcWeek, displayWeek: o.srcWeek - wo, dateRange: '', days: [] };
+        map.set(o.srcWeek, g);
+      }
+      g.days.push(o);
+    }
+    const arr = [...map.values()];
+    for (const g of arr) {
+      g.days.sort((a, b) => DAY_ORDER.indexOf(a.srcDay) - DAY_ORDER.indexOf(b.srcDay));
+      g.dateRange = rangeLabel(g.days);
+    }
+    arr.sort((a, b) => b.week - a.week);
+    return arr;
   })();
 
   $: q = query.trim().toLowerCase();
-  $: filtered = q ? options.filter(o => o.haystack.includes(q)) : options;
+  $: searching = q.length > 0;
+
+  // While searching: keep only weeks with a matching day, and only the matching
+  // days; every shown week is force-expanded so results are visible immediately.
+  $: viewGroups = searching
+    ? groups
+        .map(g => ({ ...g, days: g.days.filter(d => d.haystack.includes(q)) }))
+        .filter(g => g.days.length > 0)
+    : groups;
+
+  function toggle(w: number) {
+    expanded = { ...expanded, [w]: !expanded[w] };
+  }
 
   function confirm() {
     if (!selected) return;
@@ -104,26 +159,50 @@
           spellcheck="false"
         />
       </div>
-      {#if filtered.length === 0}
+      {#if viewGroups.length === 0}
         <div class="empty-msg">No days match “{query.trim()}”.</div>
       {:else}
         <div class="list" role="listbox" aria-label="Select a day to copy">
-          {#each filtered as opt (opt.srcWeek + '-' + opt.srcDay)}
-            <!-- svelte-ignore a11y-click-events-have-key-events -->
-            <div
-              class="item"
-              class:selected={selected?.srcWeek === opt.srcWeek && selected?.srcDay === opt.srcDay}
-              on:click={() => selected = opt}
-              role="option"
-              aria-selected={selected?.srcWeek === opt.srcWeek && selected?.srcDay === opt.srcDay}
-              tabindex="0"
-              on:keydown={(e) => e.key === 'Enter' && (selected = opt)}
-            >
-              <div class="item-main">
-                <span class="item-label">{opt.label}{#if opt.dateLabel}<span class="item-date"> · {opt.dateLabel}</span>{/if}</span>
-                <span class="item-names">{opt.names.slice(0, 3).join(' · ')}{opt.names.length > 3 ? ` +${opt.names.length - 3}` : ''}</span>
-              </div>
-              <span class="item-count">{opt.count}</span>
+          {#each viewGroups as g (g.week)}
+            {@const open = searching || expanded[g.week]}
+            <div class="week-group">
+              <button
+                type="button"
+                class="week-head"
+                class:open
+                on:click={() => toggle(g.week)}
+                aria-expanded={open}
+              >
+                <span class="chevron" class:open aria-hidden="true">›</span>
+                <span class="week-head-main">
+                  <span class="week-title">Week {g.displayWeek}</span>
+                  {#if g.dateRange}<span class="week-range">{g.dateRange}</span>{/if}
+                </span>
+                <span class="week-count">{g.days.length}</span>
+              </button>
+
+              {#if open}
+                <div class="days">
+                  {#each g.days as opt (opt.srcWeek + '-' + opt.srcDay)}
+                    <!-- svelte-ignore a11y-click-events-have-key-events -->
+                    <div
+                      class="item"
+                      class:selected={selected?.srcWeek === opt.srcWeek && selected?.srcDay === opt.srcDay}
+                      on:click={() => selected = opt}
+                      role="option"
+                      aria-selected={selected?.srcWeek === opt.srcWeek && selected?.srcDay === opt.srcDay}
+                      tabindex="0"
+                      on:keydown={(e) => e.key === 'Enter' && (selected = opt)}
+                    >
+                      <div class="item-main">
+                        <span class="item-label">{opt.dayLabel}{#if opt.dateLabel}<span class="item-date">· {opt.dateLabel}</span>{/if}</span>
+                        <span class="item-names">{opt.names.slice(0, 3).join(' · ')}{opt.names.length > 3 ? ` +${opt.names.length - 3}` : ''}</span>
+                      </div>
+                      <span class="item-count">{opt.count}</span>
+                    </div>
+                  {/each}
+                </div>
+              {/if}
             </div>
           {/each}
         </div>
@@ -260,9 +339,84 @@
     -webkit-overflow-scrolling: touch;
   }
 
-  .item-date {
+  /* ── Week accordion header ── */
+  .week-group {
+    margin-bottom: 2px;
+  }
+
+  .week-head {
+    width: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 12px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+
+  .week-head:active { background: rgba(var(--c-fg), 0.06); }
+  .week-head.open { background: rgba(var(--c-fg), 0.04); }
+
+  .chevron {
+    flex-shrink: 0;
+    width: 16px;
+    text-align: center;
+    font-size: 18px;
+    line-height: 1;
+    font-weight: 700;
+    color: rgba(var(--c-fg), 0.45);
+    transform: rotate(0deg);
+    transition: transform 0.16s ease, color 0.12s;
+  }
+
+  .chevron.open {
+    transform: rotate(90deg);
+    color: var(--c-accent-solid);
+  }
+
+  .week-head-main {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .week-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(var(--c-fg), 0.92);
+    letter-spacing: -0.01em;
+  }
+
+  .week-range {
+    font-size: 12px;
     font-weight: 600;
     color: rgba(var(--c-fg), 0.38);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .week-count {
+    font-size: 12px;
+    font-weight: 700;
+    color: rgba(var(--c-fg), 0.30);
+    background: rgba(var(--c-fg), 0.06);
+    border: 1px solid rgba(var(--c-fg), 0.08);
+    border-radius: 999px;
+    padding: 2px 9px;
+    flex-shrink: 0;
+  }
+
+  .days {
+    padding: 2px 0 6px 10px;
   }
 
   .item {
@@ -300,6 +454,12 @@
     font-weight: 700;
     color: rgba(var(--c-fg), 0.92);
     letter-spacing: -0.01em;
+  }
+
+  .item-date {
+    margin-left: 5px;
+    font-weight: 600;
+    color: rgba(var(--c-fg), 0.38);
   }
 
   .item.selected .item-label {
