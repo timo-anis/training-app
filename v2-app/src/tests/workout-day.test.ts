@@ -73,9 +73,9 @@ describe('workout-day pure transitions', () => {
     expect(moved).toMatchObject({ workoutWeek: 10, workoutDay: 'Friday', workoutStartTime: 1 });
   });
 
-  it('exit clears the session and the pin', () => {
-    const next = exitWorkoutUI(ui({ workoutActive: true, workoutMode: true, workoutWeek: 10, workoutDay: 'Friday', workoutStartTime: 5, activeExerciseIndex: 2 }));
-    expect(next).toMatchObject({ workoutActive: false, workoutMode: false, workoutWeek: null, workoutDay: null, workoutStartTime: null, activeExerciseIndex: 0 });
+  it('exit clears the session, the pin and any running rest', () => {
+    const next = exitWorkoutUI(ui({ workoutActive: true, workoutMode: true, workoutWeek: 10, workoutDay: 'Friday', workoutStartTime: 5, activeExerciseIndex: 2, restStartTime: 7, restTotal: 90 }));
+    expect(next).toMatchObject({ workoutActive: false, workoutMode: false, workoutWeek: null, workoutDay: null, workoutStartTime: null, activeExerciseIndex: 0, restStartTime: null, restTotal: null });
   });
 
   it('does not mutate its input', () => {

@@ -66,3 +66,18 @@ export function dayVolume(wd: WorkoutDay): number {
   }
   return v;
 }
+
+/**
+ * Seconds left on a running rest timer (0 once expired), or null when no rest
+ * is running (none set, or set-but-not-started "pending" rest).
+ * Used to show the rest countdown outside workout mode.
+ */
+export function restRemainingSeconds(
+  restStartTime: number | null,
+  restTotal: number | null,
+  now: number,
+): number | null {
+  if (restStartTime === null || restTotal === null || restTotal <= 0) return null;
+  const left = restTotal - Math.floor((now - restStartTime) / 1000);
+  return left > 0 ? left : 0;
+}

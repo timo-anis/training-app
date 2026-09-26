@@ -15,7 +15,7 @@ import type { DayOfWeek, UIState } from '../types/workout';
 
 type WorkoutUI = Pick<UIState,
   'week' | 'day' | 'workoutActive' | 'workoutMode' | 'activeExerciseIndex' |
-  'workoutStartTime' | 'workoutWeek' | 'workoutDay'>;
+  'workoutStartTime' | 'workoutWeek' | 'workoutDay' | 'restStartTime' | 'restTotal'>;
 
 /** The day the workout overlay must render: the pinned day, else the viewed day. */
 export function workoutDayOf(ui: Pick<UIState, 'week' | 'day' | 'workoutWeek' | 'workoutDay'>): { week: number; day: DayOfWeek } {
@@ -66,7 +66,11 @@ export function openWorkoutUI<T extends WorkoutUI>(ui: T, now: number): T {
   };
 }
 
-/** End the session: clear the timer, the overlay and the pin. */
+/**
+ * End the session: clear the timer, the overlay, the pin and any rest timer —
+ * a rest left running when the session is stopped from the bar must not show
+ * up as "Rest done" on the next session.
+ */
 export function exitWorkoutUI<T extends WorkoutUI>(ui: T): T {
   return {
     ...ui,
@@ -76,5 +80,7 @@ export function exitWorkoutUI<T extends WorkoutUI>(ui: T): T {
     workoutStartTime: null,
     workoutWeek: null,
     workoutDay: null,
+    restStartTime: null,
+    restTotal: null,
   };
 }

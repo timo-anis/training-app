@@ -6,6 +6,7 @@
   import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, copyDayOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding, appLocked, initLockForUser, resetLock, noteHidden, noteResumed, setLockEnabledForUser } from './stores/app';
   import { clearStoredNavSnapshot } from './stores/ui-state';
   import { shouldBootOnSignIn } from './lib/auth-boot';
+  import { restRemainingSeconds } from './lib/workout-metrics';
   import { displayName } from './stores/ui-state';
   import { getDisplayName } from './services/profile';
   import RecordsSheet from './components/RecordsSheet.svelte';
@@ -56,10 +57,14 @@
 
   // Elapsed timer for the bottom workout bar
   let elapsed = 0;
+  let nowTick = Date.now();
   const clockInterval = setInterval(() => {
+    nowTick = Date.now();
     const start = $uiState.workoutStartTime;
-    elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
+    elapsed = start ? Math.floor((nowTick - start) / 1000) : 0;
   }, 1000);
+  // Rest countdown shown on the bar while workout mode is closed (null = no rest running).
+  $: restLeft = restRemainingSeconds($uiState.restStartTime, $uiState.restTotal, nowTick);
 
   function fmtElapsed(s: number): string {
     const h = Math.floor(s / 3600);
@@ -148,7 +153,8 @@
     clearInterval(clockInterval);
   });
 
-  $: showWorkoutBar = $currentDayExercises.length > 0 && !$uiState.workoutMode && !showOnboarding && !$sheetOpen;
+  // A running session keeps its bar on any viewed day (even an empty one) so Resume is always reachable.
+  $: showWorkoutBar = ($currentDayExercises.length > 0 || $uiState.workoutActive) && !$uiState.workoutMode && !showOnboarding && !$sheetOpen;
 </script>
 
 <ToastNotification />
@@ -186,7 +192,13 @@
             <span class="timer-val">{fmtElapsed(elapsed)}</span>
             <span class="timer-stop">■</span>
           </button>
-          <button class="wm-btn" on:click={openWorkoutMode}>Resume →</button>
+          {#if restLeft !== null}
+            <button class="wm-btn rest" class:rest-done={restLeft === 0} on:click={openWorkoutMode} aria-label="Back to workout — rest timer">
+              {restLeft > 0 ? `Rest ${fmtElapsed(restLeft)}` : 'Rest done'} →
+            </button>
+          {:else}
+            <button class="wm-btn" on:click={openWorkoutMode}>Resume →</button>
+          {/if}
         {:else}
           <button class="wm-btn full" on:click={openWorkoutMode}>▶ Start Workout</button>
         {/if}
@@ -405,6 +417,13 @@
   }
 
   .wm-btn:active { background: rgba(var(--c-accent), 0.22); transform: scale(0.98); }
+  /* Rest running while workout mode is closed: countdown on the Resume button */
+  .wm-btn.rest { font-variant-numeric: tabular-nums; }
+  .wm-btn.rest-done {
+    border-color: var(--c-79-192-141-0_45);
+    color: var(--h-4fc08d);
+    background: var(--c-79-192-141-0_16);
+  }
   .wm-btn.full:active { background: var(--h-b07e22); transform: scale(0.98); box-shadow: none; }
 
   /* ── Help chip ── */
