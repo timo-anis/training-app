@@ -20,7 +20,8 @@ vi.mock('../services/supabase', () => ({
   },
 }));
 
-import { appState, copyDayFrom, addExercise } from '../stores/app';
+import { appState, copyDayFrom, copyPreviousDay, addExercise } from '../stores/app';
+import { latestRestByName, restForCopy } from '../lib/rest-inherit';
 import type { AppState, Exercise, WorkoutDay } from '../types/workout';
 
 // ---- helpers ----
@@ -185,5 +186,84 @@ describe('addExercise — rest time inheritance', () => {
     const newDay = state.weeks.find(w => w.week === 2 && w.day === 'Monday')!;
     const added = newDay.exercises.find(e => e.name === 'Pull-up')!;
     expect(added.rest).toBe('');
+  });
+});
+
+// ---- copy fills an EMPTY rest with the last-used rest (2026-09-26) ----
+
+describe('copy-day — rest inheritance', () => {
+  beforeEach(() => appState.set({ weeks: [], schema: '4.0' }));
+
+  it('copyDayFrom fills an empty source rest with the latest rest used for that exercise', () => {
+    seedState([
+      { week: 1, day: 'Monday', date: '', exercises: [makeEx('a', 'Squat', '')] },          // source: no rest
+      { week: 3, day: 'Friday', date: '', exercises: [makeEx('b', 'squat ', '2:30')] },     // latest use
+      { week: 2, day: 'Friday', date: '', exercises: [makeEx('c', 'Squat', '1:30')] },      // older use
+    ]);
+    copyDayFrom(1, 'Monday', 4, 'Monday');
+    const tgt = get(appState).weeks.find(w => w.week === 4 && w.day === 'Monday')!;
+    expect(tgt.exercises[0].rest).toBe('2:30');
+  });
+
+  it('an explicit rest on the source always wins', () => {
+    seedState([
+      { week: 1, day: 'Monday', date: '', exercises: [makeEx('a', 'Squat', '3:00')] },
+      { week: 3, day: 'Friday', date: '', exercises: [makeEx('b', 'Squat', '2:30')] },
+    ]);
+    copyDayFrom(1, 'Monday', 4, 'Monday');
+    const tgt = get(appState).weeks.find(w => w.week === 4 && w.day === 'Monday')!;
+    expect(tgt.exercises[0].rest).toBe('3:00');
+  });
+
+  it('stays empty when the exercise never had a rest', () => {
+    seedState([{ week: 1, day: 'Monday', date: '', exercises: [makeEx('a', 'Plank', '')] }]);
+    copyDayFrom(1, 'Monday', 2, 'Monday');
+    const tgt = get(appState).weeks.find(w => w.week === 2 && w.day === 'Monday')!;
+    expect(tgt.exercises[0].rest).toBe('');
+  });
+
+  it('copyPreviousDay also fills empty rest, and never touches the source day', () => {
+    seedState([
+      { week: 1, day: 'Tuesday', date: '', exercises: [makeEx('a', 'Row', '')] },
+      { week: 1, day: 'Friday', date: '', exercises: [makeEx('b', 'Row', '2:00')] },
+    ]);
+    copyPreviousDay(2, 'Tuesday');
+    const st = get(appState);
+    expect(st.weeks.find(w => w.week === 2 && w.day === 'Tuesday')!.exercises[0].rest).toBe('2:00');
+    expect(st.weeks.find(w => w.week === 1 && w.day === 'Tuesday')!.exercises[0].rest).toBe('');
+  });
+
+  it('keeps superset codes, order, kg/reps and resets done (unchanged copy semantics)', () => {
+    const a1 = { ...makeEx('a1', 'Bench', '', [makeSet(true, '80', '5')]), type: 'superset' as const, code: 'A1' };
+    const a2 = { ...makeEx('a2', 'Row', '', [makeSet(true, '60', '8')]), type: 'superset' as const, code: 'A2' };
+    seedState([
+      { week: 1, day: 'Monday', date: '', exercises: [a2, a1] },
+      { week: 1, day: 'Friday', date: '', exercises: [makeEx('x', 'Row', '1:45')] },
+    ]);
+    copyDayFrom(1, 'Monday', 2, 'Monday');
+    const ex = get(appState).weeks.find(w => w.week === 2 && w.day === 'Monday')!.exercises;
+    expect(ex.map(e => e.code)).toEqual(['A1', 'A2']);
+    expect(ex.map(e => e.type)).toEqual(['superset', 'superset']);
+    expect(ex[0].sets[0]).toEqual({ kg: '80', reps: '5', done: false, rpe: '' });
+    expect(ex[1].rest).toBe('1:45');
+    expect(ex[0].rest).toBe('');
+  });
+});
+
+describe('latestRestByName / restForCopy (pure)', () => {
+  it('picks the chronologically latest non-empty rest (week, then Mon→Sun), not array order', () => {
+    const weeks: WorkoutDay[] = [
+      { week: 5, day: 'Sunday', date: '', exercises: [makeEx('1', 'Dip', '1:00')] },
+      { week: 5, day: 'Monday', date: '', exercises: [makeEx('2', 'Dip', '2:00')] },
+      { week: 4, day: 'Sunday', date: '', exercises: [makeEx('3', 'Dip', '3:00')] },
+      { week: 6, day: 'Monday', date: '', exercises: [makeEx('4', 'Dip', '')] },
+    ];
+    expect(latestRestByName(weeks).get('dip')).toBe('1:00');
+  });
+  it('restForCopy prefers own rest, then latest, then empty', () => {
+    const m = new Map([['dip', '2:00']]);
+    expect(restForCopy({ name: 'Dip', rest: '0:45' }, m)).toBe('0:45');
+    expect(restForCopy({ name: ' DIP', rest: '' }, m)).toBe('2:00');
+    expect(restForCopy({ name: 'Curl', rest: '' }, m)).toBe('');
   });
 });

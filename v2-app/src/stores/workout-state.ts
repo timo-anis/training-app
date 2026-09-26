@@ -8,6 +8,7 @@ import { dayFullyDone } from '../lib/day-status';
 import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { workoutDayOf, startWorkoutUI, openWorkoutUI, exitWorkoutUI } from '../lib/workout-day';
+import { latestRestByName, restForCopy } from '../lib/rest-inherit';
 import { bootstrapState } from '../services/storage';
 import { sanitizeState } from '../lib/state-sanitize';
 import { PS_UTC } from '../lib/program';
@@ -281,9 +282,11 @@ export function copyPreviousDay(targetWeek: number, day: DayOfWeek) {
     day,
     date: getDateForWeekDay(targetWeek, day),
     exercises: (() => {
+      const latestRest = latestRestByName(state.weeks);
       const mapped = sourceDay.exercises.map(ex => ({
         ...ex,
         id: `${ex.id}_w${targetWeek}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+        rest: restForCopy(ex, latestRest),
         sets: ex.sets.length > 0 ? ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false, rpe: '' })) : [{ kg: '', reps: '', done: false, rpe: '' }],
         recoveryDone: false,
         conditioningDone: false,
@@ -302,9 +305,11 @@ export function copyDayFrom(srcWeek: number, srcDay: DayOfWeek, tgtWeek: number,
   const sourceDay = state.weeks.find(w => w.week === srcWeek && w.day === srcDay);
   if (!sourceDay || sourceDay.exercises.length === 0) return;
 
+  const latestRest = latestRestByName(state.weeks);
   const cloned = sourceDay.exercises.map(ex => ({
     ...ex,
     id: `${ex.id}_copy_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    rest: restForCopy(ex, latestRest),
     sets: ex.sets.length > 0 ? ex.sets.map(s => ({ kg: s.kg, reps: s.reps, done: false as const, rpe: '' })) : [{ kg: '', reps: '', done: false as const, rpe: '' }],
     recoveryDone: false,
     conditioningDone: false,
