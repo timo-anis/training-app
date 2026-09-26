@@ -85,8 +85,8 @@ export default defineConfig({
     // come from a single source — no duplication, no drift.
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index.html'),
-        coach: resolve(__dirname, 'coach.html'),
+        main: resolve(import.meta.dirname, 'index.html'),
+        coach: resolve(import.meta.dirname, 'coach.html'),
       },
     },
   },
