@@ -74,7 +74,7 @@ Manual fallback (no CI), deploying straight to the `gh-pages` branch:
 ```bash
 cd v2-app
 npm ci
-npm test                    # ~159 tests — all must pass
+npm test                    # ~480 tests — all must pass (Node 22+, same as CI)
 npm run check               # TypeScript + Svelte check
 npm run build               # outputs to ../v2-dist/
                             # build needs VITE_SUPABASE_URL / VITE_SUPABASE_KEY in env or .env

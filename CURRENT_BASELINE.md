@@ -1,6 +1,6 @@
 # Current Baseline — Timo Training V2
 
-**Last updated:** 2026-06-24
+**Last updated:** 2026-09-26
 
 ## Active App: V2
 
@@ -26,6 +26,7 @@
 - **Desktop redesign PR3 craft pass (B) shipped 2026-06-24 (`041c447`):** pure CSS craft pass. (a) Calendar tonal-gold structure: today = solid gold ring, partial = gold ring + hint fill, has-data/recovery = gold outline, rest/weekend = dim grey, planned = dashed-gold. (b) Typography: `font-variant-numeric: tabular-nums` app-wide + desktop `.day-label` 23px refinement. (c) Backdrop: refined desktop vignette + faint brand glow ≥900px. **Partially reverted 2026-06-24 (user preference):** done days restored to green disc (`--h-4fc08d`, commits `81676b0`+`419cd1a`); StreakStrip reverted to emoji 🔥 + circular dots + green 'secured' text. Typography, backdrop, and partial/recovery/rest/planned calendar colours remain from PR3. check 0/0, 206 tests, clean two-entry build.
 - **Coach console 2-column desktop layout shipped 2026-06-24 (`571bae4` + `9ab4887`):** at `@media (min-width:900px)` the coach SPA (`CoachApp.svelte`) switches from sequential mobile flow to a grid (`300px 1fr`): sidebar (trainee list + CoachDashboard) on the left, main panel (CoachTraineeView or empty state) on the right. `mobile-hidden`/`desktop-hidden` CSS classes control the sequential vs side-by-side switch without duplicating markup; the "Back to trainees" button is `desktop-hidden`. Max-width 1160px, centered. Bug fixes same day: sidebar `overflow: hidden auto` (prevents horizontal clip/scroll); `CoachTraineeView` gets `max-width: 700px; margin: 0 auto` at ≥900px so the calendar does not stretch to the full panel width. check 0/0, 207 tests, clean two-entry build.
 - **Maintenance / hardening pass 2026-07-22 (deep-analysis P0+P1 fixes):** (1) **check gate now 0/0 AND enforced** — migrated all 27 deprecated Svelte-5 event directives to attribute form (`on:click`→`onclick`, incl. 4 `|stopPropagation` rewritten as `onclick={(e)=>{e.stopPropagation();…}}`) in the four runes-mode components (WorkoutMode, HeroCard) + removed 2 dead CSS selectors (`.record-reps`, `.bodymap-wrap`) + silenced `state_referenced_locally` at WorkoutMode:583 with an explicit `untrack(() => !!localDayNote)` (initial-only capture was intentional). Added `--fail-on-warnings` to the `check` script so CI (`npm run check`) now FAILS on any new warning — adversarially proven (probe warning → exit 1). RestTimer component events (`on:done/skip/reset`) intentionally left as directives (component-event migration is a separate change). (2) **Superset ordering de-duplicated** — the byte-identical sort comparator that lived inline in `copyPreviousDay`, `copyDayFrom`, and `updateExerciseMeta` is now one pure `lib/exercise-sort.ts` (`sortByExerciseCode`/`compareByExerciseCode`, +7 tests); a drift between copies could have reordered supersets differently per action (§2 data-integrity risk). check 0/0, **391 tests**, clean two-entry build. Protected flows (boot/sync/storage/single-writer) untouched; no data-model or UI-string change. See `CODE_DEEP_ANALYSIS_2026-07-22.md` in the logbook.
+- **Dependency + CI maintenance 2026-09-26:** in-range bumps (supabase-js 2.117, svelte 5.57, vite 8.3, vitest 4.1.11, svelte-check 4.7, playwright 1.63) + `npm audit fix` → **0 vulnerabilities** (was 6 dev-only incl. 2 high: browserslist, fast-uri; vitest mocker path traversal). CI now Node 22 (Node 20 EOL Apr 2026) + `actions/checkout@v7`/`setup-node@v7`. Dependabot `all-deps` group limited to minor+patch — majors (vitest 5, TypeScript 7, jsdom 30, jest-dom 7, @types/node 26) now arrive as separate PRs to verify one at a time. Lockfile note: local npm 10.9 hits an arborist `edgesOut` null bug on `npm update`/`audit fix` in this tree — use `npx npm@11` for dependency changes; `npm ci` with npm 10 is fine. check 0/0, 484 tests, clean two-entry build.
 - Boot merges local vs cloud by timestamp (newer wins) — `lib/state-merge.ts`
 - Cloud saves are offline-aware with retry/backoff (`stores/sync.ts`); flush on `online`
 - WorkoutMode split (2228 → 1305 lines, -41%): extracted `WmHeader`, `WmFooter`, `WmRestControls`, `WmAddExercise`, `WmSummary`, `WmSetRow` as presentational children
@@ -156,14 +157,14 @@ WorkoutSet { kg, reps, done, rpe }   // rpe: RIR-based RPE 6–10, '' = unrated 
 
 ## Test Suite
 
-207 automated tests across 17 files — run `npm test` in `v2-app/`.
+484 automated tests across 38 files — run `npm test` in `v2-app/`.
 (Per-file counts intentionally not listed here to avoid drift; the runner is the source of truth.)
 
 ---
 
 ## CI Pipeline
 
-Push to main: install → test (207) → TypeScript check → build → deploy to GitHub Pages.
+Push to main (Node 22): install → test (484) → TypeScript check (0/0, warnings fail) → build → deploy to GitHub Pages.
 
 ---
 

@@ -12,8 +12,12 @@ updates:
       time: "06:00"
       timezone: "Europe/Tallinn"
     groups:
+      # Patch + minor bumps land together in one PR. Major bumps (breaking by
+      # definition) are left out of the group so each arrives as its own PR
+      # and can be verified in isolation.
       all-deps:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
     open-pull-requests-limit: 5
     commit-message:
       prefix: "deps"
