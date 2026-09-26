@@ -19,7 +19,7 @@
   import { searchExercises } from '../data/exercises';
   import RestTimer from './RestTimer.svelte';
   import { nextSupersetIndex, firstUndoneIndex, clampBlockIndex } from '../lib/state-helpers';
-  import { decodeRestBlob, restBlobUsable, encodeRestBlob } from '../lib/rest-persist';
+  import { decodeRestBlob, restBlobUsable, encodeRestBlob, REST_PERSIST_KEY } from '../lib/rest-persist';
   import { formatElapsed, parseRestToSeconds, secsToRest, dayVolume } from '../lib/workout-metrics';
   import { exDone } from '../lib/day-status';
   import { workoutDayOf } from '../lib/workout-day';
@@ -125,7 +125,6 @@
   const restPending = $derived($uiState.restStartTime === null && $uiState.restTotal !== null && $uiState.restTotal > 0);
 
   // ---- Rest timer persistence (survives Android screen-off / tab-kill) ----
-  const REST_PERSIST_KEY = 'timo_training_v4_rest_timer';
 
   // Reactively persist timer whenever it's running; clear when stopped.
   $effect(() => {
@@ -649,7 +648,8 @@
 </script>
 
 <div class="wm-overlay">
-  <!-- Header -->
+  <!-- Header (hidden on an empty pinned day — the empty state carries its own Back) -->
+  {#if blocks.length > 0}
   <WmHeader
     setsDone={totalSetsDone}
     setsAll={totalSetsAll}
@@ -659,6 +659,7 @@
     onBack={backToNormal}
     onFinish={openSummary}
   />
+  {/if}
 
   <!-- Block content -->
   {#if block}
@@ -924,9 +925,11 @@
   {/if}
 
   <!-- Footer nav — fixed above rest timer overlay (z-index 150) -->
+  {#if blocks.length > 0}
   <div class="wm-footer-outer">
     <WmFooter {isFirst} {isLast} onPrev={prev} onNext={next} onBack={backToNormal} onFinish={openSummary} />
   </div>
+  {/if}
 </div>
 
 <!-- ===== Completion Flash ===== -->

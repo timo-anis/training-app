@@ -9,6 +9,7 @@ import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } f
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
 import { workoutDayOf, startWorkoutUI, openWorkoutUI, exitWorkoutUI } from '../lib/workout-day';
 import { latestRestByName, restForCopy } from '../lib/rest-inherit';
+import { clearPersistedRest } from '../lib/rest-persist';
 import { bootstrapState } from '../services/storage';
 import { sanitizeState } from '../lib/state-sanitize';
 import { PS_UTC } from '../lib/program';
@@ -408,6 +409,9 @@ export function setDayLabel(week: number, day: DayOfWeek, label: string) {
 
 export function exitWorkout() {
   uiState.update(ui => exitWorkoutUI(ui));
+  // The overlay may be closed (stop from the bar) — WorkoutMode's own cleanup
+  // effect isn't mounted, so drop the persisted rest here too.
+  clearPersistedRest();
 }
 
 export function setActiveBlock(index: number) {

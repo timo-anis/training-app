@@ -9,6 +9,14 @@
  * live only in component state and was lost on every remount — the cause of
  * "timer ended but the superset did not advance".
  */
+/** localStorage key of the persisted rest timer (unchanged value — moved here from WorkoutMode). */
+export const REST_PERSIST_KEY = 'timo_training_v4_rest_timer';
+
+/** Drop the persisted rest timer (session ended) so it can't be restored into the next session. */
+export function clearPersistedRest(): void {
+  try { localStorage.removeItem(REST_PERSIST_KEY); } catch { /* ignore */ }
+}
+
 export interface RestBlob {
   s: number;
   t: number;

@@ -336,7 +336,7 @@
   </div>
 
   <div class="col-session">
-  {#if $currentDayExercises.length > 0 && !$uiState.workoutMode}
+  {#if ($currentDayExercises.length > 0 || $uiState.workoutActive) && !$uiState.workoutMode}
     <div class="session-cta-wrap">
       {#if $uiState.workoutActive}
         <button class="session-resume" on:click={openWorkoutMode}>Resume workout →</button>

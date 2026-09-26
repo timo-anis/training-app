@@ -5,7 +5,7 @@
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
   import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, copyDayOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding, appLocked, initLockForUser, resetLock, noteHidden, noteResumed, setLockEnabledForUser } from './stores/app';
   import { clearStoredNavSnapshot } from './stores/ui-state';
-  import { shouldBootOnSignIn } from './lib/auth-boot';
+  import { shouldBootOnSignIn, sessionBlocksReboot } from './lib/auth-boot';
   import { restRemainingSeconds } from './lib/workout-metrics';
   import { displayName } from './stores/ui-state';
   import { getDisplayName } from './services/profile';
@@ -84,9 +84,11 @@
       }
       if (state.status === 'signed_in') {
         // Decide BEFORE updating currentUser: supabase-js re-emits SIGNED_IN on
-        // every hidden→visible transition. For an already-booted, same user that
-        // is not a new sign-in — re-booting would reset the viewed day mid-workout.
-        const needsBoot = shouldBootOnSignIn($currentUser?.id, $bootStatus, state.user.id);
+        // every hidden→visible transition. Mid-workout that must not re-boot
+        // (it unmounts WorkoutMode and resets the view); otherwise it is kept as
+        // the resume-time cloud refresh — see lib/auth-boot.ts.
+        const needsBoot = shouldBootOnSignIn($currentUser?.id, $bootStatus, state.user.id,
+          sessionBlocksReboot($uiState.workoutActive, $uiState.workoutStartTime, Date.now()));
         currentUser.set(state.user);
         // While recovering, the session is valid but we wait for the new
         // password before entering the app. Re-check the persisted flag in case
@@ -102,6 +104,7 @@
         // App-open biometric lock: lock now iff the user enabled it (cold start).
         initLockForUser(state.user.id);
       } else if (state.status === 'signed_out') {
+        exitWorkout(); // a running session (and its pinned day) never carries over to the next user
         clearStoredNavSnapshot(); // next login always boots to today
         currentUser.set(null);
         displayName.set('');

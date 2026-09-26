@@ -116,7 +116,7 @@
           {/if}
         {/if}
       </div>
-      <button class="start-btn" onclick={openWorkoutMode}>Start</button>
+      <button class="start-btn" onclick={openWorkoutMode}>{$uiState.workoutActive ? 'Resume' : 'Start'}</button>
     </div>
   {/if}
 

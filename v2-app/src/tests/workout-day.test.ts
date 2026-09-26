@@ -117,6 +117,13 @@ describe('workoutBlocks follows the pinned day (store integration)', () => {
     expect(get(workoutBlocks).map(b => b.exercises[0].name)).toEqual(['Squat', 'Bench']);
   });
 
+  it('exitWorkout drops the persisted rest timer so it cannot resurface next session', () => {
+    localStorage.setItem('timo_training_v4_rest_timer', JSON.stringify({ s: Date.now(), t: 90, adv: true }));
+    openWorkoutMode();
+    exitWorkout();
+    expect(localStorage.getItem('timo_training_v4_rest_timer')).toBeNull();
+  });
+
   it('with no session, workoutBlocks tracks the viewed day (unchanged behaviour)', () => {
     uiState.update(u => ({ ...u, day: 'Saturday' }));
     expect(get(workoutBlocks).length).toBe(0);
