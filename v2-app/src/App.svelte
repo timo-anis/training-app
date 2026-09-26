@@ -5,6 +5,7 @@
   import { isRecoveryPending, clearRecoveryPending } from './services/supabase';
   import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, copyDayOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding, appLocked, initLockForUser, resetLock, noteHidden, noteResumed, setLockEnabledForUser } from './stores/app';
   import { clearStoredNavSnapshot } from './stores/ui-state';
+  import { shouldBootOnSignIn } from './lib/auth-boot';
   import { displayName } from './stores/ui-state';
   import { getDisplayName } from './services/profile';
   import RecordsSheet from './components/RecordsSheet.svelte';
@@ -77,11 +78,16 @@
         return;
       }
       if (state.status === 'signed_in') {
+        // Decide BEFORE updating currentUser: supabase-js re-emits SIGNED_IN on
+        // every hidden→visible transition. For an already-booted, same user that
+        // is not a new sign-in — re-booting would reset the viewed day mid-workout.
+        const needsBoot = shouldBootOnSignIn($currentUser?.id, $bootStatus, state.user.id);
         currentUser.set(state.user);
         // While recovering, the session is valid but we wait for the new
         // password before entering the app. Re-check the persisted flag in case
         // PASSWORD_RECOVERY landed between init and this event.
         if (recoveryMode || isRecoveryPending()) { recoveryMode = true; return; }
+        if (!needsBoot) return;
         await bootForUser(state.user);
         // Load display name from profiles (fire-and-forget)
         getDisplayName(state.user.id).then(n => displayName.set(n)).catch(() => {});
