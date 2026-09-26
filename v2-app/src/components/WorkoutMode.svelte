@@ -506,7 +506,9 @@
     const ex = $appState.weeks.find(w => w.week === week && w.day === day)?.exercises.find(e => e.id === exId);
     const stored = ex?.sets[i]?.[field] ?? '';
     if (!ex || stored !== '' || val === '') return false;
-    const suggested = (findLastSession($appState, ex.name, week, day)?.sets[i]?.[field] ?? '').replace(',', '.').trim();
+    const raw = (findLastSession($appState, ex.name, week, day)?.sets[i]?.[field] ?? '').trim();
+    // Normalise exactly like the matching commit function does (kg: comma → dot; reps: trim only).
+    const suggested = field === 'kg' ? raw.replace(',', '.') : raw;
     return suggested !== '' && val === suggested;
   }
   function isUntouchedCondSuggestion(week: number, day: DayOfWeek, exId: string, val: string): boolean {
@@ -817,7 +819,11 @@
               <button
                 class="recovery-toggle"
                 class:recovery-done={ex.conditioningDone}
-                onclick={() => toggleConditioningDone(week, day, ex.id)}
+                onclick={() => {
+                  // Marking done accepts the shown note, a last-session suggestion included.
+                  if (!ex.conditioningDone && localCondNote[ex.id]) updateConditioningNote(week, day, ex.id, localCondNote[ex.id]);
+                  toggleConditioningDone(week, day, ex.id);
+                }}
               >
                 {ex.conditioningDone ? '✓ Done' : 'Tap to mark done'}
               </button>

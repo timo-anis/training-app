@@ -122,6 +122,31 @@ describe('no cached state can swallow a real edit (adversarial loop 2)', () => {
   });
 });
 
+describe('acceptance paths (final review)', () => {
+  it('marking conditioning done accepts the suggested note', async () => {
+    const prevC = { ...emptyExercise('pc', 'Bike'), code: 'C', conditioning: true, conditioningNote: '12 min @160W' };
+    const curC = { ...emptyExercise('c', 'Bike'), code: 'C', conditioning: true, conditioningNote: '' };
+    appState.set({ schema: '4.1', weeks: [
+      { week: 1, day: 'Monday', date: '', exercises: [prevC] },
+      { week: 2, day: 'Monday', date: '', exercises: [curC] },
+    ] });
+    render(WorkoutMode); await flush();
+    await fireEvent.click(screen.getByRole('button', { name: 'Tap to mark done' })); await flush();
+    expect(today().exercises[0]).toMatchObject({ conditioningDone: true, conditioningNote: '12 min @160W' });
+  });
+
+  it('a comma in last session\'s reps is still recognised as an untouched suggestion', async () => {
+    const prev = ex('p1', 'Plank', 'A', 'single', '', '5,5', true);
+    appState.set({ schema: '4.1', weeks: [
+      { week: 1, day: 'Monday', date: '', exercises: [prev] },
+      { week: 2, day: 'Monday', date: '', exercises: [ex('a', 'Plank', 'A', 'single'), ex('b', 'Squat', 'B', 'single')] },
+    ] });
+    render(WorkoutMode); await flush();
+    await fireEvent.click(screen.getByRole('button', { name: 'Next ›' })); await flush();
+    expect(today().exercises[0].sets[0].reps).toBe('');
+  });
+});
+
 describe('empty pinned day', () => {
   it('offers End workout, which ends the session', async () => {
     appState.update(s => ({ ...s, weeks: s.weeks.map(w => (w.week === 2 ? { ...w, exercises: [] } : w)) }));
