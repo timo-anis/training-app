@@ -2,9 +2,9 @@
  * E2E: trainee core-path smoke tests — the workout-critical paths the DoD calls
  * out (boot, day render, add exercise, mark set done, data persists).
  *
- * ⚠️  NOT YET RUN IN CI. Requires the test trainee password as an env var and a
- * Playwright browser (chromium) — neither is available in the analysis sandbox,
- * so these were written against the real component selectors but not executed.
+ * ✅ First real run 2026-09-26 on Timo's Mac: 2/2 green (not in CI — needs the
+ * test trainee password, which lives only in v2-app/.env.e2e, gitignored).
+ * Run: set -a; source .env.e2e; set +a; npx playwright test e2e/trainee-smoke.spec.ts
  * To run locally / in CI:
  *   npm i && npx playwright install chromium
  *   E2E_TRAINEE_EMAIL=timoanis+test6@gmail.com E2E_TRAINEE_PASS=… \
