@@ -228,8 +228,9 @@
   let setDoneFlashTimer: ReturnType<typeof setTimeout> | null = null;
 
   function handleSetDone(week: number, day: DayOfWeek, exId: string, setIndex: number, currentDone: boolean, exRestString: string, exName: string, kgVal: string) {
-    commitKg(week, day, exId, setIndex);
-    commitReps(week, day, exId, setIndex);
+    // Marking done accepts the shown values, suggestions included.
+    commitKg(week, day, exId, setIndex, true);
+    commitReps(week, day, exId, setIndex, true);
     toggleSetDone(week, day, exId, setIndex);
     if (!currentDone) {
       vibrate(10);
@@ -362,6 +363,7 @@
     const current = parseFloat(raw) || 0;
     const next = Math.max(0, parseFloat((current + delta).toFixed(2)));
     localKg[k] = next > 0 ? String(next) : '';
+    delete prefillKg[k]; // explicit user edit — no longer a suggestion
     localKg = localKg; // trigger reactivity
     updateSetField(week, day, exId, i, 'kg', localKg[k]);
   }
@@ -373,6 +375,7 @@
     const current = parseInt(raw, 10) || 0;
     const next = Math.max(1, current + delta);
     localReps[k] = String(next);
+    delete prefillReps[k];
     localReps = localReps;
     updateSetField(week, day, exId, i, 'reps', localReps[k]);
   }
@@ -495,6 +498,13 @@
   let localReps = $state<Record<string, string>>({});
   let localCondNote = $state<Record<string, string>>({});
   let localNote = $state<Record<string, string>>({});
+  // Values shown as a suggestion from the last session (plain, non-reactive).
+  // An untouched suggestion is never written to the log by blur / navigation —
+  // only an edit or marking the set done turns it into data. Otherwise skipping
+  // an exercise wrote last session's numbers into it (looked performed).
+  let prefillKg: Record<string, string> = {};
+  let prefillReps: Record<string, string> = {};
+  let prefillCondNote: Record<string, string> = {};
   let noteEditingId = $state<string | null>(null);
 
   // Sync locals when block changes — prefill from last session when set is empty
@@ -504,13 +514,22 @@
         const lastSess = ex.conditioning ? null : findLastSession($appState, ex.name, wmWeek, wmDay);
         ex.sets.forEach((s, i) => {
           const k = `${ex.id}-${i}`;
-          if (localKg[k] === undefined)   localKg[k]   = s.kg   || lastSess?.sets[i]?.kg   || '';
-          if (localReps[k] === undefined)  localReps[k] = s.reps || lastSess?.sets[i]?.reps || '';
+          if (localKg[k] === undefined) {
+            localKg[k] = s.kg || lastSess?.sets[i]?.kg || '';
+            // Remember a value that came from LAST session (stored field empty):
+            // it is a suggestion, not data, until the user edits it or marks the set done.
+            if (!s.kg && localKg[k]) prefillKg[k] = localKg[k];
+          }
+          if (localReps[k] === undefined) {
+            localReps[k] = s.reps || lastSess?.sets[i]?.reps || '';
+            if (!s.reps && localReps[k]) prefillReps[k] = localReps[k];
+          }
         });
         // Conditioning note: use current value or fall back to last session's note
         if (ex.conditioning && localCondNote[ex.id] === undefined) {
           localCondNote[ex.id] = ex.conditioningNote ||
             findLastConditioningNote($appState, ex.name, wmWeek, wmDay);
+          if (!ex.conditioningNote && localCondNote[ex.id]) prefillCondNote[ex.id] = localCondNote[ex.id];
         }
         // Exercise note: prefill from stored value (empty string if none)
         if (localNote[ex.id] === undefined) localNote[ex.id] = ex.note ?? '';
@@ -538,7 +557,8 @@
             if (localKg[k] !== undefined) commitKg(week, day, ex.id, i);
             if (localReps[k] !== undefined) commitReps(week, day, ex.id, i);
           });
-          if (ex.conditioning && localCondNote[ex.id] !== undefined) {
+          if (ex.conditioning && localCondNote[ex.id] !== undefined
+              && localCondNote[ex.id] !== prefillCondNote[ex.id]) {
             commitCondNote(week, day, ex.id);
           }
           if (localNote[ex.id] !== undefined) commitNote(week, day, ex.id);
@@ -562,21 +582,28 @@
       localReps = {};
       localCondNote = {};
       localNote = {};
+      prefillKg = {};
+      prefillReps = {};
+      prefillCondNote = {};
       noteEditingId = null;
       editingNameId = null;
     }
   });
 
-  function commitKg(week: number, day: DayOfWeek, exId: string, i: number) {
+  function commitKg(week: number, day: DayOfWeek, exId: string, i: number, force = false) {
     const k = `${exId}-${i}`;
     const val = (localKg[k] ?? '').replace(',', '.').trim();
+    if (!force && prefillKg[k] !== undefined && val === prefillKg[k].replace(',', '.').trim()) return; // untouched suggestion
+    delete prefillKg[k];
     localKg[k] = val;
     updateSetField(week, day, exId, i, 'kg', val);
   }
 
-  function commitReps(week: number, day: DayOfWeek, exId: string, i: number) {
+  function commitReps(week: number, day: DayOfWeek, exId: string, i: number, force = false) {
     const k = `${exId}-${i}`;
     const val = (localReps[k] ?? '').trim();
+    if (!force && prefillReps[k] !== undefined && val === prefillReps[k].trim()) return; // untouched suggestion
+    delete prefillReps[k];
     localReps[k] = val;
     updateSetField(week, day, exId, i, 'reps', val);
   }
@@ -924,6 +951,9 @@
       <p class="wm-empty-title">No exercises on this day</p>
       <p class="wm-empty-sub">{DAY_SHORT[wmDay] ?? wmDay} · Week {wmWeek - $weekOffset}</p>
       <button class="wm-empty-back" onclick={backToNormal}>← Back to day view</button>
+      <!-- Finish (✓) lives in the header, which is hidden here — nothing to finish on an
+           empty day, so offer a plain end so the session can't get stuck. -->
+      <button class="wm-empty-end" onclick={exitWorkout}>End workout</button>
     </div>
   {/if}
 
@@ -997,6 +1027,15 @@
     color: rgba(var(--c-fg), 0.85);
     font: inherit;
     font-weight: 600;
+  }
+  .wm-empty-end {
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    color: rgba(var(--c-fg), 0.5);
+    font: inherit;
+    font-size: 14px;
+    text-decoration: underline;
   }
   .wm-content {
     flex: 1;
