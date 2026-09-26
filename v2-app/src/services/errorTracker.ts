@@ -20,6 +20,28 @@ import { currentUser } from '../stores/app';
 const APP_VERSION: string = (typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'unknown');
 const seen = new Set<string>();
 
+/**
+ * Errors raised before a user is signed in (boot, auth screen) cannot be
+ * written yet — RLS requires user_id = auth.uid(). Instead of dropping them we
+ * hold a small bounded queue and flush it once when a user becomes available.
+ * The cap keeps a crash loop on the sign-in screen from growing memory.
+ */
+export const MAX_PENDING = 10;
+interface Pending { c: Captured; url: string; occurredAt: string }
+const pending: Pending[] = [];
+let flushSubscribed = false;
+
+function ensureFlushOnSignIn(): void {
+  if (flushSubscribed) return;
+  flushSubscribed = true;
+  // Store subscription is kept for the page lifetime (one tiny listener).
+  currentUser.subscribe((u) => {
+    if (!u || pending.length === 0) return;
+    const batch = pending.splice(0);
+    for (const p of batch) void writeError(p.c, u.id, p.url, p.occurredAt);
+  });
+}
+
 function sameOriginScript(filename: string | undefined): boolean {
   if (!filename) return false; // empty filename = cross-origin / opaque
   try {
@@ -41,11 +63,26 @@ interface Captured {
 async function logError(c: Captured): Promise<void> {
   const fingerprint = `${c.kind}|${c.external ? 'ext' : 'app'}|${c.name ?? ''}|${c.message}`.slice(0, 220);
   if (seen.has(fingerprint)) return;
-  seen.add(fingerprint);
 
   const user = get(currentUser);
-  if (!user) return; // no auth → RLS blocks the write
+  if (!user) {
+    // No auth yet → RLS would block the write. Queue it (bounded) with the
+    // capture-time URL + timestamp so the row stays truthful when flushed.
+    // Overflow is NOT marked seen, so the same error can still be recorded if
+    // it recurs after sign-in. Known trade-off: an error queued on the sign-in
+    // screen is attributed to whoever signs in next (shared-device edge case).
+    if (pending.length < MAX_PENDING) {
+      seen.add(fingerprint);
+      pending.push({ c, url: window.location.pathname, occurredAt: new Date().toISOString() });
+    }
+    ensureFlushOnSignIn();
+    return;
+  }
+  seen.add(fingerprint);
+  await writeError(c, user.id, window.location.pathname);
+}
 
+async function writeError(c: Captured, userId: string, url: string, occurredAt?: string): Promise<void> {
   const opaque = c.external && /script error/i.test(c.message);
   const label = opaque
     ? 'Script error (external / cross-origin — no detail)'
@@ -54,15 +91,21 @@ async function logError(c: Captured): Promise<void> {
   const stack = [c.source ? `at ${c.source}` : null, c.stack].filter(Boolean).join('\n') || undefined;
 
   try {
-    await supabase.from('app_errors').insert({
-      user_id:     user.id,
+    const { error } = await supabase.from('app_errors').insert({
+      user_id:     userId,
       message:     message.slice(0, 500),
       stack:       stack?.slice(0, 2000),
-      url:         window.location.pathname,
+      url,
       app_version: APP_VERSION,
+      // Only set for queued (pre-sign-in) errors; otherwise the DB default now() applies.
+      ...(occurredAt ? { occurred_at: occurredAt } : {}),
     });
-  } catch {
-    // Tracker must never throw — silent fail
+    // supabase-js reports failures in `error` instead of throwing — surface them
+    // in devtools so a broken tracker is visible rather than silently empty.
+    if (error) console.warn('[errorTracker] could not record error:', error.message);
+  } catch (e) {
+    // Tracker must never throw — network-level failure, just note it.
+    console.warn('[errorTracker] could not record error:', e instanceof Error ? e.message : e);
   }
 }
 
