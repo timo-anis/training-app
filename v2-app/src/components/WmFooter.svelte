@@ -1,22 +1,20 @@
 <script lang="ts">
   // Presentational footer nav for the focused workout overlay.
+  // Prev / Next walk exercise-by-exercise (A1 → A2 → B1 …); on the last exercise
+  // Next becomes Finish. Leaving workout mode is the header's ‹ button — the
+  // footer no longer has a "Back" that could be mistaken for "previous".
   export let isFirst: boolean;
   export let isLast: boolean;
   export let onPrev: () => void;
   export let onNext: () => void;
-  export let onBack: () => void;
   export let onFinish: () => void;
 </script>
 
 <footer class="wm-footer">
+  <button class="btn-nav" on:click={onPrev} disabled={isFirst}>‹ Prev</button>
   {#if isLast}
-    <!-- Last block: always show Finish Workout -->
-    <button class="btn-nav" on:click={onPrev} disabled={isFirst}>‹ Prev</button>
-    <button class="btn-end" on:click={onBack}>← Back</button>
     <button class="btn-finish-wod" on:click={onFinish}>Finish ✓</button>
   {:else}
-    <button class="btn-nav" on:click={onPrev} disabled={isFirst}>‹ Prev</button>
-    <button class="btn-end" on:click={onBack}>← Back</button>
     <button class="btn-nav primary" on:click={onNext}>Next ›</button>
   {/if}
 </footer>
@@ -55,22 +53,6 @@
   .btn-nav:disabled { opacity: 0.25; cursor: not-allowed; }
   .btn-nav:not(:disabled):active { background: rgba(var(--c-fg), 0.11); }
   .btn-nav.primary:not(:disabled):active { background: rgba(var(--c-accent), 0.22); }
-
-  .btn-end {
-    flex: 0 0 auto;
-    padding: 16px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(var(--c-edge-e), 0.24);
-    background: rgba(var(--c-surface-c), 0.65);
-    color: rgba(var(--c-fg), 0.50);
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
-  }
-
-  .btn-end:active { background: rgba(var(--c-fg), 0.09); color: rgba(var(--c-fg), 0.70); }
 
   /* Finish Workout — solid gold, last block footer */
   .btn-finish-wod {

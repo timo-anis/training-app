@@ -23,6 +23,7 @@
   import { formatElapsed, parseRestToSeconds, secsToRest, dayVolume } from '../lib/workout-metrics';
   import { exDone } from '../lib/day-status';
   import { workoutDayOf } from '../lib/workout-day';
+  import { stepCountsOf, stepNext, stepPrev, isFirstPos, isLastPos } from '../lib/workout-nav';
   import { isPersonalRecord, sessionStreak, prevSessionVolume, volumeDelta, bestSet, sessionPRs, nextPlannedSession } from '../lib/workout-summary';
 
   const DAY_SHORT: Record<string, string> = {
@@ -83,11 +84,15 @@
   // cloud refresh) must never select "no block" and blank the screen.
   const activeIndex = $derived(clampBlockIndex($uiState.activeExerciseIndex, blocks.length));
   const block = $derived(blocks[activeIndex] ?? null);
-  const isFirst = $derived(activeIndex === 0);
-  const isLast = $derived(activeIndex === blocks.length - 1);
 
   // ---- Superset: show ONE exercise at a time + auto-advance on rest end ----
   let activeSubIndex = $state(0);
+  // Linear A1→A2→B1… navigation (lib/workout-nav.ts). isFirst/isLast are about the
+  // current EXERCISE position, not the block, so Prev works on A2 of the first block.
+  const navSteps = $derived(stepCountsOf(blocks));
+  const navPos = $derived({ block: activeIndex, sub: activeSubIndex });
+  const isFirst = $derived(isFirstPos(navSteps, navPos));
+  const isLast = $derived(isLastPos(navSteps, navPos));
   let advanceAfterRest = $state(false);
   const visibleExercises = $derived(block
     ? (block.isSuperset ? [block.exercises[Math.min(activeSubIndex, block.exercises.length - 1)]] : block.exercises)
@@ -253,27 +258,20 @@
     }
   }
 
-  function prev() {
+  // One ordered walk for every control (footer, superset arrows, swipe):
+  // A1 → A2 → B1 → B2 → C … — see lib/workout-nav.ts.
+  function goTo(pos: { block: number; sub: number } | null) {
+    if (!pos) return;
     clearRest();
-    // Inside an incomplete superset: cycle backwards (B2→B1), don't leave the block.
-    // Once all superset exercises are done, Prev exits to the previous block.
-    if (block?.isSuperset && !block.exercises.every(exDone)) {
-      const n = block.exercises.length;
-      subGoto(((activeSubIndex - 1) % n + n) % n);
-      return;
+    if (pos.block === activeIndex) {
+      activeSubIndex = pos.sub;
+    } else {
+      pendingSubIndex = pos.sub; // consumed by the block-change effect below
+      setActiveBlock(pos.block);
     }
-    if (!isFirst) setActiveBlock(activeIndex - 1);
   }
-  function next() {
-    clearRest();
-    // Inside an incomplete superset: cycle forwards (B1→B2→B1…), don't skip to next block.
-    // Once all superset exercises are done, Next advances to the next block.
-    if (block?.isSuperset && !block.exercises.every(exDone)) {
-      subGoto((activeSubIndex + 1) % block.exercises.length);
-      return;
-    }
-    if (!isLast) setActiveBlock(activeIndex + 1);
-  }
+  function prev() { goTo(stepPrev(navSteps, navPos)); }
+  function next() { goTo(stepNext(navSteps, navPos)); }
   function backToNormal() { closeWorkoutMode(); }
 
   // ---- Workout summary ----
@@ -522,6 +520,8 @@
 
   // Commit + reset locals on block navigation
   let prevActiveIndex = -1;
+  // Sub-position requested by an explicit Prev/Next that crosses into another block.
+  let pendingSubIndex: number | null = null;
   // prevActiveIndex is plain let (not $state) — reads inside $effect are
   // untracked, so this effect only re-runs when activeIndex (a $derived) changes.
   $effect(() => {
@@ -546,7 +546,13 @@
       }
       prevActiveIndex = activeIndex;
       const nb = blocks[activeIndex];
-      activeSubIndex = nb?.isSuperset ? firstUndoneIndex(nb.exercises.map(exDone)) : 0;
+      if (pendingSubIndex !== null) {
+        // Explicit Prev/Next step: land exactly where the walk points (A2→B1, B1→A2).
+        activeSubIndex = nb?.isSuperset ? Math.min(pendingSubIndex, nb.exercises.length - 1) : 0;
+        pendingSubIndex = null;
+      } else {
+        activeSubIndex = nb?.isSuperset ? firstUndoneIndex(nb.exercises.map(exDone)) : 0;
+      }
       // Only a REAL block change cancels the pending superset auto-advance. The
       // first run on mount (prevActiveIndex was -1) must keep the flag that
       // maybeRestoreRestTimer just recovered — otherwise a quick out-and-back
@@ -683,13 +689,13 @@
       <!-- Superset stepper: one exercise at a time; auto-advances on rest end -->
       {#if block.isSuperset && block.exercises.length > 1}
         <div class="ss-stepper">
-          <button class="ss-arrow" onclick={() => subGoto(activeSubIndex - 1)} aria-label="Previous superset exercise">‹</button>
+          <button class="ss-arrow" onclick={prev} disabled={isFirst} aria-label="Previous exercise">‹</button>
           <div class="ss-dots">
             {#each block.exercises as e, i}
               <button class="ss-dot" class:active={i === activeSubIndex} class:done={exDone(e)} onclick={() => subGoto(i)}>{e.code || (i + 1)}</button>
             {/each}
           </div>
-          <button class="ss-arrow" onclick={() => subGoto(activeSubIndex + 1)} aria-label="Next superset exercise">›</button>
+          <button class="ss-arrow" onclick={next} disabled={isLast} aria-label="Next exercise">›</button>
         </div>
       {/if}
 
@@ -932,7 +938,7 @@
   <!-- Footer nav — fixed above rest timer overlay (z-index 150) -->
   {#if blocks.length > 0}
   <div class="wm-footer-outer">
-    <WmFooter {isFirst} {isLast} onPrev={prev} onNext={next} onBack={backToNormal} onFinish={openSummary} />
+    <WmFooter {isFirst} {isLast} onPrev={prev} onNext={next} onFinish={openSummary} />
   </div>
   {/if}
 </div>
@@ -1534,6 +1540,7 @@
     color: rgba(var(--c-fg), 0.65); font-size: 18px; line-height: 1; cursor: pointer;
     -webkit-tap-highlight-color: transparent;
   }
+  .ss-arrow:disabled { opacity: 0.3; }
   .ss-arrow:active { background: rgba(var(--c-surface-b), 0.85); }
   .ss-dots { flex: 1 1 auto; display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
   .ss-dot {

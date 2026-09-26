@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, copyDayOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode, exitWorkout } from '../stores/app';
+  import { currentUser, uiState, appState, currentDayExercises, copyPreviousDay, searchOpen, weekOffset, syncStatus, sheetOpen, requestOnboarding, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, copyDayOpen, setDayKind, goToAdjacentDay, goToToday, todayWeekDay, showToast, addExercise, materializeAssignment, openWorkoutMode } from '../stores/app';
   import type { DayKind } from '../types/workout';
   import { listIncomingInvites, getMyCoach } from '../services/coach';
   import { loadCoachNotesFor } from '../stores/coachNotes';
@@ -340,7 +340,7 @@
     <div class="session-cta-wrap">
       {#if $uiState.workoutActive}
         <button class="session-resume" on:click={openWorkoutMode}>Resume workout →</button>
-        <button class="session-stop" on:click={exitWorkout} title="Stop workout"><span class="session-stop-dot"></span><span class="session-stop-val">{fmtElapsed(elapsed)}</span><span class="session-stop-x">■</span></button>
+        <div class="session-stop" role="timer" aria-label="Workout time"><span class="session-stop-dot"></span><span class="session-stop-val">{fmtElapsed(elapsed)}</span></div>
       {:else}
         <button class="session-start" on:click={openWorkoutMode}>▶ Start workout</button>
       {/if}
@@ -527,18 +527,16 @@
     gap: 7px;
     padding: 14px 16px;
     border-radius: 14px;
-    border: 1px solid rgba(var(--c-fg), 0.16);
-    background: rgba(var(--c-fg), 0.06);
+    border: 1px solid transparent; /* info, not a button */
+    background: transparent;
     color: rgba(var(--c-fg), 0.80);
     font-size: 14px;
     font-weight: 800;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    cursor: default;
     white-space: nowrap;
   }
   .session-stop-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(var(--c-fg), 0.70); flex-shrink: 0; }
   .session-stop-val { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-  .session-stop-x { font-size: 10px; opacity: 0.5; }
 
   .r-welcome   { order: 2; }
   .r-hero      { order: 2; }

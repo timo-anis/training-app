@@ -198,11 +198,12 @@
     {#if showWorkoutBar}
       <div class="workout-bar">
         {#if $uiState.workoutActive}
-          <button class="timer-btn" on:click={exitWorkout} title="Stop workout">
+          <!-- Session clock is information only — not a button. Stopping by
+               accident mid-workout was too easy; a session ends via ✓ Finish. -->
+          <div class="timer-btn" role="timer" aria-label="Workout time">
             <span class="timer-dot"></span>
             <span class="timer-val">{fmtElapsed(elapsed)}</span>
-            <span class="timer-stop">■</span>
-          </button>
+          </div>
           {#if restLeft !== null}
             <button class="wm-btn rest" class:rest-done={restLeft === 0} on:click={openWorkoutMode} aria-label="Back to workout — rest timer">
               {restLeft > 0 ? `Rest ${fmtElapsed(restLeft)}` : 'Rest done'} →
@@ -369,18 +370,15 @@
     gap: 7px;
     padding: 15px 16px;
     border-radius: 16px;
-    border: 1px solid rgba(var(--c-fg), 0.16);
-    background: rgba(var(--c-fg), 0.06);
+    border: 1px solid transparent; /* info, not a button */
+    background: transparent;
     color: rgba(var(--c-fg), 0.80);
     font-size: 15px;
     font-weight: 800;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background 0.12s;
+    cursor: default;
     white-space: nowrap;
   }
 
-  .timer-btn:active { background: rgba(var(--c-fg), 0.12); }
 
   .timer-dot {
     width: 7px;
@@ -397,7 +395,6 @@
   }
 
   .timer-val { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
-  .timer-stop { font-size: 10px; opacity: 0.5; }
 
   /* Resume / Start Workout */
   .wm-btn {
