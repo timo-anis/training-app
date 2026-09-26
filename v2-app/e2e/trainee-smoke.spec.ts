@@ -25,7 +25,8 @@ async function addExercise(page: Page, name: string) {
   if (await trigger.isVisible().catch(() => false)) {
     await trigger.click();
   } else {
-    await page.locator('.welcome-secondary').click();
+    // Two .welcome-secondary buttons exist (Start blank / How it works) — target by name.
+    await page.getByRole('button', { name: 'Start blank' }).click();
   }
   const input = page.locator('.add-ex-input');
   await input.waitFor({ state: 'visible', timeout: 5_000 });
@@ -62,7 +63,9 @@ test.describe('Trainee core paths', () => {
     await expect(cardAfter.locator('.donebtn').first()).toHaveAttribute('aria-pressed', 'true');
 
     // Cleanup — keep the shared account idempotent.
-    await cardAfter.locator('.del-ex-btn').click();
+    // Delete is a two-tap confirm in the app: '×' arms it, 'Delete?' confirms.
+    await cardAfter.getByRole('button', { name: 'Delete exercise', exact: true }).click();
+    await cardAfter.getByRole('button', { name: 'Confirm delete exercise', exact: true }).click();
     await expect(page.locator('.exercise-card').filter({ hasText: name })).toBeHidden({ timeout: 8_000 });
   });
 });
