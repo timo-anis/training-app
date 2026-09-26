@@ -21,7 +21,7 @@ vi.mock('../services/supabase', () => ({
   },
 }));
 import { get } from 'svelte/store';
-import { workoutDayOf, startWorkoutUI, openWorkoutUI, exitWorkoutUI } from '../lib/workout-day';
+import { workoutDayOf, startWorkoutUI, openWorkoutUI, exitWorkoutUI, isSessionStale, MAX_SESSION_MS } from '../lib/workout-day';
 import type { UIState } from '../types/workout';
 import { uiState, appState, workoutBlocks, openWorkoutMode, closeWorkoutMode, exitWorkout, startWorkout } from '../stores/app';
 import { emptyAppState, emptyExercise } from '../types/workout';
@@ -76,6 +76,29 @@ describe('workout-day pure transitions', () => {
   it('exit clears the session, the pin and any running rest', () => {
     const next = exitWorkoutUI(ui({ workoutActive: true, workoutMode: true, workoutWeek: 10, workoutDay: 'Friday', workoutStartTime: 5, activeExerciseIndex: 2, restStartTime: 7, restTotal: 90 }));
     expect(next).toMatchObject({ workoutActive: false, workoutMode: false, workoutWeek: null, workoutDay: null, workoutStartTime: null, activeExerciseIndex: 0, restStartTime: null, restTotal: null });
+  });
+
+  it('a forgotten session (>= MAX_SESSION_MS) is not resumed: opening starts fresh on the viewed day', () => {
+    const t0 = 1_000_000;
+    const forgotten = ui({
+      week: 11, day: 'Saturday', workoutActive: true, workoutMode: false, activeExerciseIndex: 3,
+      workoutStartTime: t0, workoutWeek: 10, workoutDay: 'Friday',
+    });
+    expect(isSessionStale(forgotten, t0 + MAX_SESSION_MS)).toBe(true);
+    expect(isSessionStale(forgotten, t0 + MAX_SESSION_MS - 1)).toBe(false);
+    const next = openWorkoutUI(forgotten, t0 + MAX_SESSION_MS);
+    expect(next).toMatchObject({
+      week: 11, day: 'Saturday', workoutWeek: 11, workoutDay: 'Saturday',
+      activeExerciseIndex: 0, workoutStartTime: t0 + MAX_SESSION_MS,
+    });
+    const started = startWorkoutUI(forgotten, t0 + MAX_SESSION_MS);
+    expect(started).toMatchObject({ workoutWeek: 11, workoutDay: 'Saturday', workoutStartTime: t0 + MAX_SESSION_MS });
+  });
+
+  it('a live session just under the window still resumes its pinned day', () => {
+    const t0 = 1_000_000;
+    const live = ui({ week: 11, day: 'Saturday', workoutActive: true, workoutStartTime: t0, workoutWeek: 10, workoutDay: 'Friday', activeExerciseIndex: 2 });
+    expect(openWorkoutUI(live, t0 + MAX_SESSION_MS - 1)).toMatchObject({ week: 10, day: 'Friday', activeExerciseIndex: 2 });
   });
 
   it('does not mutate its input', () => {

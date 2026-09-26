@@ -17,6 +17,7 @@
  * loading boot always re-boots, so an error screen can recover.
  */
 import type { BootStatus } from '../stores/ui-state';
+import { MAX_SESSION_MS, isSessionStale } from './workout-day';
 
 export function shouldBootOnSignIn(
   currentUserId: string | null | undefined,
@@ -29,11 +30,8 @@ export function shouldBootOnSignIn(
   return !workoutActive;
 }
 
-/**
- * A forgotten session (never stopped) must not disable the resume refresh
- * forever: only a session started within this window blocks the re-boot.
- */
-export const MAX_PROTECTED_SESSION_MS = 4 * 60 * 60 * 1000;
+/** Only a session started within MAX_SESSION_MS blocks the re-boot (see lib/workout-day.ts). */
+export const MAX_PROTECTED_SESSION_MS = MAX_SESSION_MS;
 
 export function sessionBlocksReboot(
   workoutActive: boolean,
@@ -41,5 +39,5 @@ export function sessionBlocksReboot(
   now: number,
 ): boolean {
   if (!workoutActive || workoutStartTime === null) return false;
-  return now - workoutStartTime < MAX_PROTECTED_SESSION_MS;
+  return !isSessionStale({ workoutActive, workoutStartTime }, now);
 }

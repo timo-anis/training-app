@@ -6,6 +6,7 @@
   import { currentUser, bootStatus, bootForUser, uiState, currentDayExercises, openWorkoutMode, exitWorkout, searchOpen, hintsOpen, recordsOpen, recoveryOpen, accountOpen, statsOpen, copyDayOpen, appState, sheetOpen, undoAction, execUndo, requestOnboarding, appLocked, initLockForUser, resetLock, noteHidden, noteResumed, setLockEnabledForUser } from './stores/app';
   import { clearStoredNavSnapshot } from './stores/ui-state';
   import { shouldBootOnSignIn, sessionBlocksReboot } from './lib/auth-boot';
+  import { isSessionStale } from './lib/workout-day';
   import { restRemainingSeconds } from './lib/workout-metrics';
   import { displayName } from './stores/ui-state';
   import { getDisplayName } from './services/profile';
@@ -89,6 +90,9 @@
         // the resume-time cloud refresh — see lib/auth-boot.ts.
         const needsBoot = shouldBootOnSignIn($currentUser?.id, $bootStatus, state.user.id,
           sessionBlocksReboot($uiState.workoutActive, $uiState.workoutStartTime, Date.now()));
+        // A forgotten session (≥4h, never stopped) is ended so nothing offers to
+        // "Resume" yesterday's day after the re-boot moves the view to today.
+        if (isSessionStale($uiState, Date.now())) exitWorkout();
         currentUser.set(state.user);
         // While recovering, the session is valid but we wait for the new
         // password before entering the app. Re-check the persisted flag in case

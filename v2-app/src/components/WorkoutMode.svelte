@@ -526,6 +526,7 @@
   // untracked, so this effect only re-runs when activeIndex (a $derived) changes.
   $effect(() => {
     if (activeIndex !== prevActiveIndex) {
+      const wasNavigation = prevActiveIndex >= 0;
       // Commit any uncommitted inputs from the previous block before navigating
       if (prevActiveIndex >= 0 && blocks[prevActiveIndex]) {
         const prevBlock = blocks[prevActiveIndex];
@@ -546,7 +547,11 @@
       prevActiveIndex = activeIndex;
       const nb = blocks[activeIndex];
       activeSubIndex = nb?.isSuperset ? firstUndoneIndex(nb.exercises.map(exDone)) : 0;
-      advanceAfterRest = false;
+      // Only a REAL block change cancels the pending superset auto-advance. The
+      // first run on mount (prevActiveIndex was -1) must keep the flag that
+      // maybeRestoreRestTimer just recovered — otherwise a quick out-and-back
+      // during rest loses the advance when the rest ends.
+      if (wasNavigation) advanceAfterRest = false;
       localKg = {};
       localReps = {};
       localCondNote = {};

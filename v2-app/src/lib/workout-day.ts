@@ -23,12 +23,25 @@ export function workoutDayOf(ui: Pick<UIState, 'week' | 'day' | 'workoutWeek' | 
   return { week: ui.week, day: ui.day };
 }
 
+/**
+ * A session older than this is treated as forgotten (never stopped): it no
+ * longer blocks the resume re-boot, and Resume/Start begins a fresh session on
+ * the viewed day instead of reopening an old day (e.g. yesterday's workout
+ * left open overnight).
+ */
+export const MAX_SESSION_MS = 4 * 60 * 60 * 1000;
+
+export function isSessionStale(ui: Pick<UIState, 'workoutActive' | 'workoutStartTime'>, now: number): boolean {
+  return ui.workoutActive && ui.workoutStartTime !== null && now - ui.workoutStartTime >= MAX_SESSION_MS;
+}
+
 function hasPin(ui: WorkoutUI): boolean {
   return ui.workoutActive && ui.workoutWeek != null && ui.workoutDay != null;
 }
 
 /** Start (or keep) the session timer without opening the overlay. */
 export function startWorkoutUI<T extends WorkoutUI>(ui: T, now: number): T {
+  if (isSessionStale(ui, now)) ui = exitWorkoutUI(ui);
   if (hasPin(ui)) return { ...ui, workoutActive: true, workoutStartTime: ui.workoutStartTime ?? now };
   return {
     ...ui,
@@ -46,6 +59,7 @@ export function startWorkoutUI<T extends WorkoutUI>(ui: T, now: number): T {
  *   the block the user was on.
  */
 export function openWorkoutUI<T extends WorkoutUI>(ui: T, now: number): T {
+  if (isSessionStale(ui, now)) ui = exitWorkoutUI(ui); // forgotten session → start fresh here
   if (hasPin(ui)) {
     return {
       ...ui,
