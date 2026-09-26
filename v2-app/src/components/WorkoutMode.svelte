@@ -363,7 +363,6 @@
     const current = parseFloat(raw) || 0;
     const next = Math.max(0, parseFloat((current + delta).toFixed(2)));
     localKg[k] = next > 0 ? String(next) : '';
-    delete prefillKg[k]; // explicit user edit — no longer a suggestion
     localKg = localKg; // trigger reactivity
     updateSetField(week, day, exId, i, 'kg', localKg[k]);
   }
@@ -375,7 +374,6 @@
     const current = parseInt(raw, 10) || 0;
     const next = Math.max(1, current + delta);
     localReps[k] = String(next);
-    delete prefillReps[k];
     localReps = localReps;
     updateSetField(week, day, exId, i, 'reps', localReps[k]);
   }
@@ -498,13 +496,24 @@
   let localReps = $state<Record<string, string>>({});
   let localCondNote = $state<Record<string, string>>({});
   let localNote = $state<Record<string, string>>({});
-  // Values shown as a suggestion from the last session (plain, non-reactive).
-  // An untouched suggestion is never written to the log by blur / navigation —
-  // only an edit or marking the set done turns it into data. Otherwise skipping
-  // an exercise wrote last session's numbers into it (looked performed).
-  let prefillKg: Record<string, string> = {};
-  let prefillReps: Record<string, string> = {};
-  let prefillCondNote: Record<string, string> = {};
+  // Values shown in an EMPTY set come from the last session as a suggestion.
+  // An untouched suggestion is never written by blur / navigation — only an edit
+  // or marking the set done makes it data (skipping an exercise used to write last
+  // session's numbers into it, so it looked performed). Decided at commit time
+  // from the CURRENT stored set + the last session — no cached map, so deleting
+  // or inserting sets (index shifts) can never suppress a real edit.
+  function isUntouchedSuggestion(week: number, day: DayOfWeek, exId: string, i: number, field: 'kg' | 'reps', val: string): boolean {
+    const ex = $appState.weeks.find(w => w.week === week && w.day === day)?.exercises.find(e => e.id === exId);
+    const stored = ex?.sets[i]?.[field] ?? '';
+    if (!ex || stored !== '' || val === '') return false;
+    const suggested = (findLastSession($appState, ex.name, week, day)?.sets[i]?.[field] ?? '').replace(',', '.').trim();
+    return suggested !== '' && val === suggested;
+  }
+  function isUntouchedCondSuggestion(week: number, day: DayOfWeek, exId: string, val: string): boolean {
+    const ex = $appState.weeks.find(w => w.week === week && w.day === day)?.exercises.find(e => e.id === exId);
+    if (!ex || (ex.conditioningNote ?? '') !== '' || val === '') return false;
+    return val === findLastConditioningNote($appState, ex.name, week, day);
+  }
   let noteEditingId = $state<string | null>(null);
 
   // Sync locals when block changes — prefill from last session when set is empty
@@ -514,22 +523,13 @@
         const lastSess = ex.conditioning ? null : findLastSession($appState, ex.name, wmWeek, wmDay);
         ex.sets.forEach((s, i) => {
           const k = `${ex.id}-${i}`;
-          if (localKg[k] === undefined) {
-            localKg[k] = s.kg || lastSess?.sets[i]?.kg || '';
-            // Remember a value that came from LAST session (stored field empty):
-            // it is a suggestion, not data, until the user edits it or marks the set done.
-            if (!s.kg && localKg[k]) prefillKg[k] = localKg[k];
-          }
-          if (localReps[k] === undefined) {
-            localReps[k] = s.reps || lastSess?.sets[i]?.reps || '';
-            if (!s.reps && localReps[k]) prefillReps[k] = localReps[k];
-          }
+          if (localKg[k] === undefined)   localKg[k]   = s.kg   || lastSess?.sets[i]?.kg   || '';
+          if (localReps[k] === undefined)  localReps[k] = s.reps || lastSess?.sets[i]?.reps || '';
         });
         // Conditioning note: use current value or fall back to last session's note
         if (ex.conditioning && localCondNote[ex.id] === undefined) {
           localCondNote[ex.id] = ex.conditioningNote ||
             findLastConditioningNote($appState, ex.name, wmWeek, wmDay);
-          if (!ex.conditioningNote && localCondNote[ex.id]) prefillCondNote[ex.id] = localCondNote[ex.id];
         }
         // Exercise note: prefill from stored value (empty string if none)
         if (localNote[ex.id] === undefined) localNote[ex.id] = ex.note ?? '';
@@ -557,8 +557,7 @@
             if (localKg[k] !== undefined) commitKg(week, day, ex.id, i);
             if (localReps[k] !== undefined) commitReps(week, day, ex.id, i);
           });
-          if (ex.conditioning && localCondNote[ex.id] !== undefined
-              && localCondNote[ex.id] !== prefillCondNote[ex.id]) {
+          if (ex.conditioning && localCondNote[ex.id] !== undefined) {
             commitCondNote(week, day, ex.id);
           }
           if (localNote[ex.id] !== undefined) commitNote(week, day, ex.id);
@@ -582,9 +581,6 @@
       localReps = {};
       localCondNote = {};
       localNote = {};
-      prefillKg = {};
-      prefillReps = {};
-      prefillCondNote = {};
       noteEditingId = null;
       editingNameId = null;
     }
@@ -593,8 +589,7 @@
   function commitKg(week: number, day: DayOfWeek, exId: string, i: number, force = false) {
     const k = `${exId}-${i}`;
     const val = (localKg[k] ?? '').replace(',', '.').trim();
-    if (!force && prefillKg[k] !== undefined && val === prefillKg[k].replace(',', '.').trim()) return; // untouched suggestion
-    delete prefillKg[k];
+    if (!force && isUntouchedSuggestion(week, day, exId, i, 'kg', val)) return;
     localKg[k] = val;
     updateSetField(week, day, exId, i, 'kg', val);
   }
@@ -602,13 +597,13 @@
   function commitReps(week: number, day: DayOfWeek, exId: string, i: number, force = false) {
     const k = `${exId}-${i}`;
     const val = (localReps[k] ?? '').trim();
-    if (!force && prefillReps[k] !== undefined && val === prefillReps[k].trim()) return; // untouched suggestion
-    delete prefillReps[k];
+    if (!force && isUntouchedSuggestion(week, day, exId, i, 'reps', val)) return;
     localReps[k] = val;
     updateSetField(week, day, exId, i, 'reps', val);
   }
 
   function commitCondNote(week: number, day: DayOfWeek, exId: string) {
+    if (isUntouchedCondSuggestion(week, day, exId, localCondNote[exId] ?? '')) return; // suggestion, not data
     updateConditioningNote(week, day, exId, localCondNote[exId] ?? '');
   }
 

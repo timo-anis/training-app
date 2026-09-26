@@ -81,6 +81,47 @@ describe('last-session suggestions are not written unless accepted', () => {
   });
 });
 
+describe('no cached state can swallow a real edit (adversarial loop 2)', () => {
+  function seedTwoSets() {
+    const prev = ex('p1', 'Bench', 'A', 'single', '100', '5', true);
+    prev.sets = [{ kg: '100', reps: '5', done: true, rpe: '' }, { kg: '100', reps: '5', done: true, rpe: '' }];
+    const cur = ex('a1', 'Bench', 'A', 'single');
+    cur.sets = [{ kg: '', reps: '', done: false, rpe: '' }, { kg: '95', reps: '5', done: true, rpe: '' }];
+    appState.set({ schema: '4.1', weeks: [
+      { week: 1, day: 'Monday', date: '', exercises: [prev] },
+      { week: 2, day: 'Monday', date: '', exercises: [cur, ex('b', 'Squat', 'B', 'single')] },
+    ] });
+  }
+
+  it('after deleting set 1, typing the suggested value into the shifted (stored) set IS saved', async () => {
+    seedTwoSets();
+    render(WorkoutMode); await flush();
+    await fireEvent.click(screen.getAllByRole('button', { name: /Delete set/i })[0]); await flush();
+    expect(today().exercises[0].sets).toHaveLength(1);
+    expect(today().exercises[0].sets[0].kg).toBe('95');
+    const kgInput = document.querySelector('.exercises-wrap input') as HTMLInputElement;
+    await fireEvent.input(kgInput, { target: { value: '100' } }); await fireEvent.blur(kgInput); await flush();
+    await fireEvent.click(screen.getByRole('button', { name: 'Next ›' })); await flush();
+    expect(today().exercises[0].sets[0].kg).toBe('100');
+  });
+
+  it('focusing and leaving a conditioning note does not write last session\'s note', async () => {
+    const prevC = { ...emptyExercise('pc', 'Bike'), code: 'C', conditioning: true, conditioningNote: '12 min @160W' };
+    const curC = { ...emptyExercise('c', 'Bike'), code: 'C', conditioning: true, conditioningNote: '' };
+    appState.set({ schema: '4.1', weeks: [
+      { week: 1, day: 'Monday', date: '', exercises: [prevC] },
+      { week: 2, day: 'Monday', date: '', exercises: [curC] },
+    ] });
+    render(WorkoutMode); await flush();
+    const ta = document.querySelector('textarea') as HTMLTextAreaElement;
+    expect(ta.value).toBe('12 min @160W');
+    await fireEvent.focus(ta); await fireEvent.blur(ta); await flush();
+    expect(today().exercises[0].conditioningNote).toBe('');
+    await fireEvent.input(ta, { target: { value: '15 min @170W' } }); await fireEvent.blur(ta); await flush();
+    expect(today().exercises[0].conditioningNote).toBe('15 min @170W');
+  });
+});
+
 describe('empty pinned day', () => {
   it('offers End workout, which ends the session', async () => {
     appState.update(s => ({ ...s, weeks: s.weeks.map(w => (w.week === 2 ? { ...w, exercises: [] } : w)) }));
