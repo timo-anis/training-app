@@ -147,6 +147,15 @@ describe('workoutBlocks follows the pinned day (store integration)', () => {
     expect(localStorage.getItem('timo_training_v4_rest_timer')).toBeNull();
   });
 
+  it('opening over a forgotten session drops its persisted rest blob', () => {
+    openWorkoutMode();
+    uiState.update(u => ({ ...u, workoutMode: false, workoutStartTime: Date.now() - 5 * 60 * 60 * 1000 }));
+    localStorage.setItem('timo_training_v4_rest_timer', JSON.stringify({ s: Date.now(), t: 90, adv: true }));
+    openWorkoutMode();
+    expect(localStorage.getItem('timo_training_v4_rest_timer')).toBeNull();
+    expect(get(uiState).workoutStartTime! > Date.now() - 5000).toBe(true);
+  });
+
   it('with no session, workoutBlocks tracks the viewed day (unchanged behaviour)', () => {
     uiState.update(u => ({ ...u, day: 'Saturday' }));
     expect(get(workoutBlocks).length).toBe(0);

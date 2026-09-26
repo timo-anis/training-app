@@ -90,9 +90,6 @@
         // the resume-time cloud refresh — see lib/auth-boot.ts.
         const needsBoot = shouldBootOnSignIn($currentUser?.id, $bootStatus, state.user.id,
           sessionBlocksReboot($uiState.workoutActive, $uiState.workoutStartTime, Date.now()));
-        // A forgotten session (≥4h, never stopped) is ended so nothing offers to
-        // "Resume" yesterday's day after the re-boot moves the view to today.
-        if (isSessionStale($uiState, Date.now())) exitWorkout();
         currentUser.set(state.user);
         // While recovering, the session is valid but we wait for the new
         // password before entering the app. Re-check the persisted flag in case
@@ -139,7 +136,14 @@
   // ── Biometric lock: re-lock after a long background, and password fallback ──
   function onVisibility() {
     if (document.visibilityState === 'hidden') noteHidden();
-    else noteResumed();
+    else {
+      noteResumed();
+      // A forgotten session (≥4h, never stopped) is ended on every return to the
+      // foreground — independent of which auth event (SIGNED_IN / TOKEN_REFRESHED)
+      // supabase-js emits — so an overlay left open overnight can't log today's
+      // sets onto yesterday's pinned day.
+      if (isSessionStale($uiState, Date.now())) exitWorkout();
+    }
   }
   onMount(() => {
     document.addEventListener('visibilitychange', onVisibility);

@@ -7,7 +7,7 @@ import { getStoredNavSnapshot } from './ui-state';
 import { dayFullyDone } from '../lib/day-status';
 import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
-import { workoutDayOf, startWorkoutUI, openWorkoutUI, exitWorkoutUI } from '../lib/workout-day';
+import { workoutDayOf, startWorkoutUI, openWorkoutUI, exitWorkoutUI, isSessionStale } from '../lib/workout-day';
 import { latestRestByName, restForCopy } from '../lib/rest-inherit';
 import { clearPersistedRest } from '../lib/rest-persist';
 import { bootstrapState } from '../services/storage';
@@ -341,11 +341,15 @@ export function copyDayFrom(srcWeek: number, srcDay: DayOfWeek, tgtWeek: number,
 
 // ---- Workout mode actions ----
 export function startWorkout() {
-  uiState.update(ui => startWorkoutUI(ui, Date.now()));
+  const now = Date.now();
+  if (isSessionStale(get(uiState), now)) clearPersistedRest(); // old session's rest must not follow
+  uiState.update(ui => startWorkoutUI(ui, now));
 }
 
 export function openWorkoutMode() {
-  uiState.update(ui => openWorkoutUI(ui, Date.now()));
+  const now = Date.now();
+  if (isSessionStale(get(uiState), now)) clearPersistedRest(); // old session's rest must not follow
+  uiState.update(ui => openWorkoutUI(ui, now));
 }
 
 export function closeWorkoutMode() {
