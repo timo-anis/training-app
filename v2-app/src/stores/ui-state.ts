@@ -102,6 +102,8 @@ export const uiState = writable<UIState>({
   radarMode: (_storedNav?.radarMode ?? 'day') as UIState['radarMode'],
   calendarCollapsed: _storedNav?.calendarCollapsed ?? false,
   workoutStartTime: null,
+  workoutWeek: null,
+  workoutDay: null,
   restStartTime: null,
   restTotal: null,
   highlightExercise: null,

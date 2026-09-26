@@ -22,6 +22,7 @@
   import { decodeRestBlob, restBlobUsable, encodeRestBlob } from '../lib/rest-persist';
   import { formatElapsed, parseRestToSeconds, secsToRest, dayVolume } from '../lib/workout-metrics';
   import { exDone } from '../lib/day-status';
+  import { workoutDayOf } from '../lib/workout-day';
   import { isPersonalRecord, sessionStreak, prevSessionVolume, volumeDelta, bestSet, sessionPRs, nextPlannedSession } from '../lib/workout-summary';
 
   const DAY_SHORT: Record<string, string> = {
@@ -68,6 +69,13 @@
     elapsed = start ? Math.floor((Date.now() - start) / 1000) : 0;
   }, 1000);
 
+
+  // ---- Pinned workout day ----
+  // The session renders/edits the day it was STARTED on, never the viewed day
+  // (lib/workout-day.ts). Every week/day read in this component goes through these.
+  const wmPinned = $derived(workoutDayOf($uiState));
+  const wmWeek = $derived(wmPinned.week);
+  const wmDay = $derived(wmPinned.day);
 
   // ---- Blocks ----
   const blocks = $derived($workoutBlocks);
@@ -237,7 +245,7 @@
         label: `Set ${setIndex + 1} marked done`,
         fn: () => toggleSetDone(week, day, exId, setIndex),
       });
-      if (isPersonalRecord($appState.weeks, $uiState.week, $uiState.day, exName, kgVal)) {
+      if (isPersonalRecord($appState.weeks, wmWeek, wmDay, exName, kgVal)) {
         prFlashExId = exId;
         if (prFlashTimer) clearTimeout(prFlashTimer);
         prFlashTimer = setTimeout(() => { prFlashExId = null; }, 3000);
@@ -282,7 +290,7 @@
   // confirmFinish is defined below (after swipe/flash helpers)
 
   // Summary stats computed from the current workout day
-  const summaryDay = $derived($appState.weeks.find(w => w.week === $uiState.week && w.day === $uiState.day));
+  const summaryDay = $derived($appState.weeks.find(w => w.week === wmWeek && w.day === wmDay));
 
   const summarySetsDone = $derived(summaryDay
     ? summaryDay.exercises
@@ -310,13 +318,13 @@
 
 
   // Display week number (absolute -> user-facing).
-  const summaryWeekDisplay = $derived($uiState.week - $weekOffset);
+  const summaryWeekDisplay = $derived(wmWeek - $weekOffset);
 
   // Streak: consecutive weeks (this week going back) with logged activity.
-  const summaryStreak = $derived(sessionStreak($appState.weeks, $uiState.week));
+  const summaryStreak = $derived(sessionStreak($appState.weeks, wmWeek));
 
   // Volume of the most recent prior session that had strength volume.
-  const summaryPrevVolume = $derived(prevSessionVolume($appState.weeks, $uiState.week, $uiState.day));
+  const summaryPrevVolume = $derived(prevSessionVolume($appState.weeks, wmWeek, wmDay));
 
   const summaryVolumeDelta = $derived(volumeDelta(summaryVolume, summaryPrevVolume));
 
@@ -324,10 +332,10 @@
   const summaryBestSet = $derived(bestSet(summaryDay));
 
   // PRs hit this session: exercise whose top done kg beats its prior all-time max.
-  const summaryPRs = $derived(sessionPRs($appState.weeks, $uiState.week, $uiState.day));
+  const summaryPRs = $derived(sessionPRs($appState.weeks, wmWeek, wmDay));
 
   // Next planned session (soonest day after the current one that has exercises).
-  const summaryNext = $derived(nextPlannedSession($appState.weeks, $uiState.week, $uiState.day));
+  const summaryNext = $derived(nextPlannedSession($appState.weeks, wmWeek, wmDay));
 
   // ---- Inline exercise rename ----
   let editingNameId = $state<string | null>(null);
@@ -411,8 +419,8 @@
   // ---- #3 day-level session note ----
   // Lock week/day at the moment the note is opened — prevents saving to wrong
   // day if $uiState changes between open and blur.
-  let noteWeek = $state($uiState.week);
-  let noteDay  = $state($uiState.day);
+  let noteWeek = $state(workoutDayOf($uiState).week);
+  let noteDay  = $state(workoutDayOf($uiState).day);
   let localDayNote = $state($appState.weeks.find(
     w => w.week === noteWeek && w.day === noteDay
   )?.note ?? '');
@@ -420,8 +428,8 @@
 
   function openDayNote() {
     // Re-read week/day and fresh note content every time the note is opened
-    noteWeek     = $uiState.week;
-    noteDay      = $uiState.day;
+    noteWeek     = wmWeek;
+    noteDay      = wmDay;
     localDayNote = $appState.weeks.find(
       w => w.week === noteWeek && w.day === noteDay
     )?.note ?? '';
@@ -467,7 +475,7 @@
   function addExPrevPage() { if (addExPage > 0) addExPage--; }
   function addExNextPage() { if (addExPage < addExPages - 1) addExPage++; }
   async function addExPick(exerciseName: string) {
-    addExercise($uiState.week, $uiState.day, exerciseName);
+    addExercise(wmWeek, wmDay, exerciseName);
     showAddEx = false; addExName = '';
     await tick(); setActiveBlock(blocks.length - 1);
   }
@@ -475,7 +483,7 @@
   async function handleAddExInWorkout() {
     const name = addExName.trim();
     if (!name) return;
-    addExercise($uiState.week, $uiState.day, name);
+    addExercise(wmWeek, wmDay, name);
     addExName = '';
     showAddEx = false;
     // Wait for blocks to update reactively, then jump to the new (last) block
@@ -496,7 +504,7 @@
   $effect(() => {
     if (block) {
       for (const ex of block.exercises) {
-        const lastSess = ex.conditioning ? null : findLastSession($appState, ex.name, $uiState.week, $uiState.day);
+        const lastSess = ex.conditioning ? null : findLastSession($appState, ex.name, wmWeek, wmDay);
         ex.sets.forEach((s, i) => {
           const k = `${ex.id}-${i}`;
           if (localKg[k] === undefined)   localKg[k]   = s.kg   || lastSess?.sets[i]?.kg   || '';
@@ -505,7 +513,7 @@
         // Conditioning note: use current value or fall back to last session's note
         if (ex.conditioning && localCondNote[ex.id] === undefined) {
           localCondNote[ex.id] = ex.conditioningNote ||
-            findLastConditioningNote($appState, ex.name, $uiState.week, $uiState.day);
+            findLastConditioningNote($appState, ex.name, wmWeek, wmDay);
         }
         // Exercise note: prefill from stored value (empty string if none)
         if (localNote[ex.id] === undefined) localNote[ex.id] = ex.note ?? '';
@@ -522,8 +530,8 @@
       // Commit any uncommitted inputs from the previous block before navigating
       if (prevActiveIndex >= 0 && blocks[prevActiveIndex]) {
         const prevBlock = blocks[prevActiveIndex];
-        const week = $uiState.week;
-        const day = $uiState.day;
+        const week = wmWeek;
+        const day = wmDay;
         for (const ex of prevBlock.exercises) {
           ex.sets.forEach((_s, i) => {
             const k = `${ex.id}-${i}`;
@@ -630,7 +638,7 @@
   let showCompletionFlash = $state(false);
 
   function confirmFinish() {
-    markWorkoutComplete($uiState.week, $uiState.day);
+    markWorkoutComplete(wmWeek, wmDay);
     showSummary = false;
     showCompletionFlash = true;
     setTimeout(() => {
@@ -682,8 +690,8 @@
       <!-- Exercises in this block -->
       <div class="exercises-wrap">
         {#each visibleExercises as ex}
-          {@const week = $uiState.week}
-          {@const day = $uiState.day}
+          {@const week = wmWeek}
+          {@const day = wmDay}
           {@const lastSession = ex.conditioning ? null : findLastSession($appState, ex.name, week, day)}
           <div class="ex-section">
             <div class="ex-name-row">
@@ -898,6 +906,13 @@
         {/key}
       {/if}
     </div>
+  {:else}
+    <!-- Never a blank screen: the pinned day has no exercises (e.g. all deleted). -->
+    <div class="wm-content wm-empty" role="status">
+      <p class="wm-empty-title">No exercises on this day</p>
+      <p class="wm-empty-sub">{DAY_SHORT[wmDay] ?? wmDay} · Week {wmWeek - $weekOffset}</p>
+      <button class="wm-empty-back" onclick={backToNormal}>← Back to day view</button>
+    </div>
   {/if}
 
   <!-- #8 Undo toast -->
@@ -952,6 +967,23 @@
   }
 
   /* Content */
+  .wm-empty {
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .wm-empty-title { margin: 0; font-size: 17px; font-weight: 700; color: rgba(var(--c-fg), 0.85); }
+  .wm-empty-sub { margin: 0; font-size: 13px; color: rgba(var(--c-fg), 0.45); }
+  .wm-empty-back {
+    margin-top: 8px;
+    padding: 12px 18px;
+    border-radius: 12px;
+    border: 1px solid rgba(var(--c-fg), 0.14);
+    background: rgba(var(--c-fg), 0.06);
+    color: rgba(var(--c-fg), 0.85);
+    font: inherit;
+    font-weight: 600;
+  }
   .wm-content {
     flex: 1;
     overflow-y: auto;

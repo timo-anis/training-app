@@ -7,6 +7,7 @@ import { getStoredNavSnapshot } from './ui-state';
 import { dayFullyDone } from '../lib/day-status';
 import type { AppState, DayOfWeek, WorkoutDay, Exercise, WorkoutSet, DayKind } from '../types/workout';
 import { emptyAppState, emptyExercise, DAY_ORDER } from '../types/workout';
+import { workoutDayOf, startWorkoutUI, openWorkoutUI, exitWorkoutUI } from '../lib/workout-day';
 import { bootstrapState } from '../services/storage';
 import { sanitizeState } from '../lib/state-sanitize';
 import { PS_UTC } from '../lib/program';
@@ -120,7 +121,17 @@ export interface WorkoutBlock {
   code: string;
 }
 
-export const workoutBlocks = derived(currentDayExercises, ($exercises) =>
+// Workout mode renders the day the session was STARTED on (pinned), not the
+// currently viewed day — see lib/workout-day.ts.
+export const workoutExercises = derived(
+  [appState, uiState],
+  ([$state, $ui]) => {
+    const { week, day } = workoutDayOf($ui);
+    return $state.weeks.find(w => w.week === week && w.day === day)?.exercises ?? [];
+  }
+);
+
+export const workoutBlocks = derived(workoutExercises, ($exercises) =>
   _buildWorkoutBlocks($exercises)
 );
 
@@ -324,21 +335,11 @@ export function copyDayFrom(srcWeek: number, srcDay: DayOfWeek, tgtWeek: number,
 
 // ---- Workout mode actions ----
 export function startWorkout() {
-  uiState.update(ui => ({
-    ...ui,
-    workoutActive: true,
-    workoutStartTime: ui.workoutStartTime ?? Date.now(),
-  }));
+  uiState.update(ui => startWorkoutUI(ui, Date.now()));
 }
 
 export function openWorkoutMode() {
-  uiState.update(ui => ({
-    ...ui,
-    workoutActive: true,
-    workoutMode: true,
-    activeExerciseIndex: 0,
-    workoutStartTime: ui.workoutStartTime ?? Date.now(),
-  }));
+  uiState.update(ui => openWorkoutUI(ui, Date.now()));
 }
 
 export function closeWorkoutMode() {
@@ -401,13 +402,7 @@ export function setDayLabel(week: number, day: DayOfWeek, label: string) {
 }
 
 export function exitWorkout() {
-  uiState.update(ui => ({
-    ...ui,
-    workoutActive: false,
-    workoutMode: false,
-    activeExerciseIndex: 0,
-    workoutStartTime: null,
-  }));
+  uiState.update(ui => exitWorkoutUI(ui));
 }
 
 export function setActiveBlock(index: number) {
