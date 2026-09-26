@@ -161,7 +161,7 @@ WorkoutSet { kg, reps, done, rpe }   // rpe: RIR-based RPE 6–10, '' = unrated 
 
 ## Test Suite
 
-542 automated tests across 48 files — run `npm test` in `v2-app/`.
+542 automated tests across 46 files — run `npm test` in `v2-app/`.
 (Per-file counts intentionally not listed here to avoid drift; the runner is the source of truth.)
 
 ---
