@@ -20,7 +20,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/svelte": "^5.4.2",
     "@tsconfig/svelte": "^5.0.8",
-    "@types/node": "^24.19.0",
+    "@types/node": "^26.6.2",
     "jsdom": "^26.1.0",
     "svelte": "^5.57.1",
     "svelte-check": "^4.7.6",
